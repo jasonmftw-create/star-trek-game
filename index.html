@@ -145,6 +145,10 @@ html,body{overscroll-behavior-x:none;}
 body{touch-action:pan-y;}
 .cmdsubseg{display:flex;gap:6px;overflow-x:auto;touch-action:pan-x pan-y;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
 .cmdsubseg::-webkit-scrollbar{display:none;}
+/* Sub-tab pills: smaller than the HUD buttons above, purple-tinted per theme */
+.cmdsubseg .btn.small{font-size:11px;padding:5px 10px;min-height:30px;border-radius:10px;margin:1px;
+  background:transparent;border:1px solid var(--purple);color:var(--purple);}
+.cmdsubseg .btn.small.on{background:var(--purple);border-color:var(--purple);color:#0b0b12;}
 .cmdsubseg .btn{flex:0 0 auto;}
 #cmdSubBar,#shipQuadBar{display:none;padding:2px 8px 8px;background:var(--panel);}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
@@ -4245,7 +4249,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <h2>Menu</h2>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v12</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v13</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
