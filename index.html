@@ -793,7 +793,6 @@ const CANON_CREW=[
  ["Worf","Klingon","M",38,4,"Security",[85,60,55,45,60,95],["Klingon Honor"],"unity"],
  ["Nog","Ferengi","M",20,0,"Operations",[60,65,70,45,75,55],[],"defiant"],
 
- ["Spock","Vulcan","M",148,5,"Science",[90,100,70,60,80,70],["Vulcan Logic","Diplomat"],"pool","Ambassador"],
  ["Wesley Crusher","Human","M",30,2,"Operations",[70,85,75,50,60,60],["Traveler"],"pool"],
  ["Reginald Barclay","Human","M",39,2,"Engineering",[60,70,90,50,55,45],["Holodiction"],"pool"],
  ["Ro Laren","Bajoran","F",38,2,"Security",[75,60,55,50,65,80],["Maquis Veteran"],"pool"],
@@ -883,7 +882,7 @@ const MEMORIAL_LOST=[
   {name:"Hikaru Sulu",show:"TOS",rank:"Captain",species:"Human",cause:"Died of old age",when:"late 24th century"},
   {name:"Nyota Uhura",show:"TOS",rank:"Commander",species:"Human",cause:"Died of old age",when:"late 24th century"},
   {name:"Pavel Chekov",show:"TOS",rank:"Captain",species:"Human",cause:"Died of old age",when:"late 24th century"},
-  {name:"Christine Chapel",show:"TOS",rank:"Commander",species:"Human",cause:"Died of old age",when:"late 24th century"},
+  {name:"Christine Chapel",show:"TOS",rank:"Commander",species:"Human",cause:"Died of old age",when:"late 24th century"},{name:"Spock",show:"TOS",snapVer:"main",rank:"Captain",species:"Vulcan/Human",cause:"Lost with the Narada incident",when:"2387"},
   {name:"T'Pol",show:"ENT",rank:"Commander",species:"Vulcan",cause:"Died of old age",when:"22nd century"},
   {name:"Malcolm Reed",show:"ENT",rank:"Lieutenant Commander",species:"Human",cause:"Died of old age",when:"22nd century"},
   {name:"Hoshi Sato",show:"ENT",rank:"Lieutenant",species:"Human",cause:"Died of old age",when:"22nd century"},
@@ -891,7 +890,7 @@ const MEMORIAL_LOST=[
   {name:"Una Chin-Riley",show:"SNW",rank:"Commander",species:"Illyrian",cause:"Lost to history",when:"23rd century"},
   {name:"La'an Noonien-Singh",show:"SNW",rank:"Lieutenant Commander",species:"Human",cause:"Lost to history",when:"23rd century"},
   {name:"Joseph M'Benga",show:"SNW",rank:"Lieutenant Commander",species:"Human",cause:"Lost to history",when:"23rd century"},
-  {name:"Erica Ortegas",show:"SNW",rank:"Lieutenant",species:"Human",cause:"Lost to history",when:"23rd century"},
+  {name:"Erica Ortegas",show:"SNW",rank:"Lieutenant",species:"Human",cause:"Lost to history",when:"23rd century"},{name:"Spock",show:"SNW",snapVer:"alt",rank:"Lieutenant",species:"Vulcan/Human",cause:"Lost to history",when:"23rd century"},
   {name:"Michael Burnham",show:"DIS",rank:"Captain",species:"Human",cause:"Lost to time — jumped to the 32nd century",when:"3188"},
   {name:"Saru",show:"DIS",rank:"Captain",species:"Kelpien",cause:"Lost to time — jumped to the 32nd century",when:"3188"},
   {name:"Paul Stamets",show:"DIS",rank:"Lieutenant Commander",species:"Human",cause:"Lost to time — jumped to the 32nd century",when:"3188"},
@@ -3637,10 +3636,10 @@ function lostModal(idx){
   const e=MEMORIAL_LOST[idx];if(!e)return;
   const rescued=G.rescued&&G.rescued[e.name];
   const acc=(CANON_ACCOLADES[e.name]||[]).map(a=>'<div class="kv"><span class="k">'+esc(a[1])+'</span><span class="v">'+esc(a[0])+'</span></div>').join("");
-  portraitForce=lostTabForce();
+  portraitTabForce=true;
   let h='<div class="pfaceWrap">'+faceImg(e,"pfaceBig")+'<div style="flex:1;min-width:0;"><h2>'+esc(e.name)+'<div class="rnkline">'+esc(e.rank)+'</div></h2>'+
     '<div class="flavor">'+esc(e.species)+'</div></div></div>';
-  if(typeof PORTRAITS_ALT!=="undefined"&&PORTRAITS_ALT[e.name])h+=portraitToggleHtml(e.name);
+  if(typeof PORTRAITS_ALT!=="undefined"&&PORTRAITS_ALT[e.name])h+=portraitToggleHtml(e.name,e);
   h+='<div class="sub2 dim">'+esc(e.cause)+' · '+esc(e.when)+'</div>';
   if(acc)h+='<h4>Service Record</h4>'+acc;
   h+='<h4>Temporal Extraction</h4>';
@@ -3654,7 +3653,7 @@ function lostModal(idx){
     else h+='<button class="btn" onclick="uiTemporalExtract('+idx+')">⟳ Initiate Temporal Extraction</button>';
   }
   h+='<div style="margin-top:8px;"><button class="btn ghost" onclick="closeModal()">Close</button></div>';
-  portraitForce=null;
+  portraitTabForce=false;
   openModal(h);
 }
 function uiTemporalExtract(idx){
@@ -3689,18 +3688,19 @@ function renderMemorial(){
   const sts=G.memorial.filter(m=>m.kind==="station");
   const dsOf=m=>esc(((m.name||"")+" "+(m.cause||"")+" "+(m.sub||"")+" "+(m.rank||"")+" "+(m.species||"")).toLowerCase());
   const entry=(m,sub,sec)=>'<div class="row" data-search="'+dsOf(m)+'" data-sec="'+sec+'" style="padding:6px;cursor:default;">'+faceImg(m,"pfaceSm")+'<div class="grow"><div class="nm">† '+esc(m.name)+'</div>'+(sub?'<div class="sub2">'+esc(sub)+'</div>':"")+'<div class="sub2 dim">'+esc((m.lost==="decommissioned"?"Decommissioned":"Lost in service")+" — "+m.cause)+' · Stardate '+sdStr(m.sd)+'</div></div></div>';
-  const sentry=(m)=>'<div class="row" data-search="'+dsOf(m)+'" data-sec="off" style="padding:6px;cursor:default;">'+faceImg(m,"pfaceSm")+'<div class="grow"><div class="nm">† '+esc(m.name)+'</div><div class="sub2">'+esc(m.rank+" · "+m.species)+'</div><div class="sub2 dim">'+esc(m.cause)+' · '+esc(m.when)+'</div></div></div>';
+  const sentry=(m)=>'<div class="row" data-search="'+dsOf(m)+'" data-sec="lost" style="padding:6px;cursor:default;">'+faceImg(m,"pfaceSm")+'<div class="grow"><div class="nm">† '+esc(m.name)+'</div><div class="sub2">'+esc(m.rank+" · "+m.species)+'</div><div class="sub2 dim">'+esc(m.cause)+' · '+esc(m.when)+'</div></div></div>';
 
   let h='<div class="card"><h3>Memorial</h3><p class="dim">"They are gone, but their light travels on." — In honored memory of all who served.</p>'+
     '<label>Search</label><input type="search" placeholder="Search the memorial…" oninput="liveSearch(this,\'memList\')"></div><div id="memList">';
-  h+='<div class="card" data-seccard="off"><h3>Fallen Officers ('+(offs.length+MEMORIAL_STATIC.length)+')</h3>'+MEMORIAL_STATIC.map(sentry).join("")+offs.map(m=>entry(m,m.rank+" · "+m.species,"off")).join("")+'</div>';
   const LOST_SHOWS=[["all","All"],["TOS","TOS"],["ENT","ENT"],["SNW","SNW"],["DIS","Discovery"],["SFA","Academy"],["PRO","Prodigy"]];
   const lostPills='<div class="cmdsubseg" style="margin:8px 0;">'+LOST_SHOWS.map(s=>'<button class="btn small'+(lostShow===s[0]?" on":"")+'" onclick="lostShow=\''+s[0]+'\';render()">'+s[1]+'</button>').join("")+'</div>';
   const lostList=MEMORIAL_LOST.map((l,i)=>({l:l,i:i})).filter(o=>lostShow==="all"||o.l.show===lostShow);
-  const lostTitle=lostShow==="all"?"Lost to Time ("+MEMORIAL_LOST.length+")":"Lost to Time — "+LOST_SHOWS.filter(s=>s[0]===lostShow)[0][1]+" ("+lostList.length+" of "+MEMORIAL_LOST.length+")";
-  portraitForce=lostTabForce();
-  h+='<div class="card" data-seccard="lost"><h3>'+lostTitle+'</h3><p class="dim">Not fallen — displaced. Starfleet records list these officers as lost to time, their fates unrecorded across the centuries. Tap a name for their service record — Temporal Mechanics may be able to pull one forward into 2379 at their prime.</p>'+lostPills+lostList.map(o=>lostEntry(o.l,o.i,"lost")).join("")+'</div>';
-  portraitForce=null;
+  const showFallen=lostShow==="all";
+  const fallenRows=showFallen?MEMORIAL_STATIC.map(sentry).join("")+offs.map(m=>entry(m,m.rank+" · "+m.species,"lost")).join(""):"";
+  const lostTitle=showFallen?"Lost in Time ("+(offs.length+MEMORIAL_STATIC.length+MEMORIAL_LOST.length)+")":"Lost in Time — "+LOST_SHOWS.filter(s=>s[0]===lostShow)[0][1]+" ("+lostList.length+" of "+MEMORIAL_LOST.length+")";
+  portraitTabForce=true;
+  h+='<div class="card" data-seccard="lost"><h3>'+lostTitle+'</h3><p class="dim">Gone, but their light travels on — whether fallen in the line of duty or lost to the currents of time. Tap a name for their service record — Temporal Mechanics may be able to pull the displaced forward into 2379 at their prime.</p>'+lostPills+fallenRows+lostList.map(o=>lostEntry(o.l,o.i,"lost")).join("")+'</div>';
+  portraitTabForce=false;
   h+='<div class="card" data-seccard="ship"><h3>Lost Ships ('+ships.length+')</h3>'+(ships.map(m=>entry(m,m.sub,"ship")).join("")||'<p class="dim">Every hull accounted for.</p>')+'</div>';
   h+='<div class="card" data-seccard="stn"><h3>Lost Stations ('+sts.length+')</h3>'+(sts.map(m=>entry(m,m.sub,"stn")).join("")||'<p class="dim">Every station accounted for.</p>')+'</div>';
   h+='<div class="card" data-seccard="hist"><h3>Historical Ships &amp; Stations ('+(HISTORICAL_SHIPS.length+HISTORICAL_STATIONS.length)+')</h3><p class="dim">Gone before your command began — but not forgotten.</p><h4>Historical Ships</h4>'+HISTORICAL_SHIPS.map(v=>histEntry(v,"hist")).join("")+'<h4>Historical Stations</h4>'+HISTORICAL_STATIONS.map(v=>histEntry(v,"hist")).join("")+'</div>';
@@ -3714,8 +3714,7 @@ let cmdSub="status";
 let shipQuad="all";
 let stationQuad="all";
 let lostShow="all";
-let portraitForce=null;
-function lostTabForce(){return lostShow==="TOS"?"main":lostShow==="SNW"?"alt":null;}
+let portraitTabForce=false;
 /* ================= CAPTAIN'S LOG ================= */
 function capLogAuto(t,b){
   (G.captainsLog=G.captainsLog||[]).push({d:G.day,sd:G.stardate,t,b,auto:true});
@@ -3757,13 +3756,25 @@ function postingOptions(sel){
   G.stations.forEach(s=>{if(s.status==="active")h+='<option value="station:'+s.id+'"'+(sel==="station:"+s.id?" selected":"")+'>'+esc(s.name)+'</option>';});
   return h;
 }
-const PORTRAIT_VER_INFO={"Christopher Pike":{main:"SNW",alt:"TOS"},"Spock":{main:"TOS",alt:"SNW"},"Nyota Uhura":{main:"SNW",alt:"TOS"},"Christine Chapel":{main:"TOS",alt:"SNW"},"Una Chin-Riley":{main:"SNW",alt:"TOS"},"Joseph M'Benga":{main:"SNW",alt:"TOS"},"Montgomery Scott":{main:"TOS",alt:"SNW"}};
-function portraitSrc(name){if(typeof portraitForce!=="undefined"&&portraitForce){if(portraitForce==="alt"&&typeof PORTRAITS_ALT!=="undefined"&&PORTRAITS_ALT[name])return PORTRAITS_ALT[name];if(portraitForce==="main"&&typeof PORTRAITS!=="undefined"&&PORTRAITS[name])return PORTRAITS[name];}if(typeof PORTRAITS_ALT!=="undefined"&&PORTRAITS_ALT[name]&&typeof G!=="undefined"&&G&&G.portraitVer&&G.portraitVer[name]==="alt")return PORTRAITS_ALT[name];return (typeof PORTRAITS!=="undefined"&&PORTRAITS[name])?PORTRAITS[name]:"";}
-function portraitVerCur(name){if(typeof portraitForce!=="undefined"&&portraitForce)return portraitForce;return (typeof G!=="undefined"&&G&&G.portraitVer&&G.portraitVer[name]==="alt")?"alt":"main";}
-function portraitToggleHtml(name){const info=PORTRAIT_VER_INFO[name];if(!info||typeof PORTRAITS_ALT==="undefined"||!PORTRAITS_ALT[name])return "";const cur=portraitVerCur(name);const q=name.replace(/'/g,"\\'");return '<div class="kv"><span class="k">Portrait</span><span class="v"><span class="seg"><button class="btn small'+(cur==="main"?" on":"")+'" onclick="uiPortraitVer(\''+q+'\',\'main\',this)">'+info.main+'</button><button class="btn small'+(cur==="alt"?" on":"")+'" onclick="uiPortraitVer(\''+q+'\',\'alt\',this)">'+info.alt+'</button></span></span></div>';}
+const PORTRAIT_VER_INFO={"Christopher Pike":{main:"SNW",alt:"TOS"},"Spock":{main:"TOS",alt:"SNW"},"Nyota Uhura":{main:"TOS",alt:"SNW"},"Christine Chapel":{main:"TOS",alt:"SNW"},"Una Chin-Riley":{main:"SNW",alt:"TOS"},"Joseph M'Benga":{main:"SNW",alt:"TOS"},"Montgomery Scott":{main:"TOS",alt:"SNW"}};
+function portraitPick(name,entry){
+  if(typeof PORTRAIT_VER_INFO!=="undefined"&&PORTRAIT_VER_INFO[name]){
+    if(typeof portraitTabForce!=="undefined"&&portraitTabForce&&typeof lostShow!=="undefined"&&(lostShow==="TOS"||lostShow==="SNW")){
+      var mainIsTos=PORTRAIT_VER_INFO[name].main==="TOS";
+      if(lostShow==="TOS")return mainIsTos?"main":"alt";
+      return mainIsTos?"alt":"main";
+    }
+    if(entry&&entry.snapVer)return entry.snapVer;
+  }
+  if(typeof G!=="undefined"&&G&&G.portraitVer&&G.portraitVer[name]==="alt")return "alt";
+  return "main";
+}
+function portraitSrc(name,entry){var pick=portraitPick(name,entry);if(pick==="alt"&&typeof PORTRAITS_ALT!=="undefined"&&PORTRAITS_ALT[name])return PORTRAITS_ALT[name];return (typeof PORTRAITS!=="undefined"&&PORTRAITS[name])?PORTRAITS[name]:"";}
+function portraitVerCur(name,entry){return portraitPick(name,entry);}
+function portraitToggleHtml(name,entry){const info=PORTRAIT_VER_INFO[name];if(!info||typeof PORTRAITS_ALT==="undefined"||!PORTRAITS_ALT[name])return "";const cur=portraitVerCur(name,entry);const q=name.replace(/'/g,"\\'");return '<div class="kv"><span class="k">Portrait</span><span class="v"><span class="seg"><button class="btn small'+(cur==="main"?" on":"")+'" onclick="uiPortraitVer(\''+q+'\',\'main\',this)">'+info.main+'</button><button class="btn small'+(cur==="alt"?" on":"")+'" onclick="uiPortraitVer(\''+q+'\',\'alt\',this)">'+info.alt+'</button></span></span></div>';}
 function uiPortraitVer(name,ver,btn){if(!G.portraitVer)G.portraitVer={};if(ver==="alt")G.portraitVer[name]="alt";else delete G.portraitVer[name];save();var wrap=btn.closest(".pfaceWrap");if(wrap){var img=wrap.querySelector("img.pfaceBig");if(img)img.src=portraitSrc(name);}var seg=btn.parentElement;if(seg)seg.querySelectorAll("button").forEach(function(b){b.classList.toggle("on",b===btn);});render();}
 function faceImg(o,cls){
-  const src=portraitSrc(o.name);
+  const src=portraitSrc(o.name,o);
   if(src)return '<img class="'+cls+'" src="'+src+'" alt="">';
   const init=o.name.split(" ").map(function(w){return w[0];}).join("").slice(0,2).toUpperCase();
   return '<div class="'+cls+' pfaceInit">'+init+'</div>';
@@ -4723,7 +4734,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <h2>Menu</h2>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.28</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.29</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
