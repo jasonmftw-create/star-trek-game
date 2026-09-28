@@ -88,6 +88,12 @@
 .qfld input,.qfld select{width:100%;margin-top:4px;background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:9px;font-size:16px;}
 .qcard{border:2px solid var(--violet);}
 .qcard h3{color:var(--violet);letter-spacing:2px;}
+/* ===== Q snap flash (Q Mode toggle + Q battle snap) ===== */
+#qsnap{position:fixed;inset:0;z-index:99999;pointer-events:none;opacity:0;
+  background:radial-gradient(circle at 50% 50%,rgba(255,255,255,1) 0%,rgba(255,244,214,.96) 32%,rgba(255,214,120,.55) 62%,rgba(255,200,80,0) 100%);}
+#qsnap.go{animation:qsnapA .55s ease-out;}
+@keyframes qsnapA{0%{opacity:0}12%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){#qsnap.go{animation-duration:.2s;}}
 
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
@@ -2448,8 +2454,37 @@ function renderSettings(){
     '<p class="dim">Autosaves after every time advance.</p></div>';
   return h;
 }
+function qSnapFlash(){
+  try{
+    var el=document.getElementById("qsnap");
+    if(!el){el=document.createElement("div");el.id="qsnap";document.body.appendChild(el);}
+    el.classList.remove("go");void el.offsetWidth;el.classList.add("go");
+    setTimeout(function(){el.classList.remove("go");},650);
+  }catch(e){}
+  qSnapSound();
+}
+function qSnapSound(){
+  try{
+    var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+    var ctx=new AC(),now=ctx.currentTime;
+    // finger-snap transient: short filtered noise burst
+    var dur=0.09,sr=ctx.sampleRate,buf=ctx.createBuffer(1,Math.floor(sr*dur),sr),d=buf.getChannelData(0);
+    for(var i=0;i<d.length;i++){d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2.2);}
+    var src=ctx.createBufferSource();src.buffer=buf;
+    var hp=ctx.createBiquadFilter();hp.type="highpass";hp.frequency.value=1800;
+    var g=ctx.createGain();g.gain.value=0.9;
+    src.connect(hp);hp.connect(g);g.connect(ctx.destination);src.start(now);
+    // snap body: tiny pitched click
+    var o=ctx.createOscillator();o.type="triangle";
+    o.frequency.setValueAtTime(2400,now);o.frequency.exponentialRampToValueAtTime(900,now+0.03);
+    var g2=ctx.createGain();g2.gain.setValueAtTime(0.25,now);g2.gain.exponentialRampToValueAtTime(0.001,now+0.05);
+    o.connect(g2);g2.connect(ctx.destination);o.start(now);o.stop(now+0.06);
+    setTimeout(function(){try{ctx.close();}catch(e2){}},500);
+  }catch(e){}
+}
 function uiToggleQ(){
   G.qmode=!G.qmode;save();render();
+  qSnapFlash();
   if(G.qmode){log("system","Q Mode enabled — the Continuum grants you omnipotence. Try not to bore Q.");toast("Q: \"Finally. Try not to bore me.\"");}
   else toast("Q: \"Mortals. So indecisive.\"");
 }
@@ -2539,6 +2574,7 @@ function resolveBattle(sid,e,z,choice){
   if(choice==="qsnap"){
     gainPres(25);
     log("combat","Q snaps "+en+" out of existence. "+s.name+" is unharmed. (+25 prestige)");
+    qSnapFlash();
     return done("With an infuriating smirk, Q snaps his fingers. The "+esc(e.n)+" simply <i>ceases</i> — no debris, no subspace echo, nothing. &ldquo;You're welcome,&rdquo; the Continuum echoes. <b>+25 prestige.</b>");
   }
   if(choice==="retreat"){
@@ -5632,7 +5668,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <h2>Menu</h2>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.39</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.40</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
