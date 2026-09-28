@@ -99,6 +99,7 @@
   text-align:center;border-radius:50%;font-weight:900;font-size:18px;color:#3a2a00;
   background:radial-gradient(circle at 35% 30%,#fffbe8,#ffd76a 55%,#9a6b00);
   box-shadow:0 0 14px #ffd76a,0 0 4px #fff inset;}
+#qsigil[hidden]{display:none!important;}
 [data-qtheme="full"] .qcard{border-color:#ffd76a;box-shadow:0 0 18px rgba(255,215,106,.35);}
 [data-qtheme="full"] .qcard h3{color:#ffd76a;letter-spacing:3px;}
 [data-qtheme="full"] .qcard .btn{animation:qpulse 2.6s ease-in-out infinite;}
@@ -2492,7 +2493,9 @@ function applyQTheme(){
   if(sig)sig.hidden=!on;
 }
 function uiSetQTheme(v){
-  G.qtheme=v;save();render();
+  G.qtheme=v;save();
+  try{render();}catch(e){try{console.warn(e);}catch(e2){}}
+  applyQTheme();
   toast(v==="off"?"Q Mode visuals off — omnipotence, incognito.":v==="badge"?"Just the sigil. Subtle. Q approves.":"Full Continuum treatment. Fabulous.");
 }
 function qSnapFlash(){
@@ -2527,10 +2530,15 @@ function qSnapSound(){
   }catch(e){}
 }
 function uiToggleQ(){
-  G.qmode=!G.qmode;save();render();
+  G.qmode=!G.qmode;save();
   qSnapFlash();
+  var rerr=null;
+  try{render();}
+  catch(e){rerr=(e&&e.message)||String(e);try{console.warn(e);}catch(e2){}}
+  applyQTheme();
   if(G.qmode){log("system","Q Mode enabled — the Continuum grants you omnipotence. Try not to bore Q.");toast("Q: \"Finally. Try not to bore me.\"");}
   else toast("Q: \"Mortals. So indecisive.\"");
+  if(rerr){setTimeout(function(){toast("Q: \"A glitch in the Continuum: "+String(rerr).slice(0,120)+"\"");},60);}
 }
 
 /* ================= RANDOM HOSTILE-SPACE BATTLES ================= */
@@ -5713,7 +5721,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <h2>Menu</h2>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.41</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.42</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
