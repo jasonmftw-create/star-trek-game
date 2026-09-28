@@ -150,7 +150,8 @@ body{touch-action:pan-y;}
   background:transparent;border:1px solid var(--purple);color:var(--purple);}
 .cmdsubseg .btn.small.on{background:var(--purple);border-color:var(--purple);color:#0b0b12;}
 .cmdsubseg .btn{flex:0 0 auto;}
-#cmdSubBar,#shipQuadBar,#stationQuadBar{display:none;padding:2px 8px 8px;background:var(--panel);}
+#cmdSubBar,#shipQuadBar,#stationQuadBar{display:none;padding:6px 8px 8px;background:var(--panel);
+  border-top:1px solid var(--line);margin-top:4px;}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
   padding:12px;margin-bottom:10px;}
 .card h3{margin:0 0 8px;color:var(--peach);font-size:16px;letter-spacing:2px;text-transform:uppercase;}
@@ -4260,7 +4261,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <h2>Menu</h2>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v14</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v15</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
