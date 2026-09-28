@@ -3245,6 +3245,37 @@ const MEMORIAL_STATIC=[
  {name:"Jadzia Dax",rank:"Lt. Commander",species:"Trill",cause:"Murdered by Gul Dukat aboard Deep Space 9",when:"2374"},
  {name:"Tasha Yar",rank:"Lieutenant",species:"Human",cause:"Killed by the entity Armus on Vagra II",when:"2364"}
 ];
+/* ---------- historical ships & stations: gone before your command began ---------- */
+const HISTORICAL_SHIPS=[
+ {name:"Enterprise",reg:"NX-01",cls:"NX class",fate:"Retired 2161 after the Romulan War and the founding of the Federation. Now preserved at the Fleet Museum."},
+ {name:"Enterprise",reg:"NCC-1701",cls:"Constitution class",fate:"Destroyed 2285 — Kirk ordered her self-destruct over the Genesis planet to keep her from Klingon hands."},
+ {name:"Enterprise",reg:"NCC-1701-A",cls:"Constitution class",fate:"Decommissioned 2293 following the Khitomer Accords."},
+ {name:"Enterprise",reg:"NCC-1701-B",cls:"Excelsior class",fate:"Crippled by the Nexus ribbon on her maiden voyage, 2293 — the disaster that took Captain James T. Kirk. Her later disposition is absent from surviving records."},
+ {name:"Enterprise",reg:"NCC-1701-C",cls:"Ambassador class",fate:"Destroyed 2344 defending the Klingon outpost on Narendra III against four Romulan warbirds."},
+ {name:"Enterprise",reg:"NCC-1701-D",cls:"Galaxy class",fate:"Lost 2371 — her stardrive destroyed by a Klingon Bird-of-Prey, her saucer crash-landed on Veridian III. Later restored by Commodore Geordi La Forge; now the centerpiece of the Fleet Museum."},
+ {name:"USS Excelsior",reg:"NCC-2000",cls:"Excelsior class",fate:"The great experiment. Served under Captains Styles and Hikaru Sulu; struck from active service late in the 24th century after a record-breaking career."},
+ {name:"USS Reliant",reg:"NCC-1864",cls:"Miranda class",fate:"Destroyed 2285 in the Mutara Nebula after Khan Noonien Singh seized her."},
+ {name:"USS Grissom",reg:"NCC-638",cls:"Oberth class",fate:"Destroyed 2285 by a Klingon Bird-of-Prey while surveying the Genesis planet."},
+ {name:"USS Stargazer",reg:"NCC-2893",cls:"Constellation class",fate:"Abandoned 2355 after the Battle of Maxia, where a young Jean-Luc Picard executed the maneuver that bears her name. Later recovered; now at the Fleet Museum."},
+ {name:"USS Yamato",reg:"NCC-71807",cls:"Galaxy class",fate:"Destroyed 2365 by an ancient Iconian probe's computer virus."},
+ {name:"USS Saratoga",reg:"NCC-31911",cls:"Miranda class",fate:"Destroyed 2367 at the Battle of Wolf 359 — Benjamin Sisko's ship."},
+ {name:"USS Melbourne",reg:"NCC-62043",cls:"Excelsior class",fate:"Destroyed 2367 at the Battle of Wolf 359."},
+ {name:"USS Odyssey",reg:"NCC-71832",cls:"Galaxy class",fate:"Destroyed 2370 by Jem'Hadar attack ships — Starfleet's first bloody lesson from the Dominion."},
+ {name:"USS Pegasus",reg:"NCC-53847",cls:"Oberth class",fate:"Lost 2358 testing an illegal phasing cloak; found entombed in an asteroid in 2370."},
+ {name:"USS Defiant",reg:"NX-74205",cls:"Defiant class",fate:"Destroyed 2375 at the Second Battle of Chin'toka. Her replacement, the Sao Paulo, was renamed Defiant in her honor."},
+ {name:"USS Valiant",reg:"NCC-74210",cls:"Defiant class",fate:"Destroyed 2374 — a cadet crew took her against a Dominion battleship and never came home."},
+ {name:"USS Equinox",reg:"NCC-72381",cls:"Nova class",fate:"Destroyed 2375 in the Delta Quadrant, after her crew turned to murder to get home faster."}
+];
+const HISTORICAL_STATIONS=[
+ {name:"Regula I",cls:"Research station",fate:"Abandoned 2285 after the Genesis Device detonated — the planet it orbited no longer exists."},
+ {name:"Caretaker's Array",cls:"Nacene array",fate:"The array that flung Voyager to the Delta Quadrant. Destroyed by Captain Janeway in 2371 to keep it from the Kazon."},
+ {name:"Empok Nor",cls:"Cardassian station",fate:"Sister station to Terok Nor, abandoned by the Cardassians. Drifts derelict in the Trivas system."},
+ {name:"Epsilon IX",cls:"Sensor station",fate:"Long-range sensor outpost. Destroyed 2271 — the first Federation station to encounter V'ger."}
+];
+function histEntry(v,sec){
+  const ds=esc((v.name+" "+v.reg+" "+v.cls+" "+v.fate).toLowerCase());
+  return '<div class="row" data-search="'+ds+'" data-sec="'+sec+'" style="padding:6px;cursor:default;"><div class="grow"><div class="nm">'+esc(v.name)+' <span class="dim">'+esc(v.reg)+'</span></div><div class="sub2">'+esc(v.cls)+'</div><div class="sub2 dim">'+esc(v.fate)+'</div></div></div>';
+}
 /* ---------- temporal extraction: rescue the lost to time ---------- */
 const TEMP_COST_PRES=250,TEMP_COST_DIL=100,TEMP_CD=45,TEMP_ODDS=0.85;
 function lostEntry(e,idx,sec){
@@ -3321,6 +3352,7 @@ function renderMemorial(){
   h+='<div class="card" data-seccard="lost"><h3>Lost to Time ('+MEMORIAL_LOST.length+')</h3><p class="dim">Not fallen — displaced. Starfleet records list these officers as lost to time, their fates unrecorded across the centuries. Tap a name for their service record — Temporal Mechanics may be able to pull one forward into 2379 at their prime.</p>'+MEMORIAL_LOST.map((l,i)=>lostEntry(l,i,"lost")).join("")+'</div>';
   h+='<div class="card" data-seccard="ship"><h3>Lost Ships ('+ships.length+')</h3>'+(ships.map(m=>entry(m,m.sub,"ship")).join("")||'<p class="dim">Every hull accounted for.</p>')+'</div>';
   h+='<div class="card" data-seccard="stn"><h3>Lost Stations ('+sts.length+')</h3>'+(sts.map(m=>entry(m,m.sub,"stn")).join("")||'<p class="dim">Every station accounted for.</p>')+'</div>';
+  h+='<div class="card" data-seccard="hist"><h3>Historical Ships &amp; Stations ('+(HISTORICAL_SHIPS.length+HISTORICAL_STATIONS.length)+')</h3><p class="dim">Gone before your command began — but not forgotten.</p><h4>Historical Ships</h4>'+HISTORICAL_SHIPS.map(v=>histEntry(v,"hist")).join("")+'<h4>Historical Stations</h4>'+HISTORICAL_STATIONS.map(v=>histEntry(v,"hist")).join("")+'</div>';
   h+='</div><div id="memListNoRes" style="display:none;"><div class="card"><p class="dim">No matching entries in the memorial.</p></div></div>';
   return h;
 }
