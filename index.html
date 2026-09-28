@@ -146,6 +146,7 @@ body{touch-action:pan-y;}
 .cmdsubseg{display:flex;gap:6px;overflow-x:auto;touch-action:pan-x pan-y;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
 .cmdsubseg::-webkit-scrollbar{display:none;}
 .cmdsubseg .btn{flex:0 0 auto;}
+#cmdSubBar{display:none;padding:2px 8px 8px;background:var(--panel);}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
   padding:12px;margin-bottom:10px;}
 .card h3{margin:0 0 8px;color:var(--peach);font-size:16px;letter-spacing:2px;text-transform:uppercase;}
@@ -258,6 +259,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
     <button class="btn small teal" onclick="doAdvance(30)">+30 Days</button>
     <button class="btn small" id="hudToggle" onclick="toggleHUD()"><span class="chev">▾</span> Stats</button>
   </div>
+  <div id="cmdSubBar"></div>
 </div>
 <main id="view"></main>
 <div id="modalRoot"><div id="modalShade" onclick="closeModal(true)"></div><div id="modalBox"></div></div>
@@ -2605,7 +2607,15 @@ function render(){renderHUD();
   else if(currentTab==="arcs")v.innerHTML=renderArcs();
   else if(currentTab==="memorial")v.innerHTML=renderMemorial();
   else if(currentTab==="settings")v.innerHTML=renderSettings();
+  renderCmdSubBar();
   window.scrollTo(0,0);
+}
+function renderCmdSubBar(){
+  const bar=$("cmdSubBar");if(!bar)return;
+  if(currentTab!=="command"){bar.innerHTML="";bar.style.display="none";return;}
+  bar.style.display="block";
+  const tabs=[["status","Status"],["research","Research"],["inst","Institutions"],["rec","Records"]];
+  bar.innerHTML='<div class="cmdsubseg">'+tabs.map(t=>'<button class="btn small'+(cmdSub===t[0]?" on":"")+'" onclick="cmdSub=\''+t[0]+'\';render()">'+t[1]+'</button>').join("")+'</div>';
 }
 
 /* ================= PLAYER COMMANDER ================= */
@@ -2774,10 +2784,7 @@ function renderCommand(){
     '<b>5.</b> Crew fall in love, marry, and have children. Children grow up, join the Academy, and become officers — a generational fleet.<br>'+
     '<b>6.</b> Earn prestige from missions and events to unlock the Prometheus-class and rise to Fleet Admiral.<br>'+
     '<b>7.</b> Damaged ships repair automatically at free shipyards. Injured crew heal — faster with a Medical Station.</p></div>';
-  const tabs=[["status","Status"],["research","Research"],["inst","Institutions"],["rec","Records"]];
   let h=(G.qmode?renderQCard():"");
-  h+='<div class="card" style="position:sticky;top:58px;z-index:5;padding:8px;"><div class="cmdsubseg">'+
-    tabs.map(t=>'<button class="btn small'+(cmdSub===t[0]?" on":"")+'" onclick="cmdSub=\''+t[0]+'\';render()">'+t[1]+'</button>').join("")+'</div></div>';
   if(cmdSub==="research")h+=renderResearchCard();
   else if(cmdSub==="inst")h+=cmdrInstitutions();
   else if(cmdSub==="rec")h+=recCard;
@@ -4225,7 +4232,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <h2>Menu</h2>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v10</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v11</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
