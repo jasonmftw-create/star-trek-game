@@ -28,6 +28,59 @@
 [data-theme="picard"] .mapDiv{stroke:#3f9df0;}
 [data-theme="picard"] .mapLbl{fill:#cfe6ff;}
 [data-theme="picard"] #postPick{background:#0a1119;border-color:#1d2c40;color:#eef4fb;}
+/* ===== Alert themes ===== */
+[data-theme="redalert"]{
+  --orange:#ff3b30; --peach:#ff9a8a; --purple:#ff6b6b; --violet:#ff2222;
+  --teal:#ff8a80; --ice:#ffd6d6; --red:#ff1a1a; --green:#7a2e2e; --pink:#ff5c5c;
+  --gold:#ff7043; --bg:#0d0202; --panel:#160606; --panel2:#1f0808; --line:#4a1414;
+  --txt:#ffe9e9; --dim:#c98f8f;
+}
+[data-theme="yellowalert"]{
+  --orange:#ffb300; --peach:#ffe0a3; --purple:#ffcf5e; --violet:#ffab00;
+  --teal:#ffd54f; --ice:#fff3d6; --red:#dd4444; --green:#8aa68a; --pink:#ffca7a;
+  --gold:#ffc400; --bg:#0d0902; --panel:#171106; --panel2:#201806; --line:#4a3a14;
+  --txt:#fff6e3; --dim:#d4bd8a;
+}
+[data-theme="bluealert"]{
+  --orange:#29b6f6; --peach:#b3e5fc; --purple:#4fc3f7; --violet:#40c4ff;
+  --teal:#00e5ff; --ice:#e0f7ff; --red:#dd4444; --green:#8aa698; --pink:#7fd4ff;
+  --gold:#4dd0e1; --bg:#020a12; --panel:#06121e; --panel2:#081a2c; --line:#14324e;
+  --txt:#eaf7ff; --dim:#8fb8d4;
+}
+[data-theme="greenalert"]{
+  --orange:#ffb066; --peach:#ffd9b3; --purple:#d9b3e6; --violet:#b3b3ff;
+  --teal:#a3d9e6; --ice:#e6f7ff; --red:#dd6666; --green:#b3d9b3; --pink:#ffb3d9;
+  --gold:#ffd98a; --bg:#0b0906; --panel:#14100a; --panel2:#1c1610; --line:#3a2f22;
+  --txt:#fff8f0; --dim:#c9bba8;
+}
+[data-theme="blackalert"]{
+  --orange:#6a5acd; --peach:#9a8ae6; --purple:#7a6ff0; --violet:#5a4ae6;
+  --teal:#4a6a9a; --ice:#8a9ac9; --red:#8a2a3a; --green:#4a6a5a; --pink:#8a5a9a;
+  --gold:#6a6a9a; --bg:#02030a; --panel:#070a18; --panel2:#0b1024; --line:#1a2140;
+  --txt:#c9cfe6; --dim:#6a7190;
+}
+[data-theme="graymode"]{
+  --orange:#5a5a5a; --peach:#8a8a8a; --purple:#6e6e6e; --violet:#555555;
+  --teal:#777777; --ice:#999999; --red:#5a3a3a; --green:#4a4a4a; --pink:#666666;
+  --gold:#6a6a6a; --bg:#000000; --panel:#050505; --panel2:#0a0a0a; --line:#1a1a1a;
+  --txt:#b0b0b0; --dim:#666666;
+}
+[data-theme="redalert"] .mapDiv{stroke:#ff3b30;}
+[data-theme="redalert"] .mapLbl{fill:#ff9a8a;}
+[data-theme="yellowalert"] .mapDiv{stroke:#ffb300;}
+[data-theme="yellowalert"] .mapLbl{fill:#ffe0a3;}
+[data-theme="bluealert"] .mapDiv{stroke:#29b6f6;}
+[data-theme="bluealert"] .mapLbl{fill:#b3e5fc;}
+[data-theme="graymode"] .mapDiv{stroke:#5a5a5a;}
+[data-theme="graymode"] .mapLbl{fill:#8a8a8a;}
+@keyframes redwash{0%,100%{background-color:#0d0202;}50%{background-color:#230707;}}
+@keyframes redflash{0%,100%{border-color:#4a1414;}50%{border-color:#ff2222;}}
+@keyframes blueglow{0%,100%{box-shadow:0 0 6px rgba(0,229,255,.15);}50%{box-shadow:0 0 22px rgba(0,229,255,.45);}}
+@media (prefers-reduced-motion: no-preference){
+  [data-theme="redalert"] body{animation:redwash 2.2s ease-in-out infinite;}
+  [data-theme="redalert"] .card{animation:redflash 2.2s ease-in-out infinite;}
+  [data-theme="bluealert"] #lcarsTop{animation:blueglow 3s ease-in-out infinite;}
+}
 /* ===== Settings / Q Mode bits ===== */
 .pickList{max-height:52vh;overflow-y:auto;margin:8px 0;}
 .pickList .menuItem{border-bottom:1px solid var(--line);}
@@ -2042,22 +2095,25 @@ function closeModal(force){
   $("modalRoot").classList.remove("open");
 }
 /* ================= SETTINGS / THEMES ================= */
+const THEMES={classic:"Classic LCARS",picard:"Picard Blue",redalert:"Red Alert",yellowalert:"Yellow Alert",bluealert:"Blue Alert",greenalert:"Green Alert",blackalert:"Black Alert",graymode:"Gray Mode"};
+const THEME_TOASTS={classic:"Classic LCARS restored.",picard:"Picard-era blue LCARS engaged.",redalert:"RED ALERT! All hands to battle stations!",yellowalert:"Yellow alert. Shields up, stay sharp.",bluealert:"Blue alert. Silent running.",greenalert:"Green alert. All decks report normal.",blackalert:"Black alert. Minimal emissions.",graymode:"Gray mode. Emergency lighting only."};
 function curTheme(){try{return localStorage.getItem("stfc_theme")||"classic";}catch(e){return "classic";}}
 function applyTheme(t){
-  const th=(t==="picard")?"picard":"classic";
+  const th=THEMES[t]?t:"classic";
   if(typeof document!=="undefined"&&document.documentElement)document.documentElement.setAttribute("data-theme",th);
   try{localStorage.setItem("stfc_theme",th);}catch(e){}
 }
-function uiSetTheme(t){applyTheme(t);save();render();toast(t==="picard"?"Picard-era blue LCARS engaged.":"Classic LCARS restored.");}
+function uiSetTheme(t){applyTheme(t);save();render();toast(THEME_TOASTS[t]||"Theme engaged.");}
 function battlesOn(){try{const v=localStorage.getItem("stfc_battles");return v===null?true:v==="1";}catch(e){return true;}}
 function uiToggleBattles(){try{localStorage.setItem("stfc_battles",battlesOn()?"0":"1");}catch(e){}render();
   toast(battlesOn()?"Hostile-space encounters enabled — fly careful out there.":"Hostile-space encounters disabled.");}
 function renderSettings(){
   const th=curTheme();
   let h='<div class="card"><h3>Display Theme</h3><p class="dim">Reskin the entire LCARS interface. Applies instantly.</p><div class="btnRow">'+
-    '<button class="btn'+(th==="classic"?" on":"")+'" onclick="uiSetTheme(\'classic\')">Classic LCARS</button>'+
-    '<button class="btn'+(th==="picard"?" on":"")+'" onclick="uiSetTheme(\'picard\')">Picard Blue</button></div>'+
-    '<p class="dim">Classic: the familiar orange-and-purple 24th-century Starfleet palette.<br>Picard Blue: the cooler blue LCARS of the Discovery / Picard era.</p></div>';
+    Object.keys(THEMES).map(k=>'<button class="btn small'+(th===k?" on":"")+'" onclick="uiSetTheme(\''+k+'\')">'+THEMES[k]+'</button>').join("")+'</div>'+
+    '<p class="dim">Classic: the familiar orange-and-purple 24th-century palette. Picard Blue: the cooler Discovery / Picard era.<br>'+
+    'Red Alert: pulsing red bridge lighting, flashing red screens. Yellow Alert: steady amber glow. Blue Alert: electric blue, silent running.<br>'+
+    'Green Alert: warm white normal-operations lighting. Black Alert: dim navy, minimal emissions. Gray Mode: emergency strips only.</p></div>';
   h+='<div class="card"><h3>Gameplay</h3><div class="kv"><span class="k">Random battles</span><span class="v"><button class="btn small'+(battlesOn()?" on":"")+'" onclick="uiToggleBattles()">'+(battlesOn()?"On":"Off")+'</button></span></div>'+
     '<p class="dim">When on, any active ship posted in hostile territory — Borg space, the Dominion, the Neutral Zone — risks a random enemy encounter each day. You choose: engage or run.</p></div>';
   h+='<div class="card"><h3>Q Mode — Sandbox</h3><p class="dim">The Q Continuum offers you omnipotence: bypass every lock and requirement, conjure resources out of thin air, resurrect the fallen, snap nuisances out of existence, and edit ships, stations and officers at will.</p>'+
@@ -4314,7 +4370,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <h2>Menu</h2>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.17</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.18</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
