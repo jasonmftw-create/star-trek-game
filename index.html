@@ -199,6 +199,7 @@ div.meetFace{display:flex;align-items:center;justify-content:center;font-size:42
 .compScan::before{content:"";position:absolute;top:-20%;bottom:-20%;left:0;width:34%;background:linear-gradient(100deg,transparent,rgba(150,220,255,.45),transparent);animation:scanMove 2.6s ease-in-out infinite;}
 @keyframes scanMove{from{transform:translateX(-120%);}to{transform:translateX(340%);}}
 .compShuttle{position:absolute;top:42%;left:-18%;width:64px;height:30px;background:linear-gradient(180deg,#e8f0ff,#8fb4e8);clip-path:polygon(0 45%,38% 45%,55% 0,70% 0,78% 45%,100% 55%,78% 65%,70% 100%,55% 100%,38% 55%,0 55%);filter:drop-shadow(0 0 12px rgba(140,200,255,.8));animation:shuttleFly 3s linear infinite;}
+.compShuttleArt{width:64%;max-width:280px;animation-duration:4s;}
 @keyframes shuttleFly{from{left:-18%;}to{left:104%;}}
 .compKicker{font-size:11px;letter-spacing:3px;color:#f4a259;text-transform:uppercase;margin:14px 0 4px;}
 .completeCard h2{margin:4px 12px;font-size:22px;}
@@ -1473,10 +1474,10 @@ function buildTick(){
     if(sh.status==="construction"){sh.daysLeft--;
       if(sh.daysLeft<=0){sh.status="docked";const hs=shuttleHost(sh);
         log("build",sh.name+" ("+SHUTTLE_TYPES[sh.type].name+") is ready in "+(hs?hs.name:"its")+(sh.host==="station"?" docking bay.":" shuttlebay."));
-        queueCompletion({kind:"shuttle",name:sh.name,sub:SHUTTLE_TYPES[sh.type].name+" \u2014 ready in "+(hs?hs.name:"its")+(sh.host==="station"?" docking bay":" shuttlebay")});}}
+        queueCompletion({kind:"shuttle",name:sh.name,art:SHUTTLE_PICS[sh.type],sub:SHUTTLE_TYPES[sh.type].name+" \u2014 ready in "+(hs?hs.name:"its")+(sh.host==="station"?" docking bay":" shuttlebay")});}}
     else if(sh.status==="repair"){sh.daysLeft--;
       if(sh.daysLeft<=0){sh.status="docked";log("build",sh.name+" repairs complete — back on the flight line.");
-      queueCompletion({kind:"shuttle",name:sh.name,sub:"Repairs complete \u2014 back on the flight line"});}}
+      queueCompletion({kind:"shuttle",name:sh.name,art:SHUTTLE_PICS[sh.type],sub:"Repairs complete \u2014 back on the flight line"});}}
   });
   // auto-start repairs for damaged ships when a yard is free
   G.ships.forEach(s=>{if(s.status==="damaged"){const y=freeYards();
@@ -2352,7 +2353,7 @@ function showCompletion(c){
     stage=compStars()+'<div class="compResearch"><img src="'+c.art+'" alt=""><div class="compScan"></div></div>';
   }else if(c.kind==="shuttle"){
     kicker="\u2605 Shuttle ready";
-    stage='<div class="speed"></div>'+compStars()+'<div class="compShuttle"></div>';
+    stage='<div class="speed"></div>'+compStars()+(c.art?'<div class="compShip compShuttleArt"><img src="'+c.art+'" alt=""></div>':'<div class="compShuttle"></div>');
   }else{
     kicker=c.kind==="refit"?"\u2605 Refit complete":"\u2605 Repairs complete";
     stage='<div class="speed"></div>'+compStars()+'<div class="compEngine"></div><div class="compShip"><img src="'+c.art+'" alt=""></div><div class="compOk">ALL SYSTEMS NOMINAL</div>';
@@ -5478,7 +5479,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <h2>Menu</h2>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.33</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.34</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
