@@ -144,6 +144,7 @@ div.meetFace{display:flex;align-items:center;justify-content:center;font-size:42
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
   padding:12px;margin-bottom:10px;}
 .card h3{margin:0 0 8px;color:var(--peach);font-size:16px;letter-spacing:2px;text-transform:uppercase;}
+.card.onmission{border:2px solid var(--violet);box-shadow:0 0 14px rgba(153,153,255,.35);}
 .card h4{margin:10px 0 6px;color:var(--teal);font-size:15px;letter-spacing:1px;text-transform:uppercase;}
 .row{display:flex;align-items:center;gap:10px;padding:12px 8px;border-bottom:1px solid var(--line);}
 .row:last-child{border-bottom:none;}
@@ -1141,18 +1142,7 @@ function tickDay(){
   if(G.tempCd>0)G.tempCd--;
   economyTick(); buildTick(); researchTick(); refitTick(); missionTick();
   healTick(); ageTick(); romanceTick(); familyTick();
-  randomEventTick(); scriptedTick(); rankCheckTick(); complementTick(); battleTick(); socialTick(); arcTick();
-}
-/* crew complement: drains with damage, replenishes only when NOT on mission */
-function complementTick(){
-  G.ships.forEach(s=>{const max=SHIP_CLASSES[s.cls].comp;
-    if(s.comp==null)s.comp=max;
-    if(s.comp<max&&(s.status==="active"||s.status==="damaged"))
-      s.comp=Math.min(max,s.comp+Math.max(1,Math.ceil(max*0.04)));});
-  G.stations.forEach(st=>{const max=STATION_DEFS[st.type].comp;
-    if(st.comp==null)st.comp=max;
-    if(st.comp<max&&st.status==="active")
-      st.comp=Math.min(max,st.comp+Math.max(1,Math.ceil(max*0.05)));});
+  randomEventTick(); scriptedTick(); rankCheckTick(); battleTick(); socialTick(); arcTick();
 }
 function economyTick(){
   let income=1500+300*activeStations("starbase").length
@@ -1715,7 +1705,6 @@ function resolveMission(m){
       moraleAll(-12);}
     else{
     s.damage=ri(20,60);s.status="damaged";s.missionId=null;
-    const _cl=Math.min(s.comp||0,Math.round((s.comp||0)*s.damage/400));s.comp=Math.max(0,(s.comp||0)-_cl);
     const hurt=crew.slice().sort(()=>Math.random()-0.5).slice(0,ri(1,3));
     hurt.forEach(o=>{o.health="injured";o.healDays=ri(15,40);});
     let died=null;
@@ -2106,8 +2095,7 @@ const HOSTILE_ZONES={
 };
 function battlePower(s){
   const c=SHIP_CLASSES[s.cls];if(!c)return 50;
-  const crewF=s.comp!=null?clamp(s.comp/c.comp,0,1):1;
-  return Math.max(10,Math.round(c.hull+c.tac*1.25+crewF*30-(s.damage||0)*0.6));
+  return Math.max(10,Math.round(c.hull+c.tac*1.25+30-(s.damage||0)*0.6));
 }
 function threatLabel(e,s){const r=e.pow/battlePower(s);
   return r>1.6?"OVERWHELMING":r>1.15?"SUPERIOR":r>0.85?"EVEN MATCH":"INFERIOR";}
@@ -2176,20 +2164,18 @@ function resolveBattle(sid,e,z,choice){
     const dmg=Math.min(60,Math.round(ep/p*45));
     applyDamage(dmg);
     const cr=ri(1500,6000)+Math.round(e.pow*20),dl=ri(40,160),pr=ri(10,30)+Math.round(e.pow/12);
-    const cl=Math.round((s.comp||0)*rnd(0,0.03));s.comp=Math.max(0,(s.comp||0)-cl);
     if(s.damage>=100){
       destroyShip(s,"destroyed in battle with "+e.n+" — "+z.terr);moraleAll(-10);
       log("combat",s.name+" destroyed "+en+" but was lost with all hands in "+z.terr+".");
       return done("The "+esc(e.n)+" breaks apart under "+esc(s.name)+"&rsquo;s guns — <b>victory</b>. But the triumph is hollow: damage is catastrophic, and "+esc(s.name)+" is lost with most of her crew. Her name joins the Memorial.");
     }
     gainCR(cr);gainDL(dl);gainPres(pr);
-    log("combat",s.name+" defeated "+en+" in "+z.terr+". (+"+fmt(cr)+" CR, +"+fmt(dl)+" DL, +"+pr+" prestige)"+(cl?" "+cl+" crew lost.":""));
+    log("combat",s.name+" defeated "+en+" in "+z.terr+". (+"+fmt(cr)+" CR, +"+fmt(dl)+" DL, +"+pr+" prestige)");
     capLogAuto("Battle won",s.name+" defeated "+en+" in "+z.terr+".");
-    return done("The "+esc(e.n)+" breaks apart under "+esc(s.name)+"&rsquo;s guns. <b>Victory!</b> Salvage teams recover <b>"+fmt(cr)+" CR</b>, <b>"+fmt(dl)+" dilithium</b>, and Starfleet awards <b>"+pr+" prestige</b>."+(dmg?" "+esc(s.name)+" took "+dmg+"% hull damage.":"")+(cl?" "+cl+" crew were lost.":""));
+    return done("The "+esc(e.n)+" breaks apart under "+esc(s.name)+"&rsquo;s guns. <b>Victory!</b> Salvage teams recover <b>"+fmt(cr)+" CR</b>, <b>"+fmt(dl)+" dilithium</b>, and Starfleet awards <b>"+pr+" prestige</b>."+(dmg?" "+esc(s.name)+" took "+dmg+"% hull damage.":""));
   }
   const dmg=Math.min(95,Math.round(ep/p*70));
   applyDamage(dmg);
-  const cl=Math.round((s.comp||0)*rnd(0.05,0.15));s.comp=Math.max(0,(s.comp||0)-cl);
   const hurt=crew.slice().sort(function(){return Math.random()-0.5;}).slice(0,ri(1,3));
   hurt.forEach(function(o){o.health="injured";o.healDays=ri(15,40);});
   if(s.damage>=100){
@@ -2200,8 +2186,8 @@ function resolveBattle(sid,e,z,choice){
   let died=null;
   if(hurt.length&&Math.random()<0.2){died=pick(hurt);killOfficer(died,"killed in action aboard "+s.name+" — battle with "+e.n);}
   moraleAll(-6);
-  log("combat",s.name+" was defeated by "+en+" in "+z.terr+" ("+dmg+"% hull damage, "+cl+" crew lost"+(died?", "+fullName(died)+" killed":"")+") and limps away.");
-  return done("The "+esc(e.n)+" pounds "+esc(s.name)+" mercilessly. Outgunned, she breaks off and limps away — <b>defeated</b>, with "+dmg+"% hull damage and "+cl+" crew lost."+(died?" "+fullName(died)+" did not survive.":"")+" She will need yard time.");
+  log("combat",s.name+" was defeated by "+en+" in "+z.terr+" ("+dmg+"% hull damage"+(died?", "+fullName(died)+" killed":"")+") and limps away.");
+  return done("The "+esc(e.n)+" pounds "+esc(s.name)+" mercilessly. Outgunned, she breaks off and limps away — <b>defeated</b>, with "+dmg+"% hull damage."+(died?" "+fullName(died)+" did not survive.":"")+" She will need yard time.");
 }
 
 /* ================= Q MODE (SANDBOX) ================= */
@@ -2306,8 +2292,8 @@ function qEditShip(id){
     '<label class="qfld">Registry<input id="qesReg" value="'+esc(s.registry||"")+'"></label>'+
     '<label class="qfld">Posting<select id="qesPost">'+postOptions(s.post)+'</select></label>'+
     '<div class="kv"><span class="k">Hull damage</span><span class="v">'+Math.round(s.damage||0)+'% <button class="btn small" onclick="qRepairShip(\''+s.id+'\')">Repair fully</button></span></div>'+
-    '<div class="kv"><span class="k">Crew</span><span class="v">'+fmt(s.comp||0)+' / '+fmt(c.comp)+' <button class="btn small" onclick="qRefillShip(\''+s.id+'\')">Refill crew</button></span></div>'+
     '<div class="btnRow"><button class="btn" onclick="closeModal()">Cancel</button>'+
+
     '<button class="btn danger" onclick="qScrapShip(\''+s.id+'\')">Scrap ship</button>'+
     '<button class="btn" onclick="qSaveShip(\''+s.id+'\')">Save</button></div>');
 }
@@ -2323,8 +2309,6 @@ function qSaveShip(id){
 function qRepairShip(id){const s=ship(id);if(!s)return;
   s.damage=0;if(s.status==="damaged"||s.status==="repair"){s.status="active";s.yardId=null;s.daysLeft=0;}
   closeModal();save();render();toast(s.name+" restored to pristine condition.");}
-function qRefillShip(id){const s=ship(id);if(!s)return;s.comp=SHIP_CLASSES[s.cls].comp;
-  closeModal();save();render();toast(s.name+" crew complement restored.");}
 function qScrapShip(id){
   const s=ship(id);if(!s)return;const nm=s.name;
   crewOfShip(s.id).forEach(function(o){o.post={t:"pool"};o.roles=[];o.shuttle=null;});
@@ -2798,17 +2782,17 @@ function shipWarnings(s){
   const crew=crewOfShip(s.id),c=shipClass(s),w=[];
   const hasCO=crew.some(o=>(o.roles||[]).indexOf("co")>=0||(o.roles||[]).indexOf("xo")>=0||o.rank>=5||o.rank===4);
   if(!hasCO&&s.status==="active")w.push("No captain");
-  if(crew.length<Math.ceil(c.slots/2))w.push("Under-crewed ("+crew.length+"/"+c.slots+")");
+  if(crew.length<5)w.push("Under-crewed ("+crew.length+"/5)");
   if(s.damage>0)w.push("Hull damage "+Math.round(s.damage)+"%");
   return w;
 }
 function renderShips(){
   let h="";
   G.ships.forEach(s=>{
-    const c=shipClass(s),crew=crewOfShip(s.id),warns=shipWarnings(s);
-    h+='<div class="card"><div class="row" onclick="shipModal(\''+s.id+'\')" style="cursor:pointer;">'+shipPic(s.cls)+
-      '<div class="grow"><div class="nm">'+esc(s.name)+' <span class="dim">'+esc(s.registry)+'</span></div>'+
-      '<div class="sub2">'+c.name+'-class · '+shipStatusLabel(s)+' · '+shipPostName(s)+' · Crew '+crew.length+'/'+c.slots+' · Shuttles '+shuttlesOfShip(s.id).length+' · Complement '+fmt(s.comp==null?c.comp:s.comp)+'</div>'+
+    const c=shipClass(s),crew=crewOfShip(s.id),warns=shipWarnings(s),om=s.status==="mission";
+    h+='<div class="card'+(om?' onmission':'')+'"><div class="row" onclick="shipModal(\''+s.id+'\')" style="cursor:pointer;">'+shipPic(s.cls)+
+      '<div class="grow"><div class="nm">'+esc(s.name)+' <span class="dim">'+esc(s.registry)+'</span>'+(om?' <span class="badge" style="background:var(--violet);color:#0b0b12;font-weight:bold;">ON MISSION</span>':'')+'</div>'+
+      '<div class="sub2">'+c.name+'-class · '+shipStatusLabel(s)+' · '+shipPostName(s)+' · Crew '+crew.length+'/'+c.slots+' · Shuttles '+shuttlesOfShip(s.id).length+'</div>'+
       (warns.length?'<div style="margin-top:4px;">'+warns.map(w=>'<span class="badge warn">'+esc(w)+'</span>').join("")+'</div>':"")+
       (s.damage>0?'<div class="prog"><i style="width:'+(100-s.damage)+'%;background:var(--red);"></i></div>':"")+
       '</div><span class="badge">'+c.name+'</span></div></div>';
@@ -3053,8 +3037,7 @@ function missionBrief(sid,tid){
     '<div class="kv"><span class="k">Ship</span><span class="v">'+esc(s.name)+' ('+shipClass(s).name+'-class)</span></div>'+
     '<div class="kv"><span class="k">Commanding</span><span class="v">'+(od.captain?esc(fullName(od.captain)):"None — risky")+'</span></div>'+
     '<div class="kv"><span class="k">Crew aboard</span><span class="v">'+od.crew.length+' / '+shipClass(s).slots+'</span></div>'+
-    '<div class="kv"><span class="k">Crew complement</span><span class="v">'+fmt(s.comp==null?shipClass(s).comp:s.comp)+' / '+fmt(shipClass(s).comp)+'</span></div>'+
-    '<div class="kv"><span class="k">Estimated success</span><span class="v">'+od.chance+'%</span></div>'+
+        '<div class="kv"><span class="k">Estimated success</span><span class="v">'+od.chance+'%</span></div>'+
     '<div class="kv"><span class="k">Reward</span><span class="v">'+fmt(t.cr)+' CR · '+fmt(t.dl)+' DL · '+t.pres+' pres.</span></div>'+
     '<div class="btnRow"><button class="btn teal" onclick="uiLaunchMission(\''+sid+'\',\''+tid+'\')">Launch mission</button>'+
     '<button class="btn ghost" onclick="closeModal()">Cancel</button></div>');
@@ -3062,8 +3045,6 @@ function missionBrief(sid,tid){
 function uiLaunchMission(sid,tid){
   const s=ship(sid),t=MISSION_DECK.find(x=>x.id===tid);
   if(!s||s.status!=="active"){toast("Ship unavailable.");return;}
-  const _mc=SHIP_CLASSES[s.cls].comp;
-  if((s.comp==null?_mc:s.comp)<_mc*0.4){toast(s.name+" is down to a skeleton crew — let the complement recover before launching missions.");return;}
   s.status="mission";s.missionId=tid;
   G.missions.push({id:uid("m"),tIdx:tid,shipId:sid,daysLeft:t.days,total:t.days});
   log("mission",s.name+" has departed on mission: "+t.name+" ("+t.days+" days).");
@@ -3867,7 +3848,6 @@ function shipModal(id){
   let h='<h2>'+esc(s.name)+'</h2><div class="flavor">'+esc(s.registry)+' · '+c.name+'-class · '+shipStatusLabel(s)+'</div>'+shipPic(s.cls,true);
   h+='<div class="kv"><span class="k">Posting</span><span class="v"><select id="postPick" onchange="setShipPost(\''+s.id+'\',this.value)">'+postOptions(s.post||"sol")+'</select></span></div>';
   h+='<h4>Specifications</h4>'+bar("HULL",c.hull,140)+bar("TAC",c.tac,130)+bar("SCI",c.sci,110)+bar("WARP",c.speed*10,100);
-  h+='<div class="kv"><span class="k">Crew complement</span><span class="v">'+fmt(s.comp==null?c.comp:s.comp)+' / '+fmt(c.comp)+'</span></div>'+bar("CREW",s.comp==null?c.comp:s.comp,c.comp);
   if(s.damage>0)h+='<div class="kv"><span class="k">Hull damage</span><span class="v" style="color:var(--red)">'+Math.round(s.damage)+'%</span></div>';
   if(c.special)h+='<p class="dim">'+esc(c.special)+'</p>';
   h+='<h4>Crew ('+crew.length+'/'+c.slots+')</h4>';
@@ -3898,7 +3878,6 @@ function stationModal(id){
   let h='<h2>'+esc(st.name)+'</h2><div class="flavor">'+d.name+' · '+(st.status==="active"?"Operational":"Under construction — "+st.daysLeft+"d")+'</div>'+stationPic(stationArtKey(st),true);
   h+='<p class="dim">'+esc(d.desc)+'</p>';
   if(st.blurb)h+='<p class="dim"><i>'+esc(st.blurb)+'</i></p>';
-  h+='<div class="kv"><span class="k">Crew complement</span><span class="v">'+fmt(st.comp==null?d.comp:st.comp)+' / '+fmt(d.comp)+'</span></div>'+bar("CREW",st.comp==null?d.comp:st.comp,d.comp);
   h+='<h4>Crew ('+crew.length+')</h4>';
   const sord=crew.slice().sort((a,b)=>((a===co?0:a===xo?1:2)-(b===co?0:b===xo?1:2))||b.rank-a.rank);
   sord.forEach(o=>{
