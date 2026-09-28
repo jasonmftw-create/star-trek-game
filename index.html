@@ -393,6 +393,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
     <button class="btn small teal" onclick="doAdvance(7)">+7 Days</button>
     <button class="btn small teal" onclick="doAdvance(30)">+30 Days</button>
     <button class="btn small" id="hudToggle" onclick="toggleHUD()"><span class="chev">▾</span> Stats</button>
+    <button class="btn small" id="muteBtn" onclick="toggleMute()" title="Sound on/off" style="padding:4px 8px;"></button>
   </div>
   <div id="cmdSubBar"></div>
   <div id="shipQuadBar"></div>
@@ -2096,6 +2097,8 @@ function resolveMission(m){
   G.ledger.missions++;
   log(outcome==="Disaster"?"combat":"mission",
     s.name+": "+t.name+" — "+outcome+". (+"+fmt(cr)+" CR, +"+fmt(dl)+" DL, +"+pres+" prestige)");
+  if(outcome==="Critical Success"||outcome==="Success")sfx("success");
+  else if(outcome==="Failure"||outcome==="Disaster")sfx("fail");
   interruptQueue.push({title:t.name+" — Mission Report",
     sub:s.name+" · "+t.type+" · Stardate "+sdStr(G.stardate),
     html:'<div class="bigTitle" style="font-size:18px;">'+outcome.toUpperCase()+'</div>'+
@@ -2152,6 +2155,8 @@ function resolveShuttleMission(m){
   const hs=shuttleHost(sh);
   log(outcome==="Disaster"?"combat":"mission",
     sh.name+" ("+(hs?hs.name:"?")+"): "+t.name+" — "+outcome+". (+"+fmt(cr)+" CR, +"+fmt(dl)+" DL, +"+pres+" prestige)");
+  if(outcome==="Critical Success"||outcome==="Success")sfx("success");
+  else if(outcome==="Failure"||outcome==="Disaster")sfx("fail");
   interruptQueue.push({title:t.name+" — Shuttle Report",
     sub:sh.name+" · "+c.short+" · Stardate "+sdStr(G.stardate),
     html:'<div class="bigTitle" style="font-size:18px;">'+outcome.toUpperCase()+'</div>'+
@@ -2255,6 +2260,7 @@ function romanceTick(){
     else if(r.stage==="engaged"&&r.day>30&&Math.random()<0.05){
       r.stage="married";p.rel.stage="married";G.ledger.marriages++;
       o.morale=clamp(o.morale+12,0,100);p.morale=clamp(p.morale+12,0,100);
+      sfx("wedding");
       log("romance","Wedding bells: "+fullName(o)+" and "+fullName(p)+" are married. The captain officiated. Someone cried during the vows (it was the captain).");
       capLogAuto("Wedding",fullName(o)+" and "+fullName(p)+" were married. I officiated. Someone cried during the vows (it was me).");}
     // drama
@@ -2606,6 +2612,7 @@ function splashShow(){
   var f=FANFARES[idx%FANFARES.length];window._splashF=f;
   var dur=8;
   try{
+    if(sfxMuted())throw new Error("muted");
     var AC=window.AudioContext||window.webkitAudioContext;if(!AC)throw new Error("noac");
     try{if(window._splashCtx&&window._splashCtx.close)window._splashCtx.close();}catch(e2){}
     var ctx=new AC();window._splashCtx=ctx;
@@ -2614,9 +2621,9 @@ function splashShow(){
       if(splashDone)return;
       if(ctx.state==="running"){try{dur=splashPlayFanfare(ctx,f);}catch(e3){}
         setTimeout(function(){if(!splashDone)splashDismiss();},dur*1000+1200);}
-      else if(sb)sb.hidden=false;
+      else if(sb&&!sfxMuted())sb.hidden=false;
     },900);
-  }catch(e){if(sb)sb.hidden=false;}
+  }catch(e){if(sb&&!sfxMuted())sb.hidden=false;}
   setTimeout(function(){if(!splashDone)splashDismiss();},Math.max(9000,(dur+1.5)*1000));
 }
 function splashInit(){
@@ -2671,6 +2678,111 @@ function qSnapSound(){
     var g2=ctx.createGain();g2.gain.setValueAtTime(0.5,now);g2.gain.exponentialRampToValueAtTime(0.001,now+0.07);
     o.connect(g2);g2.connect(ctx.destination);o.start(now);o.stop(now+0.08);
     setTimeout(function(){try{ctx.close();}catch(e3){}},600);
+  }catch(e){}
+}
+
+/* ================= SOUND EFFECTS (all original synthesis) ================= */
+function sfxMuted(){try{return localStorage.getItem("stfc_sfx")==="0";}catch(e){return false;}}
+function toggleMute(){
+  try{
+    var m=!sfxMuted();
+    localStorage.setItem("stfc_sfx",m?"0":"1");
+    paintMuteBtn();
+    toast(m?"Sound effects off.":"Sound effects on.");
+    if(!m)sfx("tricorder");
+  }catch(e){}
+}
+var SFX_ICON_ON='<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" style="vertical-align:-3px"><path d="M3 9v6h4l5 5V4L7 9H3z"/><path d="M16.5 8.6a4.6 4.6 0 0 1 0 6.8l-1.3-1.3a2.8 2.8 0 0 0 0-4.2z"/><path d="M18.8 5.9a8.2 8.2 0 0 1 0 12.2l-1.3-1.3a6.4 6.4 0 0 0 0-9.6z"/></svg>';
+var SFX_ICON_OFF='<svg viewBox="0 0 24 24" width="18" height="18" style="vertical-align:-3px"><path d="M3 9v6h4l5 5V4L7 9H3z" fill="currentColor"/><path d="M16.5 9.5l5 5m0-5l-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
+function paintMuteBtn(){
+  var b=document.getElementById("muteBtn");if(!b)return;
+  var m=sfxMuted();
+  b.innerHTML=m?SFX_ICON_OFF:SFX_ICON_ON;
+  b.classList.toggle("ghost",m);
+}
+function sfxCtx(){
+  try{
+    var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return null;
+    if(!window._sfxCtx||window._sfxCtx.state==="closed")window._sfxCtx=new AC();
+    var ctx=window._sfxCtx;
+    if(ctx.state==="suspended"&&ctx.resume){try{var r=ctx.resume();if(r&&r.catch)r.catch(function(){});}catch(e){}}
+    return ctx.state==="running"?ctx:null;
+  }catch(e){return null;}
+}
+function sfxNoiseBuf(ctx,dur){
+  var sr=ctx.sampleRate,buf=ctx.createBuffer(1,Math.max(1,Math.floor(sr*dur)),sr),d=buf.getChannelData(0);
+  for(var i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+  var src=ctx.createBufferSource();src.buffer=buf;return src;
+}
+function sfx(name){
+  if(sfxMuted())return;
+  try{
+    var ctx=sfxCtx();if(!ctx)return;
+    var now=ctx.currentTime+0.02;
+    var master=ctx.createGain();master.gain.value=0.5;master.connect(ctx.destination);
+    var tone=function(type,f0,t0,dur,vol,f1){
+      var o=ctx.createOscillator();o.type=type;o.frequency.setValueAtTime(f0,t0);
+      if(f1)o.frequency.exponentialRampToValueAtTime(Math.max(1,f1),t0+dur);
+      var g=ctx.createGain();g.gain.setValueAtTime(0.001,t0);
+      g.gain.exponentialRampToValueAtTime(vol,t0+0.02);
+      g.gain.exponentialRampToValueAtTime(0.001,t0+dur);
+      o.connect(g);g.connect(master);o.start(t0);o.stop(t0+dur+0.05);
+    };
+    var noise=function(t0,dur,vol,fType,f0,f1,q){
+      var n=sfxNoiseBuf(ctx,dur+0.05);
+      var flt=ctx.createBiquadFilter();flt.type=fType;flt.Q.value=q||1;
+      flt.frequency.setValueAtTime(f0,t0);
+      if(f1)flt.frequency.exponentialRampToValueAtTime(Math.max(20,f1),t0+dur);
+      var g=ctx.createGain();g.gain.setValueAtTime(0.001,t0);
+      g.gain.exponentialRampToValueAtTime(vol,t0+dur*0.25);
+      g.gain.exponentialRampToValueAtTime(0.001,t0+dur);
+      n.connect(flt);flt.connect(g);g.connect(master);n.start(t0);n.stop(t0+dur+0.06);
+    };
+    if(name==="klaxon"){
+      // red alert: alternating two-tone klaxon
+      var o=ctx.createOscillator();o.type="square";
+      for(var k=0;k<6;k++)o.frequency.setValueAtTime(k%2?392:523,now+k*0.24);
+      var g=ctx.createGain();g.gain.setValueAtTime(0.14,now);
+      g.gain.setValueAtTime(0.14,now+1.4);g.gain.exponentialRampToValueAtTime(0.001,now+1.55);
+      o.connect(g);g.connect(master);o.start(now);o.stop(now+1.6);
+    }else if(name==="warp"){
+      // warp jump: rising filtered-noise whoosh + pitch riser
+      noise(now,1.15,0.55,"bandpass",320,4600,1.1);
+      tone("sine",70,now,1.05,0.22,660);
+    }else if(name==="transporter"){
+      // transporter shimmer: sparkling ascending chimes
+      var tf=[1568,2093,1568,2637,2093,3136];
+      for(var i=0;i<tf.length;i++)tone("sine",tf[i],now+i*0.13,0.17,0.2);
+    }else if(name==="phaser"){
+      // phaser blast: descending saw sweep
+      tone("sawtooth",1900,now,0.5,0.2,170);
+    }else if(name==="torpedo"){
+      // torpedo: deep thump + low rumble
+      tone("sine",130,now,0.4,0.65,36);
+      noise(now,0.28,0.35,"lowpass",900,120,0.8);
+    }else if(name==="tricorder"){
+      // tricorder scan: quick alternating beeps
+      for(var j=0;j<4;j++)tone("square",j%2?1175:880,now+j*0.11,0.08,0.1);
+    }else if(name==="door"){
+      // turbolift doors: short pneumatic whoosh
+      noise(now,0.34,0.32,"bandpass",700,2600,2);
+    }else if(name==="success"){
+      // mission success: bright major arpeggio
+      var sc=[523,659,784,1047];
+      for(var s2=0;s2<sc.length;s2++)tone("triangle",sc[s2],now+s2*0.12,0.34,0.28);
+    }else if(name==="fail"){
+      // mission failure: somber descending minor phrase
+      var fl=[[440,0],[349,0.2],[262,0.4]];
+      for(var f2=0;f2<fl.length;f2++)tone("sawtooth",fl[f2][0],now+fl[f2][1],0.42,0.12);
+    }else if(name==="wedding"){
+      // wedding chimes: soft FM-ish bells
+      var wn=[659,784,988,1319];
+      for(var w=0;w<wn.length;w++){
+        var t0=now+w*0.3;
+        tone("sine",wn[w],t0,1.0,0.22);
+        tone("sine",wn[w]*2.76,t0,0.8,0.05);
+      }
+    }
   }catch(e){}
 }
 function uiToggleQ(){
@@ -2731,6 +2843,7 @@ function threatLabel(e,s){const r=e.pow/battlePower(s);
 function anArt(n){return /^[AEIOUaeiou]/.test(n)?"an":"a";}
 function battleTick(){
   if(!battlesOn())return;
+  var klaxoned=false;
   G.ships.forEach(function(s){
     if(!s||s.status!=="active"||s.transit)return;
     const z=HOSTILE_ZONES[s.post];if(!z)return;
@@ -2740,6 +2853,7 @@ function battleTick(){
       log("combat","RED ALERT: "+s.name+" ("+SHIP_CLASSES[s.cls].name+"-class) has encountered "+anArt(e.n)+" "+e.n+" — "+z.terr+".");
       interruptQueue.push({title:"RED ALERT — "+s.name,sub:z.terr+" · Stardate "+sdStr(G.stardate),
         html:battleHtml(s,e,z),buttons:battleButtons(s,e,z)});
+      if(!klaxoned){klaxoned=true;sfx("klaxon");}
     }
   });
 }
@@ -2764,6 +2878,7 @@ function battleButtons(s,e,z){
 function resolveBattle(sid,e,z,choice){
   const s=ship(sid);
   if(!s)return{title:"Battle Report",sub:"",html:"<p>The contact has already been resolved.</p>",buttons:[{t:"Continue"}]};
+  if(choice==="engage"){sfx("phaser");setTimeout(function(){sfx("torpedo");},450);}
   const c=SHIP_CLASSES[s.cls];
   const en=anArt(e.n)+" "+e.n;
   const done=function(html){save();return{title:s.name+" — After-Action Report",sub:z.terr+" · Stardate "+sdStr(G.stardate),html:"<p>"+html+"</p>",buttons:[{t:"Continue"}]};};
@@ -3059,7 +3174,7 @@ function hudStat(k,v,c,sub){
   return '<div class="hudStat '+(c||"")+'"><div class="k">'+k+'</div><div class="v">'+v+'</div>'+(sub||"")+'</div>';
 }
 function setTab(t){
-  if(t!==currentTab){navStack.push(currentTab);if(navStack.length>24)navStack.shift();}
+  if(t!==currentTab){sfx("door");navStack.push(currentTab);if(navStack.length>24)navStack.shift();}
   currentTab=t;
   document.querySelectorAll(".tabBtn").forEach(b=>b.classList.toggle("active",b.dataset.tab===t));
   const v=$("view");
@@ -4330,6 +4445,7 @@ function uiAwayToggle(oid,el){
 }
 function uiAwayStart(){
   if(!AWAY||AWAY.team.length<2){toast("Select at least 2 officers.");return;}
+  sfx("transporter");
   const dest=$("awayDest").value;
   const sits=AWAY_SITS.slice().sort(()=>Math.random()-0.5).slice(0,3);
   AWAY.dest=dest;AWAY.sits=sits;AWAY.stage=0;AWAY.wins=0;
@@ -4361,6 +4477,7 @@ function awayResolve(){
   else if(w===1){outcome="Partial Success";pres=25;mor=1;detail="Some objectives met. The debrief will be spirited.";}
   else{outcome="Failure";pres=5;mor=-4;detail="It went badly. The team is beamed out under less-than-ideal circumstances.";
     if(team.length&&Math.random()<0.4){const o=pick(team);o.health="injured";o.healDays=ri(10,25);detail+=" "+esc(o.name.split(" ")[0])+" was injured and is in sickbay.";}}
+  if(w>=2)sfx("success");else if(w===0)sfx("fail");
   gainPres(pres);
   team.forEach(o=>{o.morale=clamp(o.morale+mor,0,100);o.missions.t++;if(w>=2)o.missions.s++;awardAccolade(o,"Away mission: "+destLabel(AWAY.dest)+" &mdash; "+outcome);});
   log("mission","Away mission to "+destLabel(AWAY.dest)+" &mdash; "+outcome+". (+"+pres+" prestige)");
@@ -4384,6 +4501,7 @@ function missionBrief(sid,tid){
 function uiLaunchMission(sid,tid){
   const s=ship(sid),t=MISSION_DECK.find(x=>x.id===tid);
   if(!s||s.status!=="active"||s.transit){toast("Ship unavailable.");return;}
+  sfx("warp");
   s.status="mission";s.missionId=tid;
   const _md=s.cls==="protostar"?Math.max(1,Math.ceil(t.days*0.75)):t.days; // proto-drive: 25% faster
   G.missions.push({id:uid("m"),tIdx:tid,shipId:sid,daysLeft:_md,total:_md});
@@ -4420,6 +4538,7 @@ function uiLaunchShuttleMission(shid,tid){
   if(!hs||hs.status!=="active"){toast("The home berth must be active to launch shuttle missions.");return;}
   const pilot=shuttlePilot(sh);
   if(!pilot){toast("Assign a pilot first.");return;}
+  sfx("warp");
   sh.status="mission";sh.missionId=tid;
   G.missions.push({id:uid("m"),kind:"shuttle",tIdx:tid,shuttleId:shid,daysLeft:t.days,total:t.days});
   log("mission",sh.name+" has departed "+hs.name+" on mission: "+t.name+" ("+t.days+" days).");
@@ -5507,6 +5626,7 @@ const TERR=[
 }
 function mapInfo(id){
   const m=MAP_INFO[id]; if(!m)return;
+  sfx("tricorder");
   const pic=MAP_PICS[id]?'<img class="mapPic" src="'+MAP_PICS[id]+'" alt="'+esc(m.t)+'">':"";
   openModal("<h2>"+esc(m.t)+"</h2>"+pic+"<div class=\"story\">"+esc(m.b)+"</div><button class=\"btn\" onclick=\"closeModal()\">Close</button>");
 }
@@ -5838,6 +5958,7 @@ function showIntro(){
 /* ================= BOOT ================= */
 window.onload=function(){
   try{splashInit();}catch(e){}
+  try{paintMuteBtn();}catch(e){}
   const s=load();
   if(s){G=s;
     // forward-compat defaults
@@ -5867,7 +5988,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <h2>Menu</h2>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.45</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.46</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
