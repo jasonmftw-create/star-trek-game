@@ -4624,21 +4624,53 @@ const AWAY_SITS=[
  {t:"Sweep for survivors first (MED)",stat:"med",dc:95,win:"Stasis pods &mdash; twelve survivors, barely alive. The medical team brings them back from the edge.",lose:"No survivors. Just logs, and names, and a century of silence."}]}
 ];
 let AWAY=null;
+/* Territory system for away missions: difficulty/prestige/injury vary by whose space you're beaming into. */
+const AWAY_TERR_FRIENDLY=["sol","vulcan","andoria","betazed","trill","risa","bajor","ds9","qonos","khitomer","alpha","wolf359"];
+const AWAY_TERR_HOSTILE=["romulus","borg","dominion","founders"];
+function awayTerritory(dest){
+  if(dest.indexOf("Uncharted world")===0)return "unknown";
+  if(AWAY_TERR_FRIENDLY.indexOf(dest)>=0)return "friendly";
+  if(AWAY_TERR_HOSTILE.indexOf(dest)>=0)return "hostile";
+  return "neutral";
+}
+const AWAY_TERR_INFO={
+  friendly:{label:"Friendly territory",dc:-10,presMult:1,inj:0.25,blurb:"Home turf. Challenges are easier (-10 difficulty) and sickbay is close — lower injury risk."},
+  neutral:{label:"Neutral territory",dc:0,presMult:1,inj:0.4,blurb:"Standard operating conditions."},
+  hostile:{label:"Hostile territory",dc:15,presMult:1.5,inj:0.6,blurb:"Enemy space. Challenges are harder (+15 difficulty), injuries more likely — but glory pays +50% prestige."},
+  unknown:{label:"Unknown territory",dc:5,presMult:1,presBonus:15,inj:0.4,blurb:"Uncharted worlds. Slightly harder (+5 difficulty), but survey data earns a +15 prestige exploration bonus."}
+};
 function awayEligible(){return G.officers.filter(o=>{
   if(!(o.status==="active"&&!o.dead&&!o.retired&&o.stage==="adult"&&o.health==="healthy"&&!o.shuttle))return false;
-  if(o.post.t==="ship"){const s=ship(o.post.id);if(s&&s.status!=="active")return false;}
+  if(o.post.t==="ship"){const s=ship(o.post.id);if(s&&(s.status!=="active"||s.mothballed))return false;}
   return true;});}
 function destLabel(d){return POST_LABELS[d]||d;}
+function awayTeamRows(f){
+  const list=awayEligible().sort((a,b)=>b.rank-a.rank).filter(o=>{
+    if(!f)return true;
+    if(f==="pool")return o.post.t==="pool";
+    if(f==="hq")return o.post.t==="hq";
+    const c=f.indexOf(":");
+    if(c>0)return o.post.t===f.slice(0,c)&&o.post.id===f.slice(c+1);
+    return true;});
+  return list.map(o=>'<div class="row" onclick="uiAwayToggle(\''+o.id+'\',this)" style="cursor:pointer;">'+faceImg(o,"pface")+'<div class="grow"><div class="nm">'+nameHtml(o)+'</div><div class="sub2">'+esc(o.dept)+' &middot; '+esc(postName(o.post))+'</div></div><span class="awayTick" style="font-size:20px;color:var(--teal);min-width:24px;text-align:center;">'+(AWAY.team.indexOf(o.id)>=0?"\u2713":"")+'</span></div>').join("");
+}
 function uiAwayPicker(){
   const list=awayEligible().sort((a,b)=>b.rank-a.rank);
   if(list.length<2){toast("Not enough healthy officers available.");return;}
-  const unch=["Kepler-438c","Wolf 1061c","TRAPPIST-1e","Proxima b","Tau Ceti e"].map(p=>'<option value="Uncharted world ('+p+')">Uncharted world ('+p+')</option>').join("");
-  openModal('<h2>Away Mission</h2><p class="dim">Select 2&ndash;4 officers for the landing party.</p>'+
-    '<div style="max-height:230px;overflow:auto;">'+list.map(o=>'<div class="row" onclick="uiAwayToggle(\''+o.id+'\',this)" style="cursor:pointer;">'+faceImg(o,"pface")+'<div class="grow"><div class="nm">'+nameHtml(o)+'</div><div class="sub2">'+esc(o.dept)+' &middot; '+esc(postName(o.post))+'</div></div><span class="awayTick" style="font-size:20px;color:var(--teal);min-width:24px;text-align:center;"></span></div>').join("")+'</div>'+
-    '<label>Destination</label><select id="awayDest">'+Object.keys(POST_LABELS).map(k=>'<option value="'+k+'">'+esc(POST_LABELS[k])+'</option>').join("")+unch+'</select>'+
-    '<div class="btnRow"><button class="btn small violet" onclick="uiAwayStart()">Beam down</button> <button class="btn ghost" onclick="closeModal()">Cancel</button></div>');
   AWAY={team:[]};
+  const unch=["Kepler-438c","Wolf 1061c","TRAPPIST-1e","Proxima b","Tau Ceti e"].map(p=>'<option value="Uncharted world ('+p+')">Uncharted world ('+p+') &mdash; Unknown territory</option>').join("");
+  const destOpts=Object.keys(POST_LABELS).map(k=>'<option value="'+k+'">'+esc(POST_LABELS[k])+' &mdash; '+AWAY_TERR_INFO[awayTerritory(k)].label+'</option>').join("")+unch;
+  const shipOpts=G.ships.map(s=>'<option value="ship:'+s.id+'">'+esc(s.name)+'</option>').join("");
+  const stOpts=G.stations.map(s=>'<option value="station:'+s.id+'">'+esc(s.name)+'</option>').join("");
+  openModal('<h2>Away Mission</h2><p class="dim">Select 2&ndash;4 officers for the landing party.</p>'+
+    '<label>Filter by posting</label><select id="awayPostFilter" onchange="uiAwayRefilter()"><option value="">All postings</option>'+
+    '<optgroup label="Ships">'+shipOpts+'</optgroup><optgroup label="Stations">'+stOpts+'</optgroup>'+
+    '<option value="pool">Unassigned pool</option><option value="hq">Starfleet HQ</option></select>'+
+    '<div id="awayTeamList" style="max-height:230px;overflow:auto;">'+awayTeamRows("")+'</div>'+
+    '<label>Destination</label><select id="awayDest">'+destOpts+'</select>'+
+    '<div class="btnRow"><button class="btn small violet" onclick="uiAwayStart()">Beam down</button> <button class="btn ghost" onclick="closeModal()">Cancel</button></div>');
 }
+function uiAwayRefilter(){$("awayTeamList").innerHTML=awayTeamRows($("awayPostFilter").value);}
 function uiAwayToggle(oid,el){
   const i=AWAY.team.indexOf(oid);
   if(i>=0){AWAY.team.splice(i,1);el.querySelector(".awayTick").textContent="";}
@@ -4648,14 +4680,18 @@ function uiAwayStart(){
   if(!AWAY||AWAY.team.length<2){toast("Select at least 2 officers.");return;}
   sfx("transporter");
   const dest=$("awayDest").value;
-  const sits=AWAY_SITS.slice().sort(()=>Math.random()-0.5).slice(0,3);
-  AWAY.dest=dest;AWAY.sits=sits;AWAY.stage=0;AWAY.wins=0;
+  const terr=awayTerritory(dest),info=AWAY_TERR_INFO[terr];
+  const sits=AWAY_SITS.slice().sort(()=>Math.random()-0.5).slice(0,3)
+    .map(s=>({t:s.t,opts:s.opts.map(o=>({t:o.t,stat:o.stat,dc:o.dc+info.dc,win:o.win,lose:o.lose}))}));
+  AWAY.dest=dest;AWAY.sits=sits;AWAY.stage=0;AWAY.wins=0;AWAY.terr=terr;
   awayStage();
 }
 function awayStage(){
   const s=AWAY.sits[AWAY.stage];
   const teamNames=AWAY.team.map(id=>{const o=officer(id);return o?o.name.split(" ")[0]:"?";}).join(", ");
-  openModal('<h2>Away Mission &mdash; '+esc(destLabel(AWAY.dest))+'</h2><div class="flavor">Stage '+(AWAY.stage+1)+' of 3 &middot; Team: '+esc(teamNames)+'</div><p>'+s.t+'</p>'+
+  const info=AWAY_TERR_INFO[AWAY.terr];
+  openModal('<h2>Away Mission &mdash; '+esc(destLabel(AWAY.dest))+'</h2><div class="flavor">Stage '+(AWAY.stage+1)+' of 3 &middot; Team: '+esc(teamNames)+'</div>'+
+    '<div class="flavor" data-hint="'+esc(info.blurb)+'">'+esc(info.label)+'</div><p>'+s.t+'</p>'+
     s.opts.map((op,i)=>'<div style="margin:6px 0;"><button class="btn violet" style="width:100%;text-align:left;" onclick="awayChoose('+i+')">'+esc(op.t)+'</button></div>').join(""));
 }
 function awayChoose(i){
@@ -4672,16 +4708,17 @@ function awayChoose(i){
 }
 function awayResolve(){
   const w=AWAY.wins,team=AWAY.team.map(officer).filter(Boolean);
+  const info=AWAY_TERR_INFO[AWAY.terr];
   let outcome,pres,mor,detail;
-  if(w>=3){outcome="Critical Success";pres=80;mor=6;detail="Flawless. Three for three &mdash; the kind of away mission they teach at the Academy.";}
-  else if(w===2){outcome="Success";pres=50;mor=4;detail="Objectives achieved. The team beams back tired, dirty, and grinning.";}
-  else if(w===1){outcome="Partial Success";pres=25;mor=1;detail="Some objectives met. The debrief will be spirited.";}
-  else{outcome="Failure";pres=5;mor=-4;detail="It went badly. The team is beamed out under less-than-ideal circumstances.";
-    if(team.length&&Math.random()<0.4){const o=pick(team);o.health="injured";o.healDays=ri(10,25);detail+=" "+esc(o.name.split(" ")[0])+" was injured and is in sickbay.";}}
+  if(w>=3){outcome="Critical Success";pres=Math.round(80*info.presMult)+(info.presBonus||0);mor=6;detail="Flawless. Three for three &mdash; the kind of away mission they teach at the Academy.";}
+  else if(w===2){outcome="Success";pres=Math.round(50*info.presMult)+(info.presBonus||0);mor=4;detail="Objectives achieved. The team beams back tired, dirty, and grinning.";}
+  else if(w===1){outcome="Partial Success";pres=Math.round(25*info.presMult)+(info.presBonus||0);mor=1;detail="Some objectives met. The debrief will be spirited.";}
+  else{outcome="Failure";pres=Math.round(5*info.presMult)+(info.presBonus||0);mor=-4;detail="It went badly. The team is beamed out under less-than-ideal circumstances.";
+    if(team.length&&Math.random()<info.inj){const o=pick(team);o.health="injured";o.healDays=ri(10,25);detail+=" "+esc(o.name.split(" ")[0])+" was injured and is in sickbay.";}}
   if(w>=2)sfx("success");else if(w===0)sfx("fail");
   gainPres(pres);
   team.forEach(o=>{o.morale=clamp(o.morale+mor,0,100);o.missions.t++;if(w>=2)o.missions.s++;awardAccolade(o,"Away mission: "+destLabel(AWAY.dest)+" &mdash; "+outcome);});
-  log("mission","Away mission to "+destLabel(AWAY.dest)+" &mdash; "+outcome+". (+"+pres+" prestige)");
+  log("mission","Away mission to "+destLabel(AWAY.dest)+" ("+info.label+") &mdash; "+outcome+". (+"+pres+" prestige)");
   capLogAuto("Away mission","Led a landing party to "+destLabel(AWAY.dest)+". "+outcome+".");
   AWAY=null;save();
   openModal('<h2>Away Mission &mdash; '+outcome+'</h2><p>'+detail+'</p><div class="kv"><span class="k">Prestige</span><span class="v">+'+pres+'</span></div><div class="btnRow"><button class="btn violet" onclick="closeModal();render()">Continue</button></div>');
@@ -6239,7 +6276,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <h2>Menu</h2>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.48</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.49</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
