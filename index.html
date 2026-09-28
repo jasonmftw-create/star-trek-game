@@ -3479,16 +3479,16 @@ function renderMeeting(line,opts){
 function randSys(){const k=pick(Object.keys(POST_LABELS));return POST_LABELS[k]||k;}
 function randOfficer(){const p=G.officers.filter(o=>o.status==="active"&&!o.dead&&!o.retired&&o.stage==="adult");return p.length?pick(p):null;}
 const MEET_INTEL=[
- ()=>{const cr=ri(2000,6000);gainCR(cr);return "\"Commander, a contact of mine spotted a derelict freighter drifting near "+randSys()+" — I sent the coordinates to salvage ops.\" (+"+fmt(cr)+" CR)";},
- ()=>{const dl=ri(30,90);gainDL(dl);return "\"A prospector friend tipped me to an unregistered dilithium pocket near "+randSys()+". Our people got there first.\" (+"+dl+" DL)";},
- ()=>{fcStart();return "\"I have a friend in the diplomatic corps who says a strange vessel has been sniffing around "+randSys()+". If I were you, I'd answer their hail personally...\"";},
- ()=>{gainPres(15);return "\"Freighter captains are whispering about Borg scouts near "+randSys()+". I thought you should hear it from me first.\" You issue a fleet-wide alert; Command commends your vigilance. (+15 prestige)";},
- ()=>{const o=randOfficer();if(o){o.loyal=clamp((o.loyal||70)+5,0,100);return "\"The crew speaks highly of you, Commander — even the grumblers. Thought you should know.\" ("+esc(o.name.split(" ").pop())+" seems heartened.)";}gainPres(10);return "\"Morale is better than the reports say, Commander.\" (+10 prestige)";}
+ ()=>{const cr=ri(2000,6000);gainCR(cr);return "A contact of mine spotted a derelict freighter drifting near "+randSys()+" — I sent the coordinates to salvage ops. (+"+fmt(cr)+" CR)";},
+ ()=>{const dl=ri(30,90);gainDL(dl);return "A prospector friend tipped me to an unregistered dilithium pocket near "+randSys()+". Our people got there first. (+"+dl+" DL)";},
+ ()=>{fcStart();return "I have a friend in the diplomatic corps who says a strange vessel has been sniffing around "+randSys()+". If I were you, I'd answer their hail personally...";},
+ ()=>{gainPres(15);return "Freighter captains are whispering about Borg scouts near "+randSys()+". I thought you should hear it from me first. You issue a fleet-wide alert; Command commends your vigilance. (+15 prestige)";},
+ ()=>{const o=randOfficer();if(o){o.loyal=clamp((o.loyal||70)+5,0,100);return "The crew speaks highly of you, Commander — even the grumblers. Thought you should know. ("+o.name.split(" ").pop()+" seems heartened.)";}gainPres(10);return "Morale is better than the reports say, Commander. (+10 prestige)";}
 ];
 function meetIntel(o){
   MEET.o=o;MEET.path="intel";
   const intel=pick(MEET_INTEL);
-  renderMeeting("<p>\"Commander — before we get to my business, I heard something you should know.\"</p><p>"+intel()+"</p>",
+  renderMeeting("Commander — before we get to my business, I heard something you should know. "+intel(),
     [{t:"Interesting. Go on.",fn:"meetIntelAfter()"}]);
 }
 function meetIntelAfter(){
@@ -4164,7 +4164,7 @@ function renderBuild(){
     const afford=G.credits>=c.cr&&G.dilithium>=c.dl;
     const rKey=(c.lock&&c.lock.indexOf("research:")===0)?c.lock.slice(9):null;
     const R=researchState();
-    h+='<div class="row"><div class="grow"><div class="nm">'+c.name+'-class '+(u.ok?"":'<span class="badge bad">LOCKED</span>')+'</div>'+
+    h+='<div class="row">'+shipPic(k)+'<div class="grow"><div class="nm">'+c.name+'-class '+(u.ok?"":'<span class="badge bad">LOCKED</span>')+'</div>'+
       '<div class="sub2">'+fmt(c.cr)+' CR · '+fmt(c.dl)+' DL · '+days+' days · Hull '+c.hull+' · Tac '+c.tac+' · Sci '+c.sci+' · Warp '+c.speed+' · '+c.slots+' officers</div>'+
       (c.special?'<div class="sub2" style="color:var(--teal)">'+esc(c.special)+'</div>':"")+
       (!u.ok?'<div class="sub2" style="color:var(--red)">'+esc(u.why)+'</div>':"")+'</div>'+
@@ -4177,7 +4177,7 @@ function renderBuild(){
   Object.keys(STATION_DEFS).forEach(k=>{
     const d=STATION_DEFS[k];if(d.unique)return;
     const afford=G.credits>=d.cr&&G.dilithium>=d.dl;
-    h+='<div class="row"><div class="grow"><div class="nm">'+d.name+'</div>'+
+    h+='<div class="row">'+stationPic(k)+'<div class="grow"><div class="nm">'+d.name+'</div>'+
       '<div class="sub2">'+fmt(d.cr)+' CR · '+fmt(d.dl)+' DL · '+d.days+' days · Upkeep '+d.upkeep+'/d</div>'+
       '<div class="sub2" style="color:var(--teal)">'+esc(d.desc)+'</div></div>'+
       '<button class="btn small violet" '+(afford&&stBuilding<2?"":"disabled")+' onclick="uiBuildStation(\''+k+'\')">Build</button></div>';
@@ -4197,7 +4197,7 @@ function uiBuildShip(cls){
   const c=SHIP_CLASSES[cls],u=shipUnlocked(cls),yards=freeYards();
   if(!u.ok||!yards.length||G.credits<c.cr||G.dilithium<c.dl)return;
   const sugN="USS "+pick(SHIP_NAME_POOL),sugR="NCC-"+ri(74000,89999);
-  openModal('<h2>Commission '+c.name+'-class</h2><div class="flavor">'+fmt(c.cr)+' CR · '+fmt(c.dl)+' DL · '+Math.ceil(c.days*buildTimeMod())+' days at '+esc(yards[0].name)+'</div>'+
+  openModal('<h2>Commission '+c.name+'-class</h2>'+shipPic(cls,true)+'<div class="flavor">'+fmt(c.cr)+' CR · '+fmt(c.dl)+' DL · '+Math.ceil(c.days*buildTimeMod())+' days at '+esc(yards[0].name)+'</div>'+
     '<label>Ship name</label><input type="text" id="bnName" value="'+sugN+'">'+
     '<label>Registry</label><input type="text" id="bnReg" value="'+sugR+'">'+
     '<div class="btnRow"><button class="btn" onclick="uiBuildShipGo(\''+cls+'\',\''+yards[0].id+'\')">Lay the keel</button>'+
@@ -5479,7 +5479,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <h2>Menu</h2>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.34</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.35</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
