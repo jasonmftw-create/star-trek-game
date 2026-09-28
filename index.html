@@ -3954,18 +3954,17 @@ function renderPersonnel(){
       '<div class="logItem c-combat"><b>† '+esc(m.rank+" "+m.name)+'</b> <span class="dim">('+esc(m.species)+')</span><br><span class="dim">'+esc(m.cause)+' · Stardate '+sdStr(m.sd)+'</span></div>').join("")||'<p class="dim">No names on the wall. May it stay that way.</p>')+'</div>';
     return h;
   }
-  const _showCounts={};G.officers.forEach(o=>{if(!o.dead){const _s=officerShow(o);if(_s)_showCounts[_s]=(_showCounts[_s]||0)+1;}});
-  const _baseCount=G.officers.filter(o=>!o.dead).length;
-  const PERS_SHOWS=[["all","All"],["TOS","TOS"],["TNG","TNG"],["VOY","VOY"],["DS9","DS9"],["ENT","ENT"],["DISCO","DISCO"],["PRO","PRO"],["PIC","PIC"],["SFA","SFA"],["LD","LD"],["SNW","SNW"]];
-  h+='<div class="card"><label>Show</label><div class="cmdsubseg" style="margin:8px 0 0;">'+PERS_SHOWS.map(s=>'<button class="btn small'+(persShow===s[0]?" on":"")+'" onclick="persShow=\''+s[0]+'\';render()">'+s[1]+' ('+(s[0]==="all"?_baseCount:(_showCounts[s[0]]||0))+')</button>').join("")+'</div></div>';
   let list=G.officers.filter(o=>!o.dead);
-  if(persShow!=="all")list=list.filter(o=>officerShow(o)===persShow);
   if(persFilter==="all")list=list.filter(o=>o.stage==="adult"&&!o.retired);
   else if(persFilter==="pool")list=list.filter(o=>o.post.t==="pool"&&o.stage==="adult"&&!o.retired);
   else if(persFilter==="kids")list=list.filter(o=>(o.stage==="child"||o.stage==="cadet")&&!o.dead);
   else if(persFilter==="retired")list=list.filter(o=>o.retired);
   else if(persFilter.startsWith("ship:"))list=list.filter(o=>o.post.t==="ship"&&o.post.id===persFilter.slice(5)&&o.stage==="adult");
   else if(persFilter.startsWith("station:"))list=list.filter(o=>o.post.t==="station"&&o.post.id===persFilter.slice(8)&&o.stage==="adult");
+  const _showCounts={};list.forEach(o=>{const _s=officerShow(o);if(_s)_showCounts[_s]=(_showCounts[_s]||0)+1;});
+  const PERS_SHOWS=[["all","All"],["TOS","TOS"],["TNG","TNG"],["VOY","VOY"],["DS9","DS9"],["ENT","ENT"],["DISCO","DISCO"],["PRO","PRO"],["PIC","PIC"],["SFA","SFA"],["LD","LD"],["SNW","SNW"]];
+  h+='<div class="card"><label>Show</label><div class="cmdsubseg" style="margin:8px 0 0;">'+PERS_SHOWS.map(s=>'<button class="btn small'+(persShow===s[0]?" on":"")+'" onclick="persShow=\''+s[0]+'\';render()">'+s[1]+' ('+(s[0]==="all"?list.length:(_showCounts[s[0]]||0))+')</button>').join("")+'</div></div>';
+  if(persShow!=="all")list=list.filter(o=>officerShow(o)===persShow);
   list.sort((a,b)=>b.rank-a.rank||a.name.localeCompare(b.name));
   h+='<div class="card"><label>Search</label><input type="search" placeholder="Search by name, species, or department…" oninput="liveSearch(this,\'persList\',\'persCount\')"></div>';
   h+='<div class="card"><h3><span id="persCount">'+list.length+'</span> officer'+(list.length===1?"":"s")+'</h3><div id="persList">';
