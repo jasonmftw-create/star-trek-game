@@ -896,7 +896,7 @@ function MK(arr){
     rel:null,kids:[],parents:[],stage:"adult",timeInGrade:ri(100,500),
     missions:{s:ri(0,4),t:ri(1,5)},medals:[],status:"active",dead:false,retired:false,pic:0,
     accolades:(CANON_ACCOLADES[name]||[]).map(a=>({n:a[0],d:a[1]})),
-    rankLabel:rankLabel||null,affairCooldown:0,roles:[]};
+    rankLabel:rankLabel||null,affairCooldown:0,roles:[],loyal:ri(60,85),friends:[],rivals:[],request:null,promRec:false};
 }
 function retireAge(o){if(o.traits&&o.traits.indexOf("Living Legend")>=0)return 9999;return o.species==="Vulcan"?180:70;}
 
@@ -933,7 +933,7 @@ function newGameState(){
   const G0={stardate:54973.4,credits:60000,dilithium:2500,prestige:0,playerRank:0,
     ships,stations,officers:[],builds:[],missions:[],shuttles:[],log:[],memorial:[],
     ledger:{missions:0,crits:0,shipsBuilt:0,stationsBuilt:0,marriages:0,births:0,lost:0,events:0},
-    flags:{},dlIncome:0,day:0,tempCd:0,rescued:{},research:{active:null,done:{}},portraitVer:{},qmode:false,
+    flags:{},dlIncome:0,day:0,tempCd:0,rescued:{},research:{active:null,done:{}},portraitVer:{},qmode:false,captainsLog:[],arcs:[],contacts:[],
     commander:{name:"",gender:"m",species:"human",portrait:0}};
   G0.officers=CANON_CREW.concat(ORIGINAL_CREW).map(MK);   {const _cb={"Carol Freeman":["co"],"Jack Ransom":["xo"],"Shaxs":["sec"],"T'Ana":["med"]};G0.officers.forEach(o=>{if(_cb[o.name])o.roles=_cb[o.name].slice();});}
   G=G0;
@@ -1021,10 +1021,10 @@ function migrateSave(g){
   _canonSt.forEach(([id,name,type,post,blurb])=>{if(!(g.stations||[]).some(st=>st.id===id))g.stations.push({id,name,type,status:"active",daysLeft:0,post,blurb,comp:STATION_DEFS[type].comp});});
   (g.stations||[]).forEach(st=>{const b=_canonSt.find(c=>c[0]===st.id);if(b&&!st.blurb)st.blurb=b[4];});
   const _ds9=g.stations.find(st=>st.id==="ds9");if(_ds9&&!_ds9.blurb)_ds9.blurb="Guarding the Bajoran Wormhole. Colonel Kira in command; Quark's franchise empire thrives on the Promenade.";
-  (g.officers||[]).forEach(o=>{if(!o.traits)o.traits=[];});
+  (g.officers||[]).forEach(o=>{if(!o.traits)o.traits=[];if(o.loyal==null)o.loyal=70;if(!o.friends)o.friends=[];if(!o.rivals)o.rivals=[];if(o.promRec==null)o.promRec=false;});
   if(g.tempCd==null)g.tempCd=0;
   if(!g.rescued)g.rescued={};
-  if(!g.research)g.research={active:null,done:{}};if(!g.portraitVer)g.portraitVer={};if(g.qmode==null)g.qmode=false;
+  if(!g.research)g.research={active:null,done:{}};if(!g.portraitVer)g.portraitVer={};if(g.qmode==null)g.qmode=false;if(!g.captainsLog)g.captainsLog=[];if(!g.arcs)g.arcs=[];if(!g.contacts)g.contacts=[];
   // accolades: seed canon service histories, merge without duplicating
   (g.officers||[]).forEach(o=>{
     if(!o.accolades)o.accolades=[];
@@ -1141,7 +1141,7 @@ function tickDay(){
   if(G.tempCd>0)G.tempCd--;
   economyTick(); buildTick(); researchTick(); refitTick(); missionTick();
   healTick(); ageTick(); romanceTick(); familyTick();
-  randomEventTick(); scriptedTick(); rankCheckTick(); complementTick(); battleTick();
+  randomEventTick(); scriptedTick(); rankCheckTick(); complementTick(); battleTick(); socialTick(); arcTick();
 }
 /* crew complement: drains with damage, replenishes only when NOT on mission */
 function complementTick(){
@@ -1180,7 +1180,8 @@ function buildTick(){
     if(b.daysLeft<=0){G.builds.splice(i,1);
       G.ships.push({id:uid("s"),name:b.name,registry:b.registry,cls:b.cls,status:"active",daysLeft:0,damage:0,missionId:null,yardId:null,post:"sol",comp:SHIP_CLASSES[b.cls].comp});
       G.ledger.shipsBuilt++;gainPres(20);
-      log("build",b.name+" ("+b.registry+", "+SHIP_CLASSES[b.cls].name+"-class) has been commissioned. The fleet grows stronger.");}}
+      log("build",b.name+" ("+b.registry+", "+SHIP_CLASSES[b.cls].name+"-class) has been commissioned. The fleet grows stronger.");
+      capLogAuto("Ship commissioned",b.name+" ("+b.registry+", "+SHIP_CLASSES[b.cls].name+"-class) has joined the fleet.");}}
   // station construction (max 2 concurrent)
   G.stations.forEach(st=>{if(st.status==="construction"){st.daysLeft--;
     if(st.daysLeft<=0){st.status="active";G.ledger.stationsBuilt++;gainPres(25);
@@ -1211,6 +1212,472 @@ function missionTick(){
     if(m.daysLeft<=0){G.missions.splice(i,1);resolveMission(m);}}
 }
 
+/* ================= BATCH 3: arcs, first contact, relationships, intel ================= */
+/* ---------- relationships: friendships & rivalries ---------- */
+function relationTick(){
+  const act=G.officers.filter(o=>o.status==="active"&&!o.dead&&!o.retired&&o.stage==="adult");
+  for(let i=0;i<act.length;i++)for(let j=i+1;j<act.length;j++){
+    const a=act[i],b=act[j];
+    if(a.post.t!==b.post.t||a.post.id!==b.post.id)continue;
+    if(((a.friends||[]).indexOf(b.id)>=0)||((a.rivals||[]).indexOf(b.id)>=0))continue;
+    const r=Math.random();
+    if(r<0.0016&&(a.friends||[]).length<3){
+      a.friends.push(b.id);b.friends.push(a.id);
+      log("personnel",fullName(a)+" and "+fullName(b)+" have become close friends.");
+    }else if(r<0.0024&&(a.rivals||[]).length<2){
+      a.rivals.push(b.id);b.rivals.push(a.id);
+      log("personnel",fullName(a)+" and "+fullName(b)+" are barely on speaking terms — a rivalry is brewing.");
+    }
+  }
+  act.forEach(o=>{
+    (o.friends||[]).forEach(fid=>{
+      const f=officer(fid);
+      if(!f||f.post.t!==o.post.t||f.post.id!==o.post.id)return;
+      if(o.id<f.id&&Math.random()<0.05){o.morale=clamp(o.morale+1,0,100);f.morale=clamp(f.morale+1,0,100);}
+    });
+    (o.rivals||[]).forEach(rid=>{
+      const f=officer(rid);
+      if(!f||f.post.t!==o.post.t||f.post.id!==o.post.id)return;
+      if(o.id<f.id&&Math.random()<0.08){o.morale=clamp(o.morale-1,0,100);f.morale=clamp(f.morale-1,0,100);}
+    });
+  });
+}
+// mission modifier from loyalty + friendships/rivalries among the crew
+function socialMissionMod(crew){
+  if(!crew||!crew.length)return 0;
+  const loyalAvg=avg(crew.map(o=>o.loyal||70));
+  let mod=(loyalAvg-70)*0.06,fp=0,rp=0;
+  for(let i=0;i<crew.length;i++)for(let j=i+1;j<crew.length;j++){
+    const a=crew[i],b=crew[j];
+    if(((a.friends||[]).indexOf(b.id)>=0)||((b.friends||[]).indexOf(a.id)>=0))fp++;
+    else if(((a.rivals||[]).indexOf(b.id)>=0)||((b.rivals||[]).indexOf(a.id)>=0))rp++;
+  }
+  return mod+Math.min(6,fp*2)-Math.min(9,rp*3);
+}
+/* ---------- story arcs ---------- */
+function arcOff(a){return a.data.oid?officer(a.data.oid):null;}
+function arcChk(stat,dc){
+  const pool=G.officers.filter(o=>o.status==="active"&&!o.dead&&!o.retired&&o.stage==="adult");
+  const best=pool.length?Math.max.apply(null,pool.map(o=>o.stats[stat]||30)):30;
+  return (best+ri(1,100))>=dc;
+}
+function sName(s){return s?("The <b>"+esc(s.name)+"</b>"):"The survey team";}
+function arcAccolade(a,title){
+  const def=ARC_DEFS.find(d=>d.id===a.id);
+  const s=a.data.ship?ship(a.data.ship):null;
+  let crew=s?G.officers.filter(o=>o.status==="active"&&!o.dead&&!o.retired&&o.post.t==="ship"&&o.post.id===s.id):[];
+  if(!crew.length)crew=G.officers.filter(o=>o.status==="active"&&!o.dead&&!o.retired).slice(0,2);
+  crew.slice(0,4).forEach(o=>awardAccolade(o,title+" — "+def.title));
+}
+function arcNext(a,days){a.stage++;a.nextDay=G.day+days;a.notified=false;}
+function arcEnd(a){a.done=true;a.notified=false;}
+function startArc(id,data){
+  if((G.arcs||[]).some(a=>a.id===id&&!a.done))return null;
+  const def=ARC_DEFS.find(d=>d.id===id);if(!def)return null;
+  const a={uid:uid("a"),id,stage:0,nextDay:G.day,notified:false,done:false,data:data||{}};
+  if(def.setup&&def.setup(a)===false)return null;
+  (G.arcs=G.arcs||[]).push(a);
+  log("event","New developments: "+def.title+".");
+  save();return a;
+}
+function arcStageText(st,a){return typeof st==="function"?st(a):st;}
+function arcTick(){
+  G.arcs=G.arcs||[];
+  if(Math.random()<0.008){
+    const avail=ARC_DEFS.filter(d=>!G.arcs.some(a=>a.id===d.id&&!a.done));
+    if(avail.length)startArc(pick(avail).id);
+  }
+  G.arcs.forEach(a=>{
+    if(a.done||a.notified)return;
+    if(G.day>=a.nextDay){
+      a.notified=true;save();
+      const def=ARC_DEFS.find(d=>d.id===a.id);
+      interruptQueue.push({title:def.title,sub:"A story continues — stardate "+sdStr(G.stardate),
+        html:'<p>'+arcStageText(def.stages[a.stage].teaser,a)+'</p>',
+        buttons:[{t:"Continue",cls:"violet",fn:()=>arcStageItem(a.uid)}]});
+    }
+  });
+  fcTick();
+}
+function arcStageItem(uid){
+  const a=(G.arcs||[]).find(x=>x.uid===uid);if(!a||a.done)return null;
+  const def=ARC_DEFS.find(d=>d.id===a.id);if(!def)return null;
+  const st=def.stages[a.stage];
+  return {title:def.title,sub:"Part "+(a.stage+1)+" of "+def.stages.length,
+    html:'<p>'+arcStageText(st.text,a)+'</p>',
+    buttons:st.choices.map((ch,i)=>({t:ch.t,cls:"violet",fn:()=>arcChoiceItem(uid,i)}))};
+}
+function arcChoiceItem(uid,i){
+  const a=(G.arcs||[]).find(x=>x.uid===uid);if(!a||a.done)return null;
+  const def=ARC_DEFS.find(d=>d.id===a.id);
+  const st=def.stages[a.stage],ch=st.choices[i];
+  const resText=ch.go(a);
+  save();
+  return {title:def.title+(a.done?" — concluded":""),sub:"Stardate "+sdStr(G.stardate),
+    html:'<p>'+resText+'</p>'+(a.done?"":'<p class="dim">Further developments will be reported when they occur.</p>'),
+    buttons:[{t:"Continue"}]};
+}
+function arcContinue(uid){const it=arcStageItem(uid);if(it)showInterrupt(it);}
+function uiArcRumor(){
+  const avail=ARC_DEFS.filter(d=>!(G.arcs||[]).some(a=>a.id===d.id));
+  if(!avail.length){toast("No new rumors to chase.");return;}
+  if(G.prestige<20){toast("Not enough prestige.");return;}
+  gainPres(-20);startArc(pick(avail).id);toast("A new story begins...");render();
+}
+const ARC_DEFS=[
+{id:"typhon",title:"The Typhon Expanse",
+ stages:[
+  {teaser:"Long-range sensors have flagged an uncharted expanse in the Beta Quadrant — the Typhon Expanse.",
+   text:"Deep-space telemetry has mapped a vast, uncharted region at the edge of the Beta Quadrant: the Typhon Expanse. Gravimetric readings are... unusual. Starfleet is curious, and curiosity is your department.",
+   choices:[
+    {t:"Send the nearest ship to survey",go:(a)=>{
+      const s=G.ships.find(s=>s.status==="active"&&!s.mission&&!s.refitDays);
+      if(s)a.data.ship=s.id;
+      arcNext(a,12);
+      return s?("The <b>"+esc(s.name)+"</b> sets course for the Expanse. Survey ETA: 12 days."):"No ship is free, so long-range probes are dispatched instead. ETA: 12 days.";}},
+    {t:"Send probes (slower, safer)",go:(a)=>{a.data.probes=true;arcNext(a,18);return "A spread of long-range probes arcs toward the Expanse. Slow, but no crew at risk. ETA: 18 days.";}},
+    {t:"Log it and move on",go:(a)=>{arcEnd(a);gainPres(5);return "You file the readings and move on. Starfleet logs your diligence. (+5 prestige)";}}
+   ]},
+  {teaser:(a)=>a.data.probes?"The probes have reached the Typhon Expanse.":"The survey ship has reached the Typhon Expanse.",
+   text:(a)=>(a.data.probes?"The probes skim the edge of the Expanse and report back: ":"The survey team reports: ")+"a churning gravimetric distortion, light-years wide, folding subspace like crumpled foil. Something enormous is inside — or the distortion IS the something.",
+   choices:[
+    {t:"Navigate the distortion (best ENG)",go:(a)=>{
+      const win=arcChk("eng",115);
+      const s=a.data.ship?ship(a.data.ship):null;
+      if(win){arcNext(a,10);return "White-knuckle flying through folded subspace — and they make it. Inside the distortion: a structure. Artificial. Ancient. "+sName(s)+" reports all hands safe.";}
+      arcNext(a,14);
+      if(s)s.damage=Math.min(100,(s.damage||0)+20);
+      return "The distortion bucks like a living thing. "+sName(s)+" is battered back out with hull damage, but the scans got through: there is a structure inside. Ancient. Artificial.";}},
+    {t:"Map the perimeter (safe)",go:(a)=>{arcNext(a,14);return "Caution wins. The perimeter is mapped in painstaking detail — and deep scans confirm it: something artificial waits at the heart of the distortion.";}}
+   ]},
+  {teaser:"The structure at the heart of the Expanse is coming into focus.",
+   text:"It is a gateway — Iconian, by the markings, two hundred thousand years old and still humming with power. A working Iconian gateway, Commander. There are perhaps a dozen people alive who have seen one.",
+   choices:[
+    {t:"Study the gateway (best SCI)",go:(a)=>{
+      const win=arcChk("sci",115);arcEnd(a);
+      if(win){gainPres(120);arcAccolade(a,"Typhon Scholar");return "Your science teams spend three weeks in awe. The data they bring home rewrites chapters of archaeology. (+120 prestige; crew cited as Typhon Scholars)";}
+      gainPres(40);return "The gateway defies full analysis, but even partial scans are a treasure. (+40 prestige)";}},
+    {t:"Destroy it before someone misuses it (best TAC)",go:(a)=>{
+      const win=arcChk("tac",105);arcEnd(a);
+      const s=a.data.ship?ship(a.data.ship):null;
+      if(win){gainPres(80);return "A photon spread at the resonant frequency. The gateway collapses in silence. Some at Command call it vandalism; most call it prudence. (+80 prestige)";}
+      if(s)s.damage=Math.min(100,(s.damage||0)+15);
+      gainPres(20);return "The gateway's defenses wake up. "+sName(s)+" withdraws with scorch marks and a valuable lesson. (+20 prestige)";}},
+    {t:"Seal the sector and report to Command",go:(a)=>{arcEnd(a);gainPres(50);return "Buoys go up, warnings go out. Let Starfleet decide what to do with a working Iconian gateway. (+50 prestige)";}}
+   ]}
+ ]},
+{id:"sibling",title:"A Sibling's Shadow",
+ setup(a){const pool=G.officers.filter(o=>o.status==="active"&&!o.dead&&!o.retired&&o.stage==="adult");const o=pick(pool);if(!o)return false;a.data.oid=o.id;return true;},
+ stages:[
+  {teaser:(a)=>{const o=arcOff(a);return (o?fullName(o):"One of your officers")+" has received a troubling message from home.";},
+   text:(a)=>{const o=arcOff(a);const nm=o?fullName(o):"Your officer";
+     return nm+" comes to you with a personal subspace message, face drawn. Their estranged sibling — a labor organizer on the border colony of Volan III — is in serious trouble, and has asked for help. They haven't spoken in six years.";},
+   choices:[
+    {t:"Grant them leave to go",go:(a)=>{arcNext(a,10);return "Leave granted. They ship out on the next transport, grateful beyond words.";}},
+    {t:"Go with them personally",go:(a)=>{a.data.withCmdr=true;arcNext(a,10);return "You clear your schedule. They stare at you for a long moment — then nod, unable to speak.";}},
+    {t:"Duty comes first",go:(a)=>{arcEnd(a);const o=arcOff(a);if(o){o.loyal=clamp(o.loyal-10,0,100);o.morale=clamp(o.morale-5,0,100);}return "They accept your decision. Barely. Something in them goes quiet.";}}
+   ]},
+  {teaser:"Word from Volan III.",
+   text:"Volan III is in the grip of a bitter labor dispute — the mining consortium against the colonists, with the sibling caught in the middle. Starfleet's charter says stay out. Your conscience says otherwise.",
+   choices:[
+    {t:"Mediate the dispute (best DIP)",go:(a)=>{const win=arcChk("dip",110);arcNext(a,win?8:12);return win?"Your mediation cuts through months of bad faith in a single session. Both sides agree to binding arbitration.":"The talks collapse twice. But a back channel stays open — barely.";}},
+    {t:"Stand behind the sibling publicly (best CMD)",go:(a)=>{const win=arcChk("cmd",100);arcNext(a,win?8:12);return win?"Your presence steadies them. The consortium blinks first.":"The consortium digs in, and the dispute turns uglier before it turns better.";}},
+    {t:"Dig into the consortium's records (best SCI)",go:(a)=>{const win=arcChk("sci",105);arcNext(a,win?8:12);return win?"The records tell the whole sordid story. Leverage, at last.":"The records are clean — too clean. Someone is very good at hiding things.";}}
+   ]},
+  {teaser:"The Volan III dispute is coming to a head.",
+   text:"One final push will settle it — for the sibling, the colony, and your officer's family.",
+   choices:[
+    {t:"Broker a final settlement",go:(a)=>{arcEnd(a);const o=arcOff(a);
+      if(o){o.loyal=clamp(o.loyal+15,0,100);o.morale=clamp(o.morale+10,0,100);if(o.traits.indexOf("Resolved")<0)o.traits.push("Resolved");awardAccolade(o,"Peacemaker of Volan III");}
+      const pr=a.data.withCmdr?80:60;gainPres(pr);
+      return "It is done. The settlement holds, the family is whole, and "+(o?esc(o.name.split(" ").pop()):"your officer")+" returns to duty lighter than you've ever seen them. (+"+pr+" prestige)";}},
+    {t:"Leave the final step to the locals",go:(a)=>{arcEnd(a);const o=arcOff(a);if(o)o.loyal=clamp(o.loyal+8,0,100);gainPres(30);
+      return "The colonists finish what you started. Not perfect — but theirs. Your officer thanks you quietly. (+30 prestige)";}}
+   ]}
+ ]},
+{id:"borg",title:"Borg Incursion",
+ stages:[
+  {teaser:"Rumors of Borg scouts on the frontier.",
+   text:"Freighter captains are telling stories in every starbase bar: cubes on long-range scopes, transwarp signatures where none should be. Starfleet Intelligence calls it 'unconfirmed'. Your instincts call it something else.",
+   choices:[
+    {t:"Fortify the border (5,000 CR)",go:(a)=>{
+      if(G.credits<5000){arcNext(a,8);return "The funds aren't there. You make do with patrols and hope.";}
+      gainCR(-5000);a.data.fort=true;arcNext(a,10);
+      return "Defense platforms, sensor nets, rapid-response wings. The border braces. (-5,000 CR)";}},
+    {t:"Send a recon patrol",go:(a)=>{arcNext(a,8);return "Your fastest ships sweep the frontier, eyes wide open.";}},
+    {t:"Dismiss it as rumors",go:(a)=>{a.data.hard=true;arcNext(a,8);return "Probably nothing. Probably.";}}
+   ]},
+  {teaser:"A Borg probe has been confirmed on the frontier.",
+   text:"It's real. A Borg probe — small, fast, and utterly uninterested in talking — is mapping your border colonies. What you do in the next 48 hours matters.",
+   choices:[
+    {t:"Intercept it (best TAC)",go:(a)=>{
+      const dc=a.data.fort?100:(a.data.hard?120:110);const win=arcChk("tac",dc);arcNext(a,10);
+      if(win){gainPres(60);return "The interception is textbook. The probe is scrap before it finishes its scan. (+60 prestige)";}
+      gainPres(-20);return "The probe outmaneuvers everything you throw at it and completes its scan. It knows where you live now. (-20 prestige)";}},
+    {t:"Evacuate the border colonies",go:(a)=>{gainCR(-3000);arcNext(a,12);gainPres(30);return "Thousands of colonists moved to safety. Expensive — but no one dies today. (-3,000 CR, +30 prestige)";}}
+   ]},
+  {teaser:"A Borg cube is approaching the border.",
+   text:"Long-range sensors confirm the worst: a full Borg cube, on course for your space. This is the fight everyone hoped would never come.",
+   choices:[
+    {t:"All-out defense (best TAC)",go:(a)=>{
+      const dc=a.data.fort?115:125;const win=arcChk("tac",dc);arcEnd(a);
+      if(win){gainPres(150);arcAccolade(a,"Borg Bane");return "The battle rages for eleven hours. And then — impossibly — the cube breaks apart. The sector is saved. Songs will be sung. (+150 prestige)";}
+      const s=pick(G.ships.filter(s=>s.status==="active"));if(s)s.damage=Math.min(100,(s.damage||0)+40);
+      gainPres(20);return "You bleed the cube and it withdraws — but the cost is written across your fleet. It will be back. (+20 prestige)";}},
+    {t:"Lure it into the nebula trap (best ENG)",go:(a)=>{
+      const win=arcChk("eng",115);arcEnd(a);
+      if(win){gainPres(120);return "The trap works flawlessly: the cube sails into the charged nebula and tears itself apart on gravimetric shear. (+120 prestige)";}
+      gainPres(-10);return "The cube sees through the trap. Cleverness was never going to be enough. (-10 prestige)";}},
+    {t:"Order a fighting retreat",go:(a)=>{arcEnd(a);gainPres(20);return "You trade space for lives. The cube takes two colonies' worth of infrastructure and moves on. You'll be ready next time. (+20 prestige)";}}
+   ]}
+ ]},
+{id:"lostcol",title:"The Lost Colony",
+ stages:[
+  {teaser:"A pre-warp human colony has been found in the Rolor Nebula.",
+   text:"A survey probe has found the impossible: a thriving human colony deep in the Rolor Nebula — descendants of a sleeper ship lost two centuries ago. They have radio, steam power, and absolutely no idea the Federation exists.",
+   choices:[
+    {t:"Make contact (best DIP)",go:(a)=>{const win=arcChk("dip",105);arcNext(a,win?10:14);
+      return win?"First contact goes beautifully. They weep at the sight of your ship.":"They're wary — some call your ship a trick of the nebula. It will take time.";}},
+    {t:"Observe quietly (best SCI)",go:(a)=>{arcNext(a,14);return "Your anthropologists observe from orbit for two weeks. Fascinating. Heartbreaking. They deserve to know the truth — when they're ready.";}},
+    {t:"Quarantine the system",go:(a)=>{arcEnd(a);gainPres(20);return "The Prime Directive is the Prime Directive. Buoys go up; the system is sealed. It feels like the wrong call. (+20 prestige)";}}
+   ]},
+  {teaser:"The Rolor colonists have asked to join the Federation.",
+   text:"It happened faster than anyone predicted: the colonists' council has formally petitioned for Federation membership. Admitting a pre-warp society is... irregular. The debate at Command will be fierce.",
+   choices:[
+    {t:"Fast-track their application (best DIP)",go:(a)=>{const win=arcChk("dip",115);arcNext(a,win?8:12);
+      return win?"Your advocacy carries the day at Command. The fast track is approved.":"Command balks. The application crawls through committee — but it crawls forward.";}},
+    {t:"Begin the slow, proper process",go:(a)=>{arcNext(a,16);return "Cultural surveys, uplift assessments, decades of protocol. Slow — but no one can say it was reckless.";}},
+    {t:"Decline for now",go:(a)=>{arcEnd(a);gainPres(10);return "You advise patience. The colonists are disappointed but understanding. Perhaps in a generation. (+10 prestige)";}}
+   ]},
+  {teaser:"A faction on Rolor resists Federation membership.",
+   text:"Not everyone on Rolor wants the stars. A traditionalist faction — loud, organized, and growing — calls Federation membership the death of their culture. One speech, to their full assembly, could decide it.",
+   choices:[
+    {t:"Address their assembly (best DIP)",go:(a)=>{arcEnd(a);const win=arcChk("dip",110);
+      if(win){gainPres(100);(G.contacts=G.contacts||[]).push({name:"Rolor colonists",disp:"curious",trait:"human descendants",outcome:"member world",sd:G.stardate});
+        return "You speak for an hour. When you finish, the hall is silent — then the vote is called. Rolor joins the Federation. (+100 prestige)";}
+      gainPres(40);return "You speak well, but not well enough. Rolor chooses a protectorate status instead — close to the Federation, but not of it. (+40 prestige)";}},
+    {t:"Let them decide alone",go:(a)=>{arcEnd(a);gainPres(50);return "You refuse to interfere. Rolor votes narrowly for membership — and it is truly their choice. (+50 prestige)";}}
+   ]}
+ ]}
+];
+/* ---------- first contact ---------- */
+let FC=null;
+function fcName(){const s=()=>pick(["Ze","Xan","Kel","Mor","Tha","Vor","Il","On","Dra","Qu","Sel","Mar","Tun","Yr"]);return s()+s().toLowerCase()+"ians";}
+function fcTick(){if(!FC&&Math.random()<0.004)fcStart();}
+function fcStart(sys){
+  const sysK=sys||pick(Object.keys(POST_LABELS));
+  FC={name:fcName(),disp:pick(["peaceful","curious","xenophobic","warlike"]),trait:pick(["telepathic","crystalline","aquatic","nomadic","hive-minded","silicon-based"]),sys:sysK,stage:0,wins:0};
+  interruptQueue.push({title:"Unknown vessel detected",sub:"Near "+(POST_LABELS[sysK]||sysK)+" — stardate "+sdStr(G.stardate),
+    html:'<p>A vessel of unknown configuration has appeared on sensors. They are transmitting — a greeting, or a targeting scan. It\'s hard to tell.</p>',
+    buttons:[{t:"Respond",cls:"violet",fn:()=>fcStageItem()}]});
+  save();
+}
+const FC_STAGES=[
+ {t:"First, how do you approach?",
+  opts:[
+   {t:"Hail them openly (DIP)",stat:"dip",dc:100,win:"Your hail is answered in halting but clear Federation Standard. A good beginning.",lose:"Silence. Then a burst of static that might be laughter — or weapons fire."},
+   {t:"Raise shields, scan first (SCI)",stat:"sci",dc:105,win:"Your scans decode their transmission matrix — you answer in their own protocol. They seem impressed.",lose:"They take your scans as hostility. Shields are a language too, and yours just spoke."},
+   {t:"Tactical alert, weapons ready (TAC)",stat:"tac",dc:95,win:"Your crisp tactical posture reads as strength. They respond with formal military courtesy.",lose:"Weapons provoke weapons. The standoff tightens."}]},
+ {t:"They respond. Now the delicate part — the exchange.",
+  opts:[
+   {t:"Share star charts freely (DIP)",stat:"dip",dc:105,win:"The gift of knowledge opens them like a flower. Their captain — or equivalent — shares charts in return.",lose:"They take your charts and offer nothing. A bad trade, or a test?"},
+   {t:"Propose a cultural exchange (CMD)",stat:"cmd",dc:100,win:"Music, food, stories. The universal languages do their work.",lose:"Your concert is met with what you hope is applause."},
+   {t:"Demand they state intentions (TAC)",stat:"tac",dc:100,win:"Bluntness, it turns out, is respected. They state their business plainly.",lose:"They do not appreciate the tone. Neither would you."}]},
+ {t:"The moment of truth.",
+  opts:[
+   {t:"Offer a treaty of friendship (DIP)",stat:"dip",dc:110,win:"The words are spoken; the hands — or appendages — are clasped.",lose:"Not yet, they say. But the door is open."},
+   {t:"Invite them to a starbase (CMD)",stat:"cmd",dc:105,win:"An invitation is extended and accepted. History is made quietly.",lose:"They decline, politely but firmly. Some other time."},
+   {t:"Withdraw gracefully (SCI)",stat:"sci",dc:95,win:"Your graceful withdrawal is noted with what scans suggest is respect.",lose:"They watch you go, unreadable."}]}
+];
+function fcStageItem(){
+  if(!FC)return null;
+  const st=FC_STAGES[FC.stage];
+  return {title:"First Contact — the "+FC.name,sub:"Stage "+(FC.stage+1)+" of 3",
+    html:'<p class="dim">'+esc(FC.trait)+", "+esc(FC.disp)+'.</p><p>'+st.t+'</p>',
+    buttons:st.opts.map((op,i)=>({t:op.t,cls:"violet",fn:()=>fcChoiceItem(i)}))};
+}
+function fcChoiceItem(i){
+  if(!FC)return null;
+  const op=FC_STAGES[FC.stage].opts[i];
+  const pool=G.officers.filter(o=>o.status==="active"&&!o.dead&&!o.retired&&o.stage==="adult");
+  const best=pool.length?Math.max.apply(null,pool.map(o=>o.stats[op.stat]||30)):30;
+  const win=(best+ri(1,100))>=op.dc;
+  if(win)FC.wins++;
+  FC.stage++;
+  const txt=win?op.win:op.lose;
+  if(FC.stage>=3){
+    const oc=fcOutcome();
+    return {title:"First Contact — "+oc.title,sub:"Stardate "+sdStr(G.stardate),
+      html:'<p>'+txt+'</p><div class="hr"></div><p>'+oc.text+'</p>',buttons:[{t:"Continue"}]};
+  }
+  return {title:win?"A good sign":"A tense moment",sub:"The "+FC.name+" respond",
+    html:'<p>'+txt+'</p>',buttons:[{t:"Continue",cls:"violet",fn:()=>fcStageItem()}]};
+}
+function fcOutcome(){
+  const w=FC.wins,d=FC.disp;
+  let title,text,outcome;
+  if(w>=2&&(d==="peaceful"||d==="curious")){
+    title="Treaty signed";outcome="treaty";
+    const cr=ri(4000,9000),pr=ri(40,70);gainCR(cr);gainPres(pr);
+    text="The "+FC.name+" agree to a treaty of friendship and trade. (+"+fmt(cr)+" CR, +"+pr+" prestige)";
+  }else if(w>=2){
+    title="Cautious peace";outcome="peace";
+    const pr=ri(25,45);gainPres(pr);
+    text="No treaty — but no war either. The "+FC.name+" withdraw with a measure of respect. (+"+pr+" prestige)";
+  }else if(w===1){
+    title="They withdraw";outcome="withdrawn";
+    text="The "+FC.name+" break off contact and vanish into the dark. Perhaps another day.";
+  }else{
+    title="Hostile incident";outcome="hostile";
+    gainPres(-10);moraleAll(-2);
+    text="It goes badly. The "+FC.name+" fire a parting shot across your bow before warping away. (-10 prestige)";
+  }
+  (G.contacts=G.contacts||[]).push({name:FC.name,disp:d,trait:FC.trait,outcome:outcome,sd:G.stardate});
+  log("event","First contact with the "+FC.name+" ("+FC.trait+", "+d+") near "+(POST_LABELS[FC.sys]||FC.sys)+" — "+title+".");
+  capLogAuto("First contact","Made first contact with the "+FC.name+" near "+(POST_LABELS[FC.sys]||FC.sys)+". "+title+".");
+  FC=null;save();
+  return {title:title,text:text};
+}
+/* ---------- story arcs tab ---------- */
+function renderArcs(){
+  G.arcs=G.arcs||[];G.contacts=G.contacts||[];
+  let h='<div class="card"><h3>Story Arcs</h3><p class="dim">Ongoing sagas across the sector. New developments interrupt you when they occur.</p>';
+  const avail=ARC_DEFS.filter(d=>!G.arcs.some(a=>a.id===d.id));
+  h+='<div class="btnRow"><button class="btn small violet" onclick="uiArcRumor()">Investigate a rumor (20 pres.)</button></div>';
+  h+='<p class="dim">'+(avail.length?avail.length+" untold "+(avail.length===1?"story":"stories")+" out there.":"Every story has been told.")+'</p></div>';
+  const act=G.arcs.filter(a=>!a.done);
+  h+='<div class="card"><h3>Active ('+act.length+')</h3>';
+  h+=act.map(a=>{const def=ARC_DEFS.find(d=>d.id===a.id);
+    return '<div class="row"><div class="grow"><div class="nm">'+esc(def.title)+'</div><div class="sub2">Part '+(a.stage+1)+' of '+def.stages.length+' &middot; '+
+      (a.notified?'<span style="color:var(--orange)">New development — continue below</span>':'Awaiting developments ('+Math.max(0,a.nextDay-G.day)+'d)')+
+      '</div></div>'+(a.notified?'<button class="btn small violet" onclick="arcContinue(\''+a.uid+'\')">Continue</button>':"")+'</div>';}).join("")||
+    '<p class="dim">No active arcs. The sector is quiet... for now.</p>';
+  h+='</div>';
+  const done=G.arcs.filter(a=>a.done);
+  if(done.length)h+='<div class="card"><h3>Concluded</h3>'+done.map(a=>{const def=ARC_DEFS.find(d=>d.id===a.id);return '<div class="kv"><span class="k">'+esc(def.title)+'</span><span class="v dim">concluded</span></div>';}).join("")+'</div>';
+  h+='<div class="card"><h3>First Contacts ('+G.contacts.length+')</h3>'+
+    (G.contacts.slice().reverse().map(c=>'<div class="kv"><span class="k">The '+esc(c.name)+'</span><span class="v dim">'+esc(c.trait)+', '+esc(c.disp)+' — '+esc(c.outcome)+'</span></div>').join("")||
+    '<p class="dim">No first contacts yet. The galaxy is waiting.</p>')+'</div>';
+  return h;
+}
+
+/* ================= SOCIAL: requests, loyalty ================= */
+const REQ_FAVORS=["to name the next shuttle after my grandmother","to dedicate our next mission to my home colony","for permission to keep a pet tribble in my quarters","to borrow the captain's yacht for my anniversary dinner","for an extra dessert ration on Fridays","to plant a memorial garden on the observation deck"];
+const REQ_REASONS=["I'm looking for a new challenge","I could use a change of scenery","I want a posting with a little more action","I'd like to broaden my experience","I feel I've learned all I can here"];
+function socialTick(){
+  G.officers.forEach(o=>{
+    if(o.status!=="active"||o.dead||o.retired||o.stage!=="adult")return;
+    if(o.request){
+      if(G.day-o.request.day>12){
+        o.request=null;o.loyal=clamp(o.loyal-4,0,100);
+        log("personnel",fullName(o)+" quietly withdrew their request. Perhaps you were too busy.");
+      }
+      return;
+    }
+    let ch=0.008;
+    if(o.loyal<40)ch+=0.012;
+    if(o.morale<40)ch+=0.008;
+    if(Math.random()<ch){const r=genRequest(o);if(r){o.request=r;
+      log("personnel",fullName(o)+" has requested an audience with you. Check Personnel for details.");}}
+  });
+  G.officers.forEach(o=>{
+    if(o.status!=="active"||o.dead||o.retired||o.stage!=="adult")return;
+    if(o.loyal<30)o.morale=clamp(o.morale-1,0,100);
+    if(o.loyal<=15&&Math.random()<0.02){
+      o.retired=true;o.status="inactive";o.roles=[];o.post={t:"gone"};o.shuttle=null;
+      if(o.rel){const p=officer(o.rel.partner);if(p)p.rel=null;o.rel=null;}
+      log("personnel",fullName(o)+" has resigned their commission and left Starfleet. Morale across the fleet dips.");
+      moraleAll(-3);
+    }
+  });
+  relationTick();
+}
+function pickTransferDest(o){
+  const opts=[];
+  G.ships.forEach(s=>{if(s.status==="active"&&!(o.post.t==="ship"&&o.post.id===s.id))opts.push({t:"ship",id:s.id});});
+  G.stations.forEach(st=>{if(st.status==="active"&&!(o.post.t==="station"&&o.post.id===st.id))opts.push({t:"station",id:st.id});});
+  return opts.length?pick(opts):null;
+}
+function genRequest(o){
+  const day=G.day;
+  const p=o.rel?officer(o.rel.partner):null;
+  if(p&&!p.dead&&!p.retired&&p.stage==="adult"&&p.status==="active"&&(p.post.t!==o.post.t||p.post.id!==o.post.id)&&Math.random()<0.5)
+    return {type:"partner",day};
+  const r=Math.random();
+  if(r<0.38){const d=pickTransferDest(o);if(d)return {type:"transfer",day,dest:d,reason:pick(REQ_REASONS)};}
+  if(r<0.58&&o.rank<9&&o.timeInGrade>300&&!o.promRec)return {type:"promotion",day};
+  if(r<0.78)return {type:"leave",day};
+  return {type:"favor",day,favor:pick(REQ_FAVORS)};
+}
+function reqShort(r){
+  if(r.type==="transfer")return "a transfer to "+postName(r.dest);
+  if(r.type==="partner")return "a posting alongside their partner";
+  if(r.type==="promotion")return "a promotion recommendation";
+  if(r.type==="leave")return "shore leave";
+  return "a personal favor";
+}
+function reqPitch(o){
+  const r=o.request;
+  if(r.type==="transfer")return "Commander, I'd like to request a transfer to "+postName(r.dest)+". "+r.reason+", you know?";
+  if(r.type==="partner"){const p=officer(o.rel.partner);return "Commander... I'd like to be posted with "+(p?p.name.split(" ")[0]:"my partner")+". Serving apart is wearing on us both.";}
+  if(r.type==="promotion")return "Commander, I've been at this rank a while. Would you put in a good word for me with the promotion board?";
+  if(r.type==="leave")return "Commander, permission to take some shore leave? I could use a little well-earned rest.";
+  return "Commander, a small personal matter, if I may... I'd like "+r.favor+".";
+}
+function meetRequest(o){
+  MEET.path="request";
+  renderMeeting(reqPitch(o),[
+    {t:"Approved.",fn:"meetReqResolve('yes')"},
+    {t:"Denied.",fn:"meetReqResolve('no')"},
+    {t:"Not now.",fn:"meetReqResolve('wait')"}
+  ]);
+}
+function meetReqResolve(how){
+  const o=MEET.o,r=o.request;
+  if(how==="wait"){r.deferUntil=G.day+5;
+    renderMeeting("Of course. I'll bring it up another time.",[{t:"End meeting",fn:"meetFinish('done')"}]);return;}
+  let resp="";
+  if(how==="yes"){
+    if(r.type==="transfer"){doTransferCore(o,r.dest);
+      o.loyal=clamp(o.loyal+10,0,100);o.morale=clamp(o.morale+8,0,100);
+      awardAccolade(o,"Transfer granted by the Commander");resp="Thank you, Commander. You won't regret it.";}
+    else if(r.type==="partner"){const p=officer(o.rel.partner);
+      if(p&&!p.dead)doTransferCore(o,{t:p.post.t,id:p.post.id});
+      o.loyal=clamp(o.loyal+12,0,100);o.morale=clamp(o.morale+10,0,100);
+      resp="Thank you. That means everything to us.";}
+    else if(r.type==="promotion"){o.promRec=true;
+      o.loyal=clamp(o.loyal+8,0,100);o.morale=clamp(o.morale+5,0,100);
+      awardAccolade(o,"Recommended for promotion by the Commander");resp="I won't let you down, Commander.";}
+    else if(r.type==="leave"){o.morale=clamp(o.morale+12,0,100);o.loyal=clamp(o.loyal+6,0,100);
+      awardAccolade(o,"Granted shore leave");resp="You have no idea how much I needed to hear that.";}
+    else{o.morale=clamp(o.morale+6,0,100);o.loyal=clamp(o.loyal+6,0,100);resp="That means more than you know.";}
+    log("personnel","You approved "+fullName(o)+"'s request: "+reqShort(r)+".");
+  }else{
+    o.loyal=clamp(o.loyal-8,0,100);o.morale=clamp(o.morale-4,0,100);
+    resp="...I understand, Commander.";
+    log("personnel","You denied "+fullName(o)+"'s request: "+reqShort(r)+".");
+  }
+  o.request=null;
+  (G.meetings=G.meetings||{})[o.id]=G.stardate;
+  save();render();
+  renderMeeting(resp,[{t:"End meeting",fn:"meetFinish('done')"}]);
+}
+function doTransferCore(o,np){
+  const oldPost=o.post.t+(o.post.id||"");
+  o.post=np;o.shuttle=null;
+  if(oldPost!==(np.t+(np.id||""))){o.roles=[];awardAccolade(o,"Reassigned to "+postName(np));}
+  const p=o.rel?officer(o.rel.partner):null;
+  if(p&&o.rel.stage!=="interested"){
+    const together=o.post.t===p.post.t&&o.post.id===p.post.id;
+    const wasTogether=(oldPost===(p.post.t+(p.post.id||"")));
+    if(together&&!wasTogether){o.morale=clamp(o.morale+8,0,100);p.morale=clamp(p.morale+8,0,100);
+      log("romance",o.name+" transferred to be with "+p.name+". Reunited at last.");}
+    else if(!together&&wasTogether){o.morale=clamp(o.morale-8,0,100);p.morale=clamp(p.morale-8,0,100);
+      log("romance",o.name+" was transferred away from "+p.name+". Distance makes the heart ache.");}
+  }
+  log("personnel",fullName(o)+" reassigned to "+postName(np)+".");
+}
+
 /* ---------- mission resolution ---------- */
 function resolveMission(m){
   if(m.kind==="shuttle")return resolveShuttleMission(m);
@@ -1227,7 +1694,7 @@ function resolveMission(m){
   const deptAvg=deptCrew.length?avg(deptCrew.map(o=>o.stats[t.capSkill])):30;
   const moraleAvg=crew.length?avg(crew.map(o=>o.morale)):50;
   let chance=50+(shipStat-t.diff)*0.6+capSkill*0.25+deptAvg*0.1+(moraleAvg-70)*0.1+rnd(-15,15);
-  chance=clamp(chance,5,98);
+  chance=clamp(chance+socialMissionMod(crew),5,98);
   const roll=rnd(0,100);
   let outcome,cr=t.cr,dl=t.dl,pres=t.pres,detail="";
   if(t.type==="Science"&&hasStation("research"))cr=Math.round(cr*1.25);
@@ -1288,7 +1755,7 @@ function resolveShuttleMission(m){
   if(sh.type==="yacht"&&t.type==="Diplomacy")capSkill+=15;
   const moraleAvg=crew.length?avg(crew.map(o=>o.morale)):50;
   let chance=50+(stat-t.diff)*0.6+capSkill*0.3+(moraleAvg-70)*0.1+rnd(-15,15);
-  chance=clamp(chance,5,98);
+  chance=clamp(chance+socialMissionMod(crew),5,98);
   const roll=rnd(0,100);
   let outcome,cr=t.cr,dl=t.dl,pres=t.pres,detail="";
   if(roll<chance-35){outcome="Critical Success";cr=Math.round(cr*1.5);dl=Math.round(dl*1.5);pres=Math.round(pres*1.5);
@@ -1359,6 +1826,7 @@ function killOfficer(o,cause){
   if(o.dead)return;o.dead=true;breakBond(o);o.post={t:"gone"};o.health="healthy";o.shuttle=null;
   G.memorial.unshift({kind:"officer",name:o.name,rank:rankName(o),species:o.species,cause,sd:G.stardate});
   G.ledger.lost++;
+  G.officers.forEach(x=>{if(x.friends)x.friends=x.friends.filter(id=>id!==o.id);if(x.rivals)x.rivals=x.rivals.filter(id=>id!==o.id);});
   log("combat","† "+fullName(o)+" — "+cause+". Their name is added to the Memorial Wall.");
 }
 /* ---------- romance & family ---------- */
@@ -1420,7 +1888,8 @@ function romanceTick(){
     else if(r.stage==="engaged"&&r.day>30&&Math.random()<0.05){
       r.stage="married";p.rel.stage="married";G.ledger.marriages++;
       o.morale=clamp(o.morale+12,0,100);p.morale=clamp(p.morale+12,0,100);
-      log("romance","Wedding bells: "+fullName(o)+" and "+fullName(p)+" are married. The captain officiated. Someone cried during the vows (it was the captain).");}
+      log("romance","Wedding bells: "+fullName(o)+" and "+fullName(p)+" are married. The captain officiated. Someone cried during the vows (it was the captain).");
+      capLogAuto("Wedding",fullName(o)+" and "+fullName(p)+" were married. I officiated. Someone cried during the vows (it was me).");}
     // drama
     if(r.stage==="dating"&&Math.random()<0.0015)splitCouple(o,p,"have broken up. The mess hall is awkward now.");
     else if(r.stage==="engaged"&&Math.random()<0.001)splitCouple(o,p,"have called off the engagement.");
@@ -1715,6 +2184,7 @@ function resolveBattle(sid,e,z,choice){
     }
     gainCR(cr);gainDL(dl);gainPres(pr);
     log("combat",s.name+" defeated "+en+" in "+z.terr+". (+"+fmt(cr)+" CR, +"+fmt(dl)+" DL, +"+pr+" prestige)"+(cl?" "+cl+" crew lost.":""));
+    capLogAuto("Battle won",s.name+" defeated "+en+" in "+z.terr+".");
     return done("The "+esc(e.n)+" breaks apart under "+esc(s.name)+"&rsquo;s guns. <b>Victory!</b> Salvage teams recover <b>"+fmt(cr)+" CR</b>, <b>"+fmt(dl)+" dilithium</b>, and Starfleet awards <b>"+pr+" prestige</b>."+(dmg?" "+esc(s.name)+" took "+dmg+"% hull damage.":"")+(cl?" "+cl+" crew were lost.":""));
   }
   const dmg=Math.min(95,Math.round(ep/p*70));
@@ -1998,6 +2468,7 @@ const ICONS={
   commander:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.8 5.9 6.4.8-4.7 4.4 1.2 6.3L12 16.9l-5.7 3 1.2-6.3L2.8 9.2l6.4-.8z"/></svg>',
   build:'<svg viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="19.00" y1="12.00" x2="21.40" y2="12.00"/><line x1="16.95" y1="16.95" x2="18.65" y2="18.65"/><line x1="12.00" y1="19.00" x2="12.00" y2="21.40"/><line x1="7.05" y1="16.95" x2="5.35" y2="18.65"/><line x1="5.00" y1="12.00" x2="2.60" y2="12.00"/><line x1="7.05" y1="7.05" x2="5.35" y2="5.35"/><line x1="12.00" y1="5.00" x2="12.00" y2="2.60"/><line x1="16.95" y1="7.05" x2="18.65" y2="5.35"/></g><circle cx="12" cy="12" r="5.2" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="12" cy="12" r="1.9"/></svg>',
   galaxy:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8" opacity=".55"/><ellipse cx="12" cy="12" rx="2.8" ry="1.7" fill="currentColor"/><path d="M12 12C8.5 11 6 8.6 5.4 5.2M12 12c3.5 1 6 3.4 6.6 6.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  arcs:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h9l4 4v14H6z"/><path d="M9 9h7M9 13h7M9 17h4"/></svg>',
   log:'<svg viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 8h6M9 12h6M9 16h3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
   memorial:'<svg viewBox="0 0 24 24"><path d="M12 2.5l2.8 6 6.5.7-4.8 4.4 1.3 6.4L12 16.8 6.2 20l1.3-6.4L2.7 9.2l6.5-.7z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
   settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3.4"/><path d="M12 2.6v3.2M12 18.2v3.2M2.6 12h3.2M18.2 12h3.2M5.3 5.3l2.3 2.3M16.4 16.4l2.3 2.3M18.7 5.3l-2.3 2.3M7.6 16.4l-2.3 2.3" stroke-linecap="round"/></svg>'
@@ -2028,6 +2499,32 @@ function renderMeeting(line,opts){
    '<div class="meetOpts">'+opts.map(function(op,i){return '<button class="btn" onclick="'+op.fn+'"><span class="optNum">'+(i+1)+'.</span> '+esc(op.t)+'</button>';}).join("")+'</div></div></div>';
   $("meetRoot").style.display="block";
 }
+/* ---------- meeting intel & rumors ---------- */
+function randSys(){const k=pick(Object.keys(POST_LABELS));return POST_LABELS[k]||k;}
+function randOfficer(){const p=G.officers.filter(o=>o.status==="active"&&!o.dead&&!o.retired&&o.stage==="adult");return p.length?pick(p):null;}
+const MEET_INTEL=[
+ ()=>{const cr=ri(2000,6000);gainCR(cr);return "\"Commander, a contact of mine spotted a derelict freighter drifting near "+randSys()+" — I sent the coordinates to salvage ops.\" (+"+fmt(cr)+" CR)";},
+ ()=>{const dl=ri(30,90);gainDL(dl);return "\"A prospector friend tipped me to an unregistered dilithium pocket near "+randSys()+". Our people got there first.\" (+"+dl+" DL)";},
+ ()=>{fcStart();return "\"I have a friend in the diplomatic corps who says a strange vessel has been sniffing around "+randSys()+". If I were you, I'd answer their hail personally...\"";},
+ ()=>{gainPres(15);return "\"Freighter captains are whispering about Borg scouts near "+randSys()+". I thought you should hear it from me first.\" You issue a fleet-wide alert; Command commends your vigilance. (+15 prestige)";},
+ ()=>{const o=randOfficer();if(o){o.loyal=clamp((o.loyal||70)+5,0,100);return "\"The crew speaks highly of you, Commander — even the grumblers. Thought you should know.\" ("+esc(o.name.split(" ").pop())+" seems heartened.)";}gainPres(10);return "\"Morale is better than the reports say, Commander.\" (+10 prestige)";}
+];
+function meetIntel(o){
+  MEET.o=o;MEET.path="intel";
+  const intel=pick(MEET_INTEL);
+  renderMeeting("<p>\"Commander — before we get to my business, I heard something you should know.\"</p><p>"+intel()+"</p>",
+    [{t:"Interesting. Go on.",fn:"meetIntelAfter()"}]);
+}
+function meetIntelAfter(){
+  const o=officer(MEET.officer);
+  renderMeeting(pick(MEET_OPENERS).replace(/\{n\}/g,o?esc(o.name.split(" ").pop()):"officer"),
+    [{t:"How are you settling in?",fn:"meetChoose('personal')"},
+     {t:"How are your duties going?",fn:"meetChoose('duty')"},
+     {t:"I wanted to commend your work.",fn:"meetChoose('commend')"},
+     {t:"Request leave",fn:"meetLeave()"},
+     {t:"End meeting",fn:"meetFinish('done')"}]);
+}
+
 function uiRequestMeeting(oid){
   const o=officer(oid);if(!o||o.dead||o.retired||o.stage!=="adult")return;
   G.meetings=G.meetings||{};
@@ -2035,6 +2532,8 @@ function uiRequestMeeting(oid){
   if(last!==undefined&&G.stardate-last<MEET_CD){toast("You met with "+o.name.split(" ")[0]+" recently. Give it a few days.");return;}
   closeModal();
   MEET={o:o,path:null,detailRevealed:false};
+  if(o.request&&G.day>=(o.request.deferUntil||0)){meetRequest(o);return;}
+  if(Math.random()<0.22){meetIntel(o);return;}
   let op=pick(MEET_OPENERS);
   if(MEET_OPENERS_DEPT[o.dept]&&Math.random()<0.45)op=MEET_OPENERS_DEPT[o.dept];
   renderMeeting(op,[
@@ -2082,7 +2581,7 @@ function meetFinish(how){
   toast(how==="done"?"Meeting concluded.":"Dismissed.");
 }
 function openTabMenu(){
-  const tabs=[["personnel",ICONS.crew,"Personnel"],["missions",ICONS.missions,"Missions"],["build",ICONS.build,"Build"],["log",ICONS.log,"Log"],["memorial",ICONS.memorial,"Memorial"],["settings",ICONS.settings,"Settings"]];
+  const tabs=[["personnel",ICONS.crew,"Personnel"],["missions",ICONS.missions,"Missions"],["build",ICONS.build,"Build"],["log",ICONS.log,"Log"],["caplog",ICONS.log,"Captain's Log"],["arcs",ICONS.arcs,"Story Arcs"],["memorial",ICONS.memorial,"Memorial"],["settings",ICONS.settings,"Settings"]];
   let h='';
   tabs.forEach(function(t){
     h+='<button class="menuItem'+(currentTab===t[0]?" sel":"")+'" onclick="navGo(\''+t[0]+'\')"><span class="bIco">'+t[1]+'</span><span>'+t[2]+'</span></button>';
@@ -2106,6 +2605,8 @@ function render(){renderHUD();
   else if(currentTab==="missions")v.innerHTML=renderMissions();
   else if(currentTab==="build")v.innerHTML=renderBuild();
   else if(currentTab==="log")v.innerHTML=renderLog();
+  else if(currentTab==="caplog")v.innerHTML=renderCaptainLog();
+  else if(currentTab==="arcs")v.innerHTML=renderArcs();
   else if(currentTab==="memorial")v.innerHTML=renderMemorial();
   else if(currentTab==="settings")v.innerHTML=renderSettings();
   window.scrollTo(0,0);
@@ -2380,6 +2881,7 @@ function renderPersonnel(){
   h+='<div class="card"><h3><span id="persCount">'+list.length+'</span> officer'+(list.length===1?"":"s")+'</h3><div id="persList">';
   list.forEach(o=>{
     const badges=[];
+    if(o.request&&G.day>=(o.request.deferUntil||0))badges.push('<span class="badge violet">Requests an audience</span>');
     if(readyForPromotion(o))badges.push('<span class="badge good">Ready for promotion</span>');
     if(o.health==="injured")badges.push('<span class="badge bad">Injured</span>');
     if(o.rel)badges.push('<span class="badge love">'+o.rel.stage+' — '+esc((officer(o.rel.partner)||{name:"?"}).name)+'</span>');
@@ -2412,7 +2914,8 @@ function missionOdds(s,t){
   return {chance:clamp(Math.round(50+(shipStat-t.diff)*0.6+capSkill*0.25+deptAvg*0.1+(moraleAvg-70)*0.1),5,98),captain,crew};
 }
 function renderMissions(){
-  let h='<div class="card"><h3>Active Missions</h3>';
+  let h='<div class="card"><h3>Away Missions</h3><p class="dim">Beam a landing party of 2&ndash;4 officers down to a planet or system. Choice-driven, instant &mdash; and occasionally dangerous.</p><div class="btnRow"><button class="btn small violet" onclick="uiAwayPicker()">Assemble landing party</button></div></div>';
+  h+='<div class="card"><h3>Active Missions</h3>';
   if(!G.missions.length)h+='<p class="dim">No ships deployed.</p>';
   G.missions.forEach(m=>{const t=(m.kind==="shuttle"?SHUTTLE_MISSION_DECK:MISSION_DECK).find(x=>x.id===m.tIdx);
     const craft=m.kind==="shuttle"?shuttle(m.shuttleId):ship(m.shipId);
@@ -2438,6 +2941,111 @@ function renderMissions(){
   }
   return h+'</div>';
 }
+/* ================= AWAY MISSIONS ================= */
+const AWAY_SITS=[
+{t:"The landing party materializes in a dense alien jungle. Strange calls echo through the canopy, and the tricorders are picking up movement &mdash; large movement.",
+ opts:[{t:"Scan first, move second (SCI)",stat:"sci",dc:105,win:"The scans reveal a herd of territorial hexapeds &mdash; easily avoided once you know their migration path.",lose:"The scans come back garbled. A hexaped charges through the brush, scattering the team before it veers off."},
+ {t:"Set phasers to stun and push through (TAC)",stat:"tac",dc:100,win:"Disciplined fire lanes keep the wildlife at bay. The team advances without a scratch.",lose:"A startled beast slams into the column's flank. Everyone's fine, but two tricorders are smashed."},
+ {t:"Try to calm them (DIP)",stat:"dip",dc:95,win:"Soft clicks and open hands. The creatures lose interest and melt back into the jungle.",lose:"They don't want to talk. They want to charge."}]},
+{t:"Ancient ruins rise from the valley floor &mdash; and at their heart, a sealed door covered in circuitry that predates every known civilization in the sector.",
+ opts:[{t:"Bypass the locking mechanism (ENG)",stat:"eng",dc:110,win:"The door sighs open on five-thousand-year-old air. Inside: a star chart of systems no one has ever mapped.",lose:"The mechanism surges and fuses solid. Whatever was behind that door will stay there."},
+ {t:"Decipher the inscriptions first (SCI)",stat:"sci",dc:100,win:"The glyphs resolve into a warning &mdash; and a key sequence. The door opens without triggering the defenses.",lose:"Half the inscription is a recipe for soup. The other half triggers a rockfall. Tactical retreat."},
+ {t:"Order a careful forced entry (CMD)",stat:"cmd",dc:95,win:"Textbook breaching drill. The team is inside before the automated defenses finish waking up.",lose:"The breaching charge was slightly too enthusiastic. The door is open. So is a hole in the valley."}]},
+{t:"A village of colonists is suffering from a plague the local doctor can't identify. They eye your uniforms with desperate hope.",
+ opts:[{t:"Set up a field triage (MED)",stat:"med",dc:105,win:"Within hours the fever breaks. The village elder weeps and presses a carved stone into your hands &mdash; a token of eternal friendship.",lose:"The pathogen mutates faster than the treatment. You stabilize the worst cases, but it's a long road."},
+ {t:"Coordinate relief with the village council (DIP)",stat:"dip",dc:95,win:"Quarantine zones, supply lines, calm crowds. The council declares a feast in your honor.",lose:"The council factions argue while patients wait. You do what you can, but politics costs lives."},
+ {t:"Analyze the pathogen on site (SCI)",stat:"sci",dc:100,win:"It's a prion-like agent keyed to the local water supply. A filter protocol stops it cold.",lose:"The samples degrade in the field kit. You'll need a full lab &mdash; which is three sectors away."}]},
+{t:"A crashed alien probe lies half-buried in a crater, still humming with power. Its design matches nothing in Starfleet records.",
+ opts:[{t:"Carefully extract its core (ENG)",stat:"eng",dc:110,win:"The power core comes free intact &mdash; a miniaturized marvel that will keep Utopia Planitia busy for a year.",lose:"The core destabilizes and vents plasma across the crater. Everyone dives clear. The probe is slag."},
+ {t:"Download its memory banks (SCI)",stat:"sci",dc:100,win:"Star charts, engine schematics, and a distress call in a dead language. Priceless.",lose:"The data is encrypted with a rotating quantum key. You get fragments &mdash; tantalizing, incomplete."},
+ {t:"Secure the perimeter first (TAC)",stat:"tac",dc:90,win:"Good call &mdash; scavengers were watching the crash site. They think better of it and leave.",lose:"Scavengers hit the site mid-salvage. You drive them off, but they take a sensor pallet with them."}]},
+{t:"The planetary governor's reception was going well until a rival faction stormed in, accusing the Federation of favoritism. All eyes are on you.",
+ opts:[{t:"Talk everyone down (DIP)",stat:"dip",dc:110,win:"An hour of careful listening, and both factions are at the same table. The governor calls it the finest mediation she's seen.",lose:"The shouting gets louder. You withdraw with dignity and a diplomatic incident report to file."},
+ {t:"Take command of the room (CMD)",stat:"cmd",dc:100,win:"A firm voice and a fair proposal. The factions agree to binding arbitration &mdash; under your chairmanship.",lose:"Authority without trust is just noise. The rival faction walks out."},
+ {t:"Find the real grievance (SCI)",stat:"sci",dc:95,win:"Trade data doesn't lie: the favoritism is real, and fixable. You broker a new tariff schedule on the spot.",lose:"The numbers are clean, which means the grievance is pride &mdash; and pride doesn't negotiate."}]},
+{t:"The cave system the survey team flagged is deeper than expected &mdash; and the walls just trembled. Somewhere below, water is moving where water shouldn't be.",
+ opts:[{t:"Reroute and stabilize (ENG)",stat:"eng",dc:105,win:"Structural supports and a drainage channel. The caves hold, and the mineral survey underneath is extraordinary.",lose:"The supports hold &mdash; mostly. The team retreats as a side tunnel collapses behind them."},
+ {t:"Map an escape route first (TAC)",stat:"tac",dc:95,win:"Every junction marked, every fallback planned. When the second tremor hits, the team is already moving.",lose:"The tremor seals the mapped route. Improvisation and luck get everyone out."},
+ {t:"Read the geology (SCI)",stat:"sci",dc:100,win:"It's a tidal flex, predictable to the minute. You time the survey between pulses and walk out with full samples.",lose:"The readings were wrong about the timing. Everyone gets very wet, very fast."}]},
+{t:"Tricorders across the landing zone just spiked &mdash; a coherent energy pattern, artificial, and it's getting stronger. It's coming from beneath your feet.",
+ opts:[{t:"Analyze the pattern (SCI)",stat:"sci",dc:110,win:"A subspace beacon, ancient and automated. You tune it, log its frequency, and it powers down gracefully.",lose:"The pattern shifts faster than the tricorders can track. It overloads two of them and goes quiet."},
+ {t:"Dampen it before it peaks (ENG)",stat:"eng",dc:100,win:"A portable dampening field contains the surge. Whatever it was waking up goes back to sleep.",lose:"The dampeners are underpowered. The surge blows them out and rattles teeth for a kilometer."},
+ {t:"Check the team for exposure (MED)",stat:"med",dc:90,win:"Mild cellular agitation, easily treated. The medical officer's quick work prevents anything worse.",lose:"Everyone's fine &mdash; probably. The medical officer recommends a full workup back on the ship."}]},
+{t:"Movement on the ridge &mdash; raiders, and they've got the high ground. They want your equipment, and they're not asking nicely.",
+ opts:[{t:"Drive them off (TAC)",stat:"tac",dc:105,win:"Suppressing fire and a flanking maneuver. The raiders melt away, leaving their ambush site behind.",lose:"They're better armed than they looked. The team falls back to the beam-out point under covering fire."},
+ {t:"Negotiate from strength (CMD)",stat:"cmd",dc:100,win:"You walk out alone, unarmed, and talk. An hour later the raiders are sharing rations with your team.",lose:"They listen, they laugh, they open fire. So much for diplomacy."},
+ {t:"Treat the wounded, hold position (MED)",stat:"med",dc:95,win:"Nobody dies on your watch. The raiders, seeing discipline under fire, decide you're not worth it.",lose:"Two of the team take hits before the beam-out. The medkit gets a workout."}]},
+{t:"A pre-warp village clusters around a crashed weather satellite &mdash; which they've begun to worship. First contact protocols are very clear about this.",
+ opts:[{t:"Make careful first contact (DIP)",stat:"dip",dc:110,win:"Slow, respectful, honest. The village elders agree to keep the satellite's secret &mdash; and ask wonderful questions about the stars.",lose:"The Prime Directive ties your hands. You withdraw, leaving the satellite &mdash; and the myth &mdash; intact."},
+ {t:"Study them quietly (SCI)",stat:"sci",dc:95,win:"A remarkable culture, documented without interference. The anthropology journals will fight over this paper.",lose:"A child spots your observation post. The game is up; you withdraw before contamination spreads."},
+ {t:"Recover the satellite covertly (ENG)",stat:"eng",dc:100,win:"In and out before dawn. The village wakes to an empty shrine and a very confused priesthood.",lose:"The recovery beam scatters light across the whole valley. So much for covert."}]},
+{t:"A derelict ship drifts in high orbit &mdash; alien design, cold for a century, but one deck still has atmosphere. Someone should take a look.",
+ opts:[{t:"Board and assess (ENG)",stat:"eng",dc:105,win:"The engineering team coaxes the derelict's logs from dead memory banks &mdash; a lost colony ship, and a map of where it was going.",lose:"The airlock seals behind the team and the old reactor wakes up angry. A hasty retreat."},
+ {t:"Board in tactical formation (TAC)",stat:"tac",dc:100,win:"Clear deck by deck. The only residents are dust and memories. The ship is secured without incident.",lose:"Automated defenses, still live after a century. The team falls back with scorch marks and a story."},
+ {t:"Sweep for survivors first (MED)",stat:"med",dc:95,win:"Stasis pods &mdash; twelve survivors, barely alive. The medical team brings them back from the edge.",lose:"No survivors. Just logs, and names, and a century of silence."}]}
+];
+let AWAY=null;
+function awayEligible(){return G.officers.filter(o=>{
+  if(!(o.status==="active"&&!o.dead&&!o.retired&&o.stage==="adult"&&o.health==="healthy"&&!o.shuttle))return false;
+  if(o.post.t==="ship"){const s=ship(o.post.id);if(s&&s.status!=="active")return false;}
+  return true;});}
+function destLabel(d){return POST_LABELS[d]||d;}
+function uiAwayPicker(){
+  const list=awayEligible().sort((a,b)=>b.rank-a.rank);
+  if(list.length<2){toast("Not enough healthy officers available.");return;}
+  const unch=["Kepler-438c","Wolf 1061c","TRAPPIST-1e","Proxima b","Tau Ceti e"].map(p=>'<option value="Uncharted world ('+p+')">Uncharted world ('+p+')</option>').join("");
+  openModal('<h2>Away Mission</h2><p class="dim">Select 2&ndash;4 officers for the landing party.</p>'+
+    '<div style="max-height:230px;overflow:auto;">'+list.map(o=>'<div class="row" onclick="uiAwayToggle(\''+o.id+'\',this)" style="cursor:pointer;">'+faceImg(o,"pface")+'<div class="grow"><div class="nm">'+nameHtml(o)+'</div><div class="sub2">'+esc(o.dept)+' &middot; '+esc(postName(o.post))+'</div></div><span class="awayTick" style="font-size:20px;color:var(--teal);min-width:24px;text-align:center;"></span></div>').join("")+'</div>'+
+    '<label>Destination</label><select id="awayDest">'+Object.keys(POST_LABELS).map(k=>'<option value="'+k+'">'+esc(POST_LABELS[k])+'</option>').join("")+unch+'</select>'+
+    '<div class="btnRow"><button class="btn small violet" onclick="uiAwayStart()">Beam down</button> <button class="btn ghost" onclick="closeModal()">Cancel</button></div>');
+  AWAY={team:[]};
+}
+function uiAwayToggle(oid,el){
+  const i=AWAY.team.indexOf(oid);
+  if(i>=0){AWAY.team.splice(i,1);el.querySelector(".awayTick").textContent="";}
+  else{if(AWAY.team.length>=4){toast("Landing parties are 4 officers max.");return;}AWAY.team.push(oid);el.querySelector(".awayTick").textContent="\u2713";}
+}
+function uiAwayStart(){
+  if(!AWAY||AWAY.team.length<2){toast("Select at least 2 officers.");return;}
+  const dest=$("awayDest").value;
+  const sits=AWAY_SITS.slice().sort(()=>Math.random()-0.5).slice(0,3);
+  AWAY.dest=dest;AWAY.sits=sits;AWAY.stage=0;AWAY.wins=0;
+  awayStage();
+}
+function awayStage(){
+  const s=AWAY.sits[AWAY.stage];
+  const teamNames=AWAY.team.map(id=>{const o=officer(id);return o?o.name.split(" ")[0]:"?";}).join(", ");
+  openModal('<h2>Away Mission &mdash; '+esc(destLabel(AWAY.dest))+'</h2><div class="flavor">Stage '+(AWAY.stage+1)+' of 3 &middot; Team: '+esc(teamNames)+'</div><p>'+s.t+'</p>'+
+    s.opts.map((op,i)=>'<div style="margin:6px 0;"><button class="btn violet" style="width:100%;text-align:left;" onclick="awayChoose('+i+')">'+esc(op.t)+'</button></div>').join(""));
+}
+function awayChoose(i){
+  const s=AWAY.sits[AWAY.stage],op=s.opts[i];
+  let win=true;
+  if(op.stat){
+    const best=Math.max.apply(null,AWAY.team.map(id=>officer(id).stats[op.stat]));
+    win=(best+ri(1,100))>=op.dc;
+  }
+  if(win)AWAY.wins++;
+  AWAY.stage++;
+  const more=AWAY.stage<3;
+  openModal('<h2>'+(win?"Success":"Setback")+'</h2><p>'+(win?op.win:op.lose)+'</p><div class="btnRow"><button class="btn violet" onclick="'+(more?"awayStage()":"awayResolve()")+'">'+(more?"Continue":"Debrief")+'</button></div>');
+}
+function awayResolve(){
+  const w=AWAY.wins,team=AWAY.team.map(officer).filter(Boolean);
+  let outcome,pres,mor,detail;
+  if(w>=3){outcome="Critical Success";pres=80;mor=6;detail="Flawless. Three for three &mdash; the kind of away mission they teach at the Academy.";}
+  else if(w===2){outcome="Success";pres=50;mor=4;detail="Objectives achieved. The team beams back tired, dirty, and grinning.";}
+  else if(w===1){outcome="Partial Success";pres=25;mor=1;detail="Some objectives met. The debrief will be spirited.";}
+  else{outcome="Failure";pres=5;mor=-4;detail="It went badly. The team is beamed out under less-than-ideal circumstances.";
+    if(team.length&&Math.random()<0.4){const o=pick(team);o.health="injured";o.healDays=ri(10,25);detail+=" "+esc(o.name.split(" ")[0])+" was injured and is in sickbay.";}}
+  gainPres(pres);
+  team.forEach(o=>{o.morale=clamp(o.morale+mor,0,100);o.missions.t++;if(w>=2)o.missions.s++;awardAccolade(o,"Away mission: "+destLabel(AWAY.dest)+" &mdash; "+outcome);});
+  log("mission","Away mission to "+destLabel(AWAY.dest)+" &mdash; "+outcome+". (+"+pres+" prestige)");
+  capLogAuto("Away mission","Led a landing party to "+destLabel(AWAY.dest)+". "+outcome+".");
+  AWAY=null;save();
+  openModal('<h2>Away Mission &mdash; '+outcome+'</h2><p>'+detail+'</p><div class="kv"><span class="k">Prestige</span><span class="v">+'+pres+'</span></div><div class="btnRow"><button class="btn violet" onclick="closeModal();render()">Continue</button></div>');
+}
+
 function missionBrief(sid,tid){
   const s=ship(sid),t=MISSION_DECK.find(x=>x.id===tid),od=missionOdds(s,t);
   openModal('<h2>'+esc(t.name)+'</h2><div class="flavor">'+t.type+' · '+t.days+' days · Difficulty '+t.diff+'</div>'+
@@ -2602,6 +3210,7 @@ function destroyShip(s,cause){
   G.memorial.unshift({kind:"ship",name:s.name,sub:SHIP_CLASSES[s.cls].name+"-class · "+s.registry,lost:"destroyed",cause:cause,sd:G.stardate});
   G.ledger.lost++;
   log("combat","† "+s.name+" ("+s.registry+") destroyed — "+cause+". Her name is added to the Memorial.");
+  capLogAuto("Ship lost","† "+s.name+" ("+s.registry+") destroyed — "+cause+".");
 }
 function uiDecommission(kind,id){
   const tgt=kind==="ship"?ship(id):station(id);
@@ -2737,6 +3346,31 @@ function renderMemorial(){
 
 /* ---------- LOG tab ---------- */
 let logFilter="all";
+/* ================= CAPTAIN'S LOG ================= */
+function capLogAuto(t,b){
+  (G.captainsLog=G.captainsLog||[]).push({d:G.day,sd:G.stardate,t,b,auto:true});
+  if(G.captainsLog.length>300)G.captainsLog.splice(0,G.captainsLog.length-300);
+}
+function renderCaptainLog(){
+  let h='<div class="card"><h3>Captain\'s Log</h3><p class="dim">Your personal record of the mission. Major fleet events are recorded automatically (&#10022;).</p>';
+  h+='<div class="btnRow"><button class="btn small violet" onclick="uiCapLogNew()">New entry</button></div></div>';
+  h+='<div id="capForm"></div><div class="card">';
+  const items=(G.captainsLog||[]);
+  h+=items.slice().reverse().map((e,i)=>'<div class="logItem c-system"><span class="d">STARDATE '+sdStr(e.sd)+'</span> '+(e.auto?'&#10022; ':'')+'<b>'+esc(e.t)+'</b><br>'+esc(e.b).replace(/\n/g,'<br>')+'<br><button class="btn small ghost" onclick="uiCapLogDel('+(items.length-1-i)+')">Delete</button></div>').join("")||'<p class="dim">No entries yet. The stars await.</p>';
+  return h+'</div>';
+}
+function uiCapLogNew(){
+  $("capForm").innerHTML='<div class="card"><h3>New log entry</h3><label>Title</label><input id="capT" class="txtIn" maxlength="80" placeholder="Entry title..."><label>Entry</label><textarea id="capB" class="txtIn" rows="5" style="width:100%;box-sizing:border-box;" placeholder="Write your log..."></textarea><div class="btnRow" style="margin-top:8px;"><button class="btn small violet" onclick="uiCapLogSave()">Save entry</button><button class="btn small ghost" onclick="$(\'capForm\').innerHTML=\'\'">Cancel</button></div></div>';
+  const t=$("capT");if(t)t.focus();
+}
+function uiCapLogSave(){
+  const t=$("capT").value.trim(),b=$("capB").value.trim();
+  if(!t&&!b){toast("Write something first.");return;}
+  (G.captainsLog=G.captainsLog||[]).push({d:G.day,sd:G.stardate,t:t||"Untitled entry",b:b,auto:false});
+  if(G.captainsLog.length>300)G.captainsLog.splice(0,G.captainsLog.length-300);
+  save();render();toast("Logged.");
+}
+function uiCapLogDel(i){G.captainsLog.splice(i,1);save();render();}
 function renderLog(){
   const cats=["all","mission","combat","event","personnel","romance","family","build","system"];
   let h='<div class="card"><label>Category</label><select onchange="logFilter=this.value;render()">'+
@@ -2815,6 +3449,7 @@ function officerModal(id){
   if(typeof PORTRAITS_ALT!=="undefined"&&PORTRAITS_ALT[o.name])h+=portraitToggleHtml(o.name);
   if(o.dead)h+='<p class="badge bad">Deceased — see Memorial Wall</p>';
   if(o.retired)h+='<p><span class="badge">Retired with honors</span></p>';
+  if(o.request&&!o.dead&&!o.retired)h+='<p><span class="badge violet">Requests an audience — use Request meeting below</span></p>';
   h+='<h4>Attributes</h4>'+bar("CMD",o.stats.cmd)+bar("SCI",o.stats.sci)+bar("ENG",o.stats.eng)+
      bar("MED",o.stats.med)+bar("DIP",o.stats.dip)+bar("TAC",o.stats.tac);
   if(o.traits.length)h+='<div style="margin:6px 0;">'+o.traits.map(t=>'<span class="badge violet">'+esc(t)+'</span>').join("")+'</div>';
@@ -2829,6 +3464,7 @@ function officerModal(id){
   if(o.shuttle&&shuttle(o.shuttle))h+='<div class="kv"><span class="k">Shuttle duty</span><span class="v">'+esc(shuttle(o.shuttle).name)+' <button class="btn small ghost" onclick="uiRecallOfficer(\''+o.id+'\')">Recall</button></span></div>';
   if(adult){
     h+='<div class="kv"><span class="k">Morale</span><span class="v">'+o.morale+'/100</span></div>'+bar("MOR",o.morale);
+    h+='<div class="kv"><span class="k">Loyalty</span><span class="v">'+o.loyal+'/100</span></div>'+bar("LOY",o.loyal);
     h+='<div class="kv"><span class="k">Health</span><span class="v">'+(o.health==="healthy"?"Healthy":"Injured ("+Math.ceil(o.healDays)+"d)")+'</span></div>';
     h+='<div class="kv"><span class="k">Missions</span><span class="v">'+o.missions.s+'/'+o.missions.t+' successful</span></div>';
     h+='<div class="kv"><span class="k">Time in grade</span><span class="v">'+Math.floor(o.timeInGrade)+' days</span></div>';
@@ -2844,6 +3480,14 @@ function officerModal(id){
   if(o.parents.length){
     const pn=o.parents.map(p=>{const pp=officer(p);return pp?esc(pp.name):"?";}).join(" & ");
     h+='<div class="kv"><span class="k">Parents</span><span class="v">'+pn+'</span></div>';
+  }
+  if(o.friends&&o.friends.length){
+    const fl=o.friends.map(f=>{const ff=officer(f);return ff?esc(ff.name.split(" ")[0]):"?";}).join(", ");
+    h+='<div class="kv"><span class="k">Close friends</span><span class="v">'+fl+'</span></div>';
+  }
+  if(o.rivals&&o.rivals.length){
+    const rl=o.rivals.map(f=>{const ff=officer(f);return ff?esc(ff.name.split(" ")[0]):"?";}).join(", ");
+    h+='<div class="kv"><span class="k" style="color:var(--red)">Rivals</span><span class="v">'+rl+'</span></div>';
   }
   if(adult&&!o.dead&&!o.retired){
     const cur=o.post.t==="pool"?"pool":o.post.t==="hq"?"hq":o.post.t+":"+o.post.id;
@@ -2873,27 +3517,14 @@ function uiAssign(oid,val){
     val.startsWith("ship:")?{t:"ship",id:val.slice(5)}:{t:"station",id:val.slice(8)};
   if(np.t==="ship"){const s=ship(np.id);
     if(s&&(s.status==="mission"||s.status==="refit")){toast("Cannot transfer aboard — ship is "+shipStatusLabel(s)+".");render();return;}}
-  const oldPost=o.post.t+(o.post.id||"");
-  o.post=np;
-  o.shuttle=null; // reassignment ends any temporary shuttle duty
-  if(oldPost!==(np.t+(np.id||""))){o.roles=[];awardAccolade(o,"Reassigned to "+postName(np));} // positions belong to the posting
-  const p=o.rel?officer(o.rel.partner):null;
-  if(p&&o.rel.stage!=="interested"){
-    const together=o.post.t===p.post.t&&o.post.id===p.post.id;
-    const wasTogether=(oldPost===(p.post.t+(p.post.id||"")));
-    if(together&&!wasTogether){o.morale=clamp(o.morale+8,0,100);p.morale=clamp(p.morale+8,0,100);
-      log("romance",o.name+" transferred to be with "+p.name+". Reunited at last.");}
-    else if(!together&&wasTogether){o.morale=clamp(o.morale-8,0,100);p.morale=clamp(p.morale-8,0,100);
-      log("romance",o.name+" was transferred away from "+p.name+". Distance makes the heart ache.");}
-  }
-  log("personnel",fullName(o)+" reassigned to "+postName(np)+".");
+  doTransferCore(o,np);
   save();officerModal(oid);render();
 }
 function uiPromote(oid){
   const o=officer(oid);if(!o||o.rankLabel||o.rank>=9)return;
-  const cost=25*(o.rank+1);
+  const cost=o.promRec?Math.ceil(25*(o.rank+1)/2):25*(o.rank+1);
   if(G.prestige<cost){toast("Not enough prestige.");return;}
-  gainPres(-cost);o.rank++;o.timeInGrade=0;o.morale=clamp(o.morale+10,0,100);
+  gainPres(-cost);o.rank++;o.timeInGrade=0;o.morale=clamp(o.morale+10,0,100);o.promRec=false;
   awardAccolade(o,"Promoted to "+RANKS[o.rank]);
   log("personnel","PROMOTED: "+fullName(o)+" — congratulations from the sector command.");
   save();officerModal(oid);render();toast("Promoted to "+RANKS[o.rank]+".");
