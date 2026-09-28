@@ -1940,7 +1940,7 @@ function socialTick(){
     let ch=0.008;
     if(o.loyal<40)ch+=0.012;
     if(o.morale<40)ch+=0.008;
-    if(Math.random()<ch){const r=genRequest(o);if(r){o.request=r;
+    if(Math.random()<ch){const r=genRequest(o);if(r){o.request=r;sfx("chirp");
       log("personnel",fullName(o)+" has requested an audience with you. Check Personnel for details.");}}
   });
   G.officers.forEach(o=>{
@@ -2313,6 +2313,7 @@ function birthChild(a,b){
 
 /* ---------- random events ---------- */
 function fireEvent(e,tag){
+  sfx("hail");
   G.flags["evcd_"+e.id]=G.day+30;G.ledger.events++;
   log("event","EVENT"+(tag?" ("+tag+")":"")+": "+e.title);
   interruptQueue.push({title:e.title,sub:"Sector event · Stardate "+sdStr(G.stardate),
@@ -2377,6 +2378,7 @@ function rankCheckTick(){
   PLAYER_TITLES.forEach((t,i)=>{if(G.prestige>=t[0])r=i;});
   if(r>G.playerRank){
     G.playerRank=r;
+    sfx("promote");
     const bonus=[null,{cr:5000,dl:200},{cr:15000,dl:500},{cr:40000,dl:1000},{cr:100000,dl:2500}][r];
     gainCR(bonus.cr);gainDL(bonus.dl);
     log("personnel","PROMOTION: You are now "+PLAYER_TITLES[r][1]+". Starfleet Command acknowledges your sector's record.");
@@ -2414,7 +2416,7 @@ function closeModal(force){
 let completionQ=[];
 function completionsOn(){try{const v=localStorage.getItem("stfc_completions");return v===null?true:v==="1";}catch(e){return true;}}
 function uiToggleCompletions(){try{localStorage.setItem("stfc_completions",completionsOn()?"0":"1");}catch(e){}render();toast("Completion celebrations "+(completionsOn()?"enabled.":"disabled."));}
-function queueCompletion(c){completionQ.push(c);}
+function queueCompletion(c){sfx("dock");completionQ.push(c);}
 function compStars(){return '<div class="cstars"></div>';}
 function compGotoShip(id){$("completeRoot").classList.remove("open");pumpCompletions();shipModal(id);}
 function compGotoStation(id){$("completeRoot").classList.remove("open");pumpCompletions();stationModal(id);}
@@ -2782,6 +2784,36 @@ function sfx(name){
         tone("sine",wn[w],t0,1.0,0.22);
         tone("sine",wn[w]*2.76,t0,0.8,0.05);
       }
+    }else if(name==="chirp"){
+      // communicator chirp: two quick bright blips
+      tone("sine",2093,now,0.09,0.22);
+      tone("sine",2637,now+0.11,0.1,0.22);
+    }else if(name==="hail"){
+      // incoming hail: three urgent beeps
+      for(var hb=0;hb<3;hb++)tone("square",988,now+hb*0.16,0.11,0.12);
+    }else if(name==="dock"){
+      // docking clunk: low thud + short metallic burst
+      tone("sine",90,now,0.3,0.6,40);
+      noise(now,0.16,0.3,"bandpass",800,500,3);
+    }else if(name==="temporal"){
+      // temporal shimmer: slow dreamy ascending shimmer
+      var tn=[523,587,659,784,880,1047,1175,1319];
+      for(var tp=0;tp<tn.length;tp++){
+        var tt0=now+tp*0.22;
+        tone("sine",tn[tp],tt0,0.9,0.16);
+        tone("sine",tn[tp]*2.01,tt0,0.7,0.05);
+      }
+    }else if(name==="promote"){
+      // promotion mini-fanfare: triumphant rising phrase, held high note
+      tone("triangle",523,now,0.16,0.3);
+      tone("triangle",659,now+0.15,0.16,0.3);
+      tone("triangle",784,now+0.3,0.16,0.3);
+      tone("sawtooth",1047,now+0.45,0.7,0.14);
+      tone("triangle",1047,now+0.45,0.7,0.2);
+    }else if(name==="explosion"){
+      // explosion rumble: deep noise burst + sub drop
+      noise(now,1.2,0.7,"lowpass",400,60,0.8);
+      tone("sine",70,now,1.1,0.6,30);
     }
   }catch(e){}
 }
@@ -4644,6 +4676,7 @@ function uiCancelBuildGo(kind,id){
   closeModal();save();render();toast("Construction cancelled — half the materials recovered.");
 }
 function destroyShip(s,cause){
+  sfx("explosion");
   const crew=crewOfShip(s.id);
   crew.forEach(o=>{o.shuttle=null;if(Math.random()<0.7)killOfficer(o,"Lost with "+s.name+" — "+cause);else{o.post={t:"pool"};o.roles=[];o.health="injured";o.healDays=ri(10,30);}});
   G.shuttles=G.shuttles.filter(x=>!(x.host==="ship"&&x.hid===s.id));
@@ -4809,6 +4842,7 @@ function uiTemporalExtractGo(idx){
   const e=MEMORIAL_LOST[idx];if(!e)return;
   if((G.rescued&&G.rescued[e.name])||G.tempCd>0||G.prestige<TEMP_COST_PRES||G.dilithium<TEMP_COST_DIL){lostModal(idx);return;}
   gainPres(-TEMP_COST_PRES);G.dilithium=Math.max(0,G.dilithium-TEMP_COST_DIL);G.tempCd=TEMP_CD;
+  sfx("temporal");
   if(Math.random()<TEMP_ODDS){
     const def=LOST_CREW.find(d=>d[0]===e.name);
     const off=MK(def);off.lostEra=e.show;
@@ -5053,6 +5087,7 @@ function uiPromote(oid){
   const cost=o.promRec?Math.ceil(25*(o.rank+1)/2):25*(o.rank+1);
   if(G.prestige<cost){toast("Not enough prestige.");return;}
   gainPres(-cost);o.rank++;o.timeInGrade=0;o.morale=clamp(o.morale+10,0,100);o.promRec=false;
+  sfx("promote");
   awardAccolade(o,"Promoted to "+RANKS[o.rank]);
   log("personnel","PROMOTED: "+fullName(o)+" — congratulations from the sector command.");
   save();officerModal(oid);render();toast("Promoted to "+RANKS[o.rank]+".");
@@ -5988,7 +6023,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <h2>Menu</h2>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.46</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.47</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
