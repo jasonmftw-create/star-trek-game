@@ -142,6 +142,7 @@ div.meetFace{display:flex;align-items:center;justify-content:center;font-size:42
 /* ===== Content ===== */
 #view{padding:10px;max-width:860px;margin:0 auto;touch-action:pan-y;overflow-x:hidden;}
 html,body{overscroll-behavior-x:none;}
+body{touch-action:pan-y;}
 #view.swipeL{animation:swipeInL .22s ease-out;}
 #view.swipeR{animation:swipeInR .22s ease-out;}
 @keyframes swipeInL{from{transform:translateX(70px);opacity:.35;}to{transform:translateX(0);opacity:1;}}
@@ -2464,6 +2465,7 @@ document.addEventListener("touchend",function(e){
   if(n<0||n>=SWIPE_TABS.length)return;
   closeModal();closeTabMenu();setTab(SWIPE_TABS[n],dx<0?"L":"R");
 },{passive:true});
+document.addEventListener("touchcancel",function(){_swX=_swY=null;},{passive:true});
 function goBack(){
   if($("menuDrawer").classList.contains("open")){closeTabMenu();return;}
   if($("modalRoot").classList.contains("open")){closeModal();return;}
@@ -4244,6 +4246,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <h2>Menu</h2>
   <div id="menuList"></div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v9</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
