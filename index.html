@@ -150,7 +150,7 @@ body{touch-action:pan-y;}
   background:transparent;border:1px solid var(--purple);color:var(--purple);}
 .cmdsubseg .btn.small.on{background:var(--purple);border-color:var(--purple);color:#0b0b12;}
 .cmdsubseg .btn{flex:0 0 auto;}
-#cmdSubBar,#shipQuadBar{display:none;padding:2px 8px 8px;background:var(--panel);}
+#cmdSubBar,#shipQuadBar,#stationQuadBar{display:none;padding:2px 8px 8px;background:var(--panel);}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
   padding:12px;margin-bottom:10px;}
 .card h3{margin:0 0 8px;color:var(--peach);font-size:16px;letter-spacing:2px;text-transform:uppercase;}
@@ -265,6 +265,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
   </div>
   <div id="cmdSubBar"></div>
   <div id="shipQuadBar"></div>
+  <div id="stationQuadBar"></div>
 </div>
 <main id="view"></main>
 <div id="modalRoot"><div id="modalShade" onclick="closeModal(true)"></div><div id="modalBox"></div></div>
@@ -2614,6 +2615,7 @@ function render(){renderHUD();
   else if(currentTab==="settings")v.innerHTML=renderSettings();
   renderCmdSubBar();
   renderShipQuadBar();
+  renderStationQuadBar();
   window.scrollTo(0,0);
 }
 function renderCmdSubBar(){
@@ -2629,6 +2631,13 @@ function renderShipQuadBar(){
   bar.style.display="block";
   const quads=[["all","All"],["alpha","Alpha"],["beta","Beta"],["gamma","Gamma"],["delta","Delta"]];
   bar.innerHTML='<div class="cmdsubseg">'+quads.map(q=>'<button class="btn small'+(shipQuad===q[0]?" on":"")+'" onclick="shipQuad=\''+q[0]+'\';render()">'+q[1]+'</button>').join("")+'</div>';
+}
+function renderStationQuadBar(){
+  const bar=$("stationQuadBar");if(!bar)return;
+  if(currentTab!=="stations"){bar.innerHTML="";bar.style.display="none";return;}
+  bar.style.display="block";
+  const quads=[["all","All"],["alpha","Alpha"],["beta","Beta"],["gamma","Gamma"],["delta","Delta"]];
+  bar.innerHTML='<div class="cmdsubseg">'+quads.map(q=>'<button class="btn small'+(stationQuad===q[0]?" on":"")+'" onclick="stationQuad=\''+q[0]+'\';render()">'+q[1]+'</button>').join("")+'</div>';
 }
 
 /* ================= PLAYER COMMANDER ================= */
@@ -2824,7 +2833,7 @@ function shipWarnings(s){
 function renderShips(){
   let h="";
   G.ships.forEach(s=>{
-    if(shipQuad!=="all"&&shipQuadOf(s)!==shipQuad)return;
+    if(shipQuad!=="all"&&postQuadOf(s)!==shipQuad)return;
     const c=shipClass(s),crew=crewOfShip(s.id),warns=shipWarnings(s),om=s.status==="mission";
     h+='<div class="card'+(om?' onmission':'')+'"><div class="row" onclick="shipModal(\''+s.id+'\')" style="cursor:pointer;">'+shipPic(s.cls)+
       '<div class="grow"><div class="nm">'+esc(s.name)+' <span class="dim">'+esc(s.registry)+'</span>'+(om?' <span class="badge" style="background:var(--violet);color:#0b0b12;font-weight:bold;">ON MISSION</span>':'')+'</div>'+
@@ -2841,6 +2850,7 @@ function renderStations(){
   let h="";
   G.stations.forEach(st=>{
     if(st.type==="academy"||st.type==="sfcommand")return;
+    if(stationQuad!=="all"&&postQuadOf(st)!==stationQuad)return;
     const d=STATION_DEFS[st.type],crew=crewOfStation(st.id);
     h+='<div class="card"><div class="row" onclick="stationModal(\''+st.id+'\')" style="cursor:pointer;">'+stationPic(stationArtKey(st))+
       '<div class="grow"><div class="nm">'+esc(st.name)+'</div>'+
@@ -2848,7 +2858,7 @@ function renderStations(){
       (st.status==="construction"?'<div class="prog"><i style="width:'+Math.round((1-st.daysLeft/d.days)*100)+'%"></i></div>':"")+
       '</div><span class="badge">'+d.name+'</span></div></div>';
   });
-  return h;
+  return h||'<div class="card"><p class="dim">'+(stationQuad==="all"?"No stations.":"No stations in this quadrant.")+'</p></div>';
 }
 /* ---------- PERSONNEL tab ---------- */
 let persFilter="all";
@@ -3398,6 +3408,7 @@ function renderMemorial(){
 let logFilter="all";
 let cmdSub="status";
 let shipQuad="all";
+let stationQuad="all";
 /* ================= CAPTAIN'S LOG ================= */
 function capLogAuto(t,b){
   (G.captainsLog=G.captainsLog||[]).push({d:G.day,sd:G.stardate,t,b,auto:true});
@@ -3824,7 +3835,7 @@ const POST_COORDS={sol:[200,282],alpha:[300,290],beta:[100,290],gamma:[100,110],
 const POST_LABELS={sol:"Sol",alpha:"Alpha Quadrant",beta:"Beta Quadrant",gamma:"Gamma Quadrant",delta:"Delta Quadrant",qonos:"Qo'noS",romulus:"Romulus",bajor:"Bajor",ds9:"Deep Space 9",cardassia:"Cardassia Prime",ferenginar:"Ferenginar",borg:"Borg Unicomplex",dominion:"Dominion",vulcan:"Vulcan",andoria:"Andoria",betazed:"Betazed",trill:"Trill",risa:"Risa",khitomer:"Khitomer",ocampa:"Ocampa",talax:"Talax",founders:"Founders' Homeworld",wolf359:"Wolf 359"};
 function shipPostName(s){return POST_LABELS[s.post]||POST_LABELS.sol;}
 const POST_QUAD={sol:"alpha",alpha:"alpha",beta:"beta",gamma:"gamma",delta:"delta",qonos:"beta",romulus:"beta",khitomer:"beta",bajor:"alpha",ds9:"alpha",cardassia:"alpha",ferenginar:"alpha",vulcan:"alpha",andoria:"alpha",betazed:"alpha",trill:"alpha",risa:"alpha",wolf359:"alpha",ocampa:"delta",talax:"delta",borg:"delta",founders:"gamma",dominion:"gamma"};
-function shipQuadOf(s){return POST_QUAD[s.post]||"alpha";}
+function postQuadOf(s){return POST_QUAD[s.post]||"alpha";}
 function postOptions(cur){
   const gr=[["Quadrants",["alpha","beta","gamma","delta"]],["Systems",["sol","vulcan","andoria","betazed","trill","risa","wolf359","qonos","romulus","khitomer","bajor","ds9","cardassia","ferenginar","ocampa","talax","founders","borg","dominion"]]];
   return gr.map(g=>'<optgroup label="'+g[0]+'">'+g[1].map(k=>'<option value="'+k+'"'+(k===cur?" selected":"")+'>'+POST_LABELS[k]+'</option>').join("")+"</optgroup>").join("");
@@ -4249,7 +4260,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <h2>Menu</h2>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v13</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v14</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
