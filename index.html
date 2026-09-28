@@ -2048,6 +2048,12 @@ function renderSettings(){
   h+='<div class="card"><h3>Q Mode — Sandbox</h3><p class="dim">The Q Continuum offers you omnipotence: bypass every lock and requirement, conjure resources out of thin air, resurrect the fallen, snap nuisances out of existence, and edit ships, stations and officers at will.</p>'+
     '<div class="btnRow"><button class="btn'+(G.qmode?" on":"")+'" onclick="uiToggleQ()">'+(G.qmode?"Q Mode: ON — Relinquish omnipotence":"Q Mode: OFF — Accept omnipotence")+'</button></div></div>';
   if(G.qmode)h+=renderQCard();
+  h+='<div class="card"><h3>Save Data</h3><div class="btnRow">'+
+    '<button class="btn small ghost" onclick="uiSave()">Save now</button>'+
+    '<button class="btn small ghost" onclick="uiExport()">Export save</button>'+
+    '<button class="btn small ghost" onclick="uiImport()">Import save</button>'+
+    '<button class="btn small danger" onclick="uiReset()">New game</button></div>'+
+    '<p class="dim">Autosaves after every time advance.</p></div>';
   return h;
 }
 function uiToggleQ(){
@@ -2729,22 +2735,22 @@ function renderCommand(){
     const job=G.builds.find(b=>b.yardId===y.id);
     const rep=G.ships.find(s=>s.status==="repair"&&s.yardId===y.id);
     return '<div class="kv"><span class="k">'+esc(y.name)+'</span><span class="v">'+(job?esc(job.name):rep?esc(rep.name+" (repair)"):"Idle")+'</span></div>';}).join("");
-  return (G.qmode?renderQCard():"")+'<div class="card"><div class="pfaceWrap" style="margin-bottom:0;cursor:pointer;" onclick="setTab(\'commander\')">'+cmdrImg("pface")+
+  const cmdrCard='<div class="card"><div class="pfaceWrap" style="margin-bottom:0;cursor:pointer;" onclick="setTab(\'commander\')">'+cmdrImg("pface")+
     '<div style="flex:1;min-width:0;"><div class="nm">'+(G.commander.name?esc(G.commander.name):"Unnamed Commander")+'</div>'+
-    '<div class="sub2">'+PLAYER_TITLES[G.playerRank][1]+' · '+esc(cmdrSpeciesLabel(G.commander.species))+' · <span style="color:var(--orange)">Customize</span></div></div></div></div>'+
-  cmdrInstitutions()+renderResearchCard()+'<div class="card"><h3>Sector Status</h3>'+
+    '<div class="sub2">'+PLAYER_TITLES[G.playerRank][1]+' · '+esc(cmdrSpeciesLabel(G.commander.species))+' · <span style="color:var(--orange)">Customize</span></div></div></div></div>';
+  const sectorCard='<div class="card"><h3>Sector Status</h3>'+
     '<div class="kv"><span class="k">Stardate</span><span class="v">'+sdStr(G.stardate)+' ('+earthDate(G.stardate)+')</span></div>'+
     '<div class="kv"><span class="k">Days in command</span><span class="v">'+G.day+'</span></div>'+
     '<div class="kv"><span class="k">Daily income</span><span class="v">+'+fmt(d.inc)+' CR</span></div>'+
     '<div class="kv"><span class="k">Daily upkeep</span><span class="v">−'+fmt(d.up)+' CR</span></div>'+
     '<div class="kv"><span class="k">Net / day</span><span class="v" style="color:'+(d.net>=0?"var(--green)":"var(--red)")+'">'+(d.net>=0?"+":"−")+fmt(Math.abs(d.net))+' CR</span></div>'+
     (G.dlIncome?'<div class="kv"><span class="k">Dilithium trickle</span><span class="v">+'+G.dlIncome+' DL/day</span></div>':"")+
-    '</div>'+
-  '<div class="card"><h3>Active Operations</h3>'+
+    '</div>';
+  const opsCard='<div class="card"><h3>Active Operations</h3>'+
     (missions||'<p class="dim">No ships on mission. Visit the Missions tab.</p>')+
     (builds?'<h4>Under construction</h4>'+builds:"")+
-    (yardStatus?'<h4>Shipyards</h4>'+yardStatus:"")+'</div>'+
-  '<div class="card"><h3>Service Record</h3>'+
+    (yardStatus?'<h4>Shipyards</h4>'+yardStatus:"")+'</div>';
+  const recCard='<div class="card"><h3>Service Record</h3>'+
     '<div class="kv"><span class="k">Missions completed</span><span class="v">'+G.ledger.missions+' ('+G.ledger.crits+' critical)</span></div>'+
     '<div class="kv"><span class="k">Ships commissioned</span><span class="v">'+G.ledger.shipsBuilt+'</span></div>'+
     '<div class="kv"><span class="k">Stations activated</span><span class="v">'+G.ledger.stationsBuilt+'</span></div>'+
@@ -2754,12 +2760,6 @@ function renderCommand(){
     '<div class="kv"><span class="k">Events weathered</span><span class="v">'+G.ledger.events+'</span></div></div>'+
   '<div class="card"><h3>Flag Rank Progression</h3>'+
     PLAYER_TITLES.map((t,i)=>'<div class="kv"><span class="k">'+t[1]+'</span><span class="v">'+(i<=G.playerRank?"★ CURRENT":t[0]+" prestige")+'</span></div>').join("")+'</div>'+
-  '<div class="card"><h3>Save Data</h3><div class="btnRow">'+
-    '<button class="btn small ghost" onclick="uiSave()">Save now</button>'+
-    '<button class="btn small ghost" onclick="uiExport()">Export save</button>'+
-    '<button class="btn small ghost" onclick="uiImport()">Import save</button>'+
-    '<button class="btn small danger" onclick="uiReset()">New game</button></div>'+
-    '<p class="dim">Autosaves after every time advance.</p></div>'+
   '<div class="card"><h3>Captain\'s Manual</h3><p style="font-size:16px;line-height:1.6;">'+
     '<b>1.</b> Advance time with the +Day buttons. The sector lives while you watch.<br>'+
     '<b>2.</b> Build ships at shipyards and stations in the <b>Build</b> tab — every yard past the first speeds construction.<br>'+
@@ -2768,6 +2768,15 @@ function renderCommand(){
     '<b>5.</b> Crew fall in love, marry, and have children. Children grow up, join the Academy, and become officers — a generational fleet.<br>'+
     '<b>6.</b> Earn prestige from missions and events to unlock the Prometheus-class and rise to Fleet Admiral.<br>'+
     '<b>7.</b> Damaged ships repair automatically at free shipyards. Injured crew heal — faster with a Medical Station.</p></div>';
+  const tabs=[["status","Status"],["research","Research"],["inst","Institutions"],["rec","Records"]];
+  let h=(G.qmode?renderQCard():"");
+  h+='<div class="card" style="position:sticky;top:58px;z-index:5;padding:8px;"><div class="seg" style="display:flex;width:100%;">'+
+    tabs.map(t=>'<button class="btn small'+(cmdSub===t[0]?" on":"")+'" style="flex:1;" onclick="cmdSub=\''+t[0]+'\';render()">'+t[1]+'</button>').join("")+'</div></div>';
+  if(cmdSub==="research")h+=renderResearchCard();
+  else if(cmdSub==="inst")h+=cmdrInstitutions();
+  else if(cmdSub==="rec")h+=recCard;
+  else h+=cmdrCard+sectorCard+opsCard;
+  return h;
 }
 
 /* ---------- SHIPS tab ---------- */
@@ -3360,6 +3369,7 @@ function renderMemorial(){
 
 /* ---------- LOG tab ---------- */
 let logFilter="all";
+let cmdSub="status";
 /* ================= CAPTAIN'S LOG ================= */
 function capLogAuto(t,b){
   (G.captainsLog=G.captainsLog||[]).push({d:G.day,sd:G.stardate,t,b,auto:true});
