@@ -5105,6 +5105,14 @@ function renderQuadrant(q){
       +"<circle cx=\""+p[1]+"\" cy=\""+p[2]+"\" r=\"4.5\" fill=\""+p[3]+"\"/>"
       +"<g class=\"mapLblG\" data-mx=\""+p[1]+"\" data-my=\""+p[2]+"\" data-dx=\"12\" data-dy=\"4\"><text x=\"0\" y=\"0\" class=\"mapLbl\">"+p[4]+"</text></g></g>";
   });
+  let wh="";
+  if(q==="alpha"&&mapLayers.planets){
+    wh="<g onclick=\"mapInfo('wormhole')\" style=\"cursor:pointer\">"
+      +"<circle cx=\"273\" cy=\"233\" r=\"12\" fill=\"none\" stroke=\"#7ee0ff\" stroke-width=\"2\" opacity=\".75\"/>"
+      +"<circle cx=\"273\" cy=\"233\" r=\"7\" fill=\"none\" stroke=\"#bff1ff\" stroke-width=\"1.5\" opacity=\".9\"/>"
+      +"<circle cx=\"273\" cy=\"233\" r=\"3\" fill=\"#eafcff\"/>"
+      +"<g class=\"mapLblG\" data-mx=\"273\" data-my=\"233\" data-dx=\"15\" data-dy=\"4\"><text x=\"0\" y=\"0\" class=\"mapLbl\">Wormhole</text></g></g>";
+  }
   let terr="";
   if(mapLayers.territories)(QTERR[q]||[]).forEach(function(t){
     terr+="<g class=\"poi\" onclick=\"mapInfo(\u0027"+t[0]+"\u0027)\"><ellipse cx=\""+t[2]+"\" cy=\""+t[3]+"\" rx=\""+t[4]+"\" ry=\""+t[5]+"\" fill=\""+t[6]+"\" fill-opacity=\"0.07\" stroke=\""+t[6]+"\" stroke-opacity=\"0.45\" stroke-width=\"1.5\" stroke-dasharray=\"7 5\"/><g class=\"mapLblG\" data-mx=\""+t[7]+"\" data-my=\""+t[8]+"\" data-dx=\"0\" data-dy=\"0\"><text x=\"0\" y=\"0\" text-anchor=\"middle\" class=\"mapTerr\">"+t[1]+"</text></g></g>";
@@ -5153,7 +5161,7 @@ function renderQuadrant(q){
     +"<g id=\"mapZoomG\" transform=\"translate("+mapX+" "+mapY+") scale("+mapZ+")\">"
     +sect+terr+(mapLayers.planets?pm:"")+(mapLayers.fleet?fleet:"")+(mapLayers.stations?stnLayer:"")
     +"</g></svg></div></div>";
-  h+="<div class=\"mapLegend\"><span><i class=\"lgDot\" style=\"background:#ffb703\"></i>Your ships</span><span><i class=\"lgSq\"></i>Your stations</span><span><i class=\"lgDot\" style=\"background:#4cc9f0\"></i>Notable systems</span></div>";
+  h+="<div class=\"mapLegend\"><span><i class=\"lgDot\" style=\"background:#ffb703\"></i>Your ships</span>"+(q==="alpha"?"<span><i class=\"lgDot\" style=\"background:#7ee0ff\"></i>Wormhole</span>":"")+"<span><i class=\"lgSq\"></i>Your stations</span><span><i class=\"lgDot\" style=\"background:#4cc9f0\"></i>Notable systems</span></div>";
   h+="<div class=\"mapHint\">Pinch to zoom \u00b7 drag to pan \u00b7 double-tap to reset \u00b7 tap a marker for details.</div>";
   return h;
 }
@@ -5596,7 +5604,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <h2>Menu</h2>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.36</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.37</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
