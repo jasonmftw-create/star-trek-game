@@ -431,8 +431,29 @@ function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").repl
 function toast(msg){const t=$("toast");t.textContent=msg;t.style.display="block";
   clearTimeout(t._h);t._h=setTimeout(()=>t.style.display="none",2200);}
 function bar(label,val,max,color){max=max||100;
-  return '<div class="statRow"><span class="sk">'+label+'</span><div class="statBar"><i style="width:'+
+  return '<div class="statRow"'+(BAR_HINTS[label]?' data-hint="'+esc(BAR_HINTS[label])+'"':"")+'><span class="sk">'+label+'</span><div class="statBar"><i style="width:'+
     clamp(val/max*100,0,100)+'%;'+(color?('background:'+color+';'):'')+'"></i></div><span class="sv">'+Math.round(val)+'</span></div>';}
+const BAR_HINTS={
+ HULL:"Hull strength. Higher hull means the ship can take more punishment in combat before being damaged or destroyed.",
+ TAC:"Tactical systems — phasers, torpedoes and targeting. Higher TAC improves combat missions and battles.",
+ SCI:"Science capability — sensors, labs and survey gear. Higher SCI improves exploration and research missions.",
+ WARP:"Warp speed factor times ten. Faster ships reach distant postings and complete missions sooner.",
+ CMD:"Command ability — leadership, tactics and decision-making. High CMD officers make the best captains.",
+ ENG:"Engineering skill — warp cores, repairs and jury-rigging. High ENG officers keep ships running and fix things fast.",
+ MED:"Medical skill — surgery, triage and xenobiology. High MED officers heal the injured and handle plagues.",
+ DIP:"Diplomacy — negotiation, protocol and first contact. High DIP officers shine on diplomatic missions.",
+ MOR:"Morale — how happy this officer is, 0 to 100. High morale boosts mission success; low morale hurts it and can lead to transfer requests.",
+ LOY:"Loyalty — how committed this officer is to your command, 0 to 100. Below 30 they grow miserable; at 15 or less they may resign.",
+ CLASS:"Cadet class training progress. When the bar fills, the class graduates and new ensigns join your crew."};
+
+/* long-press (mobile) / right-click (desktop) any [data-hint] for a plain-language explanation */
+document.addEventListener("contextmenu",function(e){
+  const el=e.target&&e.target.closest?e.target.closest("[data-hint]"):null;
+  if(el&&el.getAttribute("data-hint")){
+    e.preventDefault();
+    openModal('<h2>What does this mean?</h2><p style="font-size:16px;line-height:1.6;">'+esc(el.getAttribute("data-hint"))+'</p><div class="btnRow"><button class="btn" onclick="closeModal()">Got it</button></div>');
+  }
+});
 
 /* Stardate 41000 ≈ year 2364 → year = 2323 + sd/1000 */
 function earthDate(sd){
@@ -445,6 +466,40 @@ function earthDate(sd){
 }
 function sdStr(sd){return sd.toFixed(1);}
 function sdYear(sd){return Math.floor(2378+(sd-54973.4)/1000);}
+/* same epoch math as earthDate, but returns numeric month/day for holiday matching */
+function stardateMD(sd){
+  const y=2323+sd/1000, yr=Math.floor(y);
+  let doy=Math.floor((y-yr)*365);
+  const mdays=[31,28,31,30,31,30,31,31,30,31,30,31]; let m=0;
+  while(m<11&&doy>=mdays[m]){doy-=mdays[m];m++;}
+  return {m:m+1,d:doy+1};
+}
+const HOLIDAYS=[
+ {m:4,d:5,key:"firstcontact",name:"First Contact Day",
+  text:"On this day in 2063, Zefram Cochrane's warp flight caught the eye of a passing Vulcan survey ship. The sector celebrates with warp-flare salutes and far too much synthehol.",
+  bonusText:"+25 prestige — the crew stands a little taller today.",
+  bonus:function(){gainPres(25);}},
+ {m:6,d:16,key:"picard",name:"Captain Picard Day",
+  text:"The sector's children compete in the annual Picard impersonation contest — bald caps, Earl Grey, and dramatic pauses. The crew judges, and morale soars.",
+  bonusText:"+4 morale fleet-wide.",
+  bonus:function(){moraleAll(4);}},
+ {m:9,d:8,key:"frontier",name:"Frontier Day",
+  text:"The anniversary of Starfleet's founding. Every ship in the sector sounds its whistle in unison at 0800 hours, and the frontier feels a little closer to home.",
+  bonusText:"+15 prestige, +2 morale fleet-wide.",
+  bonus:function(){gainPres(15);moraleAll(2);}}];
+function holidayTick(){
+  const md=stardateMD(G.stardate),year=sdYear(G.stardate);
+  HOLIDAYS.forEach(h=>{
+    if(md.m!==h.m||md.d!==h.d)return;
+    const fk="hol_"+h.key+"_"+year;
+    if(G.flags[fk])return;
+    G.flags[fk]=1;
+    h.bonus();
+    log("event",h.name+": "+h.text+" ("+h.bonusText+")");
+    interruptQueue.push({title:h.name,sub:"Stardate "+sdStr(G.stardate),
+      html:"<p>"+esc(h.text)+"</p><p>"+esc(h.bonusText)+"</p>",buttons:[{t:"Celebrate"}]});
+  });
+}
 
 /* ================= CONFIG: RANKS / DEPTS / TRAITS ================= */
 const RANKS=["Ensign","Lieutenant Junior Grade","Lieutenant","Lieutenant Commander","Commander",
@@ -1384,7 +1439,7 @@ function migrateSave(g){
   (g.officers||[]).forEach(o=>{if(!o.show)o.show=CANON_SHOW[o.name]||null;if(!o.traits)o.traits=[];if(o.loyal==null)o.loyal=70;if(!o.friends)o.friends=[];if(!o.rivals)o.rivals=[];if(o.promRec==null)o.promRec=false;});
   if(g.tempCd==null)g.tempCd=0;
   if(!g.rescued)g.rescued={};
-  if(!g.research)g.research={active:null,done:{}};if(!g.portraitVer)g.portraitVer={};if(g.qmode==null)g.qmode=false;if(!g.qtheme)g.qtheme="full";if(!g.captainsLog)g.captainsLog=[];if(!g.arcs)g.arcs=[];if(!g.contacts)g.contacts=[];
+  if(!g.holo)g.holo=[];  if(!g.research)g.research={active:null,done:{}};if(!g.portraitVer)g.portraitVer={};if(g.qmode==null)g.qmode=false;if(!g.qtheme)g.qtheme="full";if(!g.captainsLog)g.captainsLog=[];if(!g.arcs)g.arcs=[];if(!g.contacts)g.contacts=[];
   // accolades: seed canon service histories, merge without duplicating
   (g.officers||[]).forEach(o=>{
     if(!o.accolades)o.accolades=[];
@@ -1506,15 +1561,15 @@ function tickDay(){
   if(G.tempCd>0)G.tempCd--;
   economyTick(); buildTick(); researchTick(); refitTick(); missionTick(); transitTick();
   healTick(); ageTick(); romanceTick(); familyTick();
-  randomEventTick(); scriptedTick(); rankCheckTick(); battleTick(); socialTick(); arcTick();
+  randomEventTick(); scriptedTick(); rankCheckTick(); battleTick(); socialTick(); arcTick(); holoTick(); holidayTick();
 }
 function economyTick(){
   let income=1500+300*activeStations("starbase").length
     +150*(activeStations("shipyard").length+activeStations("medical").length+activeStations("research").length+activeStations("embassy").length+activeStations("gate").length
     +activeStations("academy").length+activeStations("sfcommand").length);
   let upkeep=0;
-  G.ships.forEach(s=>{if(s.status!=="museum")upkeep+=SHIP_CLASSES[s.cls].upkeep;});
-  G.stations.forEach(st=>{if(st.status==="active")upkeep+=STATION_DEFS[st.type].upkeep;});
+  G.ships.forEach(s=>{if(s.status!=="museum"&&!s.mothballed)upkeep+=SHIP_CLASSES[s.cls].upkeep;});
+  G.stations.forEach(st=>{if(st.status==="active"&&!st.mothballed)upkeep+=STATION_DEFS[st.type].upkeep;});
   G.credits+=income-upkeep;
   gainPres(2*activeStations("starbase").length+3*activeStations("embassy").length+2*G.ships.filter(s=>s.status==="active"&&s.cls==="ark"&&!s.transit&&s.post&&s.post!=="sol"&&["alpha","beta","gamma","delta"].indexOf(s.post)<0).length);
   G.dilithium+=(G.dlIncome||0);
@@ -1534,9 +1589,9 @@ function buildTick(){
     if(b.daysLeft<=0){G.builds.splice(i,1);
       const _nid=uid("s");
       G.ships.push({id:_nid,name:b.name,registry:b.registry,cls:b.cls,status:"active",daysLeft:0,damage:0,missionId:null,yardId:null,post:"sol",comp:SHIP_CLASSES[b.cls].comp,commSd:G.stardate,tours:1});
-      G.ledger.shipsBuilt++;gainPres(20);
-      queueCompletion({kind:"ship",id:_nid,name:b.name,sub:b.registry+" \u00b7 "+SHIP_CLASSES[b.cls].name+"-class",art:(typeof SHIP_PICS!=="undefined"&&SHIP_PICS[b.cls])?SHIP_PICS[b.cls]:""});
-      log("build",b.name+" ("+b.registry+", "+SHIP_CLASSES[b.cls].name+"-class) has been commissioned. The fleet grows stronger.");
+      G.ledger.shipsBuilt++;gainPres(20);gainPres(5);sfx("success");
+      queueCompletion({kind:"ship",id:_nid,name:b.name,sub:b.registry+" \u00b7 "+SHIP_CLASSES[b.cls].name+"-class · Christened (+5 prestige)",art:(typeof SHIP_PICS!=="undefined"&&SHIP_PICS[b.cls])?SHIP_PICS[b.cls]:""});
+      log("build","Christening ceremony: "+b.name+" ("+b.registry+", "+SHIP_CLASSES[b.cls].name+"-class) is commissioned. A bottle of champagne is broken across her hull. (+5 prestige)");
       capLogAuto("Ship commissioned",b.name+" ("+b.registry+", "+SHIP_CLASSES[b.cls].name+"-class) has joined the fleet.");}}
   // station construction (max 2 concurrent)
   G.stations.forEach(st=>{if(st.status==="construction"){st.daysLeft--;
@@ -1953,7 +2008,38 @@ function socialTick(){
       moraleAll(-3);
     }
   });
+  banterTick();
   relationTick();
+}
+const BANTER_FRIENDLY=[
+ "You know, I think the warp core hums in B flat today.",
+ "Remind me to show you the nebula photos from the observation deck. Breathtaking.",
+ "I saved you a seat in the mess hall. The replicated plomeek soup is almost tolerable.",
+ "If the captain asks, the holodeck was already reserved. For both of us.",
+ "Race you to the Jeffries tube junction? Loser recalibrates the plasma conduits."];
+const BANTER_RIVAL=[
+ "Touch my console settings again and you will be scrubbing plasma conduits.",
+ "Your shortcut through the Badlands cost us six hours. Six.",
+ "I still have not forgiven you for the Great Tribble Incident.",
+ "Keep talking. The captain's log will remember who was right.",
+ "Your bridge etiquette needs work. Your aim needs more."];
+function banterTick(){
+  if(Math.random()>0.08)return;
+  const cands=G.ships.filter(s=>!s.mothballed&&crewOfShip(s.id).length>=2);
+  if(!cands.length)return;
+  const s=pick(cands),crew=crewOfShip(s.id);
+  let a=null,b=null,rival=false;
+  outer:
+  for(let i=0;i<crew.length;i++)for(let j=0;j<crew.length;j++){
+    if(i===j)continue;
+    const x=crew[i],y=crew[j];
+    if((x.friends||[]).indexOf(y.id)>=0){a=x;b=y;rival=false;break outer;}
+    if((x.rivals||[]).indexOf(y.id)>=0){a=x;b=y;rival=true;break outer;}
+  }
+  if(!a)return;
+  const line=pick(rival?BANTER_RIVAL:BANTER_FRIENDLY);
+  const fa=a.name.split(" ")[0],fb=b.name.split(" ")[0];
+  log("personnel",'Bridge banter aboard '+s.name+': "'+line+'" — '+fa+(rival?' to ':' and ')+fb+'.');
 }
 function pickTransferDest(o){
   const opts=[];
@@ -2877,7 +2963,7 @@ function battleTick(){
   if(!battlesOn())return;
   var klaxoned=false;
   G.ships.forEach(function(s){
-    if(!s||s.status!=="active"||s.transit)return;
+    if(!s||s.status!=="active"||s.transit||s.mothballed)return;
     const z=HOSTILE_ZONES[s.post];if(!z)return;
     if(Math.random()<z.danger){
       const e=pick(ENEMY_POOLS[z.pool]);
@@ -4145,6 +4231,66 @@ function dailyIncome(){
   G.stations.forEach(st=>{if(st.status==="active")up+=STATION_DEFS[st.type].upkeep;});
   return {inc,up,net:inc-up};
 }
+const HOLO_PROGRAMS=[
+ {id:"tac",name:"Tactical Simulation",stat:"tac",cr:2000,dl:40,days:10,desc:"Live-fire drills against simulated Dominion attack wings."},
+ {id:"sci",name:"Science Survey Sim",stat:"sci",cr:1800,dl:40,days:10,desc:"Catalog a simulated protostar nursery."},
+ {id:"eng",name:"Engineering Crisis",stat:"eng",cr:1800,dl:50,days:10,desc:"Hold a warp core together with spare parts and optimism."},
+ {id:"dip",name:"Diplomatic Summit",stat:"dip",cr:2200,dl:40,days:10,desc:"Negotiate peace between very stubborn holograms."},
+ {id:"med",name:"Mass-Casualty Drill",stat:"med",cr:1800,dl:40,days:10,desc:"Triage a simulated plasma fire on the promenade."}];
+function holoCard(){
+  let h='<div class="card"><h3>Holodeck Training</h3><p class="dim">Run training scenarios that permanently raise an officer\'s skills.</p>';
+  const prog=G.holo||[];
+  if(prog.length){
+    h+='<h4>In training ('+prog.length+')</h4>';
+    prog.forEach(e=>{
+      const o=officer(e.id),p=HOLO_PROGRAMS.find(x=>x.id===e.prog);
+      h+='<div class="kv"><span class="k">'+esc(o?fullName(o):"?")+' — '+esc(p?p.name:"?")+'</span><span class="v">'+e.daysLeft+'d left</span></div>';
+    });
+  }
+  HOLO_PROGRAMS.forEach(p=>{
+    h+='<div class="row"><div class="grow"><div class="nm">'+esc(p.name)+'</div>'+
+      '<div class="sub2">+'+p.stat.toUpperCase()+' skill · '+p.days+' days</div>'+
+      '<div class="sub2">'+esc(p.desc)+'</div>'+
+      '<div class="sub2">'+fmt(p.cr)+' CR · '+fmt(p.dl)+' DL</div></div>'+
+      '<button class="btn small teal" onclick="uiHoloPicker(\''+p.id+'\')">Train</button></div>';
+  });
+  return h+'</div>';
+}
+function uiHoloPicker(pid){
+  const p=HOLO_PROGRAMS.find(x=>x.id===pid);if(!p)return;
+  const offs=G.officers.filter(o=>o.status==="active"&&!o.dead&&!o.retired&&o.stage==="adult"&&!(G.holo||[]).some(e=>e.id===o.id)).sort((a,b)=>b.rank-a.rank);
+  let h='<h2>'+esc(p.name)+'</h2><div class="flavor">Pick an officer to train — '+fmt(p.cr)+' CR · '+fmt(p.dl)+' DL · '+p.days+' days</div><div>';
+  offs.forEach(o=>{
+    h+='<div class="row" style="cursor:pointer;padding:6px;" onclick="uiHoloStart(\''+p.id+'\',\''+o.id+'\')">'+faceImg(o,"pfaceSm")+'<div class="grow"><div class="nm">'+nameHtml(o)+'</div><div class="sub2">'+esc(RANKS[o.rank])+' · '+p.stat.toUpperCase()+' '+(o.stats?o.stats[p.stat]:0)+'</div></div></div>';
+  });
+  h+='</div><div class="btnRow"><button class="btn small ghost" onclick="closeModal()">Cancel</button></div>';
+  openModal(h);
+}
+function uiHoloStart(pid,oid){
+  const p=HOLO_PROGRAMS.find(x=>x.id===pid),o=officer(oid);if(!p||!o)return;
+  if((G.holo||[]).some(e=>e.id===o.id)){toast("Already in training.");return;}
+  if(G.credits<p.cr||G.dilithium<p.dl){toast("Not enough resources.");return;}
+  G.credits-=p.cr;G.dilithium-=p.dl;
+  G.holo.push({id:o.id,prog:p.id,daysLeft:p.days,total:p.days});
+  log("personnel",fullName(o)+" entered the holodeck for "+p.name+" ("+p.days+" days).");
+  save();closeModal();render();toast(fullName(o)+" started "+p.name+".");
+}
+function holoTick(){
+  if(!G.holo||!G.holo.length)return;
+  for(let i=G.holo.length-1;i>=0;i--){
+    const e=G.holo[i];e.daysLeft--;
+    if(e.daysLeft>0)continue;
+    G.holo.splice(i,1);
+    const o=officer(e.id),p=HOLO_PROGRAMS.find(x=>x.id===e.prog);
+    if(!o||o.dead||o.retired||o.status!=="active"||!p)continue;
+    const gain=ri(6,12);
+    o.stats[p.stat]=Math.min(100,(o.stats?o.stats[p.stat]:0)+gain);
+    log("personnel",fullName(o)+" completed "+p.name+" (+"+gain+" "+p.stat.toUpperCase()+").");
+    interruptQueue.push({title:"Holodeck Training Complete",sub:fullName(o)+" · Stardate "+sdStr(G.stardate),
+      html:"<p>"+esc(fullName(o))+" completed <b>"+esc(p.name)+"</b>.</p><p>+"+gain+" "+p.stat.toUpperCase()+" skill.</p>",
+      buttons:[{t:"Continue"}]});
+  }
+}
 function cmdrInstitutions(){
   const ac=station("academy"),sc=station("sfcommand");
   let h="";
@@ -4165,7 +4311,21 @@ function cmdrInstitutions(){
       '<div class="sub2">'+(sc.reqCd>0?("Requisition ready in "+sc.reqCd+"d"):"Requisition available now")+'</div></div></div>'+
       '<div class="btnRow"><button class="btn small teal" onclick="event.stopPropagation();uiRequestRequisition(\'sfcommand\')"'+(sc.reqCd>0?" disabled":"")+'>'+(sc.reqCd>0?"Requisition pending":"Request requisition (+2,500 CR, +120 DL, +8 prestige)")+'</button></div></div>';
   }
+  h+=holoCard();
   return h;
+}
+function renderNeedsAttention(){
+  const idle=G.ships.filter(s=>s.status==="active"&&!s.missionId&&!s.transit&&!s.mothballed);
+  const fin=G.builds.filter(b=>b.daysLeft<=5).length+G.stations.filter(st=>st.status==="construction"&&st.daysLeft<=5).length;
+  const req=G.stations.some(st=>st.type==="sfcommand"&&st.status==="active"&&(st.reqCd||0)<=0);
+  const low=G.officers.filter(o=>o.status==="active"&&!o.dead&&!o.retired&&o.stage==="adult"&&(o.loyal==null?70:o.loyal)<30);
+  let rows="";
+  if(idle.length)rows+='<div class="row" style="cursor:pointer" onclick="setTab(\'ships\')"><div class="grow"><div class="nm">'+idle.length+' idle ship'+(idle.length>1?"s":"")+'</div><div class="sub2">Ready for orders — tap to view</div></div></div>';
+  if(fin)rows+='<div class="row" style="cursor:pointer" onclick="setTab(\'command\')"><div class="grow"><div class="nm">'+fin+' build'+(fin>1?"s":"")+' finishing within 5 days</div><div class="sub2">Tap to review construction</div></div></div>';
+  if(req)rows+='<div class="row" style="cursor:pointer" onclick="cmdSub=\'inst\';render()"><div class="grow"><div class="nm">Requisition ready</div><div class="sub2">Starfleet Command — tap to claim</div></div></div>';
+  if(low.length)rows+='<div class="row" style="cursor:pointer" onclick="setTab(\'personnel\')"><div class="grow"><div class="nm">'+low.length+' officer'+(low.length>1?"s":"")+' with low loyalty</div><div class="sub2">Tap to hold audiences and raise morale</div></div></div>';
+  if(!rows)return "";
+  return '<div class="card"><h3>Needs Attention</h3>'+rows+'</div>';
 }
 function renderCommand(){
   const d=dailyIncome();
@@ -4187,8 +4347,8 @@ function renderCommand(){
   const sectorCard='<div class="card"><h3>Sector Status</h3>'+
     '<div class="kv"><span class="k">Stardate</span><span class="v">'+sdStr(G.stardate)+' ('+earthDate(G.stardate)+')</span></div>'+
     '<div class="kv"><span class="k">Days in command</span><span class="v">'+G.day+'</span></div>'+
-    '<div class="kv"><span class="k">Daily income</span><span class="v">+'+fmt(d.inc)+' CR</span></div>'+
-    '<div class="kv"><span class="k">Daily upkeep</span><span class="v">−'+fmt(d.up)+' CR</span></div>'+
+    '<div class="kv" data-hint="Credits earned each day from Starfleet Command (1,500 CR) plus 300 per starbase and 150 per other active station. If income falls below upkeep, your treasury drains."><span class="k">Daily income</span><span class="v">+'+fmt(d.inc)+' CR</span></div>'+
+    '<div class="kv" data-hint="Credits spent each day maintaining your fleet and stations. Mothballing ships and stations you are not using removes their upkeep."><span class="k">Daily upkeep</span><span class="v">−'+fmt(d.up)+' CR</span></div>'+
     '<div class="kv"><span class="k">Net / day</span><span class="v" style="color:'+(d.net>=0?"var(--green)":"var(--red)")+'">'+(d.net>=0?"+":"−")+fmt(Math.abs(d.net))+' CR</span></div>'+
     (G.dlIncome?'<div class="kv"><span class="k">Dilithium trickle</span><span class="v">+'+G.dlIncome+' DL/day</span></div>':"")+
     '</div>';
@@ -4218,12 +4378,13 @@ function renderCommand(){
   if(cmdSub==="research")h+=renderResearchCard();
   else if(cmdSub==="inst")h+=cmdrInstitutions();
   else if(cmdSub==="rec")h+=recCard;
-  else h+=cmdrCard+sectorCard+opsCard;
+  else h+=renderNeedsAttention()+cmdrCard+sectorCard+opsCard;
   return h;
 }
 
 /* ---------- SHIPS tab ---------- */
 function shipStatusLabel(s){
+  if(s.mothballed)return "Mothballed";
   if(s.transit)return (s.transit.via==="gate"?"Slipstream transit":"Wormhole transit")+" \u2014 "+s.transit.daysLeft+"d to "+(POST_LABELS[s.transit.dest]||"?");
   if(s.status==="refit")return "Refit — "+s.daysLeft+"d";
   if(s.status==="mission")return "On Mission";
@@ -4240,6 +4401,10 @@ function shipWarnings(s){
   if(s.damage>0)w.push("Hull damage "+Math.round(s.damage)+"%");
   return w;
 }
+const WARN_HINTS={
+ "Under-crewed":"Ships work best with at least 5 officers posted. Below that the crew is stretched thin and missions suffer — assign more officers from Personnel or the ship's Assign crew button.",
+ "No captain":"No commanding officer is posted — no one holding the Captain or XO position, and no officer of Commander rank or higher. Missions launch without a captain's skill bonus.",
+ "Hull damage":"The ship has taken damage in combat or hazards. Damaged ships fight worse; send her to a shipyard to repair."};
 function renderShips(){
   let h="";
   G.ships.forEach(s=>{
@@ -4251,7 +4416,7 @@ function renderShips(){
     h+='<div class="card'+(om?' onmission':'')+'"><div class="row" onclick="shipModal(\''+s.id+'\')" style="cursor:pointer;">'+shipPic(s.cls)+
       '<div class="grow"><div class="nm">'+esc(s.name)+' <span class="dim">'+esc(s.registry)+'</span>'+(om?' <span class="badge" style="background:var(--violet);color:#0b0b12;font-weight:bold;">ON MISSION</span>':(s.transit?' <span class="badge" style="background:var(--teal);color:#0b0b12;font-weight:bold;">IN TRANSIT</span>':''))+'</div>'+
       '<div class="sub2">'+c.name+'-class · '+shipStatusLabel(s)+' · '+shipPostName(s)+' · Crew '+crew.length+'/'+c.slots+' · Shuttles '+shuttlesOfShip(s.id).length+'</div>'+
-      (warns.length?'<div style="margin-top:4px;">'+warns.map(w=>'<span class="badge warn">'+esc(w)+'</span>').join("")+'</div>':"")+
+      (warns.length?'<div style="margin-top:4px;">'+warns.map(w=>'<span class="badge warn"'+(WARN_HINTS[w.split(" (")[0]]?' data-hint="'+esc(WARN_HINTS[w.split(" (")[0]])+'"':"")+'>'+esc(w)+'</span>').join("")+'</div>':"")+
       (s.damage>0?'<div class="prog"><i style="width:'+(100-s.damage)+'%;background:var(--red);"></i></div>':"")+
       '</div><span class="badge">'+c.name+'</span></div></div>';
   });
@@ -4392,7 +4557,7 @@ function renderMissions(){
     h+='<div class="kv"><span class="k">'+esc(craft?craft.name:"?")+' — '+esc(t?t.name:"?")+'</span><span class="v">'+m.daysLeft+' / '+(t?t.days:"?")+' days</span></div>'+
        '<div class="prog"><i style="width:'+(t?Math.round((1-m.daysLeft/t.days)*100):0)+'%"></i></div>';});
   h+='</div>';
-  const ready=G.ships.filter(s=>s.status==="active"&&!s.transit);
+  const ready=G.ships.filter(s=>s.status==="active"&&!s.transit&&!s.mothballed);
   h+='<div class="card"><h3>Launch Mission</h3><label>Starship</label><select onchange="_mShip=this.value||null;render()">'+
     '<option value="">— select a ship —</option>'+
     ready.map(s=>{const c=shipClass(s),crew=crewOfShip(s.id);
@@ -4403,9 +4568,13 @@ function renderMissions(){
     if(!s||s.status!=="active"){h+='<p class="badge warn">Ship is no longer available.</p>';_mShip=null;}
     else MISSION_DECK.forEach(t=>{
       const od=missionOdds(s,t);
+      let bf=null,bc=-1;
+      ready.forEach(x=>{const ch=missionOdds(x,t).chance;if(ch>bc){bc=ch;bf=x;}});
+      const fitLine=bf?('Best fit: '+esc(bf.name)+' ('+bc+'%)'):'No ships available';
       h+='<div class="row"><div class="grow"><div class="nm">'+esc(t.name)+'</div>'+
         '<div class="sub2">'+t.type+' · Difficulty '+t.diff+' · '+t.days+' days · Est. success '+od.chance+'%'+(od.captain?" · "+esc(fullName(od.captain)):" · NO CAPTAIN")+'</div>'+
-        '<div class="sub2">Reward: '+fmt(t.cr)+' CR · '+fmt(t.dl)+' DL · '+t.pres+' prestige</div></div>'+
+        '<div class="sub2">Reward: '+fmt(t.cr)+' CR · '+fmt(t.dl)+' DL · '+t.pres+' prestige</div>'+
+        '<div class="sub2" style="color:var(--teal)">'+fitLine+'</div></div>'+
         '<button class="btn small teal" onclick="missionBrief(\''+s.id+'\',\''+t.id+'\')">Brief</button></div>';
     });
   }
@@ -4525,7 +4694,7 @@ function missionBrief(sid,tid){
     '<div class="kv"><span class="k">Ship</span><span class="v">'+esc(s.name)+' ('+shipClass(s).name+'-class)</span></div>'+
     '<div class="kv"><span class="k">Commanding</span><span class="v">'+(od.captain?esc(fullName(od.captain)):"None — risky")+'</span></div>'+
     '<div class="kv"><span class="k">Crew aboard</span><span class="v">'+od.crew.length+' / '+shipClass(s).slots+'</span></div>'+
-        '<div class="kv"><span class="k">Estimated success</span><span class="v">'+od.chance+'%</span></div>'+
+        '<div class="kv" data-hint="Your estimated chance of success, 5 to 98 percent. Based on the ship\'s stats, the captain\'s skill, how many of the right department crew are aboard, and crew morale. Nothing is ever guaranteed."><span class="k">Estimated success</span><span class="v">'+od.chance+'%</span></div>'+
     '<div class="kv"><span class="k">Reward</span><span class="v">'+fmt(t.cr)+' CR · '+fmt(t.dl)+' DL · '+t.pres+' pres.</span></div>'+
     '<div class="btnRow"><button class="btn teal" onclick="uiLaunchMission(\''+sid+'\',\''+tid+'\')">Launch mission</button>'+
     '<button class="btn ghost" onclick="closeModal()">Cancel</button></div>');
@@ -4533,6 +4702,7 @@ function missionBrief(sid,tid){
 function uiLaunchMission(sid,tid){
   const s=ship(sid),t=MISSION_DECK.find(x=>x.id===tid);
   if(!s||s.status!=="active"||s.transit){toast("Ship unavailable.");return;}
+  if(s.mothballed){toast("Ship is mothballed.");return;}
   sfx("warp");
   s.status="mission";s.missionId=tid;
   const _md=s.cls==="protostar"?Math.max(1,Math.ceil(t.days*0.75)):t.days; // proto-drive: 25% faster
@@ -4568,6 +4738,7 @@ function uiLaunchShuttleMission(shid,tid){
   const sh=shuttle(shid),t=SHUTTLE_MISSION_DECK.find(x=>x.id===tid),hs=sh?shuttleHost(sh):null;
   if(!sh||!t||sh.status!=="docked"){toast("Shuttle unavailable.");return;}
   if(!hs||hs.status!=="active"){toast("The home berth must be active to launch shuttle missions.");return;}
+  if(hs.mothballed){toast("Ship is mothballed.");return;}
   const pilot=shuttlePilot(sh);
   if(!pilot){toast("Assign a pilot first.");return;}
   sfx("warp");
@@ -5021,8 +5192,8 @@ function officerModal(id){
   h+='<div class="hr"></div><div class="kv"><span class="k">Posting</span><span class="v">'+esc(postName(o.post))+'</span></div>';
   if(o.shuttle&&shuttle(o.shuttle))h+='<div class="kv"><span class="k">Shuttle duty</span><span class="v">'+esc(shuttle(o.shuttle).name)+' <button class="btn small ghost" onclick="uiRecallOfficer(\''+o.id+'\')">Recall</button></span></div>';
   if(adult){
-    h+='<div class="kv"><span class="k">Morale</span><span class="v">'+o.morale+'/100</span></div>'+bar("MOR",o.morale);
-    h+='<div class="kv"><span class="k">Loyalty</span><span class="v">'+o.loyal+'/100</span></div>'+bar("LOY",o.loyal);
+    h+='<div class="kv" data-hint="How happy this officer is, 0 to 100. High morale boosts mission success. Shore leave, meetings, weddings and reunions raise it; injuries, transfers and disasters lower it."><span class="k">Morale</span><span class="v">'+o.morale+'/100</span></div>'+bar("MOR",o.morale);
+    h+='<div class="kv" data-hint="How committed this officer is to your command, 0 to 100. Below 30 they grow miserable and lose morale daily; at 15 or less they may resign. Hold meetings to rebuild trust."><span class="k">Loyalty</span><span class="v">'+o.loyal+'/100</span></div>'+bar("LOY",o.loyal);
     h+='<div class="kv"><span class="k">Health</span><span class="v">'+(o.health==="healthy"?"Healthy":"Injured ("+Math.ceil(o.healDays)+"d)")+'</span></div>';
     h+='<div class="kv"><span class="k">Missions</span><span class="v">'+o.missions.s+'/'+o.missions.t+' successful</span></div>';
     h+='<div class="kv"><span class="k">Time in grade</span><span class="v">'+Math.floor(o.timeInGrade)+' days</span></div>';
@@ -5181,57 +5352,22 @@ function uiToggleRole(oid,bid){
 function billetHolderAt(kind,id,bid){
   return G.officers.find(x=>x.status==="active"&&!x.dead&&!x.retired&&(x.roles||[]).includes(bid)&&x.post.t===kind&&x.post.id===id)||null;
 }
-function uiCrewAssign(kind,id){
-  const tgt=kind==="ship"?ship(id):station(id);if(!tgt)return;
-  let h='<h2>Assign Crew</h2><div class="flavor">'+esc(tgt.name)+' — tap a position, then pick an officer</div>';
-  h+='<div class="cmdrGrid" style="grid-template-columns:1fr;">';
-  BILLETS.forEach(b=>{
-    const holder=billetHolderAt(kind,id,b[0]);
-    h+='<div class="cmdrOpt" onclick="uiBilletOfficers(\''+kind+'\',\''+id+'\',\''+b[0]+'\')"><div class="cmdrLbl" style="font-size:14px;padding:10px;text-align:left;">'+b[1]+'<br><span class="dim" style="font-size:12px;">'+(holder?esc(holder.name)+" · "+esc(RANKS[holder.rank]):"— vacant —")+'</span></div></div>';
-  });
-  h+='</div><div class="btnRow"><button class="btn small ghost" onclick="'+(kind==="ship"?"shipModal":"stationModal")+'(\''+id+'\')">Back</button></div>';
-  openModal(h);
+const BILLET_STAT={co:"cmd",xo:"cmd",conn:"cmd",ops:"eng",tac:"tac",sec:"tac",eng:"eng",sci:"sci",med:"med",doc:"med",nurse:"med",coun:"dip",chef:"dip",bart:"dip"};
+function fitScore(o,bid){
+  const st=BILLET_STAT[bid]||"cmd";
+  return (o.stats&&o.stats[st]?o.stats[st]:0)+(o.rank||0)*3;
 }
-function uiBilletOfficers(kind,id,bid){
-  const tgt=kind==="ship"?ship(id):station(id);if(!tgt)return;
-  const holder=billetHolderAt(kind,id,bid);
-  const crew=(kind==="ship"?crewOfShip(id):crewOfStation(id)).slice().sort((a,b)=>b.rank-a.rank);
-  const pool=G.officers.filter(o=>o.status==="active"&&!o.dead&&!o.retired&&o.stage==="adult"&&o.post.t==="pool").slice().sort((a,b)=>b.rank-a.rank);
-  const bds=o=>esc(o.name.toLowerCase());
-  let h='<h2>'+esc(billetLabel(bid))+'</h2><div class="flavor">'+esc(tgt.name)+'</div>'+
-    '<input type="search" placeholder="Search officers…" oninput="liveSearch(this,\'bilList\')">';
-  h+='<p class="dim" style="margin:4px 0 8px;">'+(holder?"Currently held by <b>"+esc(holder.name)+"</b> — pick a replacement, or clear the position.":"Position vacant — pick an officer to assign.")+'</p>';
-  if(holder)h+='<div class="btnRow"><button class="btn small ghost" onclick="uiSetBillet(\''+kind+'\',\''+id+'\',\''+bid+'\',\'\')">Clear position</button></div>';
-  h+='<div id="bilList">';
-  h+='<div data-seccard="crew"><h4>Posted here ('+crew.length+')</h4>';
-  if(!crew.length)h+='<p class="dim">No officers posted here yet.</p>';
-  crew.forEach(o=>{
-    const isH=holder&&holder.id===o.id;
-    h+='<div class="row" data-search="'+bds(o)+'" data-sec="crew" onclick="uiSetBillet(\''+kind+'\',\''+id+'\',\''+bid+'\',\''+o.id+'\')" style="cursor:pointer;padding:6px;">'+faceImg(o,"pfaceSm")+'<div class="grow"><div class="nm">'+(isH?"✓ ":"")+nameHtml(o)+'</div><div class="sub2">'+esc(RANKS[o.rank])+' · '+esc(o.dept)+((o.roles&&o.roles.length)?" · "+esc(o.roles.map(billetLabel).join(", ")):"")+'</div></div></div>';
-  });
-  h+='</div>';
-  if(pool.length){
-    h+='<div data-seccard="pool"><h4>Unassigned officers ('+pool.length+')</h4><p class="dim" style="margin:4px 0 8px;">Assigning one transfers them to '+esc(tgt.name)+'.</p>';
-    pool.forEach(o=>{
-      h+='<div class="row" data-search="'+bds(o)+'" data-sec="pool" onclick="uiSetBillet(\''+kind+'\',\''+id+'\',\''+bid+'\',\''+o.id+'\')" style="cursor:pointer;padding:6px;">'+faceImg(o,"pfaceSm")+'<div class="grow"><div class="nm">'+nameHtml(o)+'</div><div class="sub2">'+esc(RANKS[o.rank])+' · '+esc(o.dept)+'</div></div></div>';
-    });
-    h+='</div>';
-  }
-  h+='</div><div id="bilListNoRes" style="display:none;"><p class="dim">No officers match your search.</p></div>';
-  h+='<div class="btnRow"><button class="btn small ghost" onclick="uiCrewAssign(\''+kind+'\',\''+id+'\')">Back to positions</button></div>';
-  openModal(h);
-}
-function uiSetBillet(kind,id,bid,oid){
-  const tgt=kind==="ship"?ship(id):station(id);if(!tgt)return;
+function setBilletCore(kind,id,bid,oid){
+  const tgt=kind==="ship"?ship(id):station(id);if(!tgt)return false;
   const holder=billetHolderAt(kind,id,bid);
   if(!oid){
     if(holder){holder.roles=(holder.roles||[]).filter(r=>r!==bid);log("personnel",fullName(holder)+" relieved of "+billetLabel(bid)+" duties ("+tgt.name+").");save();}
-    uiBilletOfficers(kind,id,bid);render();return;
+    return true;
   }
-  const o=officer(oid);if(!o)return;
+  const o=officer(oid);if(!o)return false;
   if(kind==="ship"&&(o.post.t!=="ship"||o.post.id!==id)){
     const s=ship(id);
-    if(s&&(s.status==="mission"||s.status==="refit")){toast("Cannot transfer aboard — ship is "+shipStatusLabel(s)+".");return;}
+    if(s&&(s.status==="mission"||s.status==="refit")){toast("Cannot transfer aboard — ship is "+shipStatusLabel(s)+".");return false;}
   }
   const oldPost=o.post.t+(o.post.id||"");
   if(o.post.t!==kind||o.post.id!==id){
@@ -5249,7 +5385,75 @@ function uiSetBillet(kind,id,bid,oid){
   if(holder&&holder.id!==o.id){holder.roles=(holder.roles||[]).filter(r=>r!==bid);log("personnel",fullName(holder)+" relieved of "+billetLabel(bid)+" duties ("+tgt.name+").");}
   if(!Array.isArray(o.roles))o.roles=[];
   if(o.roles.indexOf(bid)<0){o.roles.push(bid);log("personnel",fullName(o)+" assigned as "+billetLabel(bid)+" ("+tgt.name+").");}
-  save();uiBilletOfficers(kind,id,bid);render();
+  save();return true;
+}
+function uiSetBillet(kind,id,bid,oid){
+  if(setBilletCore(kind,id,bid,oid)){uiBilletOfficers(kind,id,bid);render();}
+}
+function uiAutoAssign(kind,id){
+  const tgt=kind==="ship"?ship(id):station(id);if(!tgt)return;
+  if(kind==="ship"&&(tgt.status==="mission"||tgt.status==="refit")){toast("Cannot auto-assign — ship is "+shipStatusLabel(tgt)+".");return;}
+  const here=kind==="ship"?crewOfShip(id):crewOfStation(id);
+  const pool=G.officers.filter(o=>o.status==="active"&&!o.dead&&!o.retired&&o.stage==="adult"&&o.post.t==="pool");
+  const cand=here.concat(pool);
+  if(!cand.length){toast("No officers available.");return;}
+  let n=0;
+  BILLETS.forEach(b=>{
+    const bid=b[0];
+    if(billetHolderAt(kind,id,bid))return;
+    let best=null,bf=-1;
+    cand.forEach(o=>{
+      if((o.roles||[]).indexOf(bid)>=0)return;
+      const f=fitScore(o,bid);
+      if(f>bf){bf=f;best=o;}
+    });
+    if(best&&setBilletCore(kind,id,bid,best.id))n++;
+  });
+  save();render();
+  if(n)log("personnel","Auto-assign: "+n+" vacant position"+(n>1?"s":"")+" filled aboard "+tgt.name+".");
+  toast(n?("Auto-assigned "+n+" position"+(n>1?"s":"")+"."):"No vacant positions to fill.");
+  uiCrewAssign(kind,id);
+}
+function uiCrewAssign(kind,id){
+  const tgt=kind==="ship"?ship(id):station(id);if(!tgt)return;
+  let h='<h2>Assign Crew</h2><div class="flavor">'+esc(tgt.name)+' — tap a position, then pick an officer</div>';
+  h+='<div class="btnRow"><button class="btn small teal" onclick="uiAutoAssign(\''+kind+'\',\''+id+'\')">Auto-assign best fit</button></div>';
+  h+='<div class="cmdrGrid" style="grid-template-columns:1fr;">';
+  BILLETS.forEach(b=>{
+    const holder=billetHolderAt(kind,id,b[0]);
+    h+='<div class="cmdrOpt" onclick="uiBilletOfficers(\''+kind+'\',\''+id+'\',\''+b[0]+'\')"><div class="cmdrLbl" style="font-size:14px;padding:10px;text-align:left;">'+b[1]+'<br><span class="dim" style="font-size:12px;">'+(holder?esc(holder.name)+" · "+esc(RANKS[holder.rank]):"— vacant —")+'</span></div></div>';
+  });
+  h+='</div><div class="btnRow"><button class="btn small ghost" onclick="'+(kind==="ship"?"shipModal":"stationModal")+'(\''+id+'\')">Back</button></div>';
+  openModal(h);
+}
+function uiBilletOfficers(kind,id,bid){
+  const tgt=kind==="ship"?ship(id):station(id);if(!tgt)return;
+  const holder=billetHolderAt(kind,id,bid);
+  const crew=(kind==="ship"?crewOfShip(id):crewOfStation(id)).slice().sort((a,b)=>fitScore(b,bid)-fitScore(a,bid));
+  const pool=G.officers.filter(o=>o.status==="active"&&!o.dead&&!o.retired&&o.stage==="adult"&&o.post.t==="pool").slice().sort((a,b)=>fitScore(b,bid)-fitScore(a,bid));
+  const bds=o=>esc(o.name.toLowerCase());
+  let h='<h2>'+esc(billetLabel(bid))+'</h2><div class="flavor">'+esc(tgt.name)+'</div>'+
+    '<input type="search" placeholder="Search officers…" oninput="liveSearch(this,\'bilList\')">';
+  h+='<p class="dim" style="margin:4px 0 8px;">'+(holder?"Currently held by <b>"+esc(holder.name)+"</b> — pick a replacement, or clear the position.":"Position vacant — pick an officer to assign.")+'</p>';
+  if(holder)h+='<div class="btnRow"><button class="btn small ghost" onclick="uiSetBillet(\''+kind+'\',\''+id+'\',\''+bid+'\',\'\')">Clear position</button></div>';
+  h+='<div id="bilList">';
+  h+='<div data-seccard="crew"><h4>Posted here ('+crew.length+')</h4>';
+  if(!crew.length)h+='<p class="dim">No officers posted here yet.</p>';
+  crew.forEach(o=>{
+    const isH=holder&&holder.id===o.id;
+    h+='<div class="row" data-search="'+bds(o)+'" data-sec="crew" onclick="uiSetBillet(\''+kind+'\',\''+id+'\',\''+bid+'\',\''+o.id+'\')" style="cursor:pointer;padding:6px;">'+faceImg(o,"pfaceSm")+'<div class="grow"><div class="nm">'+(isH?"✓ ":"")+nameHtml(o)+'</div><div class="sub2">'+esc(RANKS[o.rank])+' · '+esc(o.dept)+' · Fit '+fitScore(o,bid)+((o.roles&&o.roles.length)?" · "+esc(o.roles.map(billetLabel).join(", ")):"")+'</div></div></div>';
+  });
+  h+='</div>';
+  if(pool.length){
+    h+='<div data-seccard="pool"><h4>Unassigned officers ('+pool.length+')</h4><p class="dim" style="margin:4px 0 8px;">Assigning one transfers them to '+esc(tgt.name)+'.</p>';
+    pool.forEach(o=>{
+      h+='<div class="row" data-search="'+bds(o)+'" data-sec="pool" onclick="uiSetBillet(\''+kind+'\',\''+id+'\',\''+bid+'\',\''+o.id+'\')" style="cursor:pointer;padding:6px;">'+faceImg(o,"pfaceSm")+'<div class="grow"><div class="nm">'+nameHtml(o)+'</div><div class="sub2">'+esc(RANKS[o.rank])+' · '+esc(o.dept)+' · Fit '+fitScore(o,bid)+'</div></div></div>';
+    });
+    h+='</div>';
+  }
+  h+='</div><div id="bilListNoRes" style="display:none;"><p class="dim">No officers match your search.</p></div>';
+  h+='<div class="btnRow"><button class="btn small ghost" onclick="uiCrewAssign(\''+kind+'\',\''+id+'\')">Back to positions</button></div>';
+  openModal(h);
 }
 
 
@@ -5666,6 +5870,16 @@ function mapInfo(id){
   openModal("<h2>"+esc(m.t)+"</h2>"+pic+"<div class=\"story\">"+esc(m.b)+"</div><button class=\"btn\" onclick=\"closeModal()\">Close</button>");
 }
 
+function uiMothballToggle(kind,id){
+  const tgt=kind==="ship"?ship(id):station(id);if(!tgt)return;
+  if(kind==="ship"&&(tgt.status==="mission"||tgt.transit)){toast("Cannot mothball while on mission or in transit.");return;}
+  tgt.mothballed=!tgt.mothballed;
+  if(tgt.mothballed)log("build",tgt.name+" has been mothballed — standing down with a skeleton caretaker watch. Upkeep suspended.");
+  else log("build",tgt.name+" has been recommissioned and returns to active service.");
+  save();render();
+  if(kind==="ship")shipModal(id);else stationModal(id);
+  toast(tgt.mothballed?"Mothballed.":"Recommissioned.");
+}
 function shipModal(id){
   const s=ship(id);if(!s)return;const c=shipClass(s),crew=crewOfShip(s.id);
   const co=shipCO(s.id),xo=shipXO(s.id,co);
@@ -5697,10 +5911,11 @@ function shipModal(id){
   h+='<div class="btnRow"><button class="btn small teal" onclick="uiCrewAssign(\'ship\',\''+s.id+'\')">Assign crew</button><button class="btn small" onclick="uiBuildShuttle(\'ship\',\''+s.id+'\')">Build shuttlecraft</button></div>';
   h+='<div class="btnRow">'+
     '<button class="btn small peach" onclick="uiShoreLeave(\'ship\',\''+s.id+'\')">Shore leave (500 CR)</button>'+
-    (s.status==="active"&&!s.transit?'<button class="btn small teal" onclick="_mShip=\''+s.id+'\';closeModal();setTab(\'missions\')">Launch mission</button>':"")+
-    (s.status==="active"&&!s.transit&&hasStation("gate")?'<button class="btn small violet" onclick="uiGateTransit(\''+s.id+'\')">Slipstream transit</button>':"")+
-    (s.status==="active"&&!s.transit&&wormDir(s)?'<button class="btn small violet" onclick="uiWormholeTransit(\''+s.id+'\')">Traverse wormhole</button>':"")+
+    (s.status==="active"&&!s.transit&&!s.mothballed?'<button class="btn small teal" onclick="_mShip=\''+s.id+'\';closeModal();setTab(\'missions\')">Launch mission</button>':"")+
+    (s.status==="active"&&!s.transit&&!s.mothballed&&hasStation("gate")?'<button class="btn small violet" onclick="uiGateTransit(\''+s.id+'\')">Slipstream transit</button>':"")+
+    (s.status==="active"&&!s.transit&&!s.mothballed&&wormDir(s)?'<button class="btn small violet" onclick="uiWormholeTransit(\''+s.id+'\')">Traverse wormhole</button>':"")+
     ((s.status==="active"||s.status==="damaged")?'<button class="btn small ghost" onclick="uiDecommission(\'ship\',\''+s.id+'\')">Decommission</button>':"")+
+    ((s.status==="active"||s.status==="damaged")?'<button class="btn small ghost" onclick="uiMothballToggle(\'ship\',\''+s.id+'\')">'+(s.mothballed?"Recommission":"Mothball")+'</button>':"")+
     ((s.status==="active"||s.status==="damaged")?'<button class="btn small violet" onclick="uiMothball(\''+s.id+'\')">Mothball to Museum</button>':"")+
     (s.status==="museum"?'<button class="btn small teal" onclick="uiRecommission(\''+s.id+'\')">Return to duty</button>':"")+
     '<button class="btn small ghost" onclick="closeModal()">Close</button></div>';
@@ -5709,7 +5924,7 @@ function shipModal(id){
 function stationModal(id){
   const st=station(id);if(!st)return;const d=STATION_DEFS[st.type],crew=crewOfStation(st.id);
   const co=stationCO(st.id),xo=stationXO(st.id,co);
-  let h='<h2>'+esc(st.name)+'</h2><div class="flavor">'+d.name+' · '+(st.status==="active"?"Operational":"Under construction — "+st.daysLeft+"d")+'</div>'+stationPic(stationArtKey(st),true);
+  let h='<h2>'+esc(st.name)+'</h2><div class="flavor">'+d.name+' · '+(st.mothballed?"Mothballed":st.status==="active"?"Operational":"Under construction — "+st.daysLeft+"d")+'</div>'+stationPic(stationArtKey(st),true);
   h+='<p class="dim">'+esc(d.desc)+'</p>';
   if(st.blurb)h+='<p class="dim"><i>'+esc(st.blurb)+'</i></p>';
   h+='<h4>Crew ('+crew.length+')</h4>';
@@ -5752,6 +5967,7 @@ h+='<div class="btnRow"><button class="btn small teal" onclick="uiCrewAssign(\'s
   h+='<div class="btnRow"><button class="btn small peach" onclick="uiShoreLeave(\'station\',\''+st.id+'\')">Shore leave (500 CR)</button>'+
     (st.status==="construction"?'<button class="btn small danger" onclick="uiCancelBuild(\'station\',\''+st.id+'\')">Cancel build</button>':"")+
     (st.status==="active"?'<button class="btn small ghost" onclick="uiDecommission(\'station\',\''+st.id+'\')">Decommission</button>':"")+
+    (st.status==="active"?'<button class="btn small ghost" onclick="uiMothballToggle(\'station\',\''+st.id+'\')">'+(st.mothballed?"Recommission":"Mothball")+'</button>':"")+
     '<button class="btn small ghost" onclick="closeModal()">Close</button></div>';
   openModal(h);
 }
@@ -6023,7 +6239,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <h2>Menu</h2>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.47</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.48</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
