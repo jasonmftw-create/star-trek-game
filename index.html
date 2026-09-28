@@ -1010,7 +1010,7 @@ function shuttleStatusLabel(sh){
   return "Docked";
 }
 function migrateSave(g){
-  (g.ships||[]).forEach(s=>{if(s.comp==null)s.comp=SHIP_CLASSES[s.cls]?SHIP_CLASSES[s.cls].comp:100;});
+  (g.ships||[]).forEach(s=>{if(s.comp==null)s.comp=SHIP_CLASSES[s.cls]?SHIP_CLASSES[s.cls].comp:100;if(s.commSd==null)s.commSd=54973.4;if(s.tours==null)s.tours=1;});
   (g.stations||[]).forEach(st=>{if(st.comp==null)st.comp=STATION_DEFS[st.type]?STATION_DEFS[st.type].comp:100;});
   if(!(g.stations||[]).some(st=>st.id==="ds9")){
     g.stations.push({id:"ds9",name:"Deep Space 9",type:"starbase",status:"active",daysLeft:0,post:"bajor",comp:STATION_DEFS.starbase.comp});
@@ -1163,7 +1163,7 @@ function economyTick(){
     +150*(activeStations("shipyard").length+activeStations("medical").length+activeStations("research").length
     +activeStations("academy").length+activeStations("sfcommand").length);
   let upkeep=0;
-  G.ships.forEach(s=>{upkeep+=SHIP_CLASSES[s.cls].upkeep;});
+  G.ships.forEach(s=>{if(s.status!=="museum")upkeep+=SHIP_CLASSES[s.cls].upkeep;});
   G.stations.forEach(st=>{if(st.status==="active")upkeep+=STATION_DEFS[st.type].upkeep;});
   G.credits+=income-upkeep;
   gainPres(2*activeStations("starbase").length);
@@ -1182,7 +1182,7 @@ function buildTick(){
   // ship construction
   for(let i=G.builds.length-1;i>=0;i--){const b=G.builds[i];b.daysLeft--;
     if(b.daysLeft<=0){G.builds.splice(i,1);
-      G.ships.push({id:uid("s"),name:b.name,registry:b.registry,cls:b.cls,status:"active",daysLeft:0,damage:0,missionId:null,yardId:null,post:"sol",comp:SHIP_CLASSES[b.cls].comp});
+      G.ships.push({id:uid("s"),name:b.name,registry:b.registry,cls:b.cls,status:"active",daysLeft:0,damage:0,missionId:null,yardId:null,post:"sol",comp:SHIP_CLASSES[b.cls].comp,commSd:G.stardate,tours:1});
       G.ledger.shipsBuilt++;gainPres(20);
       log("build",b.name+" ("+b.registry+", "+SHIP_CLASSES[b.cls].name+"-class) has been commissioned. The fleet grows stronger.");
       capLogAuto("Ship commissioned",b.name+" ("+b.registry+", "+SHIP_CLASSES[b.cls].name+"-class) has joined the fleet.");}}
@@ -1729,6 +1729,7 @@ function resolveMission(m){
   gainCR(cr);gainDL(dl);gainPres(pres);
   crew.forEach(o=>{o.missions.t++;o.timeInGrade+=t.days;if(outcome==="Critical Success"||outcome==="Success")o.missions.s++;});
   s.missionId=null;if(s.status==="mission")s.status="active";
+  s.msn=(s.msn||0)+1;if(outcome==="Critical Success"||outcome==="Success")s.msnWon=(s.msnWon||0)+1;
   G.ledger.missions++;
   log(outcome==="Disaster"?"combat":"mission",
     s.name+": "+t.name+" — "+outcome+". (+"+fmt(cr)+" CR, +"+fmt(dl)+" DL, +"+pres+" prestige)");
@@ -2181,6 +2182,7 @@ function resolveBattle(sid,e,z,choice){
     if(s.damage>=40&&s.status==="active")s.status="damaged";
   };
   if(p>=ep){
+    s.batWon=(s.batWon||0)+1;
     const dmg=Math.min(60,Math.round(ep/p*45));
     applyDamage(dmg);
     const cr=ri(1500,6000)+Math.round(e.pow*20),dl=ri(40,160),pr=ri(10,30)+Math.round(e.pow/12);
@@ -2239,7 +2241,7 @@ function qUnlockAll(){const R=researchState();Object.keys(RESEARCH_DEFS).forEach
 function qFinishAll(){
   let n=0;
   for(let i=G.builds.length-1;i>=0;i--){const b=G.builds[i];
-    G.ships.push({id:uid("s"),name:b.name,registry:b.registry,cls:b.cls,status:"active",daysLeft:0,damage:0,missionId:null,yardId:null,post:"sol",comp:SHIP_CLASSES[b.cls].comp});
+    G.ships.push({id:uid("s"),name:b.name,registry:b.registry,cls:b.cls,status:"active",daysLeft:0,damage:0,missionId:null,yardId:null,post:"sol",comp:SHIP_CLASSES[b.cls].comp,commSd:G.stardate,tours:1});
     G.builds.splice(i,1);G.ledger.shipsBuilt++;n++;}
   G.stations.forEach(function(st){if(st.status==="construction"){st.status="active";st.daysLeft=0;G.ledger.stationsBuilt++;n++;}});
   (G.shuttles||[]).forEach(function(sh){if(sh.status==="construction"){sh.status="docked";sh.daysLeft=0;n++;}});
@@ -2630,7 +2632,7 @@ function renderShipQuadBar(){
   const bar=$("shipQuadBar");if(!bar)return;
   if(currentTab!=="ships"){bar.innerHTML="";bar.style.display="none";return;}
   bar.style.display="block";
-  const quads=[["all","All"],["alpha","Alpha"],["beta","Beta"],["gamma","Gamma"],["delta","Delta"]];
+  const quads=[["all","All"],["alpha","Alpha"],["beta","Beta"],["gamma","Gamma"],["delta","Delta"],["museum","Museum"]];
   bar.innerHTML='<div class="cmdsubseg">'+quads.map(q=>'<button class="btn small'+(shipQuad===q[0]?" on":"")+'" onclick="shipQuad=\''+q[0]+'\';render()">'+q[1]+'</button>').join("")+'</div>';
 }
 function renderStationQuadBar(){
@@ -2821,6 +2823,7 @@ function shipStatusLabel(s){
   if(s.status==="mission")return "On Mission";
   if(s.status==="damaged")return "Damaged ("+Math.round(s.damage)+"%)";
   if(s.status==="repair")return "Repairing — "+s.daysLeft+"d";
+  if(s.status==="museum")return "Fleet Museum";
   return "Active";
 }
 function shipWarnings(s){
@@ -2834,7 +2837,10 @@ function shipWarnings(s){
 function renderShips(){
   let h="";
   G.ships.forEach(s=>{
-    if(shipQuad!=="all"&&postQuadOf(s)!==shipQuad)return;
+    const isMus=s.status==="museum";
+    if(shipQuad==="museum"){if(!isMus)return;}
+    else{if(isMus)return;if(shipQuad!=="all"&&postQuadOf(s)!==shipQuad)return;}
+    if(isMus){h+=museumCard(s);return;}
     const c=shipClass(s),crew=crewOfShip(s.id),warns=shipWarnings(s),om=s.status==="mission";
     h+='<div class="card'+(om?' onmission':'')+'"><div class="row" onclick="shipModal(\''+s.id+'\')" style="cursor:pointer;">'+shipPic(s.cls)+
       '<div class="grow"><div class="nm">'+esc(s.name)+' <span class="dim">'+esc(s.registry)+'</span>'+(om?' <span class="badge" style="background:var(--violet);color:#0b0b12;font-weight:bold;">ON MISSION</span>':'')+'</div>'+
@@ -2843,7 +2849,27 @@ function renderShips(){
       (s.damage>0?'<div class="prog"><i style="width:'+(100-s.damage)+'%;background:var(--red);"></i></div>':"")+
       '</div><span class="badge">'+c.name+'</span></div></div>';
   });
-  return h||'<div class="card"><p class="dim">'+(shipQuad==="all"?"No ships.":"No ships in this quadrant.")+'</p></div>';
+  return h||'<div class="card"><p class="dim">'+(shipQuad==="all"?"No ships.":shipQuad==="museum"?"The museum halls are empty — mothball a ship to begin the collection.":"No ships in this quadrant.")+'</p></div>';
+}
+/* Fleet Museum profile card */
+function museumCard(s){
+  const c=shipClass(s),crew=crewOfShip(s.id);
+  const msn=s.msn||0,won=s.msnWon||0,bat=s.batWon||0;
+  const yrs=Math.max(0,((s.musSd||G.stardate)-(s.commSd||54973.4))/1000);
+  let legacy="Preserved for the officers who will follow in her wake.";
+  if(msn>=15)legacy="A storied career across "+msn+" missions — her name is spoken with respect in every wardroom in the fleet.";
+  else if(msn>=5)legacy="She served with distinction through "+msn+" missions.";
+  else if(msn>=1)legacy="She served faithfully through "+msn+" mission"+(msn>1?"s":"")+ ".";
+  if(bat>=5)legacy+=" Victor of "+bat+" battles.";
+  else if(bat>=1)legacy+=" Victor of "+bat+" battle"+(bat>1?"s":"")+".";
+  return '<div class="card"><div class="row" onclick="shipModal(\''+s.id+'\')" style="cursor:pointer;align-items:flex-start;">'+shipPic(s.cls)+
+    '<div class="grow"><div class="nm">'+esc(s.name)+' <span class="dim">'+esc(s.registry)+'</span></div>'+
+    '<div class="sub2">'+c.name+'-class · <span style="color:var(--purple);font-weight:bold;">FLEET MUSEUM</span></div>'+
+    '<div class="sub2 dim">Commissioned stardate '+sdStr(s.commSd||54973.4)+' · Mothballed stardate '+sdStr(s.musSd||G.stardate)+' · '+yrs.toFixed(1)+' years of service</div>'+
+    '<div class="sub2 dim">Service tour'+((s.tours||1)>1?"s":"")+': '+(s.tours||1)+' · Missions '+won+'/'+msn+' successful · Battles won '+bat+' · Caretaker crew '+crew.length+'</div>'+
+    '<div class="sub2"><i>&ldquo;'+legacy+'&rdquo;</i></div>'+
+    '<div class="btnRow"><button class="btn small teal" onclick="event.stopPropagation();uiRecommission(\''+s.id+'\')">Return to duty</button></div>'+
+    '</div></div></div>';
 }
 
 /* ---------- STATIONS tab ---------- */
@@ -3281,6 +3307,29 @@ function uiDecommissionGo(kind,id){
     log("system",st.name+" has been decommissioned. Its name joins the Memorial.");
   }
   closeModal();save();render();toast("Decommissioned. Their name joins the Memorial.");
+}
+/* ---------- Fleet Museum ---------- */
+function uiMothball(id){
+  const s=ship(id);if(!s||s.status==="museum")return;
+  if(s.status==="mission"||s.status==="repair"){toast("Cannot mothball while "+s.status+".");return;}
+  openModal('<h2>Mothball '+esc(s.name)+'?</h2><p class="dim">She will be preserved in the Fleet Museum with her service record on display, crew and shuttles aboard as caretakers. She will cost no upkeep, and you can return her to duty at any time.</p>'+
+    '<div class="btnRow"><button class="btn" onclick="closeModal()">Keep in service</button>'+
+    '<button class="btn teal" onclick="uiMothballGo(\''+id+'\')">To the Museum</button></div>');
+}
+function uiMothballGo(id){
+  const s=ship(id);if(!s||s.status==="museum")return;
+  if(s.status==="mission"||s.status==="repair")return;
+  s.status="museum";s.musSd=G.stardate;
+  log("system",s.name+" ("+s.registry+") has been mothballed to the Fleet Museum. Her legacy is preserved.");
+  capLogAuto("Ship mothballed",s.name+" ("+s.registry+", "+SHIP_CLASSES[s.cls].name+"-class) retired to the Fleet Museum after "+(s.msn||0)+" missions.");
+  closeModal();save();render();toast(s.name+" joins the Fleet Museum.");
+}
+function uiRecommission(id){
+  const s=ship(id);if(!s||s.status!=="museum")return;
+  s.status="active";s.tours=(s.tours||1)+1;
+  log("system",s.name+" ("+s.registry+") has been returned to active duty from the Fleet Museum — service tour "+s.tours+".");
+  capLogAuto("Ship recommissioned",s.name+" returns to active duty from the Fleet Museum.");
+  closeModal();save();render();toast(s.name+" is back on active duty.");
 }
 
 /* ---------- MEMORIAL tab ---------- */
@@ -3881,6 +3930,7 @@ const TERR=[
   });
   let fleet="";
   G.ships.forEach(s=>{
+    if(s.status==="museum")return;
     const post=s.post||"sol",pc=POST_COORDS[post]||POST_COORDS.sol;
     const isQ=post==="alpha"||post==="beta"||post==="gamma"||post==="delta";
     const rr=rng(hashStr("ship"+s.id+"@"+post)),a=rr()*Math.PI*2;
@@ -3955,6 +4005,8 @@ function shipModal(id){
     '<button class="btn small peach" onclick="uiShoreLeave(\'ship\',\''+s.id+'\')">Shore leave (500 CR)</button>'+
     (s.status==="active"?'<button class="btn small teal" onclick="_mShip=\''+s.id+'\';closeModal();setTab(\'missions\')">Launch mission</button>':"")+
     ((s.status==="active"||s.status==="damaged")?'<button class="btn small ghost" onclick="uiDecommission(\'ship\',\''+s.id+'\')">Decommission</button>':"")+
+    ((s.status==="active"||s.status==="damaged")?'<button class="btn small violet" onclick="uiMothball(\''+s.id+'\')">Mothball to Museum</button>':"")+
+    (s.status==="museum"?'<button class="btn small teal" onclick="uiRecommission(\''+s.id+'\')">Return to duty</button>':"")+
     '<button class="btn small ghost" onclick="closeModal()">Close</button></div>';
   openModal(h);
 }
@@ -4262,7 +4314,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <h2>Menu</h2>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.16</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.17</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
