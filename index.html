@@ -168,7 +168,7 @@ body{padding-bottom:90px;}
 #meetModal{position:absolute;inset:0;background:#000;display:flex;flex-direction:column;}
 .meetScene{position:relative;flex:0 0 auto;}
 .meetScene img.scene{width:100%;display:block;}
-.meetFace{position:absolute;left:15%;top:17%;width:70%;height:47%;object-fit:cover;border-radius:10px;box-shadow:0 0 28px rgba(140,190,255,.35);}
+.meetFace{position:absolute;left:26%;top:13.5%;width:48%;height:54%;object-fit:cover;object-position:center;border-radius:8px;box-shadow:0 0 28px rgba(140,190,255,.35);background:#050508;}
 div.meetFace{display:flex;align-items:center;justify-content:center;font-size:42px;font-weight:900;background:#1a1a24;color:var(--peach);}
 .meetPlate{position:absolute;left:0;right:0;bottom:8px;text-align:center;font-size:12px;letter-spacing:2px;color:var(--peach);text-shadow:0 1px 4px #000;text-transform:uppercase;}
 .meetDialog{flex:1;overflow-y:auto;padding:14px;background:#0b0b11;border-top:3px solid var(--orange);}
@@ -3202,6 +3202,154 @@ need:["I need a bigger cut of the profits! Kidding! Unless...?"],
 close:["Profit and progress, Commander!"]}
 };
 
+/* ===== Meeting: extra dialogue options + "get to know you" character Q&A ===== */
+const MEET_R_CREW=[
+"Crew's solid, Commander. {mate} has been pulling double shifts without a word of complaint — you should know that.",
+"Honestly? Good mix. A few strong personalities, but they respect each other. That is half the battle right there.",
+"{mate} keeps everyone laughing, which matters more than people think. Morale is good.",
+"Some friction between departments, nothing serious. I am keeping an eye on it.",
+"I have served under a few commanders now. This crew would follow you into a nebula, Commander. Do not waste that.",
+"The new transfers are settling in well. Give them a month and they will feel like family."];
+const MEET_R_CAREER=[
+"I joined Starfleet to see what was out there. Turns out 'out there' is mostly paperwork — but the moments between make it worth it.",
+"I worked my way up from the bottom, Commander. Every rank on this collar was earned the hard way.",
+"I have served on four ships before this one. Each taught me something. This crew is teaching me the most.",
+"Honestly? I nearly washed out of the Academy. Best thing that ever happened to me — taught me to fight for what I want.",
+"My career has been... eventful. I have the commendations and the scars to prove it.",
+"I never planned to end up here. But the stars had other ideas, and I have learned to trust them."];
+const MEET_KNOW_INTRO=[
+"Of course, Commander. What would you like to know?",
+"Ask away, Commander. I do not mind talking about it.",
+"Sure. What are you curious about?"];
+const MEET_KNOW_GROUP={
+"voy":[
+{q:"What was the Delta Quadrant really like?",a:"Seventy thousand light-years from home. Every day was a negotiation — with aliens, with physics, with despair. But we had each other. That was the whole secret. That, and the captain's coffee."},
+{q:"Tell me about Voyager's journey home.",a:"Seven years. The Borg, Species 8472, the Kazon — we faced things Starfleet had only theorized about. And then one day, we just... came home. I still do not quite believe it."},
+{q:"What kept the crew going out there?",a:"Hope is a discipline, Commander. You ration it like food and water, and you never, ever let it run out."}],
+"ds9":[
+{q:"What was life on Deep Space Nine like?",a:"A Cardassian station on the edge of nowhere that became the center of everything. Bajorans, Ferengi, changelings, wormhole aliens — it was chaos. Beautiful chaos."},
+{q:"Tell me about the Dominion War.",a:"The darkest years of my life. We lost good people — so many. But we held the line. The Federation held the line. That is what I will always remember."},
+{q:"What was the wormhole like?",a:"The Celestial Temple. The Prophets live there — nonlinear, timeless, infuriating. Flying through it never got old. Nothing else in the galaxy feels like that."}],
+"tng":[
+{q:"What was serving on the Enterprise like?",a:"The flagship. The finest crew Starfleet ever assembled — and I am not exaggerating. The captain set the tone: curiosity first, courage always, compassion no matter what."},
+{q:"Any Enterprise stories worth telling?",a:"Oh, plenty. The Borg... Q showing up whenever he pleased... You have not lived until a godlike being puts your entire species on trial over tea."}],
+"ld":[
+{q:"What is the Cerritos really like?",a:"A California-class ship doing second contact — the unglamorous work. But it is OUR work. The lower deckers keep that ship running, and we have the best stories in Starfleet."},
+{q:"Second contact — what does that actually involve?",a:"First contact gets the glory. Second contact is the paperwork — treaties, trade deals, cleaning up the messes the fancy ships leave behind. Somebody has to do it."}],
+"pic":[
+{q:"What were those years after Starfleet like?",a:"Complicated. The Federation lost its way for a while — the Romulan evacuation, the synth ban. It tested everything we believed in. But we are finding our way back."},
+{q:"Tell me about the Artifact.",a:"A Borg cube, cut off from the Collective — part battlefield, part mystery. And the synths fighting for the right to exist... it changed how I see everything."}],
+"ent":[
+{q:"What was the first Enterprise like?",a:"Primitive by your standards — no transporters for people, barely any shields, and a captain who made it up as he went. But we were the first. There is nothing like being first."},
+{q:"Tell me about first contact back then.",a:"We stumbled into it half-blind. Vulcans watching over our shoulder, Klingons shooting at us — and Archer just... talking. Talking worked, more often than you would think."}]};
+const MEET_KNOW_BYNAME={
+"Kathryn Janeway":"voy","Chakotay":"voy","Tuvok":"voy","Tom Paris":"voy","B'Elanna Torres":"voy","Harry Kim":"voy","The Doctor":"voy","Seven of Nine":"voy","Neelix":"voy","Naomi Wildman":"voy","Icheb":"voy",
+"Benjamin Sisko":"ds9","Kira Nerys":"ds9","Julian Bashir":"ds9","Miles O'Brien":"ds9","Odo":"ds9","Jake Sisko":"ds9","Nog":"ds9","Ezri Dax":"ds9","Worf":"ds9",
+"Jean-Luc Picard":"tng","William Riker":"tng","Data":"tng","Geordi La Forge":"tng","Beverly Crusher":"tng","Deanna Troi":"tng","Wesley Crusher":"tng","Reginald Barclay":"tng","Ro Laren":"tng","Katherine Pulaski":"tng","Guinan":"tng",
+"Carol Freeman":"ld","Jack Ransom":"ld","Shaxs":"ld","T'Ana":"ld","Beckett Mariner":"ld","Brad Boimler":"ld","D'Vana Tendi":"ld","Sam Rutherford":"ld",
+"Raffi Musiker":"pic","Crist\u00f3bal Rios":"pic","Elnor":"pic","Soji Asha":"pic","Jack Crusher":"pic","Pelia":"pic",
+"Phlox":"ent","Thy'lek Shran":"ent"};
+const MEET_KNOW_NAME={
+"Kathryn Janeway":[{q:"Is the coffee thing true?",a:"Completely true. In the Delta Quadrant, coffee was morale, medicine, and diplomacy. I once traded a week's replicator rations for real beans. Worth it."}],
+"Chakotay":[{q:"Tell me about your spiritual practices.",a:"My father taught me the old ways — the medicine bundle, the vision quests. When science had no answers in the Delta Quadrant, tradition did. I still meditate every morning."}],
+"Tuvok":[{q:"What is the hardest part of serving with humans?",a:"Illogic. You face a crisis and your first response is emotion. Mine is analysis. It took decades to learn that your way... also works. Sometimes."}],
+"Tom Paris":[{q:"What is the best thing you ever flew?",a:"The Delta Flyer — I helped build her. Fast, tough, beautiful. Though honestly? Give me any helm and a heading and I am happy."}],
+"B'Elanna Torres":[{q:"Klingon or human — which wins?",a:"Both. All the time. It is exhausting. But my temper built this career and my heart keeps it. I have stopped apologizing for either."}],
+"Harry Kim":[{q:"Do you ever get tired of being the reliable one?",a:"Sometimes. But somebody has to be the one the crew counts on. I decided long ago that would be me. It is not a bad thing to be."}],
+"The Doctor":[{q:"What do you want people to understand about holograms?",a:"That we are people. I think, I feel, I create — I wrote an opera! Photons and force fields, yes, but also a person. Remember that."}],
+"Seven of Nine":[{q:"Do you miss the Collective?",a:"No. But I understand the question — it was certainty. Perfection, of a kind. What I have now is messier. It is also mine. I prefer mine."}],
+"Jean-Luc Picard":[{q:"Diplomacy or action — which matters more?",a:"Diplomacy IS action, Commander. Words have ended wars that weapons could not. Though when words fail, I have never hesitated."}],
+"William Riker":[{q:"Why did you turn down your own commands?",a:"Because the Enterprise was where I belonged. People thought I lacked ambition. I just knew what I wanted. There is no shame in loving where you are."}],
+"Data":[{q:"What is the most human thing you have ever felt?",a:"When Spot curls up on my lap and purrs, I experience a... warmth. My positronic net has no word for it. I believe the human word is 'love.'"}],
+"Geordi La Forge":[{q:"What is it like seeing through the VISOR?",a:"I see everything — electromagnetic spectra, heat signatures, things no one else can. A sunset, to me, is a symphony. I would not trade it for anything."}],
+"Beverly Crusher":[{q:"How do you balance medicine and command?",a:"Carefully. A doctor heals; an officer decides. Some days those conflict. On those days I remember: every life on this ship is my patient first."}],
+"Deanna Troi":[{q:"What is the hardest emotion to carry?",a:"Grief. I feel everyone's — the crew's losses become mine. But I also feel their joy. It balances. Mostly."}],
+"Worf":[{q:"What does honor mean to you?",a:"Everything. It is the foundation of the warrior's life. Honor is not glory — glory fades. Honor is doing what is right when no one will ever know."}],
+"Benjamin Sisko":[{q:"Tell me about being the Emissary.",a:"The Prophets chose me — or I chose them. I still do not fully understand it. But Bajor is my home now, and its people are my responsibility. That much is clear."}],
+"Kira Nerys":[{q:"How did the occupation shape you?",a:"It made me. I was a child soldier, Commander. I did things I am not proud of. But Bajor is free, and I helped free it. That is worth everything."}],
+"Julian Bashir":[{q:"Darts — how good are you really?",a:"Very good. Miles will tell you otherwise, but he is delusional. Hand-eye coordination, you know. It is a gift."}],
+"Miles O'Brien":[{q:"What is the secret to keeping a ship running?",a:"Listen to her. Every ship has a voice — a hum, a vibration. Learn it, and you will hear problems before the diagnostics do. And always carry a hyperspanner."}],
+"Odo":[{q:"What was it like finding your people?",a:"I searched my whole life for the Founders. When I found them... they were not what I hoped. But I learned who I am. That was worth the journey."}],
+"Nog":[{q:"Ferengi vs. Starfleet values — which wins?",a:"Ferengi want profit. Starfleet wants purpose. Turns out purpose is more valuable than latinum. Do not tell my father I said that. Actually, tell him — he already knows."}],
+"Ezri Dax":[{q:"What is it like carrying eight lifetimes?",a:"Noisy. Wonderful. Terrifying. I will be having breakfast and suddenly remember a Klingon opera from eighty years ago. But I would not give it up."}],
+"Phlox":[{q:"Three wives — how does that work?",a:"Wonderfully! Denobulans are not possessive — we find joy in each other's happiness. I have many children too. Family is everything, Commander."}],
+"Thy'lek Shran":[{q:"Tell me about Andorian honor.",a:"We are passionate, Commander — about everything. Honor, battle, friendship. An Andorian never forgets a debt — or a friend. You are my friend. Do not make me regret it."}],
+"Guinan":[{q:"You have lived centuries — what is the biggest change you have seen?",a:"The Federation itself. I watched it born, Commander. Idealistic, flawed, beautiful. Empires rise and fall, but the idea — that we can be better — that endures."}],
+"Pelia":[{q:"What has changed most in all your years?",a:"Everything and nothing. Technology changes. Fashion changes. People? People are exactly the same. That is either comforting or depressing, depending on the day."}],
+"Elnor":[{q:"Tell me about the Qowat Milat.",a:"We are warriors of absolute candor — we speak only truth, and we choose death before dishonor. It is a lonely path. But it is an honest one."}],
+"Raffi Musiker":[{q:"Do you still see conspiracies everywhere?",a:"I see patterns, Commander. Most people miss them. Was I wrong about everything? No. Right about everything? Also no. The truth is usually in between."}],
+"Crist\u00f3bal Rios":[{q:"Tell me about your holograms.",a:"Emmet, Enoch, Ian, Hospitality, Navigation — they run my ship. They bicker, they complain, they are... family, I suppose. Do not tell them I said that."}],
+"Soji Asha":[{q:"What does it mean to you to be artificial?",a:"It means I get to decide who I am. Nobody's memories, nobody's programming — just me. That is terrifying and wonderful."}],
+"Jack Crusher":[{q:"What is it like carrying the Crusher name?",a:"Heavy, sometimes. Everyone expects something. But I am writing my own story — my mother taught me that. The name is just the title page."}],
+"Jake Sisko":[{q:"What was growing up on DS9 like?",a:"The best childhood in the galaxy! A station full of aliens, a wormhole in the backyard, and my dad running the whole thing. I would not trade it."}],
+"Neelix":[{q:"What was the Delta Quadrant like for a Talaxian?",a:"Home! Well, my corner of it. I knew every trader, every shortcut, every edible plant. Voyager needed a guide — I needed a family. We saved each other."}],
+"Naomi Wildman":[{q:"What is it like being a kid on a starship?",a:"Awesome! Everyone teaches me things — Seven teaches science, Neelix teaches cooking, Tom teaches... flying stuff I probably should not know yet!"}],
+"Icheb":[{q:"Do you remember being Borg?",a:"Yes. The silence after... it was deafening. But Seven helped me. Now I am me — mostly. Some days the memories are loud. Most days, I am just Icheb."}],
+"Carol Freeman":[{q:"What is the hardest part of commanding the Cerritos?",a:"Everything! The paperwork, the admirals, the lower deckers causing chaos — bless them. But it is my ship. I earned it. I love it. Do not quote me on the love part."}],
+"Jack Ransom":[{q:"What is your fitness secret?",a:"Discipline! Two hours a day, every day. A first officer must be ready for anything — and look good doing it. Mostly the looking good part."}],
+"Shaxs":[{q:"Bajoran security chief — how did that happen?",a:"I fought Cardassians for years. Then Starfleet offered me a badge. Turns out rage is transferable. Who knew?"}],
+"T'Ana":[{q:"Caitians are... intense. True?",a:"TRUE! We feel everything at maximum! It makes me a great doctor — I CARE so much it HURTS! Now get out of my sickbay!"}],
+"Beckett Mariner":[{q:"Why do you keep getting demoted?",a:"Because rules are suggestions and I am a genius! I get results. The paperwork just... disagrees with my methods. Constantly."}],
+"Brad Boimler":[{q:"What is your five-year plan?",a:"Captain by 35! I have it all mapped out — every promotion, every commendation, color-coded! Would you like to see the chart? I have charts!"}],
+"D'Vana Tendi":[{q:"Why did you join Starfleet?",a:"Because science! All of it! And because Orions are supposed to be pirates and I wanted to prove we can be anything! Also science!"}],
+"Sam Rutherford":[{q:"Tell me about your implant.",a:"It is the best! Cybernetic engineering assistant — helps me work faster, think clearer! Though sometimes it glitches and I forget... things. Small things. Mostly."}],
+"Ro Laren":[{q:"Do you regret leaving the Maquis?",a:"Every day and never. The Maquis were my family. But Starfleet is a chance to build something instead of burning it down. I am trying."}],
+"Wesley Crusher":[{q:"Tell me about the Traveler.",a:"He showed me that time, space, and thought are... connected. I am still learning what that means. But the universe is bigger than Starfleet teaches."}],
+"Reginald Barclay":[{q:"What do you do to relax?",a:"The holodeck. I know what people think. But it is where I can be confident. Brave. The me I want to be. I am working on being him out here too."}],
+"Katherine Pulaski":[{q:"Old-school medicine — better?",a:"Different. I learned on living patients, not holograms. Technology is a tool, Commander — but a doctor's hands and judgment? Those are irreplaceable."}]};
+const MEET_KNOW_SPECIES={
+"Vulcan":[{q:"What is Vulcan like?",a:"Hot. Logical. Precise. We suppress emotion in favor of reason — it is not coldness, Commander. It is... clarity."},{q:"Do Vulcans ever laugh?",a:"Rarely. But when something is truly logical AND absurd, even we acknowledge the... irony. Do not expect more than that."}],
+"Klingon":[{q:"Tell me about Qo'noS.",a:"A harsh world that breeds strong warriors. The storms, the mountains — Qo'noS does not forgive weakness. Neither do we."},{q:"What does honor mean to your house?",a:"Everything. A Klingon without honor is without worth. We would rather die with honor than live without it."}],
+"Andorian":[{q:"What is Andoria like?",a:"Ice and fire, Commander! Frozen wastes, passionate people. We feel everything deeply — joy, rage, loyalty. Especially loyalty."},{q:"Tell me about the Andorian Imperial Guard.",a:"The finest military tradition in the quadrant — disciplined, fierce, and utterly without mercy to our enemies. To our friends? We would die for them."}],
+"Bajoran":[{q:"Tell me about Bajor.",a:"Beautiful. Scarred. Free. The occupation tried to break us and failed. Now we rebuild — with faith in the Prophets and in each other."},{q:"Do you still follow the Prophets?",a:"Always. Faith carried my people through the darkest years. I carry it still."}],
+"Trill":[{q:"What is it like being joined?",a:"Indescribable. I am many people and one person, all at once. Past lives surface like dreams — vivid, strange, wonderful."},{q:"Do you remember your past hosts?",a:"Fragments. Joys, regrets, skills. They are part of me now — I honor them by living well."}],
+"Betazoid":[{q:"What is it like sensing everyone's emotions?",a:"Like hearing every conversation in a crowded room, all at once. I have learned to filter. Mostly."},{q:"Can you read my mind right now?",a:"I sense emotions, not thoughts, Commander. And right now I sense... curiosity. And a little mischief."}],
+"Tellarite":[{q:"Tellarites love to argue — true?",a:"True! Argument is our highest art! If a Tellarite is yelling at you, it means they respect you. Silence is the real insult."},{q:"What is Tellar Prime like?",a:"Loud. Opinionated. Wonderful. We debate everything — and that is why nothing slips past us."}],
+"Bolian":[{q:"What is Bolias like?",a:"Warm oceans, blue skin, and the best banks in the quadrant! We Bolians love people, numbers, and a good deal!"}],
+"Caitian":[{q:"Tell me about Cait.",a:"A proud world of hunters and scholars. We feel deeply, love fiercely, and never, ever back down."}],
+"Orion":[{q:"What is Orion society really like?",a:"Complicated. The syndicates, the stereotypes — that is not all of us. Many of us just want to live free and prove we are more than our reputation."}],
+"Human":[{q:"Where are you from?",a:"Earth — though 'from' gets complicated when you have lived on starships most of your life. Home is where the crew is."},{q:"Why did you join Starfleet?",a:"To see what was out there. To be part of something bigger. The usual reasons — they are usual because they are true."}]};
+const MEET_KNOW_ERA={
+"TOS":[{q:"What was the 23rd century like?",a:"The frontier days! Starships with real character, captains who made the rules up as they went, and a galaxy that still had blank spots on the map. I miss it — and I do not."},{q:"What is the strangest thing about this century?",a:"How... comfortable everything is. Replicators that actually work, diplomacy before phasers. My century was rougher. I am still deciding if that is better."}],
+"ENT":[{q:"What was the 22nd century like?",a:"We were babies out there — Warp 5 was a miracle, the Vulcans thought we were reckless, and every first contact could go wrong. It went wrong a lot. We learned."},{q:"What surprises you most about the future?",a:"That we made it. That the Federation grew from our little ship into... all this. I am prouder than I can say."}],
+"SNW":[{q:"What was your century like?",a:"The Federation at its most optimistic — new worlds every week, a crew that felt like family, and a captain who believed the best of everyone."},{q:"What do you miss most?",a:"The simplicity of it. We explored because it was wondrous, not because it was strategic. I hope this century remembers how."}],
+"DIS":[{q:"What was your time like?",a:"It depends which 'my time' you mean — I have lived in two centuries now. The 23rd was hope. The 32nd was... rebuilding hope from ashes."},{q:"Tell me about the Burn.",a:"Dilithium went inert across the galaxy in a single moment. Trillions stranded. The Federation fell. And then, slowly, we built it back. Never take connection for granted, Commander."}],
+"SFA":[{q:"What was the 32nd century like?",a:"After the Burn, the Federation was a memory. The Academy kept the flame — barely. We trained for a Federation that did not exist yet. Then it did."}],
+"PRO":[{q:"Tell me about your time.",a:"The Protostar was a miracle ship — a crew of young officers thrown across the galaxy with a hologram for a captain. We figured it out. Together."}]};
+/* ---------- get-to-know-you engine ---------- */
+function pickN(arr,n){const c=arr.slice();const out=[];while(c.length&&out.length<n)out.push(c.splice(Math.floor(Math.random()*c.length),1)[0]);return out;}
+function officerEra(o){
+  if(o.lostEra)return o.lostEra;
+  try{const e=MEMORIAL_LOST.find(l=>l.name===o.name);return e?e.show:null;}catch(err){return null;}
+}
+function meetKnowQuestions(o){
+  const qs=[];
+  const era=officerEra(o);
+  if(era&&MEET_KNOW_ERA[era])qs.push.apply(qs,pickN(MEET_KNOW_ERA[era],2));
+  const g=MEET_KNOW_BYNAME[o.name];
+  if(g&&MEET_KNOW_GROUP[g])qs.push.apply(qs,pickN(MEET_KNOW_GROUP[g],2));
+  if(MEET_KNOW_NAME[o.name])qs.push.apply(qs,pickN(MEET_KNOW_NAME[o.name],1));
+  if(!qs.length){const sp=MEET_KNOW_SPECIES[o.species]||MEET_KNOW_SPECIES["Human"];qs.push.apply(qs,pickN(sp,2));}
+  for(let i=qs.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=qs[i];qs[i]=qs[j];qs[j]=t;}
+  return qs.slice(0,4);
+}
+function meetKnow(){
+  const o=MEET.o;
+  const qs=meetKnowQuestions(o);
+  MEET.knowQs=qs;MEET.path="know";
+  const opts=qs.map(function(q,i){return {t:q.q,fn:"meetKnowAnswer("+i+")"};});
+  opts.push({t:"Never mind.",fn:"meetChoose('end2')"});
+  renderMeeting(pick(MEET_KNOW_INTRO),opts);
+}
+function meetKnowAnswer(i){
+  const o=MEET.o,q=(MEET.knowQs||[])[i];
+  if(!q){meetKnow();return;}
+  MEET.detailRevealed=true;
+  renderMeeting(q.a,[
+    {t:"Ask something else.",fn:"meetKnow()"},
+    {t:"Thanks for sharing that.",fn:"meetChoose('end2')"}]);
+}
+
 const MEET_OPENERS=["Commander. You wanted to see me?","Reporting as ordered, Commander.","Everything alright, Commander?","Good to see you, Commander. What is on your mind?"];
 const MEET_OPENERS_DEPT={medical:"I hope this is not about my requisition backlog.",security:"Trouble, Commander? Say the word.",science:"I was just reviewing the latest survey data - perfect timing.",engineering:"If this is about the plasma conduits, I can explain.",command:"Always good to talk, Commander.",operations:"You have caught me between duty shifts - what is up?"};
 const MEET_R_PERSONAL=["Honestly? Better than I expected. The crew here is decent - and that is high praise, coming from me.","Well enough. {ship} is starting to feel like home.","Can not complain. Though I do miss real sunlight sometimes."];
@@ -3216,7 +3364,10 @@ function meetFaceHtml(o){
   const init=o.name.split(" ").map(function(w){return w[0];}).join("").slice(0,2).toUpperCase();
   return '<div class="meetFace pfaceInit">'+init+'</div>';
 }
-function meetLine(s,o){return String(s).replace("{ship}",postName(o.post));}
+function meetLine(s,o){let r=String(s).replace("{ship}",postName(o.post));
+  if(r.indexOf("{mate}")>=0){let m=null;try{m=randOfficer();}catch(e){}
+    r=r.replace("{mate}",(m&&m.id!==o.id)?m.name.split(" ").pop():"the crew");}
+  return r;}
 function renderMeeting(line,opts){
   const o=MEET.o;
   $("meetRoot").innerHTML='<div id="meetModal"><div class="meetScene"><img class="scene" src="'+MEET_SCENE+'" alt="">'+meetFaceHtml(o)+
@@ -3247,6 +3398,9 @@ function meetIntelAfter(){
     [{t:"How are you settling in?",fn:"meetChoose('personal')"},
      {t:"How are your duties going?",fn:"meetChoose('duty')"},
      {t:"I wanted to commend your work.",fn:"meetChoose('commend')"},
+     {t:"What's your read on the crew?",fn:"meetChoose('crew')"},
+     {t:"Tell me about your career.",fn:"meetChoose('career')"},
+     {t:"I'd like to get to know you better.",fn:"meetChoose('know')"},
      {t:"Request leave",fn:"meetLeave()"},
      {t:"End meeting",fn:"meetFinish('done')"}]);
 }
@@ -3267,6 +3421,9 @@ function uiRequestMeeting(oid){
     {t:"How are you settling in?",fn:"meetChoose('personal')"},
     {t:"Give me your honest assessment.",fn:"meetChoose('duty')"},
     {t:"I wanted to recognize your good work.",fn:"meetChoose('commend')"},
+    {t:"What's your read on the crew?",fn:"meetChoose('crew')"},
+    {t:"Tell me about your career.",fn:"meetChoose('career')"},
+    {t:"I'd like to get to know you better.",fn:"meetChoose('know')"},
     {t:"That will be all.",fn:"meetChoose('leave')"}
   ]);
 }
@@ -3284,6 +3441,13 @@ function meetChoose(kind){
   if(kind==="commend"){MEET.path="commend";
     renderMeeting(meetVoice(o,"commend")||pick(MEET_R_COMMEND),[
       {t:"You have earned it.",fn:"meetChoose('end2')"}]);return;}
+  if(kind==="crew"){MEET.path="crew";
+    renderMeeting(pick(MEET_R_CREW),[
+      {t:"Good to know.",fn:"meetChoose('end2')"}]);return;}
+  if(kind==="career"){MEET.path="career";
+    renderMeeting(pick(MEET_R_CAREER),[
+      {t:"Impressive.",fn:"meetChoose('end2')"}]);return;}
+  if(kind==="know"){meetKnow();return;}
   if(kind==="detail"){MEET.detailRevealed=true;
     renderMeeting(meetVoice(o,"detail")||pick(MEET_R_DETAIL),[
       {t:"Fascinating. Thanks for sharing that.",fn:"meetChoose('end2')"}]);return;}
@@ -3299,6 +3463,10 @@ function meetFinish(how){
       if(MEET.detailRevealed){o.morale=clamp(o.morale+2,0,100);awardAccolade(o,"Personal note shared with the Commander");}}
     else if(MEET.path==="duty"){o.morale=clamp(o.morale+2,0,100);}
     else if(MEET.path==="commend"){o.morale=clamp(o.morale+6,0,100);}
+    else if(MEET.path==="crew"){o.morale=clamp(o.morale+2,0,100);}
+    else if(MEET.path==="career"){o.morale=clamp(o.morale+2,0,100);}
+    else if(MEET.path==="know"){o.morale=clamp(o.morale+3,0,100);
+      if(MEET.detailRevealed){o.morale=clamp(o.morale+2,0,100);awardAccolade(o,"Shared personal history with the Commander");}}
     (G.meetings=G.meetings||{})[o.id]=G.stardate;
     log("personnel","Private meeting with "+fullName(o)+" in the ready room.");
     save();render();
@@ -4147,7 +4315,7 @@ function uiTemporalExtractGo(idx){
   gainPres(-TEMP_COST_PRES);G.dilithium=Math.max(0,G.dilithium-TEMP_COST_DIL);G.tempCd=TEMP_CD;
   if(Math.random()<TEMP_ODDS){
     const def=LOST_CREW.find(d=>d[0]===e.name);
-    const off=MK(def);
+    const off=MK(def);off.lostEra=e.show;
     awardAccolade(off,"Temporal extraction — rescued from "+e.when);
     G.officers.push(off);
     G.rescued[e.name]=1;
