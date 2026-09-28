@@ -2725,6 +2725,483 @@ const ICONS={
 const MEET_SCENE="data:image/jpeg;base64,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";
 const MEET_CD=5;
 let MEET=null;
+/* ===== Officer meeting voice packs: characters talk like themselves ===== */
+function meetVoice(o,slot){
+  const v=MEET_VOICE[o.name];
+  if(v&&v[slot]&&v[slot].length)return pick(v[slot]);
+  const sp=MEET_VOICE_SPECIES[o.species];
+  if(sp&&sp[slot]&&sp[slot].length)return pick(sp[slot]);
+  return null;
+}
+const MEET_VOICE={
+"Kathryn Janeway":{
+opener:["Come in, Commander. I was just finishing my coffee — black, always.","Commander. Good timing. I was reviewing the duty roster and thinking about you."],
+personal:["Settling in? I have been commanding crews a long time, and I will say this: a crew that trusts its captain can survive anything. Even the Delta Quadrant.","Honestly? I miss my dog, my fiance, and coffee that did not come from a replicator. In that order. Do not tell anyone I said that."],
+duty:["My assessment? We are Starfleet. We hold the line, we protect the crew, and we never, ever give up. The rest is logistics.","The crew is solid. Keep them trained, keep them fed, and when the moment comes — do not hesitate. Hesitation gets people killed."],
+commend:["Thank you, Commander. Coming from you, that carries weight. I do not take this crew's trust lightly.","I appreciate that. Now — back to work. There is always more work."],
+detail:["I collect antique coffee apparatus. Pre-replicator, hand-ground. One of these days I will brew a cup the slow way.","I used to play velocity at the Academy. I was ruthless. Ask Tuvok — he still will not talk about it."],
+need:["What I need is simple: your trust when the call is hard. The easy calls make themselves.","More coffee. That is the whole list."],
+close:["Dismissed, Commander. And — thank you for the talk."]},
+"Chakotay":{
+opener:["Commander. Please, sit. What is on your mind?","Good to see you, Commander. I was just finishing my meditation."],
+personal:["I am well. The Maquis days taught me to find calm anywhere — even in a Jefferies tube with plasma leaking. This ship is luxury by comparison.","My father wanted me to be a warrior of tradition. I became a warrior of a different kind. I have made my peace with that. Mostly."],
+duty:["The crew's spirit is strong. A ship is only as steady as the people who believe in her — and they believe.","We are ready. Whatever is out there, we face it together. That is the whole of my philosophy."],
+commend:["Thank you. I have not always worn this uniform proudly — but under your command, I do.","That means a great deal, Commander. Truly."],
+detail:["I keep my medicine bundle close, even now. My father's teachings anchor me when the stars get strange.","I box. Old Earth style. It clears the head better than any meditation — though I do both."],
+need:["Nothing urgent. Though if you ever want to hear the old stories — the real ones — my door is open.","Just keep giving the crew reasons to believe. I will handle the rest."],
+close:["Until next time, Commander."]},
+"Tuvok":{
+opener:["Commander. I trust this meeting has a logical purpose.","I am here, Commander. Please proceed."],
+personal:["I am... functioning within acceptable parameters. For a Vulcan, that is the equivalent of thriving.","Emotional well-being is irrelevant. The crew's discipline, however, is satisfactory."],
+duty:["Logic dictates our readiness is adequate. I have run the simulations. Twice.","Security protocols are current. I anticipate threats before they materialize — it is simply good planning."],
+commend:["Your commendation is... noted. I find it gratifying, though I would never say so aloud. I just did. Forgive me.","Thank you, Commander. Logic suggests I have earned it."],
+detail:["I play the Vulcan lute. It requires precision and patience — two things I possess in abundance.","I am married. My wife T'Pel and I have been bonded for decades. It is... satisfactory."],
+need:["I require nothing. Though a quieter bridge during gamma shift would improve efficiency by 4.7 percent.","Nothing, Commander. Logic provides all I need."],
+close:["Live long and prosper, Commander."]},
+"Tom Paris":{
+opener:["Commander! To what do I owe the pleasure? New mission? Please say new mission.","Hey, Commander. If this is about the holodeck power usage, I can explain."],
+personal:["Settling in great! Best pilot in the fleet, great ship, and nobody has tried to arrest me this week. Living the dream.","Honestly? I spent years trying to outrun my father's name. Turns out the best way is to earn your own. Working on it."],
+duty:["She flies like a dream, Commander. Give me a heading and I will thread us through anything — asteroid field, Borg cube, your in-laws' dinner party.","Duties are good. The helm is smooth, the crew is sharp, and I have not crashed anything in weeks. Personal record."],
+commend:["Wow — thanks, Commander. That actually means a lot. Do not tell B'Elanna I got sentimental.","I appreciate it! I will try to be worthy of it. Emphasis on try."],
+detail:["I am writing a holonovel. Captain Proton, pulp heroics, ray guns — it is terrible and I love it.","I collect 20th-century Earth memorabilia. I have a genuine baseball card. Do not touch it."],
+need:["More holodeck time would not kill anyone. Hypothetically. Asking for a friend. The friend is me.","Honestly? Just point me at the next impossible flight maneuver. I get twitchy otherwise."],
+close:["Thanks, Commander. Back to the helm!"]},
+"B'Elanna Torres":{
+opener:["What is it, Commander? Make it quick — I have a plasma manifold giving me attitude.","Commander. This better be good. The warp core is being temperamental today."],
+personal:["How am I? I am Klingon enough to say what I think and human enough to regret it later. It is a whole thing.","The Maquis taught me to fight. Starfleet taught me to build. I am still deciding which one I like more."],
+duty:["Engineering is holding. Barely. Give me the parts I ask for and I will give you miracles — that is the deal.","My team is good. Loud, argumentative, brilliant. Like family, if your family argued about plasma flow at dinner."],
+commend:["Huh. Thanks, Commander. I... do not get a lot of that. I will not forget it.","I just do my job. But — thank you. Really."],
+detail:["I like Klingon opera when I am angry. Which is often. It is very... cathartic screaming.","I once built a working still in a Jefferies tube at the Academy. Do not tell anyone. Actually, tell everyone. I am proud of it."],
+need:["I need parts. Real parts, not the requisition-form kind. And maybe a punching bag in engineering.","Respect from the crew I already have. What I need is for the warp core to stop humming in B-flat."],
+close:["Back to work. These conduits will not realign themselves."]},
+"Harry Kim":{
+opener:["Commander! Reporting as ordered. Is everything alright?","Hello, Commander. I hope I am not in trouble — old Academy habit."],
+personal:["I am doing well! Still the eternal ensign at heart, but I am learning to own it. Someone has to be the heart of the crew.","I miss my parents. And my clarinet. Not necessarily in that order."],
+duty:["Operations are running smoothly, Commander. I triple-checked everything. Then I checked it again.","All stations report ready. I ran the diagnostics twice — old habits from my ensign days."],
+commend:["Thank you, Commander! That really means a lot to me. I will keep working hard, I promise.","Wow — thank you. I will not let you down."],
+detail:["I play the clarinet. Badly, according to Tom. He is right, but I enjoy it anyway.","I never got to see my hometown again after Voyager... I mean, I think about it sometimes. Home is where the crew is now."],
+need:["Honestly? Just opportunities to prove myself. I am ready for more responsibility whenever you are.","Nothing I can think of, Commander. I am just grateful to be here."],
+close:["Thank you for your time, Commander!"]},
+"The Doctor":{
+opener:["Ah, Commander! Finally, someone who appreciates the value of a medical professional's time.","Commander. I do hope this is important — I was in the middle of composing."],
+personal:["How am I? Underappreciated, overworked, and magnificent. But do go on asking — it is refreshing.","I have been expanding my subroutines. Opera, painting, poetry — I contain multitudes, Commander. Multitudes."],
+duty:["Sickbay is in perfect order, as always. I run the finest medical facility in the fleet — and I have the commendations to prove it.","The crew's health is excellent, thanks entirely to my tireless vigilance. You are welcome."],
+commend:["Finally! Recognition! I have been saying for years — oh. Thank you, Commander. Sincerely.","You are too kind. I shall note this in my memoirs. Chapter twelve, I think."],
+detail:["I am writing an opera. It is about a lonely hologram who longs to be real. It is autobiographical. Obviously.","I named my... well. I have considered a name for years. Perhaps one day I will choose one worthy of me."],
+need:["What I need is a proper name, a commission, and perhaps a statue. In that order.","More control over my program. A little autonomy goes a long way for morale — mine, specifically."],
+close:["Do try to stay healthy, Commander. I am magnificent, but even I have limits."]},
+"Seven of Nine":{
+opener:["State your purpose, Commander. I will determine if it is relevant.","Commander. I have allocated four minutes for this conversation."],
+personal:["I am... adapting. Humanity is inefficient, but I am learning to appreciate its variables.","Small talk is irrelevant. However, I have been told it serves a social function. How are you?"],
+duty:["Efficiency is at 98.4 percent. The remaining 1.6 percent is... Tom Paris.","All systems are optimal. I have already anticipated your next three questions. Proceed."],
+commend:["Your commendation is... acceptable. I will add it to my record of achievements.","Thank you, Commander. I find approval... not entirely unpleasant."],
+detail:["I am perfecting my social skills. I have mastered twelve varieties of small talk. Would you like a demonstration?","I regenerate in an alcove. It is efficient. Though I have been told a bed would be more... comfortable."],
+need:["I require nothing. Need is a biological inefficiency I have largely overcome.","Perhaps... more opportunities to explore my humanity. On my own terms."],
+close:["This conversation is concluded."]},
+"Jean-Luc Picard":{
+opener:["Commander. Please, sit. I always have time for my officers.","Ah, Commander. Come in. Tea? Earl Grey, hot — I insist."],
+personal:["I am well, thank you. A captain's life is one of constant vigilance — but moments like this, speaking plainly with an officer, remind me why I chose it.","I have seen wonders, Commander — and horrors. What sustains me is the belief that we can always choose to be better."],
+duty:["The crew is exemplary. Our mission is one of exploration and diplomacy — we carry the best of the Federation with us.","We are ready. Whatever we encounter, we will meet it with courage, curiosity, and compassion. That is the Starfleet way."],
+commend:["Thank you, Commander. I am... honored. Truly.","Your words mean a great deal. I shall endeavor to continue earning them."],
+detail:["I am an amateur archaeologist. There is nothing quite like holding a four-thousand-year-old artifact and feeling history breathe.","I ride horses. Real ones. There is a freedom in it that no holodeck can replicate."],
+need:["What I need is for us to remember who we are, even when the galaxy tests us. Especially then.","Nothing material, Commander. Only your continued excellence."],
+close:["Thank you for the conversation. Make it so — carry on."]},
+"William Riker":{
+opener:["Commander! Good to see you. Pull up a chair — what is on your mind?","Hey, Commander. I was just about to grab some lunch. Join me? We can talk."],
+personal:["Doing great! Best job in Starfleet, best crew, and the jazz scene on this ship is underrated. Life is good.","I have been offered my own command more times than I can count. Turns out I like it right here. Do not tell Picard I said that."],
+duty:["The crew is sharp and the ship is ready. You give the word, Commander, and we will make it happen.","Everything is running smooth. I keep the crew loose but ready — tension is the enemy of good judgment."],
+commend:["Thanks, Commander! That means a lot coming from you. I will buy the next round — replicated, but still.","I appreciate it. Just doing my job — but it is nice to hear it noticed."],
+detail:["I play trombone. Jazz, mostly. There is nothing like a good jam session after a long shift.","I am undefeated at poker. Do not let Worf tell you otherwise. Actually, let him — it is funnier."],
+need:["Honestly? A good poker game and a decent trombone solo now and then. Keeps me sane.","Just keep the missions interesting, Commander. I get restless otherwise."],
+close:["Good talking with you, Commander. You know where to find me."]},
+"Data":{
+opener:["Commander. I am pleased to see you. I have been practicing my smile — how is this?","Greetings, Commander. I have been anticipating this meeting with 94.7 percent enthusiasm."],
+personal:["I am functioning optimally, thank you for inquiring. I have been told that is the android equivalent of 'doing well.'","I continue to explore humanity. Yesterday I attempted humor. Geordi laughed. I am... cautiously optimistic."],
+duty:["All systems are operating within normal parameters. I have run 1,847 diagnostic scenarios. We are prepared.","I am ready, Commander. My reaction time is 0.02 seconds, and my loyalty subroutines are fully engaged."],
+commend:["Thank you, Commander. I will record this moment in my memory banks with... fondness. Is that the correct word?","Your commendation has been stored permanently. I find I am... pleased."],
+detail:["I have a cat named Spot. He is... not always cooperative. I am learning that affection cannot be programmed.","I paint. My artistic style has been described as 'technically proficient yet emotionally distant.' I am working on it."],
+need:["I would like more opportunities to understand human behavior. Perhaps... a hobby you could recommend?","Nothing, Commander. Though I am curious: what is it like to dream?"],
+close:["Goodbye, Commander. I will continue my... farewell protocols. Farewell."]},
+"Geordi La Forge":{
+opener:["Commander! Great to see you. I was just tuning the warp field — perfect timing for a break.","Hey, Commander! What is up? If it is about the engines, I already fixed it. Probably."],
+personal:["Doing great! There is nothing like solving an impossible engineering problem before lunch. Gets the blood pumping.","I have seen things through this VISOR that most people never will — the beauty of a warp field, the song of a star. I would not trade it."],
+duty:["Engineering is humming, Commander. Give me a problem and I will give you three solutions — two of which will not blow up the ship.","The ship is in great shape. My team is the best in the fleet — and I tell them so every day."],
+commend:["Thanks, Commander! That really means a lot. I will tell the team — they earned it too.","I appreciate that! Now I am blushing — can you tell? The VISOR hides it well."],
+detail:["I love old Earth jazz. There is something about a saxophone solo that just... speaks to me.","I build model ships in bottles. Tiny, intricate, maddening. It is the most relaxing thing in the world."],
+need:["Honestly? Just keep the replicators stocked with coffee for my team. Engineers run on caffeine and optimism.","A little more downtime for my crew would be great. They work miracles — miracles need rest."],
+close:["Thanks, Commander! Back to the engines!"]},
+"Beverly Crusher":{
+opener:["Commander. Come in — I was just finishing up in sickbay. What can I do for you?","Hello, Commander. I hope this is a social call — I get so few of those."],
+personal:["I am well, thank you. Between medicine, the theater, and keeping an eye on my son, I stay busy. I would not have it any other way.","Being a doctor and a mother on a starship — it is a balancing act. But it is my life, and I love it."],
+duty:["Sickbay is ready for anything, Commander. My staff is excellent, and our supplies are fully stocked.","The crew's health is my sacred trust. I will keep every one of them standing, no matter what it takes."],
+commend:["Thank you, Commander. That is very kind. I do this work because I believe in it — but it is lovely to hear.","I appreciate that more than you know. Thank you."],
+detail:["I dance. Ballet, mostly — there is a discipline to it that centers me. And I direct the ship's theater troupe.","I was a dancer before I was a doctor. Some days I think the stage taught me as much as medical school."],
+need:["What I need is for my people to actually rest when I tell them to. Doctors make the worst patients — present company included.","Just keep bringing them home safe, Commander. I will handle the rest."],
+close:["Take care of yourself, Commander. That is doctor's orders."]},
+"Deanna Troi":{
+opener:["Commander. Please, sit. I sense you have something on your mind.","Hello, Commander. Come in — I was just enjoying some chocolate. Join me?"],
+personal:["I am well. Though I sense... you are carrying something. You do not have to tell me — but I am here if you need to talk.","Being half-Betazoid means I feel everything. It is a gift and a burden. Today, the gift is winning."],
+duty:["The crew's emotional state is stable, Commander. There is some underlying tension in engineering — I am keeping an eye on it.","Morale is good. I have been holding extra counseling sessions — prevention is better than cure, as my mother never says."],
+commend:["Thank you, Commander. I can sense your sincerity — and I appreciate it deeply.","That is very kind. Empaths remember kindness longer than most."],
+detail:["I love chocolate. Real chocolate, not replicated — there is a difference, and I will die on this hill.","I play the... well, I attempt the piano. Lwaxana insists I have talent. Lwaxana insists many things."],
+need:["What I need is for the crew to keep talking to me before small problems become big ones. An open door policy, enforced gently.","Honestly? A quiet afternoon and a good dessert. Even counselors need counseling sometimes."],
+close:["Thank you for coming, Commander. My door is always open."]},
+"Worf":{
+opener:["Commander. Speak.","What is it, Commander? I was sharpening my bat'leth."],
+personal:["I am... well. For a Klingon, that means my honor is intact and my enemies are defeated. Today qualifies.","I struggle between two worlds, Commander. But I have learned that honor is honor, wherever you find it."],
+duty:["Security is tight. No threat will reach this crew while I draw breath. That is a promise, not a boast.","The crew is disciplined. I have trained them hard — they complain, but they are ready."],
+commend:["You honor me, Commander. I will endeavor to be worthy of it.","Thank you. A warrior values recognition from a respected commander above all else."],
+detail:["I enjoy prune juice. It is a... warrior's drink. Do not question it.","I collect Klingon opera recordings. The screaming speaks to my soul."],
+need:["I need worthy challenges, Commander. A warrior without battle grows restless.","Nothing. Though a good sparring partner would be... welcome."],
+close:["Qapla', Commander."]},
+"Nog":{
+opener:["Commander! Great to see you! I was just reviewing some... completely legitimate trade manifests.","Commander! To what do I owe this honor? Is this about a promotion? Because I am ready."],
+personal:["I am fantastic! First Ferengi in Starfleet, business is booming, and my father is so proud he cries. It is great.","People said a Ferengi could not make it in Starfleet. I am making it. With latinum to spare. Figuratively. Mostly."],
+duty:["Everything is running at peak efficiency, Commander! I have optimized three supply chains and negotiated two trade deals this week alone.","Duties are excellent! I treat every requisition like a business opportunity — because it is."],
+commend:["Thank you, Commander! You know, the 57th Rule of Acquisition says 'good customers are as rare as latinum' — you are a great customer of my work!","I appreciate it! I will note this in my ledger under 'priceless assets.'"],
+detail:["I am studying the Rules of Acquisition. All 285 of them. Number 34 is my favorite: 'War is good for business.' Kidding! Mostly.","I still love root beer. It is the most human thing about me, and I am not ashamed."],
+need:["What I need is... hmm. A bigger cut of the salvage profits? Kidding! Unless...?","Honestly, Commander? Just keep believing in me. It means more than latinum. Do not quote me on that."],
+close:["Thanks, Commander! Profit and progress!"]},
+"Wesley Crusher":{
+opener:["Commander! Hi! I was just working on a warp field equation — did you need something?","Hello, Commander! Is everything okay? I can help with calculations if you need."],
+personal:["I am good! Still learning every day. The universe is so much bigger than the Academy ever taught me.","Sometimes I feel the weight of expectations — my mother's, the crew's, my own. But I am finding my path."],
+duty:["All my assignments are complete, Commander! I even ran some extra simulations on the warp core efficiency.","I am ready for whatever you need. I have been studying the sensor arrays in my spare time."],
+commend:["Thank you, Commander! That means everything to me. I will keep working hard!","Wow, thank you! I will not let you down — I promise."],
+detail:["I love experimenting with warp theory. The Traveler showed me... things. The universe is more flexible than we think.","I used to hate being called 'the boy genius.' Now I just try to be useful. It is a better goal."],
+need:["Honestly? Just chances to learn and contribute. I want to earn my place, not inherit it.","Nothing, Commander. I am just grateful for the opportunity."],
+close:["Thanks for talking with me, Commander!"]},
+"Reginald Barclay":{
+opener:["C-Commander! I, uh, I was not expecting — I mean, of course, come in. What can I do for you?","Oh! Commander. Hi. Sorry, I was just... never mind. What did you need?"],
+personal:["I am... okay! Really. The holodeck helps. And the crew has been nice. Mostly. I think.","Some days are harder than others. But I am trying, Commander. I really am trying."],
+duty:["Everything is... running! I checked. Twice. Three times, actually. All good!","My diagnostics are complete and everything is within normal parameters. I am very thorough. Very."],
+commend:["Oh! Th-thank you, Commander! That is... wow. I do not hear that often. Thank you!","You really mean it? Thank you! I will... I will try to live up to it."],
+detail:["I, uh, I have holodeck programs. Recreational ones. They are... vivid. Do not judge me.","I am actually a very good engineer when I am not... you know. Anxious. Which is always. But still."],
+need:["Honestly? Just... patience. I know I am a lot. But I am working on it.","Maybe a quieter workspace? The bridge gets loud and my brain gets... loud too."],
+close:["Th-thanks, Commander. I will get back to it."]},
+"Ro Laren":{
+opener:["Commander. What do you want?","Make it quick, Commander. I am busy."],
+personal:["I am fine. I have been through worse — the occupation, the Maquis, Starfleet's trust issues. This is nothing.","I do not trust easily, Commander. But I am here, doing the work. That should tell you something."],
+duty:["My station is secure. I run a tight operation — no shortcuts, no excuses.","I get the job done. You may not always like my methods, but you will like my results."],
+commend:["...Thank you, Commander. I do not hear that often. I will not forget it.","I appreciate it. Really. Do not make a big deal out of it, though."],
+detail:["I still have my Bajoran earring. It reminds me of who I am and what I survived.","I like springball. It is violent, fast, and honest. Like me, I suppose."],
+need:["I need people to stop treating me like a risk and start treating me like an officer. I have earned it.","Nothing, Commander. I handle my own problems."],
+close:["We are done here, Commander."]},
+"Katherine Pulaski":{
+opener:["Commander. What is it? I have patients waiting — well, not waiting, but you know what I mean.","Yes, Commander? Make it quick — sickbay does not run itself."],
+personal:["I am fine, thank you for asking. Though at my age, 'fine' is a medical achievement.","I have been a doctor longer than most of this crew has been alive. I have seen everything. Twice."],
+duty:["Sickbay is in order. My methods may be old-fashioned, but my results speak for themselves.","The crew is healthy. I run a tight sickbay — no nonsense, no excuses, no unnecessary paperwork."],
+commend:["Well. Thank you, Commander. I do not fish for compliments, but I will accept that one.","I appreciate it. Now let me get back to my patients."],
+detail:["I love ancient Earth literature. Dickens, Austen — they understood human nature better than most psychologists.","I make a terrible cup of tea. Do not tell Picard I said that. Actually, do. It would annoy him."],
+need:["What I need is for people to stop calling me 'crusty.' I prefer 'experienced.'","Just keep the crew out of unnecessary danger, Commander. I am too old for heroics."],
+close:["Good day, Commander. Try not to get hurt — I am busy enough."]},
+"Benjamin Sisko":{
+opener:["Commander. Come in. I was just thinking about you — have a seat.","Commander. Good to see you. I was about to replicate some coffee — join me?"],
+personal:["I am well. Being a father, a captain, and the Emissary — it is a lot. But it is my life, and I would not trade it.","I have been through the fire, Commander — Wolf 359, the war, the Prophets. What I have learned is that family is what matters."],
+duty:["The station — the ship — is ready. My crew is the finest in the fleet, and I will put them against anyone.","We are prepared for whatever comes. I have learned to expect the unexpected and plan for the impossible."],
+commend:["Thank you, Commander. That means a great deal to me.","I appreciate it. Truly. Now let us get back to work — there is always more to do."],
+detail:["I cook. Creole, mostly — my father's recipes. There is nothing like a good gumbo to bring a crew together.","I love baseball. An ancient Earth game — simple, elegant, perfect. I have a ball signed by Buck Bokai. Do not touch it."],
+need:["What I need is for us to stay true to our principles, even when it is hard. Especially when it is hard.","Just your continued excellence, Commander. And maybe a good meal now and then."],
+close:["Thank you, Commander. Dismissed."]},
+"Kira Nerys":{
+opener:["Commander. What is it?","Make it fast, Commander — I have a full schedule."],
+personal:["I am well. The occupation taught me to appreciate every peaceful day. I do not take any of them for granted.","I fought for Bajor's freedom my whole life. Now I fight to keep the peace. It is harder, in some ways."],
+duty:["Everything is secure. I run a tight operation — Bajoran efficiency, Cardassian attention to detail. Do not quote me on that last part.","My people are ready. We have been through worse and we will get through whatever comes next."],
+commend:["Thank you, Commander. That... means more than you know.","I appreciate it. I do not do this for recognition, but it is nice to hear."],
+detail:["I still pray to the Prophets. Faith got me through the occupation — I am not giving it up now.","I love springball. It is the one thing the Cardassians could not take from us."],
+need:["What I need is for Bajor to be safe. Everything else is secondary.","Nothing, Commander. I can handle my own problems."],
+close:["We are done, Commander."]},
+"Julian Bashir":{
+opener:["Commander! Lovely to see you. Come in — I was just finishing up with a patient.","Ah, Commander! To what do I owe the pleasure? Please, sit."],
+personal:["I am wonderful, thank you! Life is good — great crew, fascinating medicine, and darts night is Thursdays.","I have a secret, Commander — well, several. But the important thing is I am exactly where I want to be."],
+duty:["Sickbay is in perfect order! I have been working on some fascinating new treatments — the crew is in excellent hands.","Medical is ready for anything. I have prepared for every contingency I can think of — and several I cannot."],
+commend:["Thank you, Commander! You are too kind. I do try my best — and it is lovely to be noticed.","I appreciate that! I shall have to tell Miles — he will be insufferably proud."],
+detail:["I play darts. I am quite good, actually — hand-eye coordination, you know. Miles and I have a standing game.","I love ancient Earth literature — particularly the spy novels. There is something thrilling about them."],
+need:["Honestly? Just interesting medical challenges. The routine stuff is fine, but I live for the puzzles.","Nothing urgent, Commander. Though a good conversation now and then does wonders for morale — mine included."],
+close:["Lovely chatting with you, Commander! Do take care."]},
+"Miles O'Brien":{
+opener:["Commander. What can I do for you? If it is the transporters, I already know.","Hey, Commander. Come in — I was just finishing some maintenance."],
+personal:["I am good! Keiko and the kids are well, the ship is holding together, and I have not been assimilated this week. All good.","I am just an engineer, Commander. I fix things. It is not glamorous, but it is honest work."],
+duty:["Everything is running, Commander. I keep this ship together with skill, experience, and the occasional well-placed kick.","The systems are solid. I have been doing this long enough to hear a problem before the diagnostics do."],
+commend:["Thanks, Commander. That means a lot — really. I just do my job, but it is nice to hear.","I appreciate it, Commander. I will pass it on to my team — they do the real work."],
+detail:["I play darts with Julian. I let him win sometimes. Do not tell him — it would crush him.","I build model ships. Old sailing ships, mostly. There is something peaceful about it."],
+need:["What I need is for people to stop breaking things in creative new ways. But I suppose that is job security.","Just the usual, Commander — parts, time, and a little appreciation now and then."],
+close:["Thanks, Commander. Back to work — these conduits will not fix themselves."]},
+"Ezri Dax":{
+opener:["Commander! Hi! Come in — I was just... organizing my thoughts. All nine lifetimes of them.","Hello, Commander! Sorry if I seem scattered — I am still getting used to being... me."],
+personal:["I am okay! It is strange — I have centuries of memories and I am still the youngest person in the room. Jadzia would laugh.","Being joined is... a lot. But I am learning. Curzon says to trust my instincts. Jadzia says to have fun. I listen to both."],
+duty:["I am ready, Commander! I may be new to this, but I have eight lifetimes of experience backing me up.","Counseling is going well. I think my... unique perspective helps people open up."],
+commend:["Thank you, Commander! That really means a lot. I am still proving myself — to the crew and to me.","Wow, thank you! Jadzia is doing a little victory dance in my head right now."],
+detail:["I never wanted to be joined! I was just... Ezri. Now I am Ezri Dax and I am still figuring out what that means.","I love the old Klingon drinking songs. Jadzia's memories, obviously. I cannot carry a tune in any lifetime."],
+need:["Honestly? Just patience while I figure this out. And maybe someone to talk to who understands — which is ironic, since that is my job.","Nothing, Commander. I am just grateful to be here."],
+close:["Thanks for the talk, Commander! It helped — really."]},
+"Phlox":{
+opener:["Commander! What a pleasant surprise! Come in, come in — mind the bat, he is friendly.","Ah, Commander! Wonderful to see you! I was just feeding my animals."],
+personal:["I am marvelous! Life is a grand adventure, and every day brings new specimens to study!","I have three wives and many children — Denobulan custom! It keeps life interesting, let me tell you."],
+duty:["Sickbay is thriving! My menagerie is healthy, my supplies are stocked, and I am ready for anything!","The crew is in excellent health! I have been experimenting with some new Denobulan remedies — fascinating results!"],
+commend:["Oh, thank you, Commander! You are too kind! I shall tell my wives — they will be delighted!","I appreciate it! Positive reinforcement is so important for morale — I read that somewhere. Or wrote it."],
+detail:["I keep a menagerie in sickbay — bats, slugs, all manner of creatures! They are excellent company.","I am a keen observer of mating rituals — all species! It is purely scientific. Mostly."],
+need:["What I need is more exotic specimens! The more unusual, the better!","Just keep the adventures coming, Commander! A doctor needs interesting patients!"],
+close:["Wonderful chatting with you, Commander! Do come by sickbay anytime!"]},
+"Raffi Musiker":{
+opener:["Commander. I hope this is important — I was in the middle of something.","What do you need, Commander? Make it quick."],
+personal:["I am... managing. The galaxy is full of conspiracies, Commander — I just try to stay one step ahead of them.","I have been burned before — by Starfleet, by people I trusted. I do not burn easily anymore."],
+duty:["I have my ear to the ground, Commander. If something is happening in this sector, I will know about it before it happens.","My sources are solid. Trust me — I know things."],
+commend:["...Thanks, Commander. I do not get a lot of that. I appreciate it.","I will take it. Do not make a habit of it, though — I have a reputation to maintain."],
+detail:["I see patterns everywhere. Most people call it paranoia. I call it being prepared.","I used to be Starfleet's best analyst. Then I asked too many questions. I still ask them."],
+need:["What I need is for people to listen when I say something is wrong. I am usually right.","Just... trust me, Commander. That is all I ask."],
+close:["We are done here. Stay sharp, Commander."]},
+"Cristóbal Rios":{
+opener:["Commander. Welcome aboard La Sirena — I mean, welcome to my office. Old habits.","Ah, Commander. Come in. Can I offer you something? I have... replicated, unfortunately."],
+personal:["I am well. A former Starfleet captain turned freighter pilot — it is not the career path they teach at the Academy.","I have seen things, Commander. Lost people. But I keep flying — it is what I do."],
+duty:["My ship — this ship — is ready. I keep her running clean and fast. Old Starfleet habits die hard.","We are good to go, Commander. I have flown through worse with less."],
+commend:["Thanks, Commander. That means something, coming from you.","I appreciate it. I do not hear that much out here in the black."],
+detail:["I have a collection of emergency holograms — medical, engineering, tactical. They are... company, of a sort.","I smoke cigars. Real ones, when I can get them. A vice I never quite kicked."],
+need:["What I need is open sky and a fast ship. Everything else is negotiable.","Just point me at the horizon, Commander. I will handle the rest."],
+close:["Hasta luego, Commander."]},
+"Elnor":{
+opener:["Commander. I am here. How may I serve?","Greetings, Commander. I offer you my absolute candor."],
+personal:["I am well. The Qowat Milat taught me honesty above all — I will never lie to you, Commander. That is my oath.","I was raised by warrior nuns to speak only truth. It makes me... direct. People find it refreshing. Or alarming."],
+duty:["I am ready, Commander. My blade is sharp, my purpose is clear, and my loyalty is absolute.","I will protect this crew with my life. That is not a boast — it is a statement of fact."],
+commend:["Thank you, Commander. Your approval brings me... I believe the human term is 'joy.'","I am honored. I will strive to continue earning your trust."],
+detail:["I was raised on Vashti by the Qowat Milat — the order of absolute candor. We choose death before dishonor, and truth before comfort.","I am learning about friendship. It is... complicated. But I am trying."],
+need:["I need nothing, Commander. Though I would welcome... a friend. If that is permitted.","Just your trust, Commander. It is all I have ever asked for."],
+close:["I bid you farewell, Commander. With absolute candor."]},
+"Jack Crusher":{
+opener:["Commander! Hey — what is up?","Hi, Commander! Come in. Is this about the mission?"],
+personal:["I am good! Still figuring things out — being a Crusher comes with... expectations. But I am making my own way.","I never knew my father. But I feel him in everything I do — the good and the complicated."],
+duty:["I am ready, Commander! I may be young, but I have been training hard. I will not let you down.","All my duties are covered. I have been studying the ship's systems in my off hours."],
+commend:["Thank you, Commander! That really means a lot. I will keep pushing myself!","Wow — thanks! I will make you proud, I promise."],
+detail:["I love flying. There is nothing like the feeling of a ship responding to your touch.","I play the piano. My mom taught me — it is one of my favorite memories of her."],
+need:["Honestly? Just chances to prove I belong here on my own merits. Not my name — mine.","Nothing, Commander. I am just happy to be part of the crew."],
+close:["Thanks, Commander! See you out there!"]},
+"Pelia":{
+opener:["Commander. I suppose you want something — everyone always does.","Ah, the Commander. To what do I owe this interruption?"],
+personal:["I am... ancient. I have lived thousands of years and I am still surprised by how little changes. And how much.","I have been an engineer since before your species discovered fire. I have earned the right to be cranky."],
+duty:["The engines are fine. They were fine yesterday, they will be fine tomorrow. I have seen to it personally.","Everything is in order. I have forgotten more about engineering than most people will ever learn."],
+commend:["Hmph. Thank you, Commander. I suppose even I enjoy recognition occasionally.","I accept your commendation. Do not let it go to your head — or mine."],
+detail:["I am a Lanthanite — I have lived for millennia. I was there for... well, most of it.","I collect antique tools. Real ones, not replicas. I have a wrench older than your civilization."],
+need:["What I need is for people to stop touching things they do not understand. That is all.","Quiet. I need quiet. And perhaps a good cup of tea."],
+close:["We are done, Commander. Try not to break anything on your way out."]},
+"Guinan":{
+opener:["Commander. Come in. Can I get you something? I listen well — it is my job.","Hello, Commander. Sit down. You look like you need to talk."],
+personal:["I am well. I have lived a long time, Commander — I have learned that the universe is full of surprises. Most of them are... interesting.","I have seen civilizations rise and fall. What I have learned is that people — good people — are what matter."],
+duty:["The... ship is in good hands, Commander. I can feel it. Trust your instincts — and your crew.","Everything is as it should be. I have a sense for these things."],
+commend:["Thank you, Commander. Coming from you, that is... meaningful.","I appreciate it. Kindness is rarer than latinum, and more valuable."],
+detail:["I am El-Aurian — a listener. My people have a... sensitivity to the way things should be.","I have tended bar for centuries. I have heard every story — and I remember all of them."],
+need:["What I need is for you to trust your gut, Commander. It is usually right.","Nothing, Commander. I am exactly where I need to be."],
+close:["Take care, Commander. And remember — I am always here."]},
+"Odo":{
+opener:["Commander. What is it?","Make it brief, Commander. I have security sweeps to run."],
+personal:["I am... functional. I do not require rest, food, or companionship. Though I have learned to appreciate the latter. Rarely.","I spent years searching for my people. I found them. Now I am still deciding what that means."],
+duty:["Security is airtight, Commander. I have personally inspected every deck. Twice.","Order is maintained. I tolerate no chaos on my... on this ship."],
+commend:["...Thank you, Commander. I am not accustomed to praise. I will... note it.","I appreciate the recognition. Do not expect me to show it."],
+detail:["I regenerate in a bucket. It is undignified, but it is necessary. Do not tell anyone I told you.","I have a fondness for... order. Everything in its place. It is the changeling in me — we crave form."],
+need:["What I need is for people to follow the rules. Is that so much to ask?","Nothing, Commander. I am self-sufficient."],
+close:["We are finished, Commander."]},
+"Jake Sisko":{
+opener:["Commander! Hey — what is going on?","Hi, Commander! Come in. I was just writing."],
+personal:["I am good! Still writing every day. My dad says I have talent — but he is my dad, so he has to say that.","Being a writer on a starship — it is the best job in the world. Stories everywhere you look."],
+duty:["I am on it, Commander! I will have that report written up in no time.","All my assignments are done. I even got ahead on the next ones."],
+commend:["Thank you, Commander! That really means a lot. I will keep writing!","Wow, thanks! I will put that in my journal — 'Commander praised me today.'"],
+detail:["I am writing a novel. It is about... well, it is about us. All of us. One day you will read it.","I love baseball. My dad taught me — it is our thing. I have his old glove."],
+need:["Honestly? Just interesting stories to tell. And maybe a quiet place to write them.","Nothing, Commander. I am just happy to be here."],
+close:["Thanks, Commander! Back to writing!"]},
+"Neelix":{
+opener:["Commander! Hello! Come in — I was just preparing something delicious!","Ah, Commander! Wonderful to see you! Have you eaten? You look hungry!"],
+personal:["I am fantastic! Life is wonderful — great crew, great kitchen, and I have not been chased by the Kazon this week!","I have traveled the Delta Quadrant my whole life. Now I have a home — and a family. It is everything."],
+duty:["Morale is my department, Commander! And morale is excellent! I have planned a wonderful meal for tonight!","Everything is in order! The kitchen is stocked, the crew is happy, and I have three new recipes to try!"],
+commend:["Oh, thank you, Commander! You are too kind! This calls for a celebration — I will make something special!","I appreciate it! You know, a compliment is the best seasoning!"],
+detail:["I am the ship's cook, morale officer, and ambassador — self-appointed, but very official!","I collect recipes from every species we meet. I have over four hundred now! Some of them are even edible!"],
+need:["What I need is more leola root! Just kidding — please do not get me leola root.","Just keep the crew hungry for adventure, Commander! I will handle the actual hunger!"],
+close:["Wonderful talking with you, Commander! Come by the kitchen anytime!"]},
+"Thy'lek Shran":{
+opener:["Commander! Good to see you! What is it — trouble? I hope it is trouble.","Ah, Commander. Come in. I was just polishing my antennae. Kidding. Mostly."],
+personal:["I am excellent! The Andorian Imperial Guard taught me to thrive on chaos — and Starfleet provides plenty!","Pinkskins — I mean, humans — you are all right. Do not tell anyone I said that."],
+duty:["My people are ready, Commander! We Andorians do not know the meaning of retreat — mostly because we refuse to learn it.","We are prepared for battle! Though I suppose 'diplomacy' is also an option. Boring, but an option."],
+commend:["Ha! Thank you, Commander! I will drink to that — Andorian ale, the real stuff!","I accept your praise! It is well-earned — I earned it, I mean."],
+detail:["I am Andorian — we have antennae, a temper, and a code of honor. In that order of importance.","I love ushann — ritual combat. It is how we settle disputes. It is very... clarifying."],
+need:["What I need is a good fight, Commander! Failing that, a good meal and good company.","Just point me at the problem, Commander. I will handle it — the Andorian way."],
+close:["Until next time, Commander! Try to stay out of trouble — or get into the fun kind!"]},
+"Soji Asha":{
+opener:["Commander! Hi! Come in — I was just... thinking. About things.","Hello, Commander! Is everything alright?"],
+personal:["I am okay. It is strange — I have memories of a life I never lived. But I am learning who I really am.","Being an android — a person — it is complicated. But I am figuring it out, one day at a time."],
+duty:["I am ready, Commander! I may be new, but I learn fast. Really fast.","All my tasks are complete. I have been studying the ship's systems — I find them... fascinating."],
+commend:["Thank you, Commander! That means a lot. I am still learning what it means to be... me.","Wow, thank you! I will keep trying my best!"],
+detail:["I love painting. Colors make sense to me in a way that memories sometimes do not.","I have a twin sister, Dahj. I think about her every day. She would have loved it here."],
+need:["Honestly? Just a chance to prove I am more than what I was made to be.","Nothing, Commander. I am just grateful to be here."],
+close:["Thanks for talking with me, Commander!"]},
+"Naomi Wildman":{
+opener:["Commander! Hi! Did you need something? I was just studying!","Hello, Commander! Come in! Is this about the mission?"],
+personal:["I am great! I am learning so much — the crew teaches me new things every day!","Being the only kid on the ship is... interesting. But everyone looks out for me. It is nice."],
+duty:["I finished all my studies, Commander! And I helped Neelix in the kitchen!","I am ready to help however I can! I may be small, but I am mighty!"],
+commend:["Thank you, Commander! That is the nicest thing anyone has said all week!","Wow, really? Thank you! I will tell my mom!"],
+detail:["I am part Ktarian! That is why I have these bumps on my forehead. They are cool, right?","I love playing kadis-kot! I am the champion — well, Seven lets me win sometimes. Do not tell her I said that."],
+need:["Honestly? Just more stories about the Alpha Quadrant! I want to know everything!","Nothing, Commander! I have everything I need right here!"],
+close:["Bye, Commander! Thanks for talking with me!"]},
+"Icheb":{
+opener:["Commander. How may I assist you?","Greetings, Commander. I was just reviewing my studies."],
+personal:["I am well. I continue to adapt to life outside the Collective. It is... challenging. But rewarding.","Seven has been teaching me about humanity. I am a slow learner, but I am persistent."],
+duty:["All my assignments are complete, Commander. I have also completed three additional courses of study.","I am prepared, Commander. I have run the calculations twice to be certain."],
+commend:["Thank you, Commander. Your approval is... gratifying. I will record it.","I appreciate it, Commander. I will continue to strive for excellence."],
+detail:["I was Borg. Now I am... me. It is still strange to say that.","I enjoy astrometrics. The precision of it is... comforting."],
+need:["Honestly? Just opportunities to learn and contribute. I want to be useful.","Nothing, Commander. I am content."],
+close:["Thank you for your time, Commander."]},
+"Carol Freeman":{
+opener:["Commander. This better be important — I have three reports overdue and a Cerritos to keep afloat.","What is it, Commander? Make it quick — I am juggling about twelve crises."],
+personal:["How am I? Stressed, underappreciated, and holding this ship together with coffee and spite. So, fine.","Being a captain is... a lot. But someone has to do it, and apparently that someone is me."],
+duty:["The Cerritos is... operational. Mostly. Give me a week and I will have her in top shape. Probably.","We get the job done, Commander. Second contact is not glamorous, but it is important."],
+commend:["Oh! Thank you, Commander! I... do not hear that enough. Thank you!","I appreciate it! Really. It is nice to be noticed for once."],
+detail:["I have a daughter — Beckett. She is... a handful. But I love her. Do not tell her I said that.","I collect antique starship models. It is the only hobby I have time for. Which is none."],
+need:["What I need is a vacation. And a bigger budget. And fewer crises. In that order.","Honestly? Just a little recognition now and then. And maybe a nap."],
+close:["Thanks, Commander. Back to the chaos."]},
+"Jack Ransom":{
+opener:["Commander! Great to see you! I was just finishing my workout — gotta stay in top form!","Hey, Commander! What is up? If it is about the mission, I am ready!"],
+personal:["I am fantastic! Best first officer in the fleet — and I have the muscles to prove it!","Life is great! I get to be handsome, heroic, and humble — it is a tough job, but someone has to do it."],
+duty:["Everything is perfect, Commander! I have personally inspected everything — with these eyes!","The crew is in peak condition! I lead by example — a very attractive, muscular example."],
+commend:["Thanks, Commander! I knew you had good taste! I mean — thank you, sincerely.","I appreciate it! I will try to stay humble. It is hard, but I try."],
+detail:["I work out every day. Two hours minimum. These muscles do not maintain themselves!","I am a bit of a thrill-seeker. Rock climbing, surfing, extreme sports — I love it all!"],
+need:["Honestly? Just more opportunities to be heroic! And maybe a better gym.","Nothing, Commander! I am living the dream!"],
+close:["Thanks, Commander! Stay awesome!"]},
+"Shaxs":{
+opener:["Commander. What do you need? If it is a fight, I am ready.","Speak, Commander. I was cleaning my phaser."],
+personal:["I am... well. For a Bajoran, that means I am alive, armed, and ready. Today qualifies.","I have fought Cardassians, Borg, and bureaucrats. The bureaucrats were the worst."],
+duty:["Security is tight, Commander. No one gets through my defenses. No one.","My team is ready. We train hard, we fight hard, and we do not back down."],
+commend:["...Thank you, Commander. I will honor that with action, not words.","I appreciate it. Now let us get back to work."],
+detail:["I collect bat'leths. I have seven. Each one has a story — most of them violent.","I enjoy a good fight. It is the Bajoran way — or at least, my way."],
+need:["I need a real challenge, Commander. Peace makes me... restless.","Nothing. Though a sparring partner would be welcome."],
+close:["We are done, Commander."]},
+"T'Ana":{
+opener:["What?! I am busy — oh. Commander. What do you want?","Make it quick, Commander. I have patients to yell at."],
+personal:["How am I? Pissed off, overworked, and surrounded by idiots. So, normal.","I am a doctor, not a miracle worker! Though I am pretty close to both."],
+duty:["Sickbay is... fine. My staff is competent — barely. I keep them in line.","The crew is healthy. I make sure of it — with threats, if necessary."],
+commend:["Huh? Oh. Thanks, Commander. Do not expect me to get sentimental.","I... appreciate it. Do not tell anyone I said that."],
+detail:["I am Caitian — we are... passionate. About everything. Especially medicine. And yelling.","I enjoy a good surgery. There is nothing like cutting into something and fixing it."],
+need:["What I need is for people to stop getting hurt in stupid ways. It is exhausting.","Quiet. I need quiet. And maybe a drink."],
+close:["We are done. Get out of my sickbay."]},
+"Beckett Mariner":{
+opener:["Commander! Hey! What is up? Please tell me this is about something fun.","Oh, hey, Commander! Come in — I was just... not doing anything wrong."],
+personal:["I am awesome! Living my best life — breaking rules, having adventures, and somehow not getting fired!","I have been demoted more times than I can count. But I keep coming back — I love this life."],
+duty:["Duties are... done! Mostly. I mean, I did the important stuff. The rest is... pending.","I get the job done, Commander — my way. It works out. Usually."],
+commend:["Whoa, thanks, Commander! That is... actually really nice. Do not tell anyone I said that.","I appreciate it! I will try to be good. Emphasis on try."],
+detail:["I have been all over the quadrant — I have stories that would make your hair curl.","I love Klingon drinking songs. And Klingon drinks. And Klingons, honestly."],
+need:["Honestly? Just more adventures! And fewer rules. Mostly fewer rules.","Nothing, Commander! I am good — just keep the missions coming!"],
+close:["Thanks, Commander! You are the best!"]},
+"Brad Boimler":{
+opener:["C-Commander! Hi! I was just... following regulations! All of them!","Oh! Commander! What a surprise! I hope I am not in trouble — I followed all the rules today!"],
+personal:["I am good! Really good! I am following all the rules, exceeding expectations, and definitely not breaking anything!","I want to be a captain one day! I am working really hard — studying, training, and absolutely not taking risks!"],
+duty:["Everything is perfect, Commander! I have completed all my duties ahead of schedule and filed the reports in triplicate!","All tasks are done! I even did extra tasks! I am very thorough!"],
+commend:["Oh wow! Thank you, Commander! That is amazing! I will put that in my permanent record!","Thank you! I will not let you down! I will work even harder!"],
+detail:["I love rules! They keep us safe and organized! I have memorized most of the Starfleet code!","I keep a detailed log of everything I do. It is very organized. You should see it!"],
+need:["Honestly? Just... clear instructions! I do best with clear instructions!","Nothing, Commander! I am perfect! I mean — I am good!"],
+close:["Thank you, Commander! I will get back to work immediately!"]},
+"D'Vana Tendi":{
+opener:["Commander! Hi! Come in! I was just cataloging samples — it is so exciting!","Hello, Commander! Is everything okay? Can I help with anything?"],
+personal:["I am wonderful! Every day is a new adventure! I love science, I love the crew, I love everything!","Being an Orion in Starfleet — it is the best! I get to prove that we are more than the stereotypes!"],
+duty:["Science is amazing, Commander! I have made three new discoveries this week!","All my experiments are going great! I love my job so much!"],
+commend:["Oh my gosh, thank you, Commander! That is the nicest thing! I will work even harder!","Thank you! I am so happy to be here! I will not let you down!"],
+detail:["I love all science! Biology, chemistry, physics — it is all fascinating!","I have a pet... well, several pets. They are all adorable and slightly dangerous!"],
+need:["Honestly? Just more science to do! And maybe a bigger lab!","Nothing, Commander! I am just happy to be here!"],
+close:["Thank you, Commander! This was so fun!"]},
+"Sam Rutherford":{
+opener:["Commander! Hey! I was just tuning my implant — what is up?","Hi, Commander! Come in! I was working on something cool!"],
+personal:["I am great! My implant is working perfectly, my engineering is on point, and life is good!","I love being an engineer! Taking things apart, putting them back together — it is the best!"],
+duty:["Engineering is awesome, Commander! I have optimized three systems this week!","Everything is running smoothly! I have been upgrading systems in my spare time!"],
+commend:["Thanks, Commander! That means a lot! I will keep innovating!","I appreciate it! I will put that in my memory banks — literally!"],
+detail:["I have a cybernetic implant! It helps me with engineering — and it is really cool!","I love building things! I once built a working shuttle from spare parts!"],
+need:["Honestly? Just more cool tech to work with! And maybe an upgrade for my implant!","Nothing, Commander! I am good!"],
+close:["Thanks, Commander! Back to the lab!"]}
+};
+const MEET_VOICE_SPECIES={
+"Vulcan":{
+opener:["Commander. I trust this meeting serves a logical purpose."],
+personal:["I am functioning within acceptable parameters.","Emotion is irrelevant. Duty is satisfactory."],
+duty:["Logic dictates our readiness is adequate.","I have anticipated all likely scenarios. We are prepared."],
+commend:["Your commendation is noted. I find it... gratifying.","Thank you, Commander. Logic suggests it is deserved."],
+detail:["I find meditation centers the mind. I recommend it.","I play a traditional Vulcan instrument. It requires discipline."],
+need:["I require nothing. Logic provides."],
+close:["Live long and prosper, Commander."]},
+"Klingon":{
+opener:["Commander. Speak your purpose."],
+personal:["I am well — my honor is intact and my blade is sharp.","A warrior's life is one of constant vigilance. I am vigilant."],
+duty:["We are ready for battle, Commander. Whatever comes, we will face it with honor.","My warriors are disciplined. We do not know retreat."],
+commend:["You honor me, Commander. I will prove worthy of it.","Thank you. A warrior treasures such recognition."],
+detail:["I enjoy the songs of our people — the operas of Kahless speak to my soul.","I train daily with the bat'leth. A warrior must stay sharp."],
+need:["I need worthy foes, Commander. Peace makes a warrior restless."],
+close:["Qapla', Commander."]},
+"Andorian":{
+opener:["Commander! What is it? I hope it is interesting."],
+personal:["I am excellent! Andorians thrive on challenge — and this ship provides plenty!","We are a passionate people, Commander. I feel everything deeply — especially annoyance."],
+duty:["We are ready, Commander! Whatever comes, we will meet it head-on!","My team is disciplined and fierce. I would not trade them for anything."],
+commend:["Ha! Thank you, Commander! I accept!","I appreciate it! Now let us celebrate — Andorian style!"],
+detail:["My antennae are quite sensitive — they pick up things most species miss.","I enjoy ushann — ritual combat. It settles disputes cleanly."],
+need:["I need action, Commander! Sitting still is... difficult for my people."],
+close:["Until next time, Commander!"]},
+"Bajoran":{
+opener:["Commander. What do you need?"],
+personal:["I am well. The Prophets watch over us — I take comfort in that.","I survived the occupation, Commander. Every peaceful day is a gift."],
+duty:["Everything is secure. I run a tight operation.","My people are ready. We have endured worse."],
+commend:["Thank you, Commander. That means more than you know.","I appreciate it. Truly."],
+detail:["I still follow the old ways — the Prophets guide me.","I wear my earring with pride. It is who I am."],
+need:["I need nothing, Commander. I am self-reliant."],
+close:["We are done, Commander."]},
+"Trill":{
+opener:["Commander. Come in — I was just sorting through... memories."],
+personal:["I am well. Though sometimes I am not sure which 'I' I am — the host or the symbiont. We manage.","Lifetimes of experience, Commander — and I am still surprised every day."],
+duty:["We are ready. I have seen enough in past lives to handle whatever comes.","My experience spans centuries, Commander. I will put it to good use."],
+commend:["Thank you, Commander. All of me appreciates it.","I am honored. Truly — all of us are."],
+detail:["Being joined is... indescribable. I am many people and one person, all at once.","I remember past lives like dreams — vivid, strange, wonderful."],
+need:["I need nothing, Commander. Though wisdom suggests I ask for patience — with myself."],
+close:["Thank you, Commander. Until next time."]},
+"Betazoid":{
+opener:["Commander. Please, sit. I can sense you have something on your mind."],
+personal:["I am well. Though I sense your emotions, Commander — you carry a great deal.","Being empathic means I feel everything. Today, I feel... hope."],
+duty:["The crew's emotional state is stable. I am monitoring it closely.","Morale is good. I make sure of it — it is my gift and my duty."],
+commend:["Thank you, Commander. I can feel your sincerity — it warms me.","Your kindness resonates, Commander. Empaths remember."],
+detail:["I sense emotions the way you see colors — constantly, vividly.","I love chocolate. It is the one thing that quiets the noise."],
+need:["I need the crew to keep talking to me. Open minds, open hearts."],
+close:["Thank you, Commander. My door is always open."]},
+"Tellarite":{
+opener:["Commander. What? Spit it out."],
+personal:["I am fine. Do not coddle me — I prefer blunt honesty.","We Tellarites argue because we care. If I am yelling at you, it means I respect you."],
+duty:["Everything works. I argued with the chief engineer for an hour and we fixed it. That is how we do things.","We are ready. My team debates everything — and that is why nothing slips past us."],
+commend:["Hmph. Fine. Thank you, Commander. Do not let it go to your head.","I accept. Now stop being sentimental."],
+detail:["I enjoy a good argument. It is our highest art form.","I am an excellent debater. I once argued a Klingon into apologizing."],
+need:["I need people to stop being so sensitive. Bluntness is a virtue."],
+close:["We are done. Good talk — for once."]},
+"Bolian":{
+opener:["Commander! Wonderful to see you! Come in!"],
+personal:["I am fantastic! Life is wonderful — great crew, great food, great everything!","We Bolians are optimists, Commander! It is our greatest strength!"],
+duty:["Everything is perfect! I have checked and double-checked!","We are ready, Commander! My team is the best!"],
+commend:["Oh, thank you! You are too kind! I will tell everyone!","I appreciate it! This calls for a celebration!"],
+detail:["I love banking! The numbers, the deals — it is thrilling!","I am a people person! I make friends everywhere I go!"],
+need:["I need nothing! Life is good!"],
+close:["Wonderful talking with you, Commander!"]},
+"Caitian":{
+opener:["Commander. What is it? Make it quick."],
+personal:["I am... fine. We Caitians feel things intensely — do not mistake my tone for anger. Usually.","I am passionate about my work, Commander. Everything else is secondary."],
+duty:["We are ready. I run a tight operation — no excuses.","My team knows what I expect. Excellence. Nothing less."],
+commend:["...Thanks, Commander. I mean it.","I appreciate it. Do not make me say it twice."],
+detail:["We Caitians are... intense. It is our nature.","I enjoy hunting — the real kind. It keeps my instincts sharp."],
+need:["I need competence, Commander. Is that too much to ask?"],
+close:["We are done, Commander."]},
+"Orion":{
+opener:["Commander! Hi! This is so exciting!"],
+personal:["I am amazing! Every day is an adventure!","Being Orion in Starfleet — I get to show the galaxy who we really are!"],
+duty:["We are ready! I have been working so hard!","Everything is perfect! I love my job!"],
+commend:["Oh wow, thank you! That means everything!","Thank you! I will work even harder!"],
+detail:["I love science! All of it! Every field is fascinating!","Orion culture is... complicated. But I am writing my own story!"],
+need:["I just need more opportunities to learn and grow!"],
+close:["Thank you so much, Commander!"]},
+"Ferengi":{
+opener:["Commander! A pleasure! I was just reviewing some profit projections."],
+personal:["I am profitable! I mean — wonderful! Business is excellent!","The Rules of Acquisition guide me, Commander. Number 1: 'Once you have their money, you never give it back.'"],
+duty:["Everything is optimized for maximum efficiency — and profit!","We are ready! I have streamlined operations and cut costs!"],
+commend:["Thank you! I shall record this as a valuable asset!","I appreciate it! Good help is hard to find — and worth every slip of latinum!"],
+detail:["I know all 285 Rules of Acquisition by heart. Would you like to hear them?","Lobes for business, Commander. It is all in the lobes."],
+need:["I need a bigger cut of the profits! Kidding! Unless...?"],
+close:["Profit and progress, Commander!"]}
+};
+
 const MEET_OPENERS=["Commander. You wanted to see me?","Reporting as ordered, Commander.","Everything alright, Commander?","Good to see you, Commander. What is on your mind?"];
 const MEET_OPENERS_DEPT={medical:"I hope this is not about my requisition backlog.",security:"Trouble, Commander? Say the word.",science:"I was just reviewing the latest survey data - perfect timing.",engineering:"If this is about the plasma conduits, I can explain.",command:"Always good to talk, Commander.",operations:"You have caught me between duty shifts - what is up?"};
 const MEET_R_PERSONAL=["Honestly? Better than I expected. The crew here is decent - and that is high praise, coming from me.","Well enough. {ship} is starting to feel like home.","Can not complain. Though I do miss real sunlight sometimes."];
@@ -2766,7 +3243,7 @@ function meetIntel(o){
 }
 function meetIntelAfter(){
   const o=officer(MEET.officer);
-  renderMeeting(pick(MEET_OPENERS).replace(/\{n\}/g,o?esc(o.name.split(" ").pop()):"officer"),
+  renderMeeting((meetVoice(o,"opener")||pick(MEET_OPENERS)).replace(/\{n\}/g,o?esc(o.name.split(" ").pop()):"officer"),
     [{t:"How are you settling in?",fn:"meetChoose('personal')"},
      {t:"How are your duties going?",fn:"meetChoose('duty')"},
      {t:"I wanted to commend your work.",fn:"meetChoose('commend')"},
@@ -2783,8 +3260,9 @@ function uiRequestMeeting(oid){
   MEET={o:o,path:null,detailRevealed:false};
   if(o.request&&G.day>=(o.request.deferUntil||0)){meetRequest(o);return;}
   if(Math.random()<0.22){meetIntel(o);return;}
-  let op=pick(MEET_OPENERS);
-  if(MEET_OPENERS_DEPT[o.dept]&&Math.random()<0.45)op=MEET_OPENERS_DEPT[o.dept];
+  let op=meetVoice(o,"opener");
+  if(!op){op=pick(MEET_OPENERS);
+  if(MEET_OPENERS_DEPT[o.dept]&&Math.random()<0.45)op=MEET_OPENERS_DEPT[o.dept];}
   renderMeeting(op,[
     {t:"How are you settling in?",fn:"meetChoose('personal')"},
     {t:"Give me your honest assessment.",fn:"meetChoose('duty')"},
@@ -2796,23 +3274,23 @@ function meetChoose(kind){
   const o=MEET.o;
   if(kind==="leave"){meetFinish("left");return;}
   if(kind==="personal"){MEET.path="personal";
-    renderMeeting(pick(MEET_R_PERSONAL),[
+    renderMeeting(meetVoice(o,"personal")||pick(MEET_R_PERSONAL),[
       {t:"Tell me something about yourself.",fn:"meetChoose('detail')"},
       {t:"Good. Carry on.",fn:"meetChoose('end2')"}]);return;}
   if(kind==="duty"){MEET.path="duty";
-    renderMeeting(pick(MEET_R_DUTY),[
+    renderMeeting(meetVoice(o,"duty")||pick(MEET_R_DUTY),[
       {t:"Anything you need from me?",fn:"meetChoose('need')"},
       {t:"Keep up the good work.",fn:"meetChoose('end2')"}]);return;}
   if(kind==="commend"){MEET.path="commend";
-    renderMeeting(pick(MEET_R_COMMEND),[
+    renderMeeting(meetVoice(o,"commend")||pick(MEET_R_COMMEND),[
       {t:"You have earned it.",fn:"meetChoose('end2')"}]);return;}
   if(kind==="detail"){MEET.detailRevealed=true;
-    renderMeeting(pick(MEET_R_DETAIL),[
+    renderMeeting(meetVoice(o,"detail")||pick(MEET_R_DETAIL),[
       {t:"Fascinating. Thanks for sharing that.",fn:"meetChoose('end2')"}]);return;}
   if(kind==="need"){
-    renderMeeting(pick(MEET_R_NEED),[
+    renderMeeting(meetVoice(o,"need")||pick(MEET_R_NEED),[
       {t:"I will see what I can do.",fn:"meetChoose('end2')"}]);return;}
-  if(kind==="end2"){renderMeeting(pick(MEET_CLOSE),[{t:"End meeting",fn:"meetFinish('done')"}]);return;}
+  if(kind==="end2"){renderMeeting(meetVoice(o,"close")||pick(MEET_CLOSE),[{t:"End meeting",fn:"meetFinish('done')"}]);return;}
 }
 function meetFinish(how){
   const o=MEET.o;
@@ -4734,7 +5212,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <h2>Menu</h2>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.30</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.31</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
