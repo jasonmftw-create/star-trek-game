@@ -146,7 +146,7 @@ body{touch-action:pan-y;}
 .cmdsubseg{display:flex;gap:6px;overflow-x:auto;touch-action:pan-x pan-y;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
 .cmdsubseg::-webkit-scrollbar{display:none;}
 .cmdsubseg .btn{flex:0 0 auto;}
-#cmdSubBar{display:none;padding:2px 8px 8px;background:var(--panel);}
+#cmdSubBar,#shipQuadBar{display:none;padding:2px 8px 8px;background:var(--panel);}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
   padding:12px;margin-bottom:10px;}
 .card h3{margin:0 0 8px;color:var(--peach);font-size:16px;letter-spacing:2px;text-transform:uppercase;}
@@ -260,6 +260,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
     <button class="btn small" id="hudToggle" onclick="toggleHUD()"><span class="chev">▾</span> Stats</button>
   </div>
   <div id="cmdSubBar"></div>
+  <div id="shipQuadBar"></div>
 </div>
 <main id="view"></main>
 <div id="modalRoot"><div id="modalShade" onclick="closeModal(true)"></div><div id="modalBox"></div></div>
@@ -2608,6 +2609,7 @@ function render(){renderHUD();
   else if(currentTab==="memorial")v.innerHTML=renderMemorial();
   else if(currentTab==="settings")v.innerHTML=renderSettings();
   renderCmdSubBar();
+  renderShipQuadBar();
   window.scrollTo(0,0);
 }
 function renderCmdSubBar(){
@@ -2616,6 +2618,13 @@ function renderCmdSubBar(){
   bar.style.display="block";
   const tabs=[["status","Status"],["research","Research"],["inst","Institutions"],["rec","Records"]];
   bar.innerHTML='<div class="cmdsubseg">'+tabs.map(t=>'<button class="btn small'+(cmdSub===t[0]?" on":"")+'" onclick="cmdSub=\''+t[0]+'\';render()">'+t[1]+'</button>').join("")+'</div>';
+}
+function renderShipQuadBar(){
+  const bar=$("shipQuadBar");if(!bar)return;
+  if(currentTab!=="ships"){bar.innerHTML="";bar.style.display="none";return;}
+  bar.style.display="block";
+  const quads=[["all","All"],["alpha","Alpha"],["beta","Beta"],["gamma","Gamma"],["delta","Delta"]];
+  bar.innerHTML='<div class="cmdsubseg">'+quads.map(q=>'<button class="btn small'+(shipQuad===q[0]?" on":"")+'" onclick="shipQuad=\''+q[0]+'\';render()">'+q[1]+'</button>').join("")+'</div>';
 }
 
 /* ================= PLAYER COMMANDER ================= */
@@ -2811,6 +2820,7 @@ function shipWarnings(s){
 function renderShips(){
   let h="";
   G.ships.forEach(s=>{
+    if(shipQuad!=="all"&&shipQuadOf(s)!==shipQuad)return;
     const c=shipClass(s),crew=crewOfShip(s.id),warns=shipWarnings(s),om=s.status==="mission";
     h+='<div class="card'+(om?' onmission':'')+'"><div class="row" onclick="shipModal(\''+s.id+'\')" style="cursor:pointer;">'+shipPic(s.cls)+
       '<div class="grow"><div class="nm">'+esc(s.name)+' <span class="dim">'+esc(s.registry)+'</span>'+(om?' <span class="badge" style="background:var(--violet);color:#0b0b12;font-weight:bold;">ON MISSION</span>':'')+'</div>'+
@@ -2819,7 +2829,7 @@ function renderShips(){
       (s.damage>0?'<div class="prog"><i style="width:'+(100-s.damage)+'%;background:var(--red);"></i></div>':"")+
       '</div><span class="badge">'+c.name+'</span></div></div>';
   });
-  return h||'<div class="card"><p class="dim">No ships.</p></div>';
+  return h||'<div class="card"><p class="dim">'+(shipQuad==="all"?"No ships.":"No ships in this quadrant.")+'</p></div>';
 }
 
 /* ---------- STATIONS tab ---------- */
@@ -3383,6 +3393,7 @@ function renderMemorial(){
 /* ---------- LOG tab ---------- */
 let logFilter="all";
 let cmdSub="status";
+let shipQuad="all";
 /* ================= CAPTAIN'S LOG ================= */
 function capLogAuto(t,b){
   (G.captainsLog=G.captainsLog||[]).push({d:G.day,sd:G.stardate,t,b,auto:true});
@@ -3808,6 +3819,8 @@ function initMapZoom(){
 const POST_COORDS={sol:[200,282],alpha:[300,290],beta:[100,290],gamma:[100,110],delta:[300,110],qonos:[118,296],romulus:[158,322],bajor:[252,296],ds9:[284,270],cardassia:[288,312],ferenginar:[312,268],borg:[296,112],dominion:[108,118],vulcan:[236,322],andoria:[178,252],betazed:[250,248],trill:[296,236],risa:[214,344],khitomer:[92,336],ocampa:[266,142],talax:[332,152],founders:[140,90],wolf359:[184,306]};
 const POST_LABELS={sol:"Sol",alpha:"Alpha Quadrant",beta:"Beta Quadrant",gamma:"Gamma Quadrant",delta:"Delta Quadrant",qonos:"Qo'noS",romulus:"Romulus",bajor:"Bajor",ds9:"Deep Space 9",cardassia:"Cardassia Prime",ferenginar:"Ferenginar",borg:"Borg Unicomplex",dominion:"Dominion",vulcan:"Vulcan",andoria:"Andoria",betazed:"Betazed",trill:"Trill",risa:"Risa",khitomer:"Khitomer",ocampa:"Ocampa",talax:"Talax",founders:"Founders' Homeworld",wolf359:"Wolf 359"};
 function shipPostName(s){return POST_LABELS[s.post]||POST_LABELS.sol;}
+const POST_QUAD={sol:"alpha",alpha:"alpha",beta:"beta",gamma:"gamma",delta:"delta",qonos:"beta",romulus:"beta",khitomer:"beta",bajor:"alpha",ds9:"alpha",cardassia:"alpha",ferenginar:"alpha",vulcan:"alpha",andoria:"alpha",betazed:"alpha",trill:"alpha",risa:"alpha",wolf359:"alpha",ocampa:"delta",talax:"delta",borg:"delta",founders:"gamma",dominion:"gamma"};
+function shipQuadOf(s){return POST_QUAD[s.post]||"alpha";}
 function postOptions(cur){
   const gr=[["Quadrants",["alpha","beta","gamma","delta"]],["Systems",["sol","vulcan","andoria","betazed","trill","risa","wolf359","qonos","romulus","khitomer","bajor","ds9","cardassia","ferenginar","ocampa","talax","founders","borg","dominion"]]];
   return gr.map(g=>'<optgroup label="'+g[0]+'">'+g[1].map(k=>'<option value="'+k+'"'+(k===cur?" selected":"")+'>'+POST_LABELS[k]+'</option>').join("")+"</optgroup>").join("");
@@ -4232,7 +4245,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <h2>Menu</h2>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v11</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v12</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
