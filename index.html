@@ -143,10 +143,9 @@ div.meetFace{display:flex;align-items:center;justify-content:center;font-size:42
 #view{padding:10px;max-width:860px;margin:0 auto;touch-action:pan-y;overflow-x:hidden;}
 html,body{overscroll-behavior-x:none;}
 body{touch-action:pan-y;}
-#view.swipeL{animation:swipeInL .22s ease-out;}
-#view.swipeR{animation:swipeInR .22s ease-out;}
-@keyframes swipeInL{from{transform:translateX(70px);opacity:.35;}to{transform:translateX(0);opacity:1;}}
-@keyframes swipeInR{from{transform:translateX(-70px);opacity:.35;}to{transform:translateX(0);opacity:1;}}
+.cmdsubseg{display:flex;gap:6px;overflow-x:auto;touch-action:pan-x pan-y;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+.cmdsubseg::-webkit-scrollbar{display:none;}
+.cmdsubseg .btn{flex:0 0 auto;}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
   padding:12px;margin-bottom:10px;}
 .card h3{margin:0 0 8px;color:var(--peach);font-size:16px;letter-spacing:2px;text-transform:uppercase;}
@@ -2439,33 +2438,13 @@ function toggleHUD(){
 function hudStat(k,v,c,sub){
   return '<div class="hudStat '+(c||"")+'"><div class="k">'+k+'</div><div class="v">'+v+'</div>'+(sub||"")+'</div>';
 }
-function setTab(t,dir){
+function setTab(t){
   if(t!==currentTab){navStack.push(currentTab);if(navStack.length>24)navStack.shift();}
   currentTab=t;
   document.querySelectorAll(".tabBtn").forEach(b=>b.classList.toggle("active",b.dataset.tab===t));
   const v=$("view");
-  if(dir){v.classList.remove("swipeL","swipeR");void v.offsetWidth;v.classList.add(dir==="L"?"swipeL":"swipeR");}
   render();}
 function navGo(t){closeModal();closeTabMenu();setTab(t);}
-const SWIPE_TABS=["command","ships","stations","galaxy"];
-let _swX=null,_swY=null;
-document.addEventListener("touchstart",function(e){
-  if(e.touches.length===1){_swX=e.touches[0].clientX;_swY=e.touches[0].clientY;}
-},{passive:true});
-document.addEventListener("touchend",function(e){
-  if(_swX===null)return;
-  const dx=e.changedTouches[0].clientX-_swX,dy=e.changedTouches[0].clientY-_swY;
-  _swX=_swY=null;
-  if(Math.abs(dx)<70||Math.abs(dx)<Math.abs(dy)*1.4)return;
-  const t=e.target;
-  if(t.closest&&(t.closest("#mapZoom")||t.closest("#modalRoot.open")||t.closest("#meetRoot")||t.closest("input,textarea,select")))return;
-  if($("menuDrawer").classList.contains("open"))return;
-  const i=SWIPE_TABS.indexOf(currentTab);if(i<0)return;
-  const n=dx<0?i+1:i-1;
-  if(n<0||n>=SWIPE_TABS.length)return;
-  closeModal();closeTabMenu();setTab(SWIPE_TABS[n],dx<0?"L":"R");
-},{passive:true});
-document.addEventListener("touchcancel",function(){_swX=_swY=null;},{passive:true});
 function goBack(){
   if($("menuDrawer").classList.contains("open")){closeTabMenu();return;}
   if($("modalRoot").classList.contains("open")){closeModal();return;}
@@ -2797,8 +2776,8 @@ function renderCommand(){
     '<b>7.</b> Damaged ships repair automatically at free shipyards. Injured crew heal — faster with a Medical Station.</p></div>';
   const tabs=[["status","Status"],["research","Research"],["inst","Institutions"],["rec","Records"]];
   let h=(G.qmode?renderQCard():"");
-  h+='<div class="card" style="position:sticky;top:58px;z-index:5;padding:8px;"><div class="seg" style="display:flex;width:100%;">'+
-    tabs.map(t=>'<button class="btn small'+(cmdSub===t[0]?" on":"")+'" style="flex:1;" onclick="cmdSub=\''+t[0]+'\';render()">'+t[1]+'</button>').join("")+'</div></div>';
+  h+='<div class="card" style="position:sticky;top:58px;z-index:5;padding:8px;"><div class="cmdsubseg">'+
+    tabs.map(t=>'<button class="btn small'+(cmdSub===t[0]?" on":"")+'" onclick="cmdSub=\''+t[0]+'\';render()">'+t[1]+'</button>').join("")+'</div></div>';
   if(cmdSub==="research")h+=renderResearchCard();
   else if(cmdSub==="inst")h+=cmdrInstitutions();
   else if(cmdSub==="rec")h+=recCard;
@@ -4246,7 +4225,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <h2>Menu</h2>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v9</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v10</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
