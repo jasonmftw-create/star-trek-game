@@ -356,6 +356,8 @@ body{touch-action:pan-y;}
 .persOpts summary .chev{margin-left:auto;color:var(--dim);transition:transform .15s;}
 .persOpts[open] summary .chev{transform:rotate(180deg);}
 .persOpts .optBody{margin-top:12px;display:grid;gap:12px;}
+.persOpts .optBody>*{min-width:0;}
+.persOpts select,.persOpts input{min-width:0;}
 .cellBadges{margin-top:4px;display:flex;flex-wrap:wrap;gap:3px;}
 .cellBadges .badge{font-size:10px;padding:2px 7px;}
 .seniorRow{border:1px solid rgba(255,255,255,.14)!important;border-left:4px solid var(--dc,#9a9ab0)!important;border-radius:10px;background:rgba(255,255,255,.035);}
@@ -4739,20 +4741,9 @@ function renderPersonnel(){
   }
   h+='<div class="card"><h3><span id="persCount">'+list.length+'</span> officer'+(list.length===1?"":"s")+'</h3><div id="persList" class="offGrid">';
   list.forEach(o=>{
-    const badges=[];const _os=officerShow(o);
-    if(o.request&&G.day>=(o.request.deferUntil||0))badges.push('<span class="badge violet">Requests an audience</span>');
-    if(readyForPromotion(o))badges.push('<span class="badge good">Ready for promotion</span>');
-    if(o.health==="injured")badges.push('<span class="badge bad">Injured</span>');
-    if(o.rel)badges.push('<span class="badge love">'+o.rel.stage+' \u2014 '+esc((officer(o.rel.partner)||{name:"?"}).name)+'</span>');
-    if(o.kids.length)badges.push('<span class="badge">'+o.kids.length+' child'+(o.kids.length>1?"ren":"")+'</span>');
-    o.medals.forEach(m=>badges.push('<span class="badge rank medal">'+esc(m)+'</span>'));
-    if(o.stage!=="adult")badges.push('<span class="badge">'+o.stage+', age '+Math.floor(o.age)+'</span>');
-    if(o.retired)badges.push('<span class="badge">Retired</span>');
+    const _os=officerShow(o);
     const ds=esc((o.name+" "+(o.species||"")+" "+(o.dept||"")+(_os?" "+_os:"")+" "+(RANKS[o.rank]||"")).toLowerCase());
-    h+='<div class="offCell" data-search="'+ds+'" onclick="officerModal(\''+o.id+'\')">'+faceImg(o,"pfaceSm")+'<div class="grow">'+
-      '<div class="nm">'+nameHtml(o)+'</div>'+
-      '<div class="sub2">'+esc(o.species)+' \u00b7 '+esc(o.dept)+(_os?' \u00b7 '+_os:'')+'</div>'+
-      (badges.length?'<div class="cellBadges">'+badges.join("")+'</div>':"")+'</div></div>';
+    h+='<div class="offCell" data-search="'+ds+'" onclick="officerModal(\''+o.id+'\')">'+faceImg(o,"pfaceSm")+'<div class="grow"><div class="onm">'+esc(o.name)+'</div><div class="osub">'+esc(rankName(o))+' \u00b7 '+esc(o.dept)+'</div></div></div>';
   });
   return h+'</div><div id="persListNoRes" style="display:none;"><p class="dim">No officers match your search.</p></div></div>';
 }
@@ -6918,7 +6909,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.89</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.90</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
