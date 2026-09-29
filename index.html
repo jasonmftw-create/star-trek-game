@@ -3601,7 +3601,7 @@ function tickDay(){
   G.day++; G.stardate+=1.0; // TNG scale: 1000 units per year
   if(G.tempCd>0)G.tempCd--;
   economyTick(); buildTick(); researchTick(); refitTick(); missionTick(); transitTick();
-  healTick(); ageTick(); romanceTick(); familyTick();
+  healTick(); ageTick(); romanceTick(); familyTick(); crewTick();
   randomEventTick(); scriptedTick(); rankCheckTick(); battleTick(); socialTick(); arcTick(); holoTick(); holidayTick();
   if(G.shipOps&&G.shipOps.length)G.shipOps=G.shipOps.filter(function(m){return ship(m.shipId);});
 }
@@ -3815,7 +3815,7 @@ const ARC_DEFS=[
       const s=a.data.ship?ship(a.data.ship):null;
       if(win){arcNext(a,10);return "White-knuckle flying through folded subspace — and they make it. Inside the distortion: a structure. Artificial. Ancient. "+sName(s)+" reports all hands safe.";}
       arcNext(a,14);
-      if(s)s.damage=Math.min(100,(s.damage||0)+20);
+      if(s){s.damage=Math.min(100,(s.damage||0)+20);if(typeof shipCasualties==="function")shipCasualties(s,20,"hazard");}
       return "The distortion bucks like a living thing. "+sName(s)+" is battered back out with hull damage, but the scans got through: there is a structure inside. Ancient. Artificial.";}},
     {t:"Map the perimeter (safe)",go:(a)=>{arcNext(a,14);return "Caution wins. The perimeter is mapped in painstaking detail — and deep scans confirm it: something artificial waits at the heart of the distortion.";}}
    ]},
@@ -3830,7 +3830,7 @@ const ARC_DEFS=[
       const win=arcChk("tac",105);arcEnd(a);
       const s=a.data.ship?ship(a.data.ship):null;
       if(win){gainPres(80);return "A photon spread at the resonant frequency. The gateway collapses in silence. Some at Command call it vandalism; most call it prudence. (+80 prestige)";}
-      if(s)s.damage=Math.min(100,(s.damage||0)+15);
+      if(s){s.damage=Math.min(100,(s.damage||0)+15);if(typeof shipCasualties==="function")shipCasualties(s,15,"hazard");}
       gainPres(20);return "The gateway's defenses wake up. "+sName(s)+" withdraws with scorch marks and a valuable lesson. (+20 prestige)";}},
     {t:"Seal the sector and report to Command",go:(a)=>{arcEnd(a);gainPres(50);return "Buoys go up, warnings go out. Let Starfleet decide what to do with a working Iconian gateway. (+50 prestige)";}}
    ]}
@@ -3891,7 +3891,7 @@ const ARC_DEFS=[
     {t:"All-out defense (best TAC)",go:(a)=>{
       const dc=a.data.fort?115:125;const win=arcChk("tac",dc);arcEnd(a);
       if(win){gainPres(150);arcAccolade(a,"Borg Bane");return "The battle rages for eleven hours. And then — impossibly — the cube breaks apart. The sector is saved. Songs will be sung. (+150 prestige)";}
-      const s=pick(G.ships.filter(s=>s.status==="active"&&!s.transit));if(s)s.damage=Math.min(100,(s.damage||0)+40);
+      const s=pick(G.ships.filter(s=>s.status==="active"&&!s.transit));if(s){s.damage=Math.min(100,(s.damage||0)+40);if(typeof shipCasualties==="function")shipCasualties(s,40,"disaster");}
       gainPres(20);return "You bleed the cube and it withdraws — but the cost is written across your fleet. It will be back. (+20 prestige)";}},
     {t:"Lure it into the nebula trap (best ENG)",go:(a)=>{
       const win=arcChk("eng",115);arcEnd(a);
@@ -4220,7 +4220,7 @@ function resolveMission(m){
       detail="Catastrophe. "+s.name+" was destroyed with most of her crew. Survivors were recovered by escape pod.";
       moraleAll(-12);}
     else{
-    s.damage=ri(20,60);s.status="damaged";s.missionId=null;
+    const _mmd=ri(20,60);s.damage=_mmd;if(typeof shipCasualties==="function")shipCasualties(s,_mmd,"mission mishap");s.status="damaged";s.missionId=null;
     const hurt=crew.slice().sort(()=>Math.random()-0.5).slice(0,ri(1,3));
     hurt.forEach(o=>{o.health="injured";o.healDays=ri(15,40);});
     let died=null;
@@ -4928,6 +4928,153 @@ async function aiNarrateEvent(item,tok){
 }
 /* ---- end AI CONVERSATIONS (v2.7) ---- */
 
+/* ================= CREW COMPLEMENT & NPCs (v2.9) =================
+   Two tiers: Essential Personnel (named officers on the Personnel tab) and
+   Crew (the rank-and-file). Ships/stations carry a living crew number that
+   falls to battle damage and recovers via the starbase pipeline. NPCs are
+   named background crew with no profiles — they recur, react, and can be
+   lost by name. */
+function shipCompMax(s){const c=SHIP_CLASSES[s.cls];return (c&&c.comp)||100;}
+function stCompMax(st){const d=STATION_DEFS[st.type];return (d&&d.comp)||500;}
+function shipCrewN(s){if(s.crew==null||!(s.crew>=0))s.crew=shipCompMax(s);return Math.round(s.crew);}
+function stCrewN(st){if(st.crew==null||!(st.crew>=0))st.crew=stCompMax(st);return Math.round(st.crew);}
+function crewFracShip(s){return shipCrewN(s)/Math.max(1,shipCompMax(s));}
+function shipUndercrewed(s){return crewFracShip(s)<0.30;}
+function starbasePipeline(){return G.stations.some(st=>st.status==="active"&&st.type==="starbase"&&!st.mothballed);}
+/* casualties: call with the hull-damage points just taken */
+function shipCasualties(s,dmg,cause){
+  if(!(dmg>=10))return 0;
+  const max=shipCompMax(s);
+  let loss=Math.max(1,Math.round(max*(dmg/100)*0.08));
+  loss=Math.min(loss,shipCrewN(s));
+  if(loss<=0)return 0;
+  s.crew=shipCrewN(s)-loss;
+  const npcs=shipNpcs(s);
+  if(npcs.length&&loss>=15){
+    const k=(npcs.length>2&&loss>=40)?2:1,dead=[];
+    for(let i=0;i<k&&npcs.length;i++)dead.push(npcs.splice(ri(0,npcs.length-1),1)[0]);
+    log("combat","† "+dead.map(x=>x.r+" "+x.n).join(", ")+" — lost aboard "+s.name+(cause?" ("+cause+")":"")+".");
+  }
+  if(shipUndercrewed(s))log("combat",s.name+" is UNDERCREWED ("+shipCrewN(s)+"/"+max+") — request replacements at a starbase.");
+  return loss;
+}
+/* daily recovery through the starbase personnel pipeline */
+function crewTick(){
+  if(!starbasePipeline())return;
+  G.ships.forEach(s=>{
+    if(s.status==="museum"||s.mothballed)return;
+    const max=shipCompMax(s),cur=shipCrewN(s);
+    if(cur<max)s.crew=Math.min(max,cur+Math.max(1,Math.round((max-cur)*0.04)));
+  });
+  G.stations.forEach(st=>{
+    if(st.status!=="active"||st.mothballed)return;
+    const max=stCompMax(st),cur=stCrewN(st);
+    if(cur<max)st.crew=Math.min(max,cur+Math.max(1,Math.round((max-cur)*0.04)));
+  });
+}
+function uiCrewReplacements(sid){
+  const s=ship(sid);if(!s)return;
+  const max=shipCompMax(s),need=max-shipCrewN(s);
+  if(need<=0){toast("Crew complement is full.");return;}
+  if(!starbasePipeline()){toast("No active starbase — no personnel pipeline.");return;}
+  const cost=need*5;
+  if(G.credits<cost){toast("Need "+fmt(cost)+" CR for "+need+" replacements.");return;}
+  G.credits-=cost;s.crew=max;shipNpcs(s);
+  log("personnel",s.name+" receives "+need+" replacement crew via starbase transfer. (−"+fmt(cost)+" CR)");
+  toast(need+" replacements beamed aboard.");
+  save();shipModal(sid);render();
+}
+/* ---------- NPCs: named background crew, no profiles ---------- */
+const NPC_RANKS=["Crewman","Crewman","Petty Officer","Ensign","Ensign","Lieutenant j.g."];
+const NPC_GIVEN=["Tovin","Joran","Darian","Kov","Talan","Renn","Dekker","Sobel","Marik","Varel","Joss","Bram","Kale","Tobin","Rillak","Senn","Dov","Mikal","Trey","Pavel","Anton","Rurik","Stefan","Luka","Liora","Sarella","Nessa","T'Lyn","Kestra","Mira","Yelena","Dara","Sennah","Iliana","Vera","Noor","Tessa","Alina","Rhea","Sora","Linnea","Odette","Priya","Wren","Zia","Hana","Iris","Tova"];
+const NPC_SURN=["Voss","Kwan","Okoro","Bel","Teller","Mbeki","Vance","Rao","Venn","Jalis","Park","Kade","Stahl","Illyan","Vex","Osei","Harrow","Kessler","Brandt","Lowell","Marsh","Quill","Sorrel","Vane","Wexler","Yost","Zane","Drexler","Alvarez","Reyes","Delacroix","Ishikawa","Novak","Petrov","Santiago","Weiss","Moreau","Lindqvist","Adeyemi","Okafor"];
+const NPC_DEPTS=["Command","Operations","Security","Engineering","Medical","Science"];
+function mkNpc(used){
+  used=used||{};let n,tries=0;
+  do{n=pick(NPC_GIVEN)+" "+pick(NPC_SURN);tries++;}while(used[n]&&tries<50);
+  used[n]=1;
+  return {n:n,r:pick(NPC_RANKS),d:pick(NPC_DEPTS)};
+}
+function shipNpcs(s){
+  if(!s.npcs)s.npcs=[];
+  if(shipCrewN(s)>40){const used={};s.npcs.forEach(x=>used[x.n]=1);
+    while(s.npcs.length<8)s.npcs.push(mkNpc(used));}
+  return s.npcs;
+}
+function stNpcs(st){
+  if(!st.npcs)st.npcs=[];
+  if(stCrewN(st)>100){const used={};st.npcs.forEach(x=>used[x.n]=1);
+    while(st.npcs.length<10)st.npcs.push(mkNpc(used));}
+  return st.npcs;
+}
+function npcLabel(n){return n.r+" "+n.n;}
+const NPC_ROOM_DEPT={bridge:"Command",ready:"Command",lounge:null,transporter:"Operations",sickbay:"Medical",science:"Science",mess:null,holodeck:null,quarters:null,engineering:"Engineering",shuttle:"Operations",brig:"Security"};
+const NPC_STROOM_DEPT={ops:"Command",promenade:null,docking:"Operations",security:"Security",sickbay:"Medical",science:"Science",cargo:"Operations",reactor:"Engineering",replimat:null,holosuites:null,transporter:"Operations",habitat:null,brig:"Security"};
+function deckNpcsFor(s,rid){
+  const want=NPC_ROOM_DEPT[rid],all=shipNpcs(s);
+  const pool=want?all.filter(n=>n.d===want):all;
+  return (pool.length?pool:all).slice(0,4);
+}
+function sdeckNpcsFor(st,rid){
+  const want=NPC_STROOM_DEPT[rid],all=stNpcs(st);
+  const pool=want?all.filter(n=>n.d===want):all;
+  return (pool.length?pool:all).slice(0,4);
+}
+function npcAmbient(s){
+  const npcs=shipNpcs(s);if(!npcs.length||Math.random()>0.35)return "";
+  const n=pick(npcs),nm=npcLabel(n);
+  return pick([
+    nm+" hurries past with a hyperspanner and an apology.",
+    "Overheard: "+n.n+" explaining to a crewmate why the replicator owes them a favor.",
+    nm+" is holding court in the corridor, retelling the "+s.name+" story for the third time today.",
+    "Someone paged "+n.n+" to the bridge. They walked a little taller the rest of the shift.",
+    n.n+" has started a betting pool on the next drill. Participation is suspiciously high.",
+    nm+" is showing a new transfer the ropes — mostly where the good coffee is."
+  ]);
+}
+function npcAmbientSt(st){
+  const npcs=stNpcs(st);if(!npcs.length||Math.random()>0.35)return "";
+  const n=pick(npcs),nm=npcLabel(n);
+  return pick([
+    nm+" waves from across the section, juggling three PADDs.",
+    "Overheard: "+n.n+" trading shift-swap offers like a stockbroker.",
+    nm+" is giving directions to a lost civilian with total confidence and questionable accuracy."
+  ]);
+}
+/* ---------- AI room-entry reactions (v2.9): the crew notices you ----------
+   One short call per room entry, only when NPCs are present. Silent fallback
+   to the static room text — no key, no call. */
+let deckReactSeq=0,sdeckReactSeq=0;
+function npcReactPrompt(place,roomName,npcs,stateBits){
+  const names=npcs.map(n=>n.r+" "+n.n+" ("+n.d+")").join(", ");
+  return "You are the narrator of a Star Trek episode. The fleet commander has just walked into "+roomName+" "+place+". "+
+    "Write ONE brief reaction beat, 1 to 2 sentences, plain prose, no stage directions, no dialogue: how does the crew on duty react to the commander's arrival? "+
+    "Crew present: "+names+". "+stateBits;
+}
+function deckNpcReact(s,rid){
+  if(typeof aiGenText==="undefined"||!aiHasKey())return;
+  const npcs=deckNpcsFor(s,rid);if(!npcs.length)return;
+  const seq=++deckReactSeq;
+  const state="Ship status: "+(DECK&&DECK.battle?"red alert":((s.damage||0)>=40?"damage-control alert":"routine operations"))+", "+aliveShiftName()+" shift, crew "+shipCrewN(s)+"/"+shipCompMax(s)+".";
+  aiGenText(npcReactPrompt("aboard the "+s.name,deckRoomDef(rid).name,npcs,state),90).then(t=>{
+    if(!t||seq!==deckReactSeq||!DECK||DECK.room!==rid||DECK.shipId!==s.id)return;
+    const box=document.getElementById("deckRoot"),sp=box&&box.querySelector(".npcReact");
+    if(sp)sp.textContent=t;
+  }).catch(function(){});
+}
+function sdeckNpcReact(st,rid){
+  if(typeof aiGenText==="undefined"||!aiHasKey())return;
+  const npcs=sdeckNpcsFor(st,rid);if(!npcs.length)return;
+  const seq=++sdeckReactSeq;
+  const state="Station status: routine operations, "+aliveShiftName()+" shift, crew "+stCrewN(st)+"/"+stCompMax(st)+".";
+  aiGenText(npcReactPrompt("aboard "+st.name,sdeckRoomDef(rid).name,npcs,state),90).then(t=>{
+    if(!t||seq!==sdeckReactSeq||!SDECK||SDECK.room!==rid||SDECK.stId!==st.id)return;
+    const box=document.getElementById("deckRoot"),sp=box&&box.querySelector(".npcReact");
+    if(sp)sp.textContent=t;
+  }).catch(function(){});
+}
+/* ---- end CREW COMPLEMENT & NPCs (v2.9) ---- */
+
 
 
 const Q_QUIPS=[
@@ -5293,7 +5440,9 @@ const HOSTILE_ZONES={
 };
 function battlePower(s){
   const c=SHIP_CLASSES[s.cls];if(!c)return 50;
-  return Math.max(10,Math.round(c.hull+c.tac*1.25+30-(s.damage||0)*0.6));
+  let p=Math.max(10,Math.round(c.hull+c.tac*1.25+30-(s.damage||0)*0.6));
+  if(typeof shipUndercrewed==="function"&&shipUndercrewed(s))p=Math.round(p*0.85);
+  return p;
 }
 function threatLabel(e,s){const r=e.pow/battlePower(s);
   return r>1.6?"OVERWHELMING":r>1.15?"SUPERIOR":r>0.85?"EVEN MATCH":"INFERIOR";}
@@ -5358,6 +5507,7 @@ function resolveBattle(sid,e,z,choice){
     const ch=clamp(0.55+((c.speed||9)-9)*0.12,0.15,0.92);
     if(Math.random()<ch){
       const d=ri(3,12);s.damage=Math.min(99,(s.damage||0)+d);
+      if(typeof shipCasualties==="function")shipCasualties(s,d,"evasive escape");
       if(s.damage>=40&&s.status==="active")s.status="damaged";
       log("combat",s.name+" evaded "+en+" in "+z.terr+", taking "+d+"% hull damage during the escape.");
       return done("Helm lays in an evasive course and "+esc(s.name)+" warps out trailing plasma — but intact. The "+esc(e.n)+" does not pursue. <b>Escaped</b> with "+d+"% hull damage.");
@@ -5369,6 +5519,7 @@ function resolveBattle(sid,e,z,choice){
   const crew=crewOfShip(s.id);
   const applyDamage=function(dmg){
     s.damage=Math.min(120,(s.damage||0)+dmg);
+    if(typeof shipCasualties==="function")shipCasualties(s,dmg,"battle");
     if(s.damage>=40&&s.status==="active")s.status="damaged";
   };
   if(p>=ep){
@@ -6438,7 +6589,7 @@ function meetFinish(how){
   toast(how==="done"?"Meeting concluded.":"Dismissed.");
 }
 function openTabMenu(){
-  const tabs=[["personnel",ICONS.crew,"Personnel"],["missions",ICONS.missions,"Missions"],["build",ICONS.build,"Build"],["log",ICONS.log,"Log"],["caplog",ICONS.log,"Captain's Log"],["arcs",ICONS.arcs,"Story Arcs"],["memorial",ICONS.memorial,"Memorial"],["settings",ICONS.settings,"Settings"]];
+  const tabs=[["personnel",ICONS.crew,"Essential Personnel"],["missions",ICONS.missions,"Missions"],["build",ICONS.build,"Build"],["log",ICONS.log,"Log"],["caplog",ICONS.log,"Captain's Log"],["arcs",ICONS.arcs,"Story Arcs"],["memorial",ICONS.memorial,"Memorial"],["settings",ICONS.settings,"Settings"]];
   let h='';
   tabs.forEach(function(t){
     h+='<button class="menuItem'+(currentTab===t[0]?" sel":"")+'" onclick="navGo(\''+t[0]+'\')"><span class="bIco">'+t[1]+'</span><span>'+t[2]+'</span></button>';
@@ -7505,8 +7656,9 @@ function destroyShip(s,cause){
   G.ships=G.ships.filter(x=>x.id!==s.id);
   G.memorial.unshift({kind:"ship",name:s.name,sub:SHIP_CLASSES[s.cls].name+"-class · "+s.registry,lost:"destroyed",cause:cause,sd:G.stardate});
   G.ledger.lost++;
-  log("combat","† "+s.name+" ("+s.registry+") destroyed — "+cause+". Her name is added to the Memorial.");
-  capLogAuto("Ship lost","† "+s.name+" ("+s.registry+") destroyed — "+cause+".");
+  const _souls=(typeof shipCrewN==="function")?shipCrewN(s):0;
+  log("combat","† "+s.name+" ("+s.registry+") destroyed — "+cause+". "+(_souls>0?_souls+" souls lost with her. ":"")+"Her name is added to the Memorial.");
+  capLogAuto("Ship lost","† "+s.name+" ("+s.registry+") destroyed — "+cause+(_souls>0?" ("+_souls+" souls lost)":"")+".");
 }
 function uiDecommission(kind,id){
   const tgt=kind==="ship"?ship(id):station(id);
@@ -8161,7 +8313,7 @@ function crewSectionsHTML(crew,co,xo,cap,emptyHint){
   const sr=crew.filter(isSeniorStaff).sort(ord),rest=crew.filter(o=>!isSeniorStaff(o)).sort(ord);
   let h="";
   if(sr.length){h+='<h4>Briefing Room</h4>';sr.forEach(o=>{h+=crewRowHTML(o,true);});}
-  h+='<h4>Crew ('+crew.length+cap+')</h4>';
+  h+='<h4>Essential Personnel ('+crew.length+cap+')</h4>';
   rest.forEach(o=>{h+=crewRowHTML(o,false);});
   if(!crew.length)h+='<p class="dim">'+emptyHint+'</p>';
   else if(!sr.length)h+='<p class="dim">Assign bridge and department-head positions (Assign crew) to build the briefing room.</p>';
@@ -9051,7 +9203,16 @@ function shipModal(id){
   if(s.status==="repair"){const _ry=station(s.yardId),_rtot=Math.max(1,Math.ceil(s.damage/12));
     h+='<div class="kv"><span class="k">In repair</span><span class="v">'+esc(_ry?_ry.name:"Shipyard")+' — '+s.daysLeft+'d left</span></div><div class="prog"><i style="width:'+Math.round((1-s.daysLeft/_rtot)*100)+'%"></i></div>';}
   if(c.special)h+='<p class="dim">'+esc(c.special)+'</p>';
-  h+=crewSectionsHTML(crew,co,xo,"/"+c.slots,"No crew assigned. Visit Personnel to assign officers.");
+  if(typeof shipCrewN==="function"){
+    const _cc=shipCompMax(s),_cn=shipCrewN(s),_uc=shipUndercrewed(s);
+    h+='<div class="kv"><span class="k">Crew</span><span class="v">'+_cn+' / '+_cc+(_uc?' <span class="badge" style="background:var(--red);color:#fff;font-weight:bold;">UNDERCREWED</span>':"")+'</span></div>';
+    if(_cn<_cc){
+      if(starbasePipeline())h+='<div class="btnRow"><button class="btn small teal" onclick="uiCrewReplacements(\''+s.id+'\')">Request replacements ('+fmt((_cc-_cn)*5)+' CR)</button></div>';
+      else h+='<p class="dim">No active starbase — no personnel pipeline for replacements.</p>';
+    }
+    if(_uc)h+='<p class="dim" style="color:var(--red)">Undercrewed: battle performance reduced until the complement is restored.</p>';
+  }
+  h+=crewSectionsHTML(crew,co,xo,"/"+c.slots,"No essential personnel assigned. Visit Personnel to assign officers.");
   const shs=shuttlesOfShip(s.id);
   h+='<h4>Shuttle Bay ('+shs.length+')</h4>';
   shs.forEach(sh=>{
@@ -9089,7 +9250,11 @@ function stationModal(id){
   h+='<div class="kv"><span class="k">Posting</span><span class="v">'+sheetPick('Posting',postOptions(st.post||"sol"),(function(_stid){return function(v){setStationPost(_stid,v);};})(st.id))+'</span></div>';
   h+='<p class="dim">'+esc(d.desc)+'</p>';
   if(st.blurb)h+='<p class="dim"><i>'+esc(st.blurb)+'</i></p>';
-  h+=crewSectionsHTML(crew,co,xo,"","No crew assigned.");
+  if(typeof stCrewN==="function"){
+    const _scc=stCompMax(st),_scn=stCrewN(st);
+    h+='<div class="kv"><span class="k">Crew</span><span class="v">'+_scn+' / '+_scc+'</span></div>';
+  }
+  h+=crewSectionsHTML(crew,co,xo,"","No essential personnel assigned.");
   const shs=shuttlesOfStation(st.id);
   h+='<h4>Docking Bay — Shuttlecraft ('+shs.length+')</h4>';
   shs.forEach(sh=>{
@@ -9924,6 +10089,7 @@ function deckGotoRoom(rid){
   DECK.room=rid;DECK.screen="room";DECK.roomMap=deckRoomMap(ship(DECK.shipId));
   sfx("door");
   if(Math.random()<0.35){const enc=deckMakeEncounter();if(enc){DECK.enc=enc;}}
+  if(typeof deckNpcReact==="function")deckNpcReact(ship(DECK.shipId),rid);
   renderDeck();
 }
 function deckRoomHtml(s,rid){
@@ -9947,6 +10113,14 @@ function deckRoomHtml(s,rid){
       (occ.length>8?'<div class="dim" style="font-size:12px;">+'+(occ.length-8)+' more aboard</div>':"")+'</div>';
   }else{
     h+='<p class="dim">Nobody is here right now. The room waits.</p>';
+  }
+  if(typeof deckNpcsFor==="function"){
+    const dnpcs=deckNpcsFor(s,rid);
+    if(dnpcs.length){
+      h+='<div class="deckSec" style="margin-top:6px;">Also aboard</div><div class="dim">'+dnpcs.map(n=>esc(npcLabel(n))).join(" · ")+'</div>';
+      if(typeof aiHasKey==="function"&&aiHasKey())h+='<div class="npcReact dim" style="font-style:italic;margin-top:4px;"></div>';
+    }
+    const _namb=npcAmbient(s);if(_namb)h+='<div class="aliveTick">'+esc(_namb)+'</div>';
   }
   h+=deckRoomActions(s,rid,occ);
   h+='</div><div class="deckBtnRow"><button class="btn small ghost" onclick="deckGoBack()">&#8592; Deck plan</button></div>';
@@ -10356,7 +10530,7 @@ function deckOpFx(s,op,fx,win){
   const F=win?fx:(fx.onLose||{});
   if(F.pres)gainPres(F.pres);
   if(F.morale)crewOfShip(s.id).forEach(o=>{o.morale=clamp(o.morale+F.morale,0,100);});
-  if(F.dmg){s.damage=Math.min(120,(s.damage||0)+F.dmg);if(s.damage>=40&&s.status==="active")s.status="damaged";}
+  if(F.dmg){s.damage=Math.min(120,(s.damage||0)+F.dmg);if(typeof shipCasualties==="function")shipCasualties(s,F.dmg,"crisis");if(s.damage>=40&&s.status==="active")s.status="damaged";}
   if(F.inj){const c=crewOfShip(s.id).filter(o=>o.health==="healthy");for(let k=0;k<F.inj&&c.length;k++){const o=c.splice(Math.floor(Math.random()*c.length),1)[0];o.health="injured";o.healDays=ri(10,25);}}
   if(F.accolade&&win){const b=deckOpBest(s,"cmd");if(b.o)awardAccolade(b.o,F.accolade);}
 }
@@ -10374,7 +10548,7 @@ function deckOpResolve(s,op,def){
   if(w>=n){outcome="Textbook Resolution";pres=110;mor=6;detail="Every objective secured. This is the one they\'ll teach at the Academy — the crisis that never left the ship, solved by the people who live in her.";}
   else if(w>=n-1){outcome="Resolved";pres=70;mor=4;detail="The crisis is over. The ship hums on, and the crew walks a little taller.";}
   else if(w>=1){outcome="Contained";pres=35;mor=1;detail="It\'s handled — mostly. The debrief will be spirited, and the repair crews are already at work.";}
-  else{outcome="Costly";pres=10;mor=-5;detail="The crisis passed, but it took its toll. Sickbay is busy and the mood is somber.";s.damage=Math.min(120,(s.damage||0)+ri(5,15));if(s.damage>=40&&s.status==="active")s.status="damaged";}
+  else{outcome="Costly";pres=10;mor=-5;detail="The crisis passed, but it took its toll. Sickbay is busy and the mood is somber.";const _cd=ri(5,15);s.damage=Math.min(120,(s.damage||0)+_cd);if(typeof shipCasualties==="function")shipCasualties(s,_cd,"crisis");if(s.damage>=40&&s.status==="active")s.status="damaged";}
   gainPres(pres);
   crewOfShip(s.id).forEach(o=>{o.morale=clamp(o.morale+mor,0,100);o.missions.t++;if(w>=n-1)o.missions.s++;});
   const b=deckOpBest(s,"cmd");
@@ -10673,9 +10847,10 @@ function sdeckRender(){
 }
 function sdeckStatusStrip(st){
   const crew=crewOfStation(st.id),shs=shuttlesOfStation(st.id);
-  return '<div class="deckStrip"><div style="flex:1;">'+bar("CREW",crew.length,Math.max(crew.length,20))+'</div>'+
+  return '<div class="deckStrip"><div style="flex:1;">'+bar("CREW",stCrewN(st),stCompMax(st))+'</div>'+
     '<div style="font-size:11px;opacity:.75;">'+esc(POST_LABELS[st.post||"sol"]||"Deep Space")+'</div></div>'+
-    '<div class="kv"><span class="k">Complement</span><span class="v">'+crew.length+' assigned</span></div>'+
+    '<div class="kv"><span class="k">Essential personnel</span><span class="v">'+crew.length+' assigned</span></div>'+
+    '<div class="kv"><span class="k">Crew</span><span class="v">'+stCrewN(st)+' / '+stCompMax(st)+'</span></div>'+
     '<div class="kv"><span class="k">Docked shuttlecraft</span><span class="v">'+shs.length+'</span></div>';
 }
 function sdeckPlanHtml(st){
@@ -10701,6 +10876,7 @@ function sdeckGotoRoom(rid){
   SDECK.room=rid;SDECK.screen="room";SDECK.roomMap=sdeckRoomMap(sdeckStation());
   sfx("door");
   if(Math.random()<0.35){const enc=sdeckMakeEncounter();if(enc){SDECK.enc=enc;}}
+  if(typeof sdeckNpcReact==="function")sdeckNpcReact(sdeckStation(),rid);
   sdeckRender();
 }
 function sdeckRoomHtml(st,rid){
@@ -10725,6 +10901,14 @@ function sdeckRoomHtml(st,rid){
       (occ.length>8?'<div class="dim" style="font-size:12px;">+'+(occ.length-8)+' more aboard</div>':"")+'</div>';
   }else{
     h+='<p class="dim">Nobody is here right now. The room waits.</p>';
+  }
+  if(typeof sdeckNpcsFor==="function"){
+    const snpcs=sdeckNpcsFor(st,rid);
+    if(snpcs.length){
+      h+='<div class="deckSec" style="margin-top:6px;">Also aboard</div><div class="dim">'+snpcs.map(n=>esc(npcLabel(n))).join(" · ")+'</div>';
+      if(typeof aiHasKey==="function"&&aiHasKey())h+='<div class="npcReact dim" style="font-style:italic;margin-top:4px;"></div>';
+    }
+    const _snamb=npcAmbientSt(st);if(_snamb)h+='<div class="aliveTick">'+esc(_snamb)+'</div>';
   }
   h+=sdeckRoomActions(st,rid,occ);
   h+='</div><div class="deckBtnRow"><button class="btn small ghost" onclick="sdeckGoBack()">&#8592; Section plan</button></div>';
@@ -10791,7 +10975,7 @@ function sdeckBrief(){
   const st=sdeckStation();if(!st)return;const crew=crewOfStation(st.id),shs=shuttlesOfStation(st.id);
   const hurt=crew.filter(o=>o.health!=="healthy").length,op=sdeckActiveOp(st);
   openModal('<h2>Station Status Briefing</h2>'+
-    '<div class="kv"><span class="k">Personnel</span><span class="v">'+crew.length+' assigned</span></div>'+
+    '<div class="kv"><span class="k">Essential personnel</span><span class="v">'+crew.length+' assigned</span></div>'+
     '<div class="kv"><span class="k">Average morale</span><span class="v">'+Math.round(sdeckCrewAvgMor(st))+'%</span></div>'+
     '<div class="kv"><span class="k">Under medical care</span><span class="v">'+hurt+'</span></div>'+
     '<div class="kv"><span class="k">Docked shuttlecraft</span><span class="v">'+shs.length+'</span></div>'+
@@ -11338,7 +11522,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.8</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.9</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
