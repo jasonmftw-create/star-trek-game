@@ -316,6 +316,12 @@ body{touch-action:pan-y;}
 .cmdrOpt.sel{border-color:var(--orange);box-shadow:0 0 8px var(--orange);}
 .cmdrOpt img{width:100%;aspect-ratio:1;object-fit:cover;display:block;}
 .cmdrLbl{font-size:11px;text-align:center;padding:3px 2px;color:var(--peach);font-weight:700;}
+.bilGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+.bilCell{border:1px solid #2a3550;border-radius:10px;padding:8px 10px;cursor:pointer;background:#101828;}
+.bilCell:active{border-color:var(--orange);}
+.bilCell .bn{font-size:13px;font-weight:700;color:var(--peach);}
+.bilCell .bh{font-size:11px;color:#8b93a7;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bilCell.vac .bh{color:#5a6b7d;font-style:italic;}
 .txtIn{flex:1;background:#000;border:1px solid var(--orange);color:var(--peach);border-radius:8px;padding:9px;font-size:16px;min-width:0;}
 .badge{display:inline-block;font-size:13px;font-weight:700;padding:3px 10px;border-radius:10px;
   background:var(--panel2);color:var(--teal);border:1px solid var(--line);margin:1px 2px 1px 0;}
@@ -5703,10 +5709,10 @@ function uiCrewAssign(kind,id){
   const tgt=kind==="ship"?ship(id):station(id);if(!tgt)return;
   let h='<h2>Assign Crew</h2><div class="flavor">'+esc(tgt.name)+' — tap a position, then pick an officer</div>';
   h+='<div class="btnRow"><button class="btn small teal" onclick="uiAutoAssign(\''+kind+'\',\''+id+'\')">Auto-assign best fit</button></div>';
-  h+='<div class="cmdrGrid" style="grid-template-columns:1fr;">';
+  h+='<div class="bilGrid">';
   BILLETS.forEach(b=>{
     const holder=billetHolderAt(kind,id,b[0]);
-    h+='<div class="cmdrOpt" onclick="uiBilletOfficers(\''+kind+'\',\''+id+'\',\''+b[0]+'\')"><div class="cmdrLbl" style="font-size:14px;padding:10px;text-align:left;">'+b[1]+'<br><span class="dim" style="font-size:12px;">'+(holder?esc(holder.name)+" · "+esc(RANKS[holder.rank]):"— vacant —")+'</span></div></div>';
+    h+='<div class="bilCell'+(holder?"":" vac")+'" onclick="uiBilletOfficers(\''+kind+'\',\''+id+'\',\''+b[0]+'\')"><div class="bn">'+b[1]+'</div><div class="bh">'+(holder?esc(holder.name)+" · "+esc(RANKS[holder.rank]):"— vacant —")+'</div></div>';
   });
   h+='</div><div class="btnRow"><button class="btn small ghost" onclick="'+(kind==="ship"?"shipModal":"stationModal")+'(\''+id+'\')">Back</button></div>';
   openModal(h);
@@ -6721,7 +6727,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.73</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.74</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
