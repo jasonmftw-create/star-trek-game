@@ -549,6 +549,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
 .deckCap{font-size:11px;opacity:.55;text-align:center;margin-bottom:8px;letter-spacing:.5px;}
 .aliveTick{font-size:12px;opacity:.8;font-style:italic;margin:6px 0;padding:7px 10px;border-left:2px solid var(--teal);background:rgba(255,255,255,.03);border-radius:0 8px 8px 0;}
 .aliveGreet{font-size:13px;margin:8px 0;padding:9px 12px;border:1px solid var(--gold);border-radius:10px;background:rgba(255,215,0,.06);}
+.aiChatLog{max-height:46vh;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:10px 2px;}.aiMsgU{align-self:flex-end;background:var(--teal);color:#04121a;border-radius:12px 12px 3px 12px;padding:8px 11px;max-width:86%;font-size:13px;line-height:1.45;}.aiMsgO{align-self:flex-start;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px 12px 12px 3px;padding:8px 11px;max-width:86%;font-size:13px;line-height:1.45;}.aiTyping{opacity:.55;}.aiChatBar{display:flex;gap:8px;margin:8px 0;}.aiChatBar input{flex:1;min-width:0;}
 
 </style>
 </head>
@@ -587,7 +588,6 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
 
 <div id="completeRoot"></div>
 <script>
-
 "use strict";
 /* ============================================================
    STAR TREK: FLEET COMMAND — a Starfleet sector management sim
@@ -4729,6 +4729,7 @@ function renderSettings(){
   h+=COMPLETION_TOGGLE_ROW;
   h+='<div class="kv"><span class="k">Random battles</span><span class="v"><button class="btn small'+(battlesOn()?" on":"")+'" onclick="uiToggleBattles()">'+(battlesOn()?"On":"Off")+'</button></span></div>'+
     '<p class="dim">When on, any active ship posted in hostile territory — Borg space, the Dominion, the Neutral Zone — risks a random enemy encounter each day. You choose: engage or run.</p></div>';
+  h+=aiSetupHtml();
   h+='<div class="card"><h3>Save Data</h3><div class="btnRow">'+
     '<button class="btn small ghost" onclick="uiSave()">Save now</button>'+
     '<button class="btn small ghost" onclick="uiExport()">Export save</button>'+
@@ -4737,6 +4738,132 @@ function renderSettings(){
     '<p class="dim">Autosaves after every time advance.</p></div>';
   return h;
 }
+
+
+/* ================= AI CONVERSATIONS (v2.7) =================
+   Fresh, in-character dialogue with any officer, powered by the player's
+   own free Google AI Studio key. Key lives in G.aiKey (localStorage only,
+   never leaves the device except to Google's API). Per-officer history in
+   o.aiChat (additive, capped at 20). No key or any failure -> graceful
+   fallback line, never a crash. */
+const AI_MODEL_DEFAULT="gemini-2.5-flash-lite";
+function aiModel(){return (G.aiModel||AI_MODEL_DEFAULT).trim()||AI_MODEL_DEFAULT;}
+function aiHasKey(){return !!(G.aiKey&&String(G.aiKey).trim());}
+function aiSetupHtml(){
+  const has=aiHasKey();
+  let h='<div class="card"><h3>AI Conversations</h3><p class="dim">Talk with any officer — every conversation fresh and in character, generated just for you. Needs a free Google AI Studio key (about two minutes, no card required). Your key stays on this device and is only ever sent to Google.</p>';
+  h+='<label>API key</label><input id="aiKeyIn" type="password" autocomplete="off" placeholder="Paste your key here" value="'+esc(G.aiKey||"")+'" style="width:100%;box-sizing:border-box;margin:4px 0;">';
+  h+='<div class="btnRow"><button class="btn small teal" onclick="uiSaveAiKey()">Save key</button>';
+  if(has)h+='<button class="btn small ghost" onclick="uiTestAiKey()">Test</button><button class="btn small ghost" onclick="uiClearAiKey()">Remove</button>';
+  h+='</div><div id="aiKeyStatus" class="dim" style="margin-top:6px;">'+(has?"Key saved — tap Talk on any officer to chat.":"No key yet.")+'</div>';
+  h+='<p class="dim">Get a free key:<br>1. On your phone open <b>aistudio.google.com</b> and sign in<br>2. Tap <b>Get API key</b> &rarr; <b>Create API key</b> &rarr; copy it<br>3. Paste it above and tap Save key</p></div>';
+  return h;
+}
+function uiSaveAiKey(){const el=document.getElementById("aiKeyIn");const v=el?el.value.trim():"";G.aiKey=v;save();render();toast(v?"AI key saved — go talk to your crew.":"Key cleared.");}
+function uiClearAiKey(){G.aiKey="";save();render();}
+function aiErrMsg(e){const m=String((e&&e.message)||e||"");if(m==="no-key")return "no key saved";if(/401|403/.test(m))return "key rejected — double-check the paste";if(/429/.test(m))return "rate limit — wait a minute, then retry";if(/Failed to fetch|NetworkError|Load failed/.test(m))return "network error — are you online?";return m.slice(0,110);}
+async function aiRawProbe(){
+  const key=String(G.aiKey||"").trim();if(!key)throw new Error("no-key");
+  const url="https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(aiModel())+":generateContent";
+  const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify({contents:[{role:"user",parts:[{text:"Reply with exactly this word: OK"}]}],generationConfig:{maxOutputTokens:8,temperature:0}})});
+  if(!res.ok)throw new Error("HTTP "+res.status);
+  const j=await res.json();
+  let t="";try{t=j.candidates[0].content.parts.map(function(p){return p.text||"";}).join("").trim();}catch(e){}
+  if(!t)throw new Error("empty reply");
+  return t;
+}
+async function uiTestAiKey(){
+  const st=document.getElementById("aiKeyStatus");
+  if(st)st.textContent="Testing…";
+  try{const t=await aiRawProbe();if(st)st.textContent=/OK/.test(t)?"Connected — AI conversations are ready.":"Connected, but the reply looked odd. Try again.";}
+  catch(e){if(st)st.textContent="Test failed: "+aiErrMsg(e);}
+}
+function aiChatHist(o){if(!o.aiChat)o.aiChat=[];return o.aiChat;}
+function aiTrimHist(o){if(o.aiChat&&o.aiChat.length>20)o.aiChat=o.aiChat.slice(-20);}
+function aiSystemFor(o){
+  const cn=(G.commander&&G.commander.name)||"Commander";
+  const partner=o.rel?officer(o.rel.partner):null;
+  const nm=function(id){const x=officer(id);return x?x.name.split(" ")[0]:"";};
+  const friends=(o.friends||[]).map(nm).filter(Boolean).slice(0,3);
+  const rivals=(o.rivals||[]).map(nm).filter(Boolean).slice(0,2);
+  const acc=(o.accolades||[]).slice(-2).map(function(a){return a.n;}).join("; ");
+  let s="You are "+o.name+", a "+rankName(o)+" ("+o.species+", "+(o.gender==="M"?"male":o.gender==="F"?"female":"non-binary")+") serving as a "+o.dept+" officer in Starfleet, year 2379. ";
+  s+="You are speaking privately with "+cn+", the fleet commander, your superior officer. ";
+  try{if(o.post)s+="Your posting: "+postName(o.post)+". ";}catch(e){}
+  if(o.traits&&o.traits.length)s+="Personality traits: "+o.traits.join(", ")+". ";
+  if(o.backstory)s+="Your backstory: "+o.backstory+" ";
+  if(o.rel&&partner)s+="You are "+o.rel.stage+" with "+partner.name+". ";
+  if(friends.length)s+="Close friends aboard: "+friends.join(", ")+". ";
+  if(rivals.length)s+="Rivals aboard: "+rivals.join(", ")+". ";
+  if(acc)s+="Recent service record: "+acc+". ";
+  s+="Morale "+o.morale+"/100, loyalty "+(o.loyal==null?70:o.loyal)+"/100. ";
+  s+="Rules: stay fully in character as "+o.name+", a Starfleet officer — never mention being an AI or language model. Reply in first person, 1 to 4 sentences of natural spoken dialogue. No stage directions, no asterisks, no narrated actions. Address them as \""+cn+"\". Keep it Star Trek: professional, measured, warm when it fits. Never break character.";
+  return s;
+}
+async function aiChatCall(o,userText){
+  const key=String(G.aiKey||"").trim();if(!key)throw new Error("no-key");
+  const url="https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(aiModel())+":generateContent";
+  const hist=aiChatHist(o).slice(-8).map(function(m){return {role:m.r==="u"?"user":"model",parts:[{text:String(m.t).slice(0,600)}]};});
+  hist.push({role:"user",parts:[{text:String(userText).slice(0,600)}]});
+  const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify({system_instruction:{parts:[{text:aiSystemFor(o)}]},contents:hist,generationConfig:{maxOutputTokens:220,temperature:0.9}})});
+  if(!res.ok)throw new Error("HTTP "+res.status);
+  const j=await res.json();
+  let t="";try{t=j.candidates[0].content.parts.map(function(p){return p.text||"";}).join("").trim();}catch(e){}
+  if(!t)throw new Error("empty reply");
+  return t;
+}
+function aiFallbackLine(){
+  const cn=(G.commander&&G.commander.name)||"Commander";
+  return "Forgive me, "+cn+" — the comm is full of static on my end. Say that again in a moment?";
+}
+function aiChatHtml(o){
+  const log=aiChatHist(o).map(function(m){return '<div class="'+(m.r==="u"?"aiMsgU":"aiMsgO")+'">'+esc(m.t)+'</div>';}).join("");
+  let h='<!--AI_CHAT:'+o.id+'--><div class="pfaceWrap">'+faceImg(o,"pfaceBig")+'<div style="flex:1;min-width:0;"><h2>'+nameHtml(o)+'</h2><div class="flavor">'+esc(rankName(o))+' · '+esc(o.dept||"")+' — private channel</div></div></div>';
+  h+='<div id="aiChatLog" class="aiChatLog">'+(log||'<div class="dim" style="text-align:center;padding:14px 6px;">Say hello — every conversation is fresh.</div>')+'</div>';
+  h+='<div class="aiChatBar"><input id="aiChatIn" maxlength="300" placeholder="Say something…" autocomplete="off" onkeydown="if(event.key===\'Enter\'){aiSend(\''+o.id+'\');}">'+
+     '<button class="btn teal" onclick="aiSend(\''+o.id+'\')">Send</button></div>';
+  h+='<div class="btnRow"><button class="btn ghost" onclick="closeModal()">Close</button></div>';
+  return h;
+}
+function aiChatScroll(){const el=document.getElementById("aiChatLog");if(el)el.scrollTop=el.scrollHeight;}
+function aiTalk(oid){
+  const o=officer(oid);if(!o||o.dead)return;
+  if(!aiHasKey()){
+    openModal('<h2>Talk with '+esc(o.name.split(" ")[0])+'</h2><p class="dim">AI conversations need a free Google AI Studio key — about two minutes, no card, and the key never leaves your phone.</p><p class="dim">1. Open <b>aistudio.google.com</b><br>2. Tap <b>Get API key</b> &rarr; <b>Create API key</b> &rarr; copy<br>3. Paste it in <b>Settings &rarr; AI Conversations</b></p><div class="btnRow"><button class="btn teal" onclick="navGo(\'settings\')">Open Settings</button><button class="btn ghost" onclick="closeModal()">Not now</button></div>');
+    return;
+  }
+  const _prevHtml=$("modalBox").innerHTML,_prevBack=modalBack;
+  openModal(aiChatHtml(o));
+  aiChatScroll();
+  modalBack=function(){$("modalBox").innerHTML=_prevHtml;modalBack=_prevBack;};
+  setTimeout(function(){const el=document.getElementById("aiChatIn");if(el)el.focus();},350);
+}
+async function aiSend(oid){
+  const o=officer(oid);if(!o)return;
+  const inp=document.getElementById("aiChatIn");const v=inp?inp.value.trim():"";if(!v)return;
+  const hist=aiChatHist(o);hist.push({r:"u",t:v});aiTrimHist(o);save();
+  if(inp)inp.value="";
+  const log=document.getElementById("aiChatLog");
+  if(log&&log.insertAdjacentHTML)log.insertAdjacentHTML("beforeend",'<div class="aiMsgU">'+esc(v)+'</div><div class="aiMsgO aiTyping" id="aiTyping">…</div>');
+  aiChatScroll();
+  try{
+    const reply=await aiChatCall(o,v);
+    hist.push({r:"o",t:reply});aiTrimHist(o);
+    o.morale=clamp(o.morale+1,0,100);
+    save();
+    const ty=document.getElementById("aiTyping");if(ty)ty.outerHTML='<div class="aiMsgO">'+esc(reply)+'</div>';
+  }catch(e){
+    const fb=aiFallbackLine();
+    hist.push({r:"o",t:fb});aiTrimHist(o);save();
+    const ty=document.getElementById("aiTyping");
+    if(ty)ty.outerHTML='<div class="aiMsgO">'+esc(fb)+'</div><div class="dim" style="font-size:11px;margin:2px 0 8px;">(AI unreachable — '+esc(aiErrMsg(e))+')</div>';
+  }
+  aiChatScroll();
+}
+/* ---- end AI CONVERSATIONS (v2.7) ---- */
+
+
+
 const Q_QUIPS=[
   "Don't be boring, mon capitaine.",
   "You're being very small right now.",
@@ -7843,7 +7970,7 @@ function officerModal(id){
       h+='<button class="btn small teal" '+(G.prestige>=cost?"":"disabled")+' onclick="uiPromote(\''+o.id+'\')">Promote ('+cost+' pres.)</button>';
     if(!o.rankLabel&&o.rank>0)
       h+='<button class="btn small ghost" onclick="uiDemote(\''+o.id+'\')">Demote</button>';     const mLast=(G.meetings||{})[o.id];const mCd=mLast!==undefined&&G.stardate-mLast<MEET_CD;
-    h+='<button class="btn small teal" '+(mCd?"disabled":"")+' onclick="uiRequestMeeting(\''+o.id+'\')">Request meeting'+(mCd?" ("+Math.ceil(MEET_CD-(G.stardate-mLast))+"d)":"")+'</button>';h+='<button class="btn small violet" onclick="uiAwardPicker(\''+o.id+'\')">Award honor</button>';
+    h+='<button class="btn small teal" '+(mCd?"disabled":"")+' onclick="uiRequestMeeting(\''+o.id+'\')">Request meeting'+(mCd?" ("+Math.ceil(MEET_CD-(G.stardate-mLast))+"d)":"")+'</button>';h+='<button class="btn small gold" onclick="aiTalk(\''+o.id+'\')">Talk</button>';h+='<button class="btn small violet" onclick="uiAwardPicker(\''+o.id+'\')">Award honor</button>';
     if(o.rankLabel==="Civilian")
       h+='<button class="btn small peach" onclick="uiCommission(\''+o.id+'\',\'civ\')">Grant field commission</button>';
     if(o.rankLabel==="Cadet")
@@ -7851,6 +7978,7 @@ function officerModal(id){
     h+='</div>';
     if(readyForPromotion(o))h+='<p><span class="badge good">Ready for promotion</span></p>';
   }
+  if(!o.dead&&!(adult&&!o.retired))h+='<div class="btnRow"><button class="btn small gold" onclick="aiTalk(\''+o.id+'\')">Talk</button></div>';
   h+='<div class="btnRow"><button class="btn ghost" onclick="closeModal()">Close</button></div>';
   const _wasOpen=$("modalRoot").classList.contains("open");
   const _prevHtml=$("modalBox").innerHTML,_prevBack=modalBack;
@@ -11124,6 +11252,7 @@ window.onload=function(){
   applyTheme(curTheme());
   render();
 };
+
 </script>
 <nav id="bottomNav">
   <button class="navBtn" onclick="goBack()"><span class="bIco"><svg viewBox="0 0 24 24"><path d="M14.5 5 7.5 12l7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Back</span></button>
@@ -11139,7 +11268,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.6</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.7</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
