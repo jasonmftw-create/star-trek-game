@@ -597,6 +597,17 @@ const PLAYER_TITLES=[[0,"Commodore"],[200,"Rear Admiral"],[500,"Vice Admiral"],[
 const TRAITS=["Borg Expertise","Holographic","Android","Empath","Veteran of Wolf 359","Maquis Veteran",
   "Q Encounter Survivor","Klingon Honor","Diplomat","Surgeon","Warp Theorist","Exobiologist",
   "Tactician","Test Pilot","Counselor","Xenolinguist","Field Medic","Starship Designer"];
+const ORIENTS=["Straight","Gay","Lesbian","Bisexual","Pansexual","Asexual"];
+function randOrient(){const r=Math.random();return r<0.80?"Straight":r<0.89?"Bisexual":r<0.94?"Gay":r<0.97?"Lesbian":r<0.99?"Pansexual":"Asexual";}
+const CANON_ORIENT={"Kathryn Janeway":"Straight","Chakotay":"Straight","Tuvok":"Straight","Tom Paris":"Straight",
+"B'Elanna Torres":"Straight","Harry Kim":"Straight","The Doctor":"Straight","Seven of Nine":"Bisexual",
+"Jean-Luc Picard":"Straight","William Riker":"Straight","Data":"Straight","Geordi La Forge":"Straight",
+"Beverly Crusher":"Straight","Deanna Troi":"Straight","Worf":"Straight","Nog":"Straight","Wesley Crusher":"Straight",
+"Reginald Barclay":"Straight","Ro Laren":"Straight","Katherine Pulaski":"Straight","Benjamin Sisko":"Straight",
+"Kira Nerys":"Straight","Julian Bashir":"Straight","Miles O'Brien":"Straight","Ezri Dax":"Straight",
+"Phlox":"Straight","Raffi Musiker":"Bisexual","Crist\u00f3bal Rios":"Straight","Elnor":"Straight",
+"Jack Crusher":"Straight","Pelia":"Straight","Guinan":"Straight","Odo":"Straight","Jake Sisko":"Straight",
+"Neelix":"Straight","Thy'lek Shran":"Straight","Soji Asha":"Straight","Naomi Wildman":"Straight","Icheb":"Straight"};
 const TRAIT_COMPLEMENT={ // pairs that spark chemistry
   "Diplomat":"Tactician","Tactician":"Diplomat","Surgeon":"Field Medic","Field Medic":"Surgeon",
   "Warp Theorist":"Starship Designer","Starship Designer":"Warp Theorist",
@@ -1376,13 +1387,13 @@ let G=null; let currentTab="command"; let navStack=[]; let tabScrollY={}; let in
 const SAVE_KEY="stfc_save_v1";
 
 function MK(arr){
-  const [name,species,gender,age,rank,dept,st,traits,post,rankLabel,stage]=arr;
+  const [name,species,gender,age,rank,dept,st,traits,post,rankLabel,stage,orient]=arr;
   const postObj = post==="pool"?{t:"pool"}:post==="hq"?{t:"hq"}:
     ["voyager","enterprise","defiant","callisto","peregrine","horizon","titan","cerritos"].includes(post)?{t:"ship",id:post}:{t:"station",id:post};
   return {id:uid("o"),name,species,gender,age,rank,dept,
     stats:{cmd:st[0],sci:st[1],eng:st[2],med:st[3],dip:st[4],tac:st[5]},
     traits:traits.slice(),post:postObj,morale:ri(60,85),health:"healthy",healDays:0,
-    rel:null,kids:[],parents:[],stage:stage||"adult",timeInGrade:ri(100,500),
+    rel:null,kids:[],parents:[],stage:stage||"adult",orient:orient||CANON_ORIENT[name]||randOrient(),timeInGrade:ri(100,500),
     missions:{s:ri(0,4),t:ri(1,5)},medals:[],status:"active",dead:false,retired:false,pic:0,show:CANON_SHOW[name]||null,
     accolades:(CANON_ACCOLADES[name]||[]).map(a=>({n:a[0],d:a[1]})),
     rankLabel:rankLabel||null,affairCooldown:0,roles:[],loyal:ri(60,85),friends:[],rivals:[],request:null,promRec:false};
@@ -1401,6 +1412,40 @@ const MUSEUM_SEED=[
   {id:"mus-rombop",name:"Romulan Bird-of-Prey",registry:"\u2014",cls:"rombop",status:"museum",daysLeft:0,damage:0,missionId:null,yardId:null,post:"sol",musSd:54973.4,tours:1,msn:0,msnWon:0,batWon:0,commTxt:"23rd century · 'Balance of Terror'",blurb:"The invisible raider from 'Balance of Terror' — the Federation's first deadly dance with the Romulans."}
 ];
 function seedMuseum(g){MUSEUM_SEED.forEach(def=>{if(!(g.ships||[]).some(s=>s.id===def.id))g.ships.push(Object.assign({},def,{comp:SHIP_CLASSES[def.cls].comp}));});}
+/* Canon bonds, verified against series canon at 2378 (post-Voyager return):
+   Paris+Torres married with newborn Miral; Riker+Troi dating (wed 2379);
+   Bashir+Ezri dating; Chakotay+Seven dating; Jack Crusher is Beverly's son. */
+const CANON_PAIRS=[
+  ["Tom Paris","B'Elanna Torres","married",[{name:"Miral Paris",species:"Klingon/Human",gender:"F",age:0}]],
+  ["William Riker","Deanna Troi","dating",[]],
+  ["Julian Bashir","Ezri Dax","dating",[]],
+  ["Chakotay","Seven of Nine","dating",[]]
+];
+const CANON_PARENTS={"Jack Crusher":["Beverly Crusher"]};
+function seedCanonBonds(g){
+  let n=0;const byName={};
+  (g.officers||[]).forEach(o=>{if(!o.dead&&!o.retired)byName[o.name]=o;});
+  CANON_PAIRS.forEach(function(pr){
+    const a=byName[pr[0]],b=byName[pr[1]];
+    if(!a||!b||a.rel||b.rel)return;
+    a.rel={stage:pr[2],partner:b.id,day:0};b.rel={stage:pr[2],partner:a.id,day:0};n++;
+    (pr[3]||[]).forEach(function(k){
+      if(byName[k.name]||(g.officers||[]).some(function(o){return o.name===k.name;}))return;
+      const kid=MK([k.name,k.species,k.gender,k.age,0,"Operations",[35,35,35,35,35,35],[],"pool","Child","child"]);
+      kid.parents=[a.id,b.id];
+      a.kids.push(kid.id);b.kids.push(kid.id);
+      g.officers.push(kid);byName[k.name]=kid;n++;
+    });
+  });
+  Object.keys(CANON_PARENTS).forEach(function(cn){
+    const c=byName[cn];if(!c)return;
+    CANON_PARENTS[cn].forEach(function(pn){
+      const par=byName[pn];
+      if(par&&c.parents.indexOf(par.id)<0){c.parents.push(par.id);if(par.kids.indexOf(c.id)<0)par.kids.push(c.id);n++;}
+    });
+  });
+  return n;
+}
 function newGameState(){
   _uid=1;
   const ships=[
@@ -1437,7 +1482,7 @@ function newGameState(){
     ledger:{missions:0,crits:0,shipsBuilt:0,stationsBuilt:0,marriages:0,births:0,lost:0,events:0},
     flags:{},dlIncome:0,day:0,tempCd:0,rescued:{},research:{active:null,done:{}},portraitVer:{},qmode:false,qtheme:"full",captainsLog:[],arcs:[],contacts:[],
     commander:{name:"",gender:"m",species:"human",portrait:0}};
-  G0.officers=CANON_CREW.concat(ORIGINAL_CREW,AUX_CREW).map(MK);   {const _cb={"Carol Freeman":["co"],"Jack Ransom":["xo"],"Shaxs":["sec"],"T'Ana":["med"]};G0.officers.forEach(o=>{if(_cb[o.name])o.roles=_cb[o.name].slice();});}
+  G0.officers=CANON_CREW.concat(ORIGINAL_CREW,AUX_CREW).map(MK);   {const _cb={"Carol Freeman":["co"],"Jack Ransom":["xo"],"Shaxs":["sec"],"T'Ana":["med"]};G0.officers.forEach(o=>{if(_cb[o.name])o.roles=_cb[o.name].slice();});}   seedCanonBonds(G0);
   G=G0;
   G.ships.forEach(s=>{s.comp=SHIP_CLASSES[s.cls].comp;});
   G.stations.forEach(st=>{st.comp=STATION_DEFS[st.type].comp;});
@@ -1573,6 +1618,10 @@ function migrateSave(g){
     if(!(g.officers||[]).some(o=>o.name===def[0])&&!(g.memorial||[]).some(m=>m.name===def[0]))
       g.officers.push(MK(def));
   });
+  // v1.1: orientation defaults + canon relationship audit (Paris/Torres marriage, Miral Paris, etc.)
+  (g.officers||[]).forEach(o=>{if(!o.orient)o.orient=CANON_ORIENT[o.name]||randOrient();});
+  if(seedCanonBonds(g))g.log.unshift({d:g.day||0,sd:g.stardate,cat:"personnel",
+    text:"Personnel audit complete: canon relationships verified \u2014 Paris/Torres marriage and Miral Paris birth record restored; Riker/Troi, Bashir/Dax and Chakotay/Seven noted as dating; Jack Crusher listed as Beverly Crusher's son."});
   {const _cbm={"Carol Freeman":"co","Jack Ransom":"xo","Shaxs":"sec","T'Ana":"med"};
   Object.keys(_cbm).forEach(nm=>{const o=(g.officers||[]).find(x=>x.name===nm&&!x.dead&&!x.retired);
     if(o&&!(o.roles||[]).length&&!(g.officers||[]).some(x=>x!==o&&x.post&&o.post&&x.post.t===o.post.t&&x.post.id===o.post.id&&(x.roles||[]).indexOf(_cbm[nm])>=0))o.roles=[_cbm[nm]];});}
@@ -2408,8 +2457,18 @@ function postings(){
   G.stations.forEach(st=>{if(st.status==="active")out.push({t:"station",id:st.id});});
   return out;
 }
+function attractedTo(o,other){
+  const or=String(o.orient||"Straight").toLowerCase(),og=(o.gender==="F"||o.gender==="f")?"f":"m",
+        tg=(other.gender==="F"||other.gender==="f")?"f":"m";
+  if(or==="asexual")return false;
+  if(or==="bisexual"||or==="pansexual")return true;
+  if(or==="straight")return og!==tg;
+  return og===tg; // gay / lesbian
+}
 function compat(a,b){
   let s=35;
+  if(!(attractedTo(a,b)&&attractedTo(b,a)))s-=80;
+  if(String(a.orient||"").toLowerCase()==="asexual"||String(b.orient||"").toLowerCase()==="asexual")s-=40;
   if(a.dept===b.dept)s+=15;
   if(a.traits.some(t=>b.traits.includes(t)))s+=10;
   if(a.traits.some(t=>TRAIT_COMPLEMENT[t]&&b.traits.includes(TRAIT_COMPLEMENT[t])))s+=10;
@@ -2500,7 +2559,7 @@ function birthChild(a,b){
     dept:pick(DEPTS),stats:{cmd:0,sci:0,eng:0,med:0,dip:0,tac:0},traits:[],
     post:JSON.parse(JSON.stringify(a.post.t!=="pool"?a.post:b.post.t!=="pool"?b.post:{t:"pool"})),
     morale:80,health:"healthy",healDays:0,rel:null,kids:[],parents:[a.id,b.id],
-    stage:"child",timeInGrade:0,missions:{s:0,t:0},medals:[],status:"active",dead:false,retired:false,rankLabel:null,affairCooldown:0,roles:[]};
+    stage:"child",orient:randOrient(),timeInGrade:0,missions:{s:0,t:0},medals:[],status:"active",dead:false,retired:false,rankLabel:null,affairCooldown:0,roles:[]};
   ["cmd","sci","eng","med","dip","tac"].forEach(k=>{
     kid.stats[k]=clamp(Math.round((a.stats[k]+b.stats[k])/2+rnd(-12,12)+6),5,99);});
   const pt=a.traits.concat(b.traits);
@@ -5677,6 +5736,7 @@ function uiGiveAward(oid,aid){
   log("award",o.name+" was presented the "+a.name+" (+"+a.morale+" morale).");
   save();officerModal(oid);toast(o.name+" received the "+a.name+".");
 }
+function uiSetOrient(id,val){const o=officer(id);if(!o)return;o.orient=val;save();render();officerModal(id);}
 function officerModal(id){
   const o=officer(id);if(!o)return;
   const adult=o.stage==="adult";
@@ -5712,6 +5772,9 @@ function officerModal(id){
   }
   if(o.rel&&partner){
     h+='<div class="kv"><span class="k">Relationship</span><span class="v" style="color:var(--pink)">'+o.rel.stage+' — <a href="#" onclick="officerModal(\''+partner.id+'\');return false;" style="color:var(--pink)">'+esc(partner.name)+'</a></span></div>';
+  }
+  if(o.stage==="adult"){
+    h+='<div class="kv"><span class="k">Orientation</span><span class="v"><select class="txtIn" style="max-width:170px" onchange="uiSetOrient(\''+o.id+'\',this.value)" onclick="event.stopPropagation()">'+ORIENTS.map(x=>'<option value="'+x+'"'+(o.orient===x?" selected":"")+'>'+x+'</option>').join("")+'</select></span></div>';
   }
   if(o.kids.length){
     h+='<div class="kv"><span class="k">Children</span><span class="v">'+o.kids.map(k=>{const c=officer(k);return c?esc(c.name.split(" ")[0]+" ("+Math.floor(c.age)+")"):"?";}).join(", ")+'</span></div>';
@@ -6905,7 +6968,7 @@ function uiCreateCadet(){
   const ac=station("academy");if(!ac||ac.status!=="active"){toast("Starfleet Academy is not active.");return;}
   cacDraft={step:0,name:"",nameTouched:false,gender:"m",species:"human",portrait:0,age:20,
     stats:{cmd:CAC_STAT_BASE,sci:CAC_STAT_BASE,eng:CAC_STAT_BASE,med:CAC_STAT_BASE,dip:CAC_STAT_BASE,tac:CAC_STAT_BASE},
-    pts:CAC_PTS,dept:"Command",traits:[],backstory:""};
+    pts:CAC_PTS,dept:"Command",traits:[],backstory:"",orient:"Straight"};
   cacRandomName();
   openModal(cacHTML());
 }
@@ -6952,6 +7015,7 @@ function cacStepIdentity(){
   h+='<h3>Age</h3><div class="btnRow"><button class="btn small ghost" onclick="cacAge(-1)">−</button>'+
     '<div class="nm" style="min-width:60px;text-align:center;">'+d.age+'</div>'+
     '<button class="btn small ghost" onclick="cacAge(1)">+</button></div>';
+  h+='<h3>Orientation</h3><div class="row"><select class="txtIn" style="flex:1" onchange="cacSet(\'orient\',this.value)">'+ORIENTS.map(x=>'<option value="'+x+'"'+(d.orient===x?" selected":"")+'>'+x+'</option>').join("")+'</select></div>';
   return h;
 }
 function cacStepPortrait(){
@@ -7047,7 +7111,7 @@ function cacEnroll(){
   if(G.credits<CAC_COST){toast("Not enough credits (1,000 CR needed).");return;}
   gainCR(-CAC_COST);
   const o=MK([name,cacSpeciesLabel(d.species),d.gender==="f"?"F":"M",d.age,0,d.dept,
-    [d.stats.cmd,d.stats.sci,d.stats.eng,d.stats.med,d.stats.dip,d.stats.tac],d.traits.slice(),"pool","Cadet","cadet"]);
+    [d.stats.cmd,d.stats.sci,d.stats.eng,d.stats.med,d.stats.dip,d.stats.tac],d.traits.slice(),"pool","Cadet","cadet",d.orient]);
   o.customPic=crewPoolUrls(d.species+"-"+d.gender)[d.portrait];
   o.gradDays=CAC_GRAD_DAYS;
   if(d.backstory)o.backstory=d.backstory;
@@ -7167,7 +7231,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v1.0</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v1.1</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
