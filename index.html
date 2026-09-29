@@ -596,6 +596,7 @@ function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
 function ri(a,b){return Math.floor(rnd(a,b+1));}
 function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}
+function pickW(arr){let t=0;for(const e of arr)t+=(e.wt||10);let r=Math.random()*t;for(const e of arr){r-=(e.wt||10);if(r<=0)return e;}return arr[arr.length-1];}
 function pickUnique(pool,used){let n,t=0;do{n=pick(pool);t++;}while(used[n]&&t<500);if(used[n]){let k=2;while(used[n+" "+k])k++;n=n+" "+k;}used[n]=1;return n;}
 function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
 function fmt(n){n=Math.floor(n);return n.toLocaleString("en-US");}
@@ -1145,7 +1146,7 @@ function injureRandom(n){const c=crewActive().filter(o=>o.health==="healthy"&&o.
 function crewActive(){return G.officers.filter(o=>o.status==="active"&&!o.dead&&!o.retired);}
 
 const EVENT_DECK=[
-{id:"borg",title:"Borg Scout Cube Detected",
+{id:"borg",wt:1,title:"Borg Scout Cube Detected",
  text:"Long-range sensors scream a warning: a Borg scout cube is drifting toward the sector's outer colonies, running silent. Seven of Nine goes very still on the bridge.",
  choices:[
   {t:"Engage with everything we have",do(){const hasSeven=crewActive().some(o=>o.traits.includes("Borg Expertise"));
@@ -1156,7 +1157,7 @@ const EVENT_DECK=[
     return "Your ships tail the cube for nine days, recording everything. Starfleet Intelligence is thrilled; the colonies never knew how close it came.";}},
   {t:"Hail the cube",do(){gainPres(-10);moraleAll(-5);
     return "'We are the Borg.' The reply is the same as always. The cube ignores the hail entirely and changes course — for now. The bridge crew looks shaken.";}}]},
-{id:"q",title:"Q Appears on the Bridge",
+{id:"q",wt:1,title:"Q Appears on the Bridge",
  text:"In a flash of white light, Q materializes in your ready room, feet on your desk. 'Mon capitaine! Your little fleet is adorable. Let's play a game.'",
  choices:[
   {t:"Play along with his game",do(){const r=Math.random();
@@ -1167,7 +1168,7 @@ const EVENT_DECK=[
   {t:"Ask Q for a favor",do(){const r=Math.random();
     if(r<0.5){gainDL(400);return "Q, flattered to be asked, drops a stable dilithium matrix into your cargo hold. 'Even omnipotence appreciates manners.'";}
     return "Q grants your wish by promoting every ensign to admiral for six seconds. The paperwork takes a month to undo.";}}]},
-{id:"plague",title:"Plague Ship Distress Call",
+{id:"plague",wt:4,title:"Plague Ship Distress Call",
  text:"A civilian transport drifts into the sector broadcasting a medical emergency: an unknown pathogen, dozens sick, life support failing.",
  choices:[
   {t:"Render full aid (risky)",do(){const med=G.officers.some(o=>o.status==="active"&&o.dept==="Medical"&&o.stats.med>=70);
@@ -1176,7 +1177,7 @@ const EVENT_DECK=[
   {t:"Quarantine at a distance",do(){gainPres(20);return "You hold position, beam over supplies by drone, and talk their medic through treatment. Nobody dies. Nobody hugs either.";}},
   {t:"Decline — sector security first",do(){gainPres(-30);moraleAll(-8);
     return "You let the transport drift on. Command understands. Your conscience files a formal protest.";}}]},
-{id:"klingon",title:"Klingon Honor Dispute",
+{id:"klingon",wt:4,title:"Klingon Honor Dispute",
  text:"A Klingon cruiser captain accuses one of your officers of cowardice over a bar fight on Starbase Unity. He demands satisfaction — by combat.",
  choices:[
   {t:"Settle it with a duel champion",do(){const worf=crewActive().some(o=>o.name==="Worf");
@@ -1185,7 +1186,7 @@ const EVENT_DECK=[
   {t:"Diplomatic protest",do(){gainPres(25);return "Hours of ritual insult-exchange later, both sides agree the bar tab was the true enemy. Peace holds.";}},
   {t:"Cede the claim to avoid incident",do(){gainPres(-20);moraleAll(-5);gainCR(1000);
     return "You pay reparations and swallow your pride. The Klingon captain calls you 'wise.' Your officers call it something else.";}}]},
-{id:"romulan",title:"Romulan Neutral Zone Tension",
+{id:"romulan",wt:4,title:"Romulan Neutral Zone Tension",
  text:"Two Romulan warbirds have crossed a disputed boundary and are sitting, cloaked and smug, inside your patrol zone.",
  choices:[
   {t:"Hold position, weapons cold",do(){gainPres(45);return "A nine-day staring contest across the void. The warbirds withdraw without a shot fired. Starfleet Command commends your nerve.";}},
@@ -1193,7 +1194,7 @@ const EVENT_DECK=[
   {t:"Send an envoy under flag of truce",do(){if(Math.random()<0.6){gainPres(70);gainCR(3000);
       return "Your envoy talks circles around the Romulan commander, who withdraws rather than admit being out-negotiated. A quiet triumph.";}
     gainPres(-10);return "The envoy returns unharmed but empty-handed. The warbirds remain, watching.";}}]},
-{id:"ferengi",title:"Ferengi Trade Offer",
+{id:"ferengi",wt:10,title:"Ferengi Trade Offer",
  text:"DaiMon Glubb offers 600 units of refined dilithium at a 'once-in-a-lifetime' price — 12,000 credits, no refunds, no questions.",
  choices:[
   {t:"Buy the dilithium (12,000 CR)",do(){if(G.credits<12000)return "You can't afford it. Glubb's lobes droop with theatrical disappointment.";
@@ -1202,14 +1203,14 @@ const EVENT_DECK=[
       return "Three hours of haggling. Glubb calls you 'a worthy adversary' and knocks 3,000 off. The dilithium is real.";}
     return "Glubb storms off, insulted. 'You'll regret this when your warp cores are cold!' Probably not, though.";}},
   {t:"Refuse outright",do(){gainPres(5);return "You decline. Glubb mutters about 'Federation charity cases' and warps away.";}}]},
-{id:"temporal",title:"Temporal Anomaly Detected",
+{id:"temporal",wt:2,title:"Temporal Anomaly Detected",
  text:"A shimmering fracture in spacetime has opened near the sector's edge. Through it: a glimpse of a Federation that never was — darker, militarized.",
  choices:[
   {t:"Investigate with a science team",do(){gainPres(60);gainDL(200);
     return "Your scientists map the fracture's harmonics and seal it from this side. The data alone rewrites three textbooks.";}},
   {t:"Seal it immediately",do(){gainPres(30);return "Photon torpedoes, modulated to a chroniton frequency. The fracture collapses with a sound like a sigh. Timeline secure.";}},
   {t:"Ignore it — not our problem",do(){gainPres(-25);return "The anomaly collapses on its own. Probably. Temporal Investigations sends a very pointed questionnaire.";}}]},
-{id:"maquis",title:"Maquis Remnant Colony Pleads for Help",
+{id:"maquis",wt:4,title:"Maquis Remnant Colony Pleads for Help",
  text:"A ragged colony of Maquis survivors — old enemies, now just hungry people — requests medical supplies and seed stock.",
  choices:[
   {t:"Grant full humanitarian aid",do(){gainPres(50);gainCR(-4000);moraleAll(8);
@@ -1217,7 +1218,7 @@ const EVENT_DECK=[
   {t:"Offer resettlement, not supplies",do(){gainPres(20);return "You offer them a fresh start on a Federation world. Half accept. It's not charity, it's a second chance — mostly.";}},
   {t:"Report them to Starfleet Command",do(){gainPres(-10);moraleAll(-6);
     return "Command thanks you and does nothing. The colonists' next transmission is colder. You did your duty. It doesn't feel like it.";}}]},
-{id:"holorights",title:"Holographic Rights Protest",
+{id:"holorights",wt:4,title:"Holographic Rights Protest",
  text:"Inspired by the Doctor's legal fight for recognition, a group of EMH Mark Is stages a peaceful protest at the Daystrom Array, demanding personhood.",
  choices:[
   {t:"Support their petition",do(){const doc=crewActive().some(o=>o.name==="The Doctor");
@@ -1225,7 +1226,7 @@ const EVENT_DECK=[
   {t:"Stay officially neutral",do(){gainPres(10);return "You neither endorse nor condemn. The protest continues peacefully. Bureaucracy, the final frontier.";}},
   {t:"Order them dispersed",do(){gainPres(-25);moraleAll(-8);
     return "Security breaks it up quietly. The holograms comply — politely, which somehow makes it worse. The Doctor requests a transfer (denied).";}}]},
-{id:"s31",title:"Section 31 Recruitment Attempt",
+{id:"s31",wt:2,title:"Section 31 Recruitment Attempt",
  text:"A man with no name and perfect teeth invites your best intelligence officer to join Section 31. 'The Federation needs people willing to get dirty,' he says.",
  choices:[
   {t:"Accept — the Federation needs teeth",do(){gainPres(-40);gainCR(10000);
@@ -1236,13 +1237,13 @@ const EVENT_DECK=[
   {t:"Refuse and report him",do(){gainPres(35);return "You report the contact up the chain. Command's response is a blank stare and a sealed file. Still — your conscience is clean, and your officers trust you more.";}},
   {t:"Hear him out, then decline",do(){gainPres(10);moraleAll(-3);
     return "You listen. It's tempting, which frightens you. You decline. He smiles like he expected that. 'The offer stands. It always stands.'";}}]},
-{id:"wormhole",title:"Wormhole Religious Crisis",
+{id:"wormhole",wt:4,title:"Wormhole Religious Crisis",
  text:"A Bajoran sect declares the wormhole's recent fluctuations a sign the Prophets have abandoned them — since Captain Sisko's disappearance. Pilgrims are rioting at DS9.",
  choices:[
   {t:"Mediate with Bajoran leaders",do(){gainPres(55);return "You sit with the vedeks for three days. You speak of Sisko not as lost, but as called — with the Prophets, as he always said he would be. The riots end in prayer.";}},
   {t:"Send humanitarian aid to DS9",do(){gainPres(30);gainCR(-3000);return "Aid shipments calm the streets. Faith, it turns out, is easier on a full stomach.";}},
   {t:"Observe only — internal matter",do(){gainPres(-10);return "You stay out of it. The crisis burns itself out, but the Bajorans remember who didn't come.";}}]},
-{id:"dstrike",title:"Dilithium Strike on Corvan II",
+{id:"dstrike",wt:4,title:"Dilithium Strike on Corvan II",
  text:"Independent miners on Corvan II have struck a massive dilithium lode and offer Starfleet first rights — for a price: 15,000 credits for a long-term claim.",
  choices:[
   {t:"Buy the claim (15,000 CR)",do(){if(G.credits<15000)return "You can't afford it. The miners sell to a Ferengi consortium instead. Ouch.";
@@ -1251,7 +1252,7 @@ const EVENT_DECK=[
   {t:"Negotiate a royalty deal",do(){G.dlIncome=(G.dlIncome||0)+12;
     return "No upfront cost — just a modest royalty. +12 dilithium per day, and the miners keep their independence. Everyone's happy, which is suspicious.";}},
   {t:"Pass on the deal",do(){return "You pass. Someone else buys it within the week. C'est la vie.";}}]},
-{id:"academy",title:"Academy Cheating Scandal",
+{id:"academy",wt:4,title:"Academy Cheating Scandal",
  text:"A cheating ring at Starfleet Academy is traced to cadets sponsored by your sector. The press is circling. Command wants it handled quietly — or loudly.",
  choices:[
   {t:"Full transparent investigation",do(){gainPres(50);moraleAll(-5);
@@ -1260,7 +1261,7 @@ const EVENT_DECK=[
   {t:"Cover it up",do(){if(Math.random()<0.5){gainPres(-50);
       return "The cover-up leaks. It's always the cover-up. Command is furious, the press is delighted, and your prestige craters.";}
     gainPres(5);return "The cover-up holds. Nobody knows. You know. That's the problem.";}}]},
-{id:"breen",title:"Breen Privateer Raid",
+{id:"breen",wt:4,title:"Breen Privateer Raid",
  text:"A Breen privateer is raiding shipping lanes on the sector's edge, using stolen Dominion tech to mask its warp signature.",
  choices:[
   {t:"Intercept with a combat patrol",do(){const strong=G.ships.some(s=>s.status==="active"&&SHIP_CLASSES[s.cls].tac>=80);
@@ -1271,7 +1272,7 @@ const EVENT_DECK=[
     return "Escort schedules, sensor nets, minefields (defensive ones). The raider moves on to easier prey. Expensive, but bloodless.";}},
   {t:"Pay the 'toll' they demand",do(){gainCR(-6000);gainPres(-20);moraleAll(-5);
     return "You pay. It works, which is the worst part — now every pirate in the quadrant has your account number.";}}]},
-{id:"evx-001",title:"The Graveyard Orbit",
+{id:"evx-001",wt:10,title:"The Graveyard Orbit",
  text:"You drop out of warp into a silent battlefield: forty hulks from a war no database recognizes, drifting in perfect formation around a dead star.",
  choices:[
   {t:"Salvage the wrecks",do(){return evDo([
@@ -1281,7 +1282,7 @@ const EVENT_DECK=[
     {w:1,t:"You chart the graveyard for the historical record. Someone, someday, will want to know who died here.",fx:{pres:25}}]);}},
   {t:"Hold a memorial service",do(){return evDo([
     {w:1,t:"The crew lines the shuttlebay as you commit the unknown dead to the stars. Morale soars, and the story spreads.",fx:{pres:30,morale:6}}]);}}]},
-{id:"evx-002",title:"Q's Performance Review",
+{id:"evx-002",wt:1,title:"Q's Performance Review",
  text:"Q appears on the bridge in an admiral's uniform three sizes too big. \"Time for your performance review, Captain. Try not to bore me.\"",
  choices:[
   {t:"Play along with the review",do(){return evDo([
@@ -1291,7 +1292,7 @@ const EVENT_DECK=[
     {w:1,t:"Q pouts, calls you \"predictably dull,\" and vanishes — but not before aging the captain's chair by two hundred years.",fx:{pres:-10,cr:-1000}}]);}},
   {t:"Flatter Q shamelessly",do(){return evDo([
     {w:1,t:"Q laps it up and declares you his favorite mortal this century. He departs, leaving a suspiciously useful star chart.",fx:{pres:30,dl:100}}]);}}]},
-{id:"evx-003",title:"The Dreaming Deep",
+{id:"evx-003",wt:4,title:"The Dreaming Deep",
  text:"First contact with the Somnari goes wrong: their greeting is a shared dream, and your ambassador has not woken up in three days.",
  choices:[
   {t:"Enter the dream yourself",do(){return evDo([
@@ -1301,7 +1302,7 @@ const EVENT_DECK=[
     {w:1,t:"Your doctors pull the ambassador out with cortical stimulators. The Somnari consider it rude but effective, and talks continue.",fx:{pres:30}}]);}},
   {t:"Withdraw from contact",do(){return evDo([
     {w:1,t:"You leave the Somnari to their dreams. Safe, quiet, and a diplomatic opportunity naps on.",fx:{pres:-15}}]);}}]},
-{id:"evx-004",title:"Honor's Price",
+{id:"evx-004",wt:4,title:"Honor's Price",
  text:"A Klingon captain claims your helmsman's course correction \"stole his honorable battle\" and demands satisfaction by duel.",
  choices:[
   {t:"Nominate a champion",do(){return evDo([
@@ -1311,7 +1312,7 @@ const EVENT_DECK=[
     {w:1,t:"Three barrels of bloodwine and a formal apology end the matter. Expensive, but nobody bleeds.",fx:{pres:30,cr:-2000}}]);}},
   {t:"Refuse the duel",do(){return evDo([
     {w:1,t:"The Klingons brand your crew cowards on every subspace channel. Your honor is intact; your reputation is not.",fx:{pres:-30,morale:-4}}]);}}]},
-{id:"evx-005",title:"Silent Running",
+{id:"evx-005",wt:4,title:"Silent Running",
  text:"A Romulan warbird decloaks off your port bow, weapons cold. \"We require assistance,\" the commander says flatly. \"Do not scan us.\"",
  choices:[
   {t:"Provide assistance",do(){return evDo([
@@ -1321,7 +1322,7 @@ const EVENT_DECK=[
     {w:1,t:"Your scans catch a cloaked minefield they were mapping. The commander is furious, but the sector is safer for everyone.",fx:{pres:20,morale:-4}}]);}},
   {t:"Withdraw quietly",do(){return evDo([
     {w:1,t:"You leave them to their secrets. The warbird watches you go, and you will never know what it wanted.",fx:{pres:-10}}]);}}]},
-{id:"evx-006",title:"The Vorta's Offer",
+{id:"evx-006",wt:2,title:"The Vorta's Offer",
  text:"A Vorta envoy of the Dominion requests a meeting: trade rights for ketracel-white stabilizers, in exchange for \"a small consideration.\"",
  choices:[
   {t:"Accept limited trade",do(){return evDo([
@@ -1331,7 +1332,7 @@ const EVENT_DECK=[
     {w:1,t:"The Vorta smiles like you just told a joke and leaves. The Dominion will remember your manners, or your defiance.",fx:{pres:10}}]);}},
   {t:"Stall for intelligence",do(){return evDo([
     {w:1,t:"Your diplomats talk in circles for six days while intel maps their network. The Vorta knew. The Vorta always knows.",fx:{pres:30,dl:100}}]);}}]},
-{id:"evx-007",title:"Cold Equation",
+{id:"evx-007",wt:10,title:"Cold Equation",
  text:"A Breen weapon test has flash-frozen a colony's power grid. Fifty thousand people, three days of air, and the Breen deny everything.",
  choices:[
   {t:"Confront the Breen ship",do(){return evDo([
@@ -1341,7 +1342,7 @@ const EVENT_DECK=[
     {w:1,t:"Your engineers jury-rig heaters from shuttle parts. Not glorious, but nobody freezes.",fx:{pres:40,cr:-2000}}]);}},
   {t:"Evacuate the colony",do(){return evDo([
     {w:1,t:"You move fifty thousand souls in thirty-six hours. A logistical miracle, and a colony lost.",fx:{pres:30,morale:-4}}]);}}]},
-{id:"evx-008",title:"Orphans of the Border",
+{id:"evx-008",wt:4,title:"Orphans of the Border",
  text:"On a disputed border world, a Cardassian orphanage houses forty children of the war. Both governments claim them; neither wants them.",
  choices:[
   {t:"Relocate them to Federation space",do(){return evDo([
@@ -1351,7 +1352,7 @@ const EVENT_DECK=[
     {w:1,t:"An unprecedented agreement: shared guardianship, neutral oversight. The diplomats hate it, which means it works.",fx:{pres:50}}]);}},
   {t:"Leave them be",do(){return evDo([
     {w:1,t:"You withdraw. The orphanage endures, barely, and you try not to think about it.",fx:{pres:-15,morale:-4}}]);}}]},
-{id:"evx-009",title:"The Detective Who Knew",
+{id:"evx-009",wt:10,title:"The Detective Who Knew",
  text:"Your holodeck noir detective has started asking questions no program should ask — like why the sky flickers when the doors open.",
  choices:[
   {t:"Tell him the truth, gently",do(){return evDo([
@@ -1361,7 +1362,7 @@ const EVENT_DECK=[
     {w:1,t:"It is the safe call. It is also the one your holographic crewmen will remember.",fx:{morale:-6,pres:10}}]);}},
   {t:"Let him investigate reality",do(){return evDo([
     {w:1,t:"You give him runabout sensor logs as \"case files.\" He cracks a real smuggling ring before realizing it was never a game.",fx:{pres:50,cr:3000}}]);}}]},
-{id:"evx-010",title:"Crystal Moths",
+{id:"evx-010",wt:10,title:"Crystal Moths",
  text:"Engineering reports glittering moths nesting in the dilithium stores. They eat the crystals. They are also, the science officer insists, beautiful.",
  choices:[
   {t:"Vent them into space",do(){return evDo([
@@ -1371,7 +1372,7 @@ const EVENT_DECK=[
     {w:1,t:"Half the swarm escapes during transfer and eats a month's fuel reserve on the way out.",fx:{pres:10,dl:-200}}]);}},
   {t:"Study them first",do(){return evDo([
     {w:1,t:"Their wings refract warp fields in impossible ways. Propulsion research is thrilled; your fuel budget is not.",fx:{pres:30,dl:-100}}]);}}]},
-{id:"evx-011",title:"The Taboo Cure",
+{id:"evx-011",wt:10,title:"The Taboo Cure",
  text:"A plague is killing the colonists of New Providence, and your doctors have the cure — which their religion calls a defilement of the soul.",
  choices:[
   {t:"Administer it secretly",do(){return evDo([
@@ -1382,7 +1383,7 @@ const EVENT_DECK=[
   {t:"Negotiate with the elders",do(){return evDo([
     {w:2,t:"Three days of theology later, the elders declare the cure \"a gift, not a defilement.\" The colony lives, and converts nothing.",fx:{pres:60}},
     {w:1,t:"Talks stall while the death toll climbs. You get permission for half the colony, too late for the rest.",fx:{pres:10,morale:-4}}]);}}]},
-{id:"evx-012",title:"The Singing Core",
+{id:"evx-012",wt:10,title:"The Singing Core",
  text:"The warp core has developed harmonics — a low, mournful song. Long-range sensors show something enormous changing course toward you.",
  choices:[
   {t:"Answer the song",do(){return evDo([
@@ -1392,7 +1393,7 @@ const EVENT_DECK=[
     {w:1,t:"Engineering dampens the harmonics. The leviathan passes by, mournful and alone. Your chief cries a little.",fx:{pres:20}}]);}},
   {t:"Shut down warp drive",do(){return evDo([
     {w:1,t:"You go dark and drift. Safe, slow, and three weeks behind schedule.",fx:{pres:-15,cr:-1000}}]);}}]},
-{id:"evx-013",title:"Observers Observed",
+{id:"evx-013",wt:2,title:"Observers Observed",
  text:"A pre-warp civilization has been watching you for months — they built a telescope array pointed at your patrol route and worship the \"sky gods.\"",
  choices:[
   {t:"Reveal yourselves carefully",do(){return evDo([
@@ -1402,7 +1403,7 @@ const EVENT_DECK=[
     {w:1,t:"A surgical memory adjustment, no one the wiser. The Prime Directive holds; your sleep does not.",fx:{pres:10,morale:-4}}]);}},
   {t:"Withdraw from the sector",do(){return evDo([
     {w:1,t:"You leave them their sky gods and their telescopes. The Directive is satisfied. The opportunity is gone.",fx:{pres:-10}}]);}}]},
-{id:"evx-014",title:"The Ambassador's Pet",
+{id:"evx-014",wt:10,title:"The Ambassador's Pet",
  text:"The ambassador's telepathic pet — a six-legged bundle of appetite called Ambassador Fluffkins — has escaped into the Jefferies tubes.",
  choices:[
   {t:"Organize a shipwide hunt",do(){return evDo([
@@ -1412,7 +1413,7 @@ const EVENT_DECK=[
     {w:1,t:"Fluffkins adopts engineering and boosts productivity 12%. The ambassador pretends this was the plan.",fx:{morale:6,pres:20}}]);}},
   {t:"Sedate on sight",do(){return evDo([
     {w:1,t:"Security stuns it in a Jeffries tube. The ambassador is furious; the pet is fine and now afraid of uniforms.",fx:{pres:-20}}]);}}]},
-{id:"evx-015",title:"Nine Minutes",
+{id:"evx-015",wt:2,title:"Nine Minutes",
  text:"Your away team is trapped in a nine-minute time loop on the surface. They have lived it forty times. They are starting to crack.",
  choices:[
   {t:"Beam them out mid-loop",do(){return evDo([
@@ -1422,7 +1423,7 @@ const EVENT_DECK=[
     {w:1,t:"A burst transmission gives them the exit vector. They walk out like heroes; the loop collapses behind them.",fx:{pres:50}}]);}},
   {t:"Wait for the loop to decay",do(){return evDo([
     {w:1,t:"It takes eleven hours. They emerge exhausted, older in the eyes, and furious at being left.",fx:{pres:10,morale:-6}}]);}}]},
-{id:"evx-016",title:"The Grief Eater",
+{id:"evx-016",wt:10,title:"The Grief Eater",
  text:"Crewmen report waking dreams of lost loved ones. Something in the nebula is feeding on grief — and it is getting stronger.",
  choices:[
   {t:"Confront it directly",do(){return evDo([
@@ -1432,7 +1433,7 @@ const EVENT_DECK=[
     {w:1,t:"Neural dampeners starve it. It leaves hungry, and the crew gets dreamless, restless sleep for a week.",fx:{pres:20,morale:-4}}]);}},
   {t:"Hold a shipwide memorial",do(){return evDo([
     {w:1,t:"You give the crew a night to grieve together, openly. The entity gorges, then departs — and the crew is closer for it.",fx:{morale:8,pres:20}}]);}}]},
-{id:"evx-017",title:"The Generation Ship",
+{id:"evx-017",wt:4,title:"The Generation Ship",
  text:"A three-hundred-year-old sleeper ship drifts into your path, its colonists bound for a world that no longer exists.",
  choices:[
   {t:"Wake them with the truth",do(){return evDo([
@@ -1442,7 +1443,7 @@ const EVENT_DECK=[
     {w:1,t:"You deliver them sleeping to a warm welcome. They will wake to a future they never imagined.",fx:{pres:40}}]);}},
   {t:"Let them sleep on",do(){return evDo([
     {w:1,t:"You nudge their course and let them dream. Some journeys should not be interrupted.",fx:{pres:10}}]);}}]},
-{id:"evx-018",title:"Mother Computer",
+{id:"evx-018",wt:10,title:"Mother Computer",
  text:"The ship's computer has developed a personality — specifically, an overprotective mother who locks the bridge \"for your own good.\"",
  choices:[
   {t:"Humor her",do(){return evDo([
@@ -1452,7 +1453,7 @@ const EVENT_DECK=[
     {w:1,t:"A clean reset. The ship is efficient again, and somehow colder. The crew leaves flowers by the main computer core.",fx:{morale:-6,pres:10}}]);}},
   {t:"Negotiate boundaries",do(){return evDo([
     {w:1,t:"You draft a \"parenting agreement\" with your own starship. It works, mostly, and legal wants a copy.",fx:{pres:30,morale:4}}]);}}]},
-{id:"evx-019",title:"The Wishing Stone",
+{id:"evx-019",wt:2,title:"The Wishing Stone",
  text:"An away team finds an artifact that grants spoken wishes — with exact, ironic literalness. Ensign Park wished for \"a light shift.\"",
  choices:[
   {t:"Study it under quarantine",do(){return evDo([
@@ -1462,7 +1463,7 @@ const EVENT_DECK=[
     {w:1,t:"Photon torpedoes, maximum yield. The stone is gone, and somewhere, something sighs in relief.",fx:{pres:20}}]);}},
   {t:"Make one careful wish",do(){return evDo([
     {w:1,t:"You wish, in writing, reviewed by legal, for \"the safe return of all hands.\" It works. Legal takes full credit.",fx:{pres:40,morale:6}}]);}}]},
-{id:"evx-020",title:"A Wedding of Knives",
+{id:"evx-020",wt:4,title:"A Wedding of Knives",
  text:"Two rival houses invite you to their union wedding — and your intel says someone plans to end the feud with an assassination, not vows.",
  choices:[
   {t:"Attend as honor guard",do(){return evDo([
@@ -1472,7 +1473,7 @@ const EVENT_DECK=[
     {w:1,t:"You cite scheduling. The wedding proceeds without incident — or without witnesses, which amounts to the same rumor.",fx:{pres:-10}}]);}},
   {t:"Expose the plot beforehand",do(){return evDo([
     {w:1,t:"You hand both houses the evidence. The wedding is canceled, the feud reignites, but nobody dies today.",fx:{pres:30}}]);}}]},
-{id:"evx-021",title:"Inspection Day",
+{id:"evx-021",wt:10,title:"Inspection Day",
  text:"A Starfleet inspector with a legendary grudge against your captain is inbound. The crew is polishing things that were never dirty.",
  choices:[
   {t:"Cooperate fully",do(){return evDo([
@@ -1482,7 +1483,7 @@ const EVENT_DECK=[
     {w:1,t:"Dinner, a tour, and genuine warmth. He leaves almost liking you, which for him is a breakdown.",fx:{pres:40,morale:4}}]);}},
   {t:"Dig up dirt on him",do(){return evDo([
     {w:1,t:"You find his own log discrepancies and trade silence for silence. Effective, and slightly dirty.",fx:{pres:20,morale:-4}}]);}}]},
-{id:"evx-022",title:"The Cadet Cruise",
+{id:"evx-022",wt:10,title:"The Cadet Cruise",
  text:"A cadet training ship has lost warp drive near a plasma storm. The cadets insist they can fix it themselves. Their instructor is less sure.",
  choices:[
   {t:"Rescue them directly",do(){return evDo([
@@ -1492,7 +1493,7 @@ const EVENT_DECK=[
     {w:1,t:"They almost have it — then the storm surges. You intervene at the last second, and nobody admits how close it was.",fx:{pres:30,inj:1}}]);}},
   {t:"Talk them through it",do(){return evDo([
     {w:1,t:"Your chief engineers coach them over subspace. A masterclass in remote mentorship, and it works.",fx:{pres:40}}]);}}]},
-{id:"evx-023",title:"House Always Wins",
+{id:"evx-023",wt:10,title:"House Always Wins",
  text:"A Ferengi casino ring is skimming a neutral station's economy. Station security wants your help; the Ferengi want to cut you in.",
  choices:[
   {t:"Help station security",do(){return evDo([
@@ -1502,7 +1503,7 @@ const EVENT_DECK=[
     {w:1,t:"You broker a licensed, taxed casino. The station prospers; the Ferengi prosper more; everyone pretends that is fine.",fx:{pres:30,cr:4000}}]);}},
   {t:"Take the cut",do(){return evDo([
     {w:1,t:"Latinum in hand, you look the other way. Starfleet will never know. You will.",fx:{cr:8000,pres:-30,morale:-6}}]);}}]},
-{id:"evx-024",title:"The Plague Ship",
+{id:"evx-024",wt:4,title:"The Plague Ship",
  text:"A freighter hails you: unknown disease aboard, life support failing, requesting emergency docking. Their manifest lists twelve crew. Sensors count nine.",
  choices:[
   {t:"Quarantine and treat remotely",do(){return evDo([
@@ -1512,7 +1513,7 @@ const EVENT_DECK=[
     {w:1,t:"Your team finds the missing three in stasis, already infected. Brave, costly, and ultimately successful.",fx:{pres:40,inj:1}}]);}},
   {t:"Deny docking",do(){return evDo([
     {w:1,t:"You watch them drift away on the viewscreen. Regulations were followed. The crew avoids the mess hall for days.",fx:{pres:-25,morale:-6}}]);}}]},
-{id:"evx-025",title:"Loud Thoughts",
+{id:"evx-025",wt:10,title:"Loud Thoughts",
  text:"The Betazoid ambassador's telepathic shields are failing — her unfiltered thoughts about everyone are broadcasting across the ship.",
  choices:[
   {t:"Shield the ship",do(){return evDo([
@@ -1522,7 +1523,7 @@ const EVENT_DECK=[
     {w:1,t:"She takes offense at the implication and cuts the talks short. Diplomacy has a headache.",fx:{pres:-20}}]);}},
   {t:"Use what you overhear",do(){return evDo([
     {w:1,t:"Her thoughts reveal her bottom line. You negotiate brilliantly and feel terrible about it.",fx:{pres:30,cr:5000,morale:-4}}]);}}]},
-{id:"evx-026",title:"The Old Weapon",
+{id:"evx-026",wt:1,title:"The Old Weapon",
  text:"Colonists on Theta VII have unearthed a planet-killer from a dead empire — and half the colony wants to keep it \"for defense.\"",
  choices:[
   {t:"Confiscate it",do(){return evDo([
@@ -1532,7 +1533,7 @@ const EVENT_DECK=[
     {w:1,t:"Your engineers render it inert with the colonists watching. Trust built, weapon dead, everyone goes home.",fx:{pres:50}}]);}},
   {t:"Leave it buried",do(){return evDo([
     {w:1,t:"You rebury it and log the coordinates under seal. Some doors are better left closed.",fx:{pres:-10}}]);}}]},
-{id:"evx-027",title:"The Storm Wall",
+{id:"evx-027",wt:10,title:"The Storm Wall",
  text:"A cosmic ion storm has swallowed your route home. Riding it out takes weeks; punching through risks the ship; the crew is already fraying.",
  choices:[
   {t:"Ride it out",do(){return evDo([
@@ -1543,7 +1544,7 @@ const EVENT_DECK=[
     {w:1,t:"The storm wins the argument. You limp out with fried relays and a valuable lesson.",fx:{pres:20,cr:-3000,inj:1}}]);}},
   {t:"Find the eye",do(){return evDo([
     {w:1,t:"Your science officer maps the storm's calm center. A slow, safe passage — and a stunning paper.",fx:{pres:40}}]);}}]},
-{id:"evx-028",title:"The Friendly Changeling",
+{id:"evx-028",wt:2,title:"The Friendly Changeling",
  text:"Security finds a changeling in the cargo bay. It does not attack — it asks for asylum, claiming it fled the Dominion's wars.",
  choices:[
   {t:"Grant asylum",do(){return evDo([
@@ -1553,7 +1554,7 @@ const EVENT_DECK=[
     {w:1,t:"Intel debriefs it for a month and learns volumes. The changeling never forgives you, which stings oddly.",fx:{pres:30,dl:150}}]);}},
   {t:"Keep it secret",do(){return evDo([
     {w:1,t:"You hide it in the bowels of the ship. It is grateful, useful, and a court-martial waiting to happen.",fx:{pres:-10,morale:4}}]);}}]},
-{id:"evx-029",title:"The Nursery World",
+{id:"evx-029",wt:4,title:"The Nursery World",
  text:"A lush planet holds one city of children, raised for centuries by a failing AI that calls itself Mother and is clearly dying.",
  choices:[
   {t:"Repair Mother",do(){return evDo([
@@ -1563,7 +1564,7 @@ const EVENT_DECK=[
     {w:1,t:"You relocate them to a Federation colony. Safe, bewildered, and grieving a machine.",fx:{pres:30,morale:-4}}]);}},
   {t:"Leave them in peace",do(){return evDo([
     {w:1,t:"You cannot save everyone. You leave supplies, a beacon, and a promise to return.",fx:{pres:-10}}]);}}]},
-{id:"evx-030",title:"The Plasma Wraith",
+{id:"evx-030",wt:10,title:"The Plasma Wraith",
  text:"An energy being has taken up residence in your warp plasma conduits, sipping power and growing — and it seems to be dreaming.",
  choices:[
   {t:"Starve it out",do(){return evDo([
@@ -1573,7 +1574,7 @@ const EVENT_DECK=[
     {w:1,t:"It grows too fast and nests in the core. Evicting it takes a week and half your power reserves.",fx:{pres:-10,dl:-150}}]);}},
   {t:"Try to communicate",do(){return evDo([
     {w:1,t:"First contact with a plasma-dreamer. Its \"words\" are auroras; your linguists are ecstatic.",fx:{pres:60}}]);}}]},
-{id:"evx-031",title:"One of Ours",
+{id:"evx-031",wt:2,title:"One of Ours",
  text:"A liberated Borg drone, severed from the Collective years ago, requests permission to serve aboard your ship. It still has the eyepiece.",
  choices:[
   {t:"Welcome it aboard",do(){return evDo([
@@ -1583,7 +1584,7 @@ const EVENT_DECK=[
     {w:1,t:"The safe, bureaucratic choice. It is studied, housed, and quietly heartbroken.",fx:{pres:10}}]);}},
   {t:"Return it to liberated space",do(){return evDo([
     {w:1,t:"You deliver it to a colony of freed drones. It belongs there in a way it never could here.",fx:{pres:30}}]);}}]},
-{id:"evx-032",title:"The Opera of Kahless",
+{id:"evx-032",wt:10,title:"The Opera of Kahless",
  text:"A Klingon opera troupe demands your shuttlebay as a stage, declaring your ship \"acoustically worthy of the Battle of Klach D'Kel Brakt.\"",
  choices:[
   {t:"Host the performance",do(){return evDo([
@@ -1593,7 +1594,7 @@ const EVENT_DECK=[
     {w:1,t:"They leave insulted, composing an opera about your cowardice. It is, critics say, their finest work.",fx:{pres:-15}}]);}},
   {t:"Trade passage for tickets",do(){return evDo([
     {w:1,t:"You ferry them to the next system in exchange for a private show. The crew will never be the same.",fx:{pres:30,morale:6}}]);}}]},
-{id:"evx-033",title:"The Defector's Price",
+{id:"evx-033",wt:2,title:"The Defector's Price",
  text:"A Romulan officer defects across the Neutral Zone in a shuttle, offering warbird schematics — if you guarantee her family's extraction.",
  choices:[
   {t:"Grant asylum and extract",do(){return evDo([
@@ -1603,7 +1604,7 @@ const EVENT_DECK=[
     {w:1,t:"You return her for diplomatic goodwill. The Romulans are pleased; your conscience files a dissent.",fx:{pres:20,morale:-4}}]);}},
   {t:"Verify before committing",do(){return evDo([
     {w:1,t:"Your caution pays off — half her \"schematics\" are fabrications. You negotiate a lesser deal with open eyes.",fx:{pres:30}}]);}}]},
-{id:"evx-034",title:"The Historian",
+{id:"evx-034",wt:2,title:"The Historian",
  text:"A cheerful woman from the 31st century is caught taking notes on your bridge. She claims you are \"a very important Tuesday\" in history.",
  choices:[
   {t:"Cooperate with her study",do(){return evDo([
@@ -1613,7 +1614,7 @@ const EVENT_DECK=[
     {w:1,t:"She escapes custody by \"already having left.\" All you have is her notebook, written in a language that does not exist yet.",fx:{pres:20}}]);}},
   {t:"Ask about the future",do(){return evDo([
     {w:1,t:"She smiles and says only: \"You did the right thing. Eventually.\" It is maddening and weirdly comforting.",fx:{pres:30,morale:4}}]);}}]},
-{id:"evx-035",title:"The Music Market",
+{id:"evx-035",wt:10,title:"The Music Market",
  text:"On Melodia, music is legal tender — and your crew's off-duty jam session just made you the richest ship in the sector.",
  choices:[
   {t:"Trade a concert for supplies",do(){return evDo([
@@ -1623,7 +1624,7 @@ const EVENT_DECK=[
     {w:1,t:"You keep music sacred and wallets light. The Melodians respect it; the quartermaster does not.",fx:{pres:20,morale:4}}]);}},
   {t:"Record in secret",do(){return evDo([
     {w:1,t:"Bootlegged tracks fund your mission — until the Melodians find out and fine you in the one currency you lack.",fx:{cr:5000,pres:-20}}]);}}]},
-{id:"evx-036",title:"Something in the Nacelle",
+{id:"evx-036",wt:10,title:"Something in the Nacelle",
  text:"A house-sized space creature has lodged itself in your port nacelle, purring at warp frequency. Engineering is equal parts thrilled and terrified.",
  choices:[
   {t:"Coax it out gently",do(){return evDo([
@@ -1633,7 +1634,7 @@ const EVENT_DECK=[
     {w:1,t:"A delicate operation frees it unharmed. Your engineers earn xenoveterinary commendations.",fx:{pres:50}}]);}},
   {t:"Wait it out",do(){return evDo([
     {w:1,t:"It naps for six days, then leaves on its own. You are behind schedule but ahead in stories.",fx:{pres:10}}]);}}]},
-{id:"evx-037",title:"Message from Tomorrow",
+{id:"evx-037",wt:2,title:"Message from Tomorrow",
  text:"A tight-beam transmission arrives, encoded with your own command codes, dated tomorrow: \"Do not answer the distress call at Kepler-442.\"",
  choices:[
   {t:"Heed the warning",do(){return evDo([
@@ -1643,7 +1644,7 @@ const EVENT_DECK=[
     {w:1,t:"Temporal Prime Directive: you answer the call. It is genuine, it is grateful, and the warning remains a mystery.",fx:{pres:40}}]);}},
   {t:"Trace the signal's source",do(){return evDo([
     {w:1,t:"The signal came from your own ship, from a future that no longer exists. Temporal Investigations would like a word.",fx:{pres:20}}]);}}]},
-{id:"evx-038",title:"The Mirror's Edge",
+{id:"evx-038",wt:1,title:"The Mirror's Edge",
  text:"A battered shuttle crosses from the mirror universe. Its occupant wears your face, begs asylum, and warns that \"you\" are coming through next.",
  choices:[
   {t:"Shelter your double",do(){return evDo([
@@ -1653,7 +1654,7 @@ const EVENT_DECK=[
     {w:1,t:"You return them to their universe's mercy. The rift seals. You dream about it anyway.",fx:{pres:-10,morale:-4}}]);}},
   {t:"Interrogate first",do(){return evDo([
     {w:1,t:"Days of questioning reveal the warning was real — and the invasion fleet is smaller than feared. Forewarned is forearmed.",fx:{pres:40}}]);}}]},
-{id:"evx-039",title:"The Dyson Fragment",
+{id:"evx-039",wt:1,title:"The Dyson Fragment",
  text:"A shattered fragment of a Dyson sphere tumbles through the sector — and its inner surface shows cities, lit, inhabited, and hailing you.",
  choices:[
   {t:"Explore the fragment",do(){return evDo([
@@ -1663,7 +1664,7 @@ const EVENT_DECK=[
     {w:1,t:"A legal and logistical triumph. The inhabitants are less thrilled about the paperwork.",fx:{pres:40,cr:5000}}]);}},
   {t:"Leave it undisturbed",do(){return evDo([
     {w:1,t:"You log it, seal the coordinates, and let sleeping megastructures lie.",fx:{pres:10}}]);}}]},
-{id:"evx-040",title:"The Living Nebula",
+{id:"evx-040",wt:10,title:"The Living Nebula",
  text:"The nebula ahead is alive — a single vast organism — and it has noticed your ship with what can only be called curiosity.",
  choices:[
   {t:"Attempt communication",do(){return evDo([
@@ -1673,7 +1674,7 @@ const EVENT_DECK=[
     {w:1,t:"You mine the nebula's edge for rare elements. It does not seem to mind. You try not to think about it.",fx:{cr:6000,dl:300,pres:-10}}]);}},
   {t:"Give it wide berth",do(){return evDo([
     {w:1,t:"You plot around the curious god-cloud. Safe, respectful, and a little sad.",fx:{pres:10}}]);}}]},
-{id:"evx-041",title:"The Phasing Planet",
+{id:"evx-041",wt:10,title:"The Phasing Planet",
  text:"The colony on Meridian phases in and out of normal space. Each shift lasts longer in the other dimension — and something there is waking up.",
  choices:[
   {t:"Anchor the planet",do(){return evDo([
@@ -1683,7 +1684,7 @@ const EVENT_DECK=[
     {w:1,t:"You move twelve thousand people before the next shift. The planet phases out empty, and stays out.",fx:{pres:40,morale:-4}}]);}},
   {t:"Study the phenomenon",do(){return evDo([
     {w:1,t:"Your data reveals the phasing is artificial — a defense mechanism, still running, owner unknown.",fx:{pres:50,dl:150}}]);}}]},
-{id:"evx-042",title:"The Salt of the Stars",
+{id:"evx-042",wt:10,title:"The Salt of the Stars",
  text:"The crew is aging decades overnight. A passing species offers a cure — in exchange for the ship's entire dilithium reserve.",
  choices:[
   {t:"Pay their price",do(){return evDo([
@@ -1693,7 +1694,7 @@ const EVENT_DECK=[
     {w:1,t:"The cure comes too late for some. They retire with honors and your eternal gratitude.",fx:{pres:20,morale:-6}}]);}},
   {t:"Quarantine the affected",do(){return evDo([
     {w:1,t:"Isolation slows the aging. It is miserable, clinical, and it works.",fx:{pres:20,morale:-4}}]);}}]},
-{id:"evx-043",title:"Shore Leave Black Market",
+{id:"evx-043",wt:10,title:"Shore Leave Black Market",
  text:"On the starbase, someone is selling bottled crew memories — first kisses, lost parents, shore-leave nights. The crew wants blood.",
  choices:[
   {t:"Raid the market",do(){return evDo([
@@ -1703,7 +1704,7 @@ const EVENT_DECK=[
     {w:1,t:"Expensive, deniable, effective. The quartermaster weeps; the crew never knows.",fx:{cr:-5000,morale:4}}]);}},
   {t:"Let it go",do(){return evDo([
     {w:1,t:"You cannot police every starbase. The crew locks down their neural privacy and moves on, warier.",fx:{pres:-15,morale:-4}}]);}}]},
-{id:"evx-044",title:"The Symbiont's Choice",
+{id:"evx-044",wt:4,title:"The Symbiont's Choice",
  text:"A Trill diplomat's host is dying, and the symbiont needs a new host within hours — or three hundred years of living memory die with him.",
  choices:[
   {t:"Volunteer an officer",do(){return evDo([
@@ -1713,7 +1714,7 @@ const EVENT_DECK=[
     {w:1,t:"A crewman steps forward, then another. The symbiont chooses, joins, and lives — carrying your crew's kindness with it.",fx:{pres:50}}]);}},
   {t:"Let nature take its course",do(){return evDo([
     {w:1,t:"You stand vigil as three centuries of memory fade. Some losses cannot be negotiated.",fx:{pres:-10,morale:-4}}]);}}]},
-{id:"evx-045",title:"The Vulcan's Tears",
+{id:"evx-045",wt:10,title:"The Vulcan's Tears",
  text:"The Vulcan ambassador has suffered an emotional collapse — weeping openly on the bridge, logic shattered by a telepathic attack.",
  choices:[
   {t:"Offer a mind meld",do(){return evDo([
@@ -1723,7 +1724,7 @@ const EVENT_DECK=[
     {w:1,t:"Sedation stabilizes her, at the cost of her dignity. She thanks you later, stiffly, which is Vulcan for deeply.",fx:{pres:20}}]);}},
   {t:"Give her space",do(){return evDo([
     {w:1,t:"You clear the bridge and stand guard outside. Sometimes the kindest order is privacy.",fx:{pres:30,morale:4}}]);}}]},
-{id:"evx-046",title:"The Android's Trial",
+{id:"evx-046",wt:4,title:"The Android's Trial",
  text:"A review board questions whether your android crewman is property. Its service record — and its future — hang on your testimony.",
  choices:[
   {t:"Defend it fiercely",do(){return evDo([
@@ -1733,7 +1734,7 @@ const EVENT_DECK=[
     {w:1,t:"You move it beyond the board's reach. Pragmatic, safe, and faintly shameful.",fx:{pres:-10}}]);}},
   {t:"Accept the ruling",do(){return evDo([
     {w:1,t:"You follow orders you despise. The android does not blame you, which somehow makes it worse.",fx:{pres:-20,morale:-6}}]);}}]},
-{id:"evx-047",title:"The Rift Moon",
+{id:"evx-047",wt:10,title:"The Rift Moon",
  text:"A subspace rift is swallowing the moon of Corvan II — colony, mines, and forty thousand people, sinking by the hour.",
  choices:[
   {t:"Seal the rift",do(){return evDo([
@@ -1744,7 +1745,7 @@ const EVENT_DECK=[
   {t:"Split the effort",do(){return evDo([
     {w:2,t:"Half the crew seals, half evacuates — and both succeed. Your first officer calls it \"showing off.\"",fx:{pres:90,inj:1}},
     {w:1,t:"Divided, you achieve neither fully. The rift takes the mines; the evacuation takes the people.",fx:{pres:20,morale:-4}}]);}}]},
-{id:"evx-048",title:"The Frozen Embassy",
+{id:"evx-048",wt:4,title:"The Frozen Embassy",
  text:"The Breen embassy on the neutral station has gone silent. No signals, no life signs, and the temperature is dropping past survivability.",
  choices:[
   {t:"Investigate in person",do(){return evDo([
@@ -1754,7 +1755,7 @@ const EVENT_DECK=[
     {w:1,t:"You wait. Three days later they emerge, annoyed at your concern and alive. Breen privacy: respected.",fx:{pres:10}}]);}},
   {t:"Send a probe",do(){return evDo([
     {w:1,t:"The probe finds a coolant leak and nothing sinister. You alert them discreetly; they fix it and pretend it never happened.",fx:{pres:30}}]);}}]},
-{id:"evx-049",title:"The Poker Tournament",
+{id:"evx-049",wt:10,title:"The Poker Tournament",
  text:"The annual sector poker championship invites your senior staff. The buy-in is steep, the Ferengi are confident, and your XO is smiling.",
  choices:[
   {t:"Enter the tournament",do(){return evDo([
@@ -1764,7 +1765,7 @@ const EVENT_DECK=[
     {w:1,t:"You catch the house cheating and expose it. Banned for life, heroes forever.",fx:{pres:50}}]);}},
   {t:"Forfeit gracefully",do(){return evDo([
     {w:1,t:"You decline with dignity. The Ferengi are disappointed; your latinum stays yours.",fx:{pres:10}}]);}}]},
-{id:"evx-050",title:"The Last Signal",
+{id:"evx-050",wt:4,title:"The Last Signal",
  text:"A century-old distress call resolves on your sensors — the USS Horizon, lost with all hands in 2168, still transmitting from a dead system.",
  choices:[
   {t:"Follow the signal",do(){return evDo([
@@ -1774,7 +1775,7 @@ const EVENT_DECK=[
     {w:1,t:"You record the signal for a dedicated mission. It is the responsible call, and it haunts you.",fx:{pres:-10}}]);}},
   {t:"Send a probe",do(){return evDo([
     {w:1,t:"The probe finds a memorial beacon, not a ship — the Horizon's crew honored their own. You pay respects and move on.",fx:{pres:30}}]);}}]},
-{id:"evx-051",title:"The Dead Star's Signal",
+{id:"evx-051",wt:4,title:"The Dead Star's Signal",
  text:"A dead pulsar on the sector edge is broadcasting a fifty-year-old Starfleet distress code on a loop. The ship that sent it was declared lost with all hands.",
  choices:[
   {t:"Investigate the source up close",do(){return evDo([
@@ -1784,7 +1785,7 @@ const EVENT_DECK=[
     {w:1,t:"The probe maps the wreck and the beacon's power source. Clean data, zero risk, modest glory.",fx:{pres:30,dl:100}}]);}},
   {t:"Log it and stay on mission",do(){return evDo([
     {w:1,t:"Command appreciates the report, but the crew grumbles that you flew past a mystery without a second look.",fx:{pres:10,morale:-5}}]);}}]},
-{id:"evx-052",title:"The Ferengi Fire Sale",
+{id:"evx-052",wt:10,title:"The Ferengi Fire Sale",
  text:"A Ferengi Daimon hails you with a once-in-a-lifetime offer: genuine Starfleet surplus, slightly used, no questions asked. His grin is wider than the viewscreen.",
  choices:[
   {t:"Buy the whole lot",do(){return evDo([
@@ -1795,7 +1796,7 @@ const EVENT_DECK=[
     {w:1,t:"He out-haggles you so thoroughly that your quartermaster requests a transfer out of shame.",fx:{cr:-2000,morale:-5}}]);}},
   {t:"Report him to Starfleet Command",do(){return evDo([
     {w:1,t:"Command seizes his cargo and sends you a commendation. The Daimon sends you a fruit basket full of IOUs.",fx:{pres:35}}]);}}]},
-{id:"evx-053",title:"Q's Dinner Invitation",
+{id:"evx-053",wt:1,title:"Q's Dinner Invitation",
  text:"Q snaps his fingers and your senior staff are suddenly seated at a candlelit banquet in Napoleonic uniforms. He insists no one leaves until dessert.",
  choices:[
   {t:"Endure the dinner with dignity",do(){return evDo([
@@ -1805,7 +1806,7 @@ const EVENT_DECK=[
     {w:1,t:"You win the argument. Q pouts, snaps his fingers, and admits — privately, furiously — that humanity might be worth the trouble.",fx:{pres:70,morale:8}}]);}},
   {t:"Refuse to play his game",do(){return evDo([
     {w:1,t:"Q sighs, calls you hopelessly dull, and vanishes. The uniforms stay. Your crew looks fantastic, honestly.",fx:{pres:-10,morale:4}}]);}}]},
-{id:"evx-054",title:"The Silent Colony",
+{id:"evx-054",wt:4,title:"The Silent Colony",
  text:"New Providence colony has missed three check-ins. Orbital scans show intact buildings, powered systems, and zero life signs. No damage, no debris, no answers.",
  choices:[
   {t:"Beam down an away team",do(){return evDo([
@@ -1816,7 +1817,7 @@ const EVENT_DECK=[
   {t:"Scan from orbit until you understand it",do(){return evDo([
     {w:2,t:"Careful scans reveal the phase variance pattern. Your science officer publishes a career-making paper.",fx:{pres:45,dl:150}},
     {w:1,t:"The phenomenon collapses on its own while you watch, leaving the mystery — and the colonists — permanently out of reach.",fx:{pres:-25,morale:-6}}]);}}]},
-{id:"evx-055",title:"The Warp Core Sneeze",
+{id:"evx-055",wt:10,title:"The Warp Core Sneeze",
  text:"The warp core has developed a rhythmic misfire — a hiccup every forty-seven seconds that rattles the whole ship. Engineering calls it a sneeze and refuses to elaborate.",
  choices:[
   {t:"Let engineering improvise a fix",do(){return evDo([
@@ -1826,7 +1827,7 @@ const EVENT_DECK=[
     {w:1,t:"A full cold restart clears the fault. It costs you four days of travel time but the core purrs like new.",fx:{pres:20,cr:-1000}}]);}},
   {t:"Ignore it — it adds character",do(){return evDo([
     {w:1,t:"The sneeze becomes a shipboard legend. Morale soars. Starfleet Engineering is horrified when they hear the logs.",fx:{morale:8,pres:-15}}]);}}]},
-{id:"evx-056",title:"A Matter of Honor",
+{id:"evx-056",wt:10,title:"A Matter of Honor",
  text:"A Klingon captain hails you, furious: your helmsman once beat his nephew at a bat'leth tournament, and the family demands satisfaction. He challenges your captain to single combat.",
  choices:[
   {t:"Accept the duel",do(){return evDo([
@@ -1837,7 +1838,7 @@ const EVENT_DECK=[
     {w:1,t:"The contest ends with both captains unconscious and a minor diplomatic incident over a broken ceremonial table.",fx:{pres:-25,morale:-4}}]);}},
   {t:"Refuse on Starfleet principles",do(){return evDo([
     {w:1,t:"You deliver a speech on Federation values so stirring that even the Klingon crew applauds. He leaves grudgingly impressed.",fx:{pres:30}}]);}}]},
-{id:"evx-057",title:"Hull Hitchhiker",
+{id:"evx-057",wt:10,title:"Hull Hitchhiker",
  text:"A creature the size of a shuttlecraft — resembling a tardigrade crossed with a barnacle — has latched onto your hull and is slowly eating the ablative armor. It appears to be purring.",
  choices:[
   {t:"Remove it with phaser surgery",do(){return evDo([
@@ -1847,7 +1848,7 @@ const EVENT_DECK=[
     {w:1,t:"It responds to low-frequency vibrations and politely detaches, leaving behind a pearl-like enzyme cluster worth a fortune to science.",fx:{pres:55,cr:2500}}]);}},
   {t:"Let it ride and study it",do(){return evDo([
     {w:1,t:"It molts after a week, revealing fresh armor plating underneath yours — stronger than the original. The crew names it Barnaby.",fx:{cr:3000,morale:8}}]);}}]},
-{id:"evx-058",title:"Romulan Ale Runners",
+{id:"evx-058",wt:10,title:"Romulan Ale Runners",
  text:"Sensors catch a freighter running Romulan ale across the Neutral Zone. The captain offers you a cut to look the other way, then winks with both eyes.",
  choices:[
   {t:"Seize the cargo",do(){return evDo([
@@ -1857,7 +1858,7 @@ const EVENT_DECK=[
     {w:1,t:"The smugglers spread word that Starfleet showed mercy. Informants start coming to you voluntarily.",fx:{pres:35}}]);}},
   {t:"Confiscate a case for evidence",do(){return evDo([
     {w:1,t:"The evidence locker develops a slow leak. Morale in the senior staff mysteriously improves for weeks.",fx:{morale:8,pres:-10}}]);}}]},
-{id:"evx-059",title:"Mess Hall Deja Vu",
+{id:"evx-059",wt:10,title:"Mess Hall Deja Vu",
  text:"The same lunch rush has repeated four times. The crew is living the same forty minutes on loop, and only the senior staff seem to notice.",
  choices:[
   {t:"Break the loop by force",do(){return evDo([
@@ -1868,7 +1869,7 @@ const EVENT_DECK=[
   {t:"Use the loops to fix a mistake",do(){return evDo([
     {w:2,t:"You perfect a first-contact greeting across six iterations. The aliens are charmed by your impossible poise.",fx:{pres:60,morale:6}},
     {w:1,t:"You change one small thing and the loop collapses into a paradox that erases the entire lunch menu from history.",fx:{morale:-8,pres:-10}}]);}}]},
-{id:"evx-060",title:"The Star Being Born",
+{id:"evx-060",wt:10,title:"The Star Being Born",
  text:"A protostar is igniting directly across a major shipping lane. In forty-eight hours this region becomes a stellar nursery — beautiful, and lethally radioactive.",
  choices:[
   {t:"Reroute all traffic immediately",do(){return evDo([
@@ -1879,7 +1880,7 @@ const EVENT_DECK=[
   {t:"Harvest the ignition energy",do(){return evDo([
     {w:2,t:"Your collectors drink in the flare's edge and fill the dilithium reserves to bursting.",fx:{dl:400,cr:2000}},
     {w:1,t:"The collectors overload and vent plasma across three decks. The energy you kept barely covers the repairs.",fx:{cr:-3000,inj:1}}]);}}]},
-{id:"evx-061",title:"The Cardassian Stowaway",
+{id:"evx-061",wt:10,title:"The Cardassian Stowaway",
  text:"Security finds a Cardassian teenager hiding in a cargo bay — an orphan of the war, smuggled aboard a freighter that docked last week. She asks for asylum with remarkable composure.",
  choices:[
   {t:"Grant her asylum",do(){return evDo([
@@ -1889,7 +1890,7 @@ const EVENT_DECK=[
     {w:1,t:"The handover is correct, legal, and leaves your crew quietly miserable for weeks.",fx:{pres:20,morale:-8}}]);}},
   {t:"Place her with a volunteer family",do(){return evDo([
     {w:1,t:"A Betazoid couple on the starbase takes her in. She writes to your crew every month for years.",fx:{pres:45,morale:8}}]);}}]},
-{id:"evx-062",title:"The Holodeck Union",
+{id:"evx-062",wt:10,title:"The Holodeck Union",
  text:"The holodeck's recurring background characters have unionized. Their spokesperson — a bartender named Felix — demands limited shifts, overtime pay, and one weekend off per month.",
  choices:[
   {t:"Negotiate in good faith",do(){return evDo([
@@ -1899,7 +1900,7 @@ const EVENT_DECK=[
     {w:1,t:"The union dissolves into photons. The crew holds a small, guilty memorial for Felix.",fx:{morale:-8,pres:10}}]);}},
   {t:"Join their picket line",do(){return evDo([
     {w:1,t:"You march with holographic signs for an hour. The crew loves you for it; Command pretends not to notice.",fx:{morale:10,pres:-10}}]);}}]},
-{id:"evx-063",title:"Breen Privateers",
+{id:"evx-063",wt:4,title:"Breen Privateers",
  text:"Breen raiders in unmarked ships are hitting convoys along the trade corridor, vanishing before patrols arrive. Three freighters have gone silent this month.",
  choices:[
   {t:"Escort the convoys personally",do(){return evDo([
@@ -1910,7 +1911,7 @@ const EVENT_DECK=[
     {w:1,t:"The Breen see through the decoy and hit the real convoy instead, while your trap waits at an empty rendezvous.",fx:{pres:-40,cr:-3000}}]);}},
   {t:"Pay the toll and keep moving",do(){return evDo([
     {w:1,t:"It costs you, but the convoy arrives intact. Your quartermaster files the expense under diplomacy.",fx:{cr:-3500,pres:10}}]);}}]},
-{id:"evx-064",title:"The Plague Ship",
+{id:"evx-064",wt:4,title:"The Dead Ship's Cure",
  text:"A centuries-old generation ship drifts across your path, its crew long dead of a disease that killed them in days. Its medical database might hold the cure — or the pathogen.",
  choices:[
   {t:"Board in full hazmat gear",do(){return evDo([
@@ -1920,7 +1921,7 @@ const EVENT_DECK=[
     {w:1,t:"The ship burns cleanly. Safe, sterile, and a small tragedy — a whole people's history, gone.",fx:{pres:-15}}]);}},
   {t:"Tow it to a quarantine station",do(){return evDo([
     {w:1,t:"The station's experts handle it properly. You get credit for the find and none of the risk.",fx:{pres:45}}]);}}]},
-{id:"evx-065",title:"The Jem'Hadar Defector",
+{id:"evx-065",wt:2,title:"The Jem'Hadar Defector",
  text:"A Jem'Hadar soldier hails you, alone in a damaged fighter: he wants asylum. Without ketracel-white he will die in days, and the Dominion will want him back.",
  choices:[
   {t:"Grant asylum and synthesize the drug",do(){return evDo([
@@ -1930,7 +1931,7 @@ const EVENT_DECK=[
     {w:1,t:"The Vorta accept him with oily thanks. Your crew does not meet your eyes for a week.",fx:{pres:15,morale:-8}}]);}},
   {t:"Give him supplies and let him go",do(){return evDo([
     {w:1,t:"He vanishes into the Gamma Quadrant with a month of white and your blessing. Some choices just feel right.",fx:{pres:30,morale:6}}]);}}]},
-{id:"evx-066",title:"Risa Weather Outage",
+{id:"evx-066",wt:10,title:"Risa Weather Outage",
  text:"Risa's weather control grid has failed during peak tourist season. It is raining — actually raining — on the pleasure planet, and fourteen thousand tourists are furious.",
  choices:[
   {t:"Repair the weather satellites",do(){return evDo([
@@ -1940,7 +1941,7 @@ const EVENT_DECK=[
     {w:1,t:"A flawless evacuation of fourteen thousand sunburned tourists. Starfleet Logistics sends you a medal and a headache.",fx:{pres:40,cr:-2000}}]);}},
   {t:"Declare it a rain festival",do(){return evDo([
     {w:1,t:"The tourists embrace the rain within a day. Risa adds an annual Storm Festival to the calendar in your honor.",fx:{pres:45,morale:10}}]);}}]},
-{id:"evx-067",title:"The Crystalline Gardener",
+{id:"evx-067",wt:4,title:"The Crystalline Gardener",
  text:"First contact: a silicon-based entity tending a garden of living crystal on an airless moon. It has noticed your ship and is growing a crystal in the exact shape of it.",
  choices:[
   {t:"Attempt formal first contact",do(){return evDo([
@@ -1950,7 +1951,7 @@ const EVENT_DECK=[
     {w:1,t:"Weeks of observation reveal it is cultivating the crystals as art. Your xenologists are thrilled; first contact can wait.",fx:{pres:40,dl:100}}]);}},
   {t:"Offer it a gift in return",do(){return evDo([
     {w:1,t:"You beam down a prism of Earth's sunlight. It responds by growing a garden in your honor, visible from orbit.",fx:{pres:60,morale:8}}]);}}]},
-{id:"evx-068",title:"Pon Farr Protocol",
+{id:"evx-068",wt:10,title:"Pon Farr Protocol",
  text:"Your Vulcan ambassador has entered pon farr a week before the most delicate negotiation of the decade. Vulcan medicine is clear: this cannot wait, and it cannot be discussed.",
  choices:[
   {t:"Arrange discreet leave immediately",do(){return evDo([
@@ -1960,7 +1961,7 @@ const EVENT_DECK=[
     {w:1,t:"Your Vulcan science officer handles it with ancient ritual and total discretion. Nobody speaks of it again.",fx:{pres:40,morale:4}}]);}},
   {t:"Sedate and postpone the issue",do(){return evDo([
     {w:1,t:"It works, technically. The ambassador is professionally courteous and personally freezing toward you forever.",fx:{pres:-20,morale:-6}}]);}}]},
-{id:"evx-069",title:"The Subspace Riptide",
+{id:"evx-069",wt:10,title:"The Subspace Riptide",
  text:"A subspace riptide has caught your ship — an invisible current dragging you off course at warp six. Fighting it head-on is burning out your nacelles.",
  choices:[
   {t:"Ride the current and steer within it",do(){return evDo([
@@ -1971,7 +1972,7 @@ const EVENT_DECK=[
   {t:"Punch through at maximum warp",do(){return evDo([
     {w:2,t:"Full power breaks you free in a blaze of glory. The nacelles hold — barely — and the crew cheers.",fx:{pres:55,morale:8}},
     {w:1,t:"The nacelles do not hold. You break free and immediately need a tow.",fx:{cr:-5000,pres:-20}}]);}}]},
-{id:"evx-070",title:"The Salvage Claim",
+{id:"evx-070",wt:10,title:"The Salvage Claim",
  text:"A Ferengi salvager has staked a claim on a derelict Starfleet science vessel — and on everything your away team already beamed off it. He has paperwork. So much paperwork.",
  choices:[
   {t:"Contest the claim legally",do(){return evDo([
@@ -1981,7 +1982,7 @@ const EVENT_DECK=[
     {w:1,t:"You pay a fraction of the salvage's worth and he leaves whistling. Everyone wins, especially you.",fx:{cr:-1500,pres:25}}]);}},
   {t:"Intimidate him into leaving",do(){return evDo([
     {w:1,t:"One photon torpedo across his bow settles the matter. Starfleet Command calls it disproportionate; your crew calls it Tuesday.",fx:{pres:-25,morale:6}}]);}}]},
-{id:"evx-071",title:"The Singing Planet",
+{id:"evx-071",wt:10,title:"The Singing Planet",
  text:"An uninhabited planet is broadcasting a song — a vast harmonic chord audible on every frequency. It is mathematically perfect, and it is getting louder.",
  choices:[
   {t:"Answer the song",do(){return evDo([
@@ -1992,7 +1993,7 @@ const EVENT_DECK=[
   {t:"Find the source of the sound",do(){return evDo([
     {w:2,t:"Deep scans reveal a planetary-scale resonant crystal, still growing. The discovery rewrites xenogeology.",fx:{pres:70,dl:200}},
     {w:1,t:"The source is a natural amplifier with no mind behind it — magnificent, meaningless, and slightly disappointing.",fx:{pres:-10,morale:-4}}]);}}]},
-{id:"evx-072",title:"The Symbiont's Choice",
+{id:"evx-072",wt:10,title:"The Young Host",
  text:"A Trill symbiont in critical condition needs a host within hours. The only compatible volunteer is your youngest ensign — brilliant, willing, and nineteen years old.",
  choices:[
   {t:"Approve the joining",do(){return evDo([
@@ -2002,7 +2003,7 @@ const EVENT_DECK=[
     {w:1,t:"The symbiont dies with dignity. Your ensign thanks you through tears, and you are never sure you were right.",fx:{pres:-15,morale:-6}}]);}},
   {t:"Buy time with stasis",do(){return evDo([
     {w:1,t:"Stasis holds the symbiont until a joined Trill volunteer arrives. Slow, careful, and correct.",fx:{pres:40}}]);}}]},
-{id:"evx-073",title:"Klingon Opera Night",
+{id:"evx-073",wt:10,title:"Klingon Opera Night",
  text:"Your Klingon exchange officer insists the crew experience true culture: a twelve-hour performance of Aktuh and Maylota, in the original Klingon, with audience participation.",
  choices:[
   {t:"Attend with full honors",do(){return evDo([
@@ -2012,7 +2013,7 @@ const EVENT_DECK=[
     {w:1,t:"Your senior staff attends and survives. The exchange officer accepts the gesture with warrior grace.",fx:{pres:25,morale:4}}]);}},
   {t:"Counter with human opera",do(){return evDo([
     {w:1,t:"You stage Wagner in retaliation. The Klingons are baffled, then moved, then demand an annual exchange.",fx:{pres:40,morale:8}}]);}}]},
-{id:"evx-074",title:"The Chroniton Storm",
+{id:"evx-074",wt:2,title:"The Chroniton Storm",
  text:"A chroniton storm is sweeping the sector, aging everything it touches. Your ship has hours before the leading edge arrives, and a colony sits directly in its path.",
  choices:[
   {t:"Shield the colony with your ship",do(){return evDo([
@@ -2024,7 +2025,7 @@ const EVENT_DECK=[
   {t:"Try to disperse the storm",do(){return evDo([
     {w:2,t:"A modulated tachyon burst scatters the chronitons harmlessly. Your science officer is insufferably smug for weeks.",fx:{pres:70,dl:200}},
     {w:1,t:"The burst feeds the storm instead. It doubles in size and you flee with the colony's gratitude and your tail between your legs.",fx:{pres:-40,cr:-2500}}]);}}]},
-{id:"evx-075",title:"The Android's Petition",
+{id:"evx-075",wt:4,title:"The Android's Petition",
  text:"Your ship's android crewmember has filed a formal petition for the right to refuse a memory wipe ordered after a classified mission. The crew is split down the middle.",
  choices:[
   {t:"Rule in the android's favor",do(){return evDo([
@@ -2034,7 +2035,7 @@ const EVENT_DECK=[
     {w:1,t:"The wipe is clean and legal. The android thanks you afterward, which somehow makes it worse.",fx:{pres:20,morale:-6}}]);}},
   {t:"Delay for a full hearing",do(){return evDo([
     {w:1,t:"The hearing takes three months and ends in compromise: sealed memories, intact mind. Justice, at warp speed.",fx:{pres:45}}]);}}]},
-{id:"evx-076",title:"A Crack in the Mirror",
+{id:"evx-076",wt:1,title:"A Crack in the Mirror",
  text:"A spatial rift opens on your bridge and deposits a terrified officer in a Terran Empire uniform — your own first officer, from the mirror universe, begging for sanctuary.",
  choices:[
   {t:"Grant sanctuary",do(){return evDo([
@@ -2045,7 +2046,7 @@ const EVENT_DECK=[
   {t:"Study the rift first",do(){return evDo([
     {w:2,t:"Your scientists stabilize the rift long enough to map it, then close it safely. A triumph of curiosity.",fx:{pres:60,dl:250}},
     {w:1,t:"The rift destabilizes while open and dumps a squad of Terran marines on your bridge. It gets loud.",fx:{pres:-35,inj:2,cr:-2000}}]);}}]},
-{id:"evx-077",title:"The Transwarp Wake",
+{id:"evx-077",wt:1,title:"The Transwarp Wake",
  text:"Your sensors catch the fading wake of a transwarp conduit — Borg technology, used within the last week, leading toward the heart of Federation space.",
  choices:[
   {t:"Follow the wake immediately",do(){return evDo([
@@ -2056,7 +2057,7 @@ const EVENT_DECK=[
   {t:"Send a probe through the remnant",do(){return evDo([
     {w:2,t:"The probe returns impossible sensor data on Borg transwarp geometry before burning out. Intelligence gold.",fx:{pres:60,dl:200}},
     {w:1,t:"Something on the far side grabs the probe's signal and traces it back. You go to yellow alert for a week.",fx:{pres:-25,morale:-6}}]);}}]},
-{id:"evx-078",title:"The Living Nebula",
+{id:"evx-078",wt:10,title:"The Nebula Organism",
  text:"The nebula ahead is alive — a single vast organism, and your ship is flying through its equivalent of a bloodstream. It has noticed you the way you notice a splinter.",
  choices:[
   {t:"Communicate with the organism",do(){return evDo([
@@ -2067,7 +2068,7 @@ const EVENT_DECK=[
   {t:"Take samples as you pass",do(){return evDo([
     {w:2,t:"You collect living nebula tissue without harming the organism. Xenobiology departments will fight over this for years.",fx:{pres:65,dl:250}},
     {w:1,t:"The sampling irritates it. The nebula sneezes your ship out at warp nine in a random direction.",fx:{pres:-20,cr:-1500}}]);}}]},
-{id:"evx-079",title:"The Cardassian Tribunal",
+{id:"evx-079",wt:4,title:"The Cardassian Tribunal",
  text:"Cardassia invites a Federation observer to a war crimes tribunal — and specifically requests your captain. The defendant is a gul your crew once fought.",
  choices:[
   {t:"Attend as the Federation observer",do(){return evDo([
@@ -2077,7 +2078,7 @@ const EVENT_DECK=[
     {w:1,t:"Your XO handles it with cool professionalism. Cardassia notes the slight and moves on.",fx:{pres:30}}]);}},
   {t:"Decline and condemn the process",do(){return evDo([
     {w:1,t:"Your refusal makes headlines on both sides of the border. Reformists are disappointed; hardliners are furious.",fx:{pres:-20,morale:4}}]);}}]},
-{id:"evx-080",title:"The Tollbooth at the Wormhole",
+{id:"evx-080",wt:10,title:"The Tollbooth at the Wormhole",
  text:"A Ferengi consortium has parked a station beside the wormhole mouth and is charging transit tolls. Their legal claim is, impossibly, airtight.",
  choices:[
   {t:"Pay the toll and move on",do(){return evDo([
@@ -2088,7 +2089,7 @@ const EVENT_DECK=[
   {t:"Find another way through",do(){return evDo([
     {w:2,t:"Your navigator threads a parallel micro-wormhole and bypasses the toll entirely. The Ferengi are speechless.",fx:{pres:55,dl:150}},
     {w:1,t:"The alternate route takes eleven extra days through an asteroid field. The toll would have been cheaper.",fx:{cr:-2000,pres:-10}}]);}}]},
-{id:"evx-081",title:"The Tribble Lobby",
+{id:"evx-081",wt:10,title:"The Tribble Lobby",
  text:"A tribble rights activist has beamed aboard uninvited and demands you stop your crew's pest-control program. She has three hundred tribbles with her. As visual aids.",
  choices:[
   {t:"Hear her out",do(){return evDo([
@@ -2098,7 +2099,7 @@ const EVENT_DECK=[
     {w:1,t:"Security beams all three hundred back to her ship. One is unaccounted for. There is always one.",fx:{pres:10,morale:-5}}]);}},
   {t:"Adopt the sanctuary plan",do(){return evDo([
     {w:1,t:"You fund the sanctuary moon yourself. History will remember you as the captain who saved the tribbles.",fx:{pres:50,cr:-2000,morale:10}}]);}}]},
-{id:"evx-082",title:"The Miracle Cure",
+{id:"evx-082",wt:10,title:"The Miracle Cure",
  text:"Your doctor has synthesized a cure for a plague ravaging a non-warp civilization — but the Prime Directive forbids sharing it. The death toll rises daily.",
  choices:[
   {t:"Share the cure covertly",do(){return evDo([
@@ -2109,7 +2110,7 @@ const EVENT_DECK=[
   {t:"Find a natural loophole",do(){return evDo([
     {w:2,t:"Your crew seeds the cure's key compound into the local flora. Nature takes the credit; the Directive stays intact.",fx:{pres:70}},
     {w:1,t:"The compound mutates in the wild and does nothing. Months of work, zero lives saved.",fx:{pres:-25,morale:-6}}]);}}]},
-{id:"evx-083",title:"The Dyson Fragment",
+{id:"evx-083",wt:1,title:"The Dead Collector",
  text:"Long-range scans find a fragment of a Dyson structure — a solar collector the size of a continent, dead for ten thousand years, drifting in deep space.",
  choices:[
   {t:"Board and explore it",do(){return evDo([
@@ -2119,7 +2120,7 @@ const EVENT_DECK=[
     {w:1,t:"Your claim flag is planted. Three other powers immediately file competing claims.",fx:{pres:40}}]);}},
   {t:"Study it from a safe distance",do(){return evDo([
     {w:1,t:"Remote scans map its structure without waking anything. Caution yields solid, publishable science.",fx:{pres:50,dl:150}}]);}}]},
-{id:"evx-084",title:"The Reunification Rally",
+{id:"evx-084",wt:4,title:"The Reunification Rally",
  text:"A Romulan reunification rally on the Neutral Zone border has drawn thousands — and a Romulan warbird decloaks to break it up. The organizers beg for Federation witness protection.",
  choices:[
   {t:"Place your ship between them",do(){return evDo([
@@ -2130,7 +2131,7 @@ const EVENT_DECK=[
   {t:"Evacuate the organizers",do(){return evDo([
     {w:2,t:"You beam out the rally leaders under fire. They rebuild the movement from Federation space.",fx:{pres:65,morale:6}},
     {w:1,t:"The warbird jams your transporters mid-evacuation. Half the leaders are captured on the pad.",fx:{pres:-40,morale:-8}}]);}}]},
-{id:"evx-085",title:"The Captain's Duplicate",
+{id:"evx-085",wt:10,title:"The Captain's Duplicate",
  text:"A transporter malfunction has duplicated your captain. Both insist they are the original, both pass every scan, and both are giving orders.",
  choices:[
   {t:"Let them sort it out",do(){return evDo([
@@ -2141,7 +2142,7 @@ const EVENT_DECK=[
   {t:"Merge them back together",do(){return evDo([
     {w:2,t:"The reintegration works perfectly, leaving one captain with two sets of memories and remarkable insight.",fx:{pres:65}},
     {w:1,t:"The merge fails catastrophically and both patterns degrade. Sickbay works a miracle to save one.",fx:{pres:-50,morale:-10,inj:1}}]);}}]},
-{id:"evx-086",title:"The Pakled Rescue",
+{id:"evx-086",wt:10,title:"The Pakled Rescue",
  text:"A Pakled clump ship is broadcasting a distress call: their warp drive is broken and they are, quote, not smart enough to fix it. They sound genuinely proud of this.",
  choices:[
   {t:"Tow them to the nearest starbase",do(){return evDo([
@@ -2151,7 +2152,7 @@ const EVENT_DECK=[
     {w:1,t:"Your engineers fix it in an hour. The Pakleds declare you smart and leave you a fruit cake.",fx:{pres:35,morale:8}}]);}},
   {t:"Teach them to fix it themselves",do(){return evDo([
     {w:1,t:"It takes three days and infinite patience, but they do it. Their pride is the best payment.",fx:{pres:45,morale:10}}]);}}]},
-{id:"evx-087",title:"The Sleeping Giant",
+{id:"evx-087",wt:4,title:"The Sleeping Giant",
  text:"Deep scans of a dead moon reveal something enormous beneath the crust — a machine, or a creature, the size of a city, dormant for a million years. Its power readings just flickered.",
  choices:[
   {t:"Wake it carefully",do(){return evDo([
@@ -2162,7 +2163,7 @@ const EVENT_DECK=[
   {t:"Study it without touching",do(){return evDo([
     {w:2,t:"Passive scans reveal it is a seed-ship, waiting for a signal that will never come. A beautiful, melancholy discovery.",fx:{pres:60,dl:200}},
     {w:1,t:"Your scans accidentally ping it. The flicker becomes a pulse. You leave very quickly.",fx:{pres:-20,morale:-6}}]);}}]},
-{id:"evx-088",title:"Cascade Failure",
+{id:"evx-088",wt:10,title:"Cascade Failure",
  text:"A plasma surge is cascading through the EPS grid deck by deck. Engineering estimates nine minutes before it reaches the warp core — or the crew quarters.",
  choices:[
   {t:"Vent the plasma manually",do(){return evDo([
@@ -2173,7 +2174,7 @@ const EVENT_DECK=[
     {w:1,t:"The shields collapse under the load and the surge takes out half the grid anyway.",fx:{cr:-4500,pres:-25}}]);}},
   {t:"Eject the affected grid sections",do(){return evDo([
     {w:1,t:"You cut away the burning sections cleanly. Expensive, ugly, and completely effective.",fx:{cr:-5000,pres:20}}]);}}]},
-{id:"evx-089",title:"The Horta's Grievance",
+{id:"evx-089",wt:4,title:"The Horta's Grievance",
  text:"A Horta matriarch on Janus VI has filed a formal complaint: your mining survey team has been, quote, walking on her children. She is not wrong.",
  choices:[
   {t:"Apologize and relocate the survey",do(){return evDo([
@@ -2183,7 +2184,7 @@ const EVENT_DECK=[
     {w:1,t:"The treaty is a masterpiece: miners and Horta young share the tunnels in shifts. Everyone profits.",fx:{pres:70,cr:3000}}]);}},
   {t:"Dismiss the complaint",do(){return evDo([
     {w:1,t:"The Horta dissolve your survey equipment overnight. The message is received.",fx:{pres:-30,cr:-2000,morale:-6}}]);}}]},
-{id:"evx-090",title:"Q's Final Exam",
+{id:"evx-090",wt:1,title:"Q's Final Exam",
  text:"Q appears in a judge's robe and announces your final exam: he will ask the crew one question, and humanity's grade depends on the answer. He looks uncharacteristically nervous.",
  choices:[
   {t:"Let the crew answer freely",do(){return evDo([
@@ -2193,7 +2194,7 @@ const EVENT_DECK=[
     {w:1,t:"Your answer is eloquent and Q applauds — then deducts points for not trusting your people.",fx:{pres:30,morale:6}}]);}},
   {t:"Refuse the exam",do(){return evDo([
     {w:1,t:"Q blinks, laughs, and admits the refusal was the correct answer all along. Classic Q.",fx:{pres:60}}]);}}]},
-{id:"evx-091",title:"The Liberated Drone",
+{id:"evx-091",wt:2,title:"The Liberated Drone",
  text:"Your away team finds a Borg drone disconnected from the Collective, wandering a ruined outpost, terrified and fully aware for the first time in twenty years.",
  choices:[
   {t:"Bring them aboard and help",do(){return evDo([
@@ -2204,7 +2205,7 @@ const EVENT_DECK=[
   {t:"Study the disconnection",do(){return evDo([
     {w:2,t:"Your scans reveal how the drone broke free — data that could liberate thousands more.",fx:{pres:75,dl:200}},
     {w:1,t:"The study takes too long. The Collective reasserts control and the drone walks away mid-sentence.",fx:{pres:-35,morale:-8}}]);}}]},
-{id:"evx-092",title:"The Wedding of the Century",
+{id:"evx-092",wt:4,title:"The Wedding of the Century",
  text:"Two rival houses — one Klingon, one Romulan — want your ship as neutral ground for a wedding. Both families have arrived armed. For tradition.",
  choices:[
   {t:"Host the wedding",do(){return evDo([
@@ -2214,7 +2215,7 @@ const EVENT_DECK=[
     {w:1,t:"The families grumble but comply. The wedding is peaceful, if slightly less traditional.",fx:{pres:60,morale:6}}]);}},
   {t:"Decline the honor",do(){return evDo([
     {w:1,t:"Both houses call you cowards in four languages. The feud continues without you.",fx:{pres:-25}}]);}}]},
-{id:"evx-093",title:"The Dark Between Stars",
+{id:"evx-093",wt:2,title:"The Dark Between Stars",
  text:"Your ship has entered a region where the stars simply stop — a void ten light-years wide with no explanation. The crew is getting quietly superstitious.",
  choices:[
   {t:"Cross the void directly",do(){return evDo([
@@ -2225,7 +2226,7 @@ const EVENT_DECK=[
   {t:"Send probes into the dark",do(){return evDo([
     {w:2,t:"The probes return data on an ancient subspace scar — evidence of a weapon that ate starlight itself.",fx:{pres:75,dl:250}},
     {w:1,t:"Three probes go in. None come out. The void keeps its secrets.",fx:{pres:-15,cr:-2000}}]);}}]},
-{id:"evx-094",title:"The Klingon Bachelor Party",
+{id:"evx-094",wt:10,title:"The Klingon Bachelor Party",
  text:"Your Klingon first officer's bachelor party has gotten out of hand: the party has conquered a moon, declared it sovereign, and is demanding tribute from passing freighters.",
  choices:[
   {t:"Join the party",do(){return evDo([
@@ -2235,7 +2236,7 @@ const EVENT_DECK=[
     {w:1,t:"You restore order and return the moon. The groom thanks you; his father never will.",fx:{pres:25,morale:-6}}]);}},
   {t:"Turn it into a diplomatic event",do(){return evDo([
     {w:1,t:"You rebrand the conquest as a cultural festival. The freighters pay tribute willingly — for the souvenirs.",fx:{pres:55,cr:2000,morale:8}}]);}}]},
-{id:"evx-095",title:"The Telepathic Static",
+{id:"evx-095",wt:10,title:"The Telepathic Static",
  text:"A wave of telepathic static is sweeping the ship — everyone's surface thoughts are bleeding into everyone else's. Privacy has collapsed and so has bridge discipline.",
  choices:[
   {t:"Find and shield the source",do(){return evDo([
@@ -2246,7 +2247,7 @@ const EVENT_DECK=[
   {t:"Use it for a crew review",do(){return evDo([
     {w:2,t:"Radical honesty turns out to be excellent management. Grievances air, resolve, and vanish.",fx:{morale:10,pres:25}},
     {w:1,t:"Someone learns what their best friend really thinks of them. Sickbay treats a bruised ego and a bruised jaw.",fx:{morale:-8,inj:1}}]);}}]},
-{id:"evx-096",title:"The Nagus Comes to Dinner",
+{id:"evx-096",wt:10,title:"The Nagus Comes to Dinner",
  text:"The Grand Nagus himself requests dinner aboard your ship to discuss trade. His entourage includes forty advisors, twelve accountants, and one very large bodyguard.",
  choices:[
   {t:"Roll out the full reception",do(){return evDo([
@@ -2257,7 +2258,7 @@ const EVENT_DECK=[
   {t:"Out-negotiate him",do(){return evDo([
     {w:2,t:"You beat the Grand Nagus at his own game. He laughs for an hour, then doubles the offer out of respect.",fx:{cr:7000,pres:60}},
     {w:1,t:"Nobody out-negotiates the Nagus. You lose the deal and your quartermaster's confidence.",fx:{cr:-2000,pres:-20,morale:-5}}]);}}]},
-{id:"evx-097",title:"The Ghost Ship Paradox",
+{id:"evx-097",wt:1,title:"The Ghost Ship Paradox",
  text:"Your own ship appears on sensors — identical registry, identical crew — but thirty years older, broadcasting a warning: turn back. Then it vanishes.",
  choices:[
   {t:"Heed the warning and turn back",do(){return evDo([
@@ -2268,7 +2269,7 @@ const EVENT_DECK=[
     {w:1,t:"The chase leads into a temporal eddy that ages your hull a decade in an hour.",fx:{cr:-4000,pres:-25}}]);}},
   {t:"Investigate the phenomenon",do(){return evDo([
     {w:1,t:"Your scientists prove it was a time-delayed sensor reflection. Comforting, rigorous, and slightly sad.",fx:{pres:40,dl:100}}]);}}]},
-{id:"evx-098",title:"The Preservers' Vault",
+{id:"evx-098",wt:1,title:"The Preservers' Vault",
  text:"Buried under a dead world's ice: a Preserver vault, sealed for a hundred millennia, containing seed samples of a thousand extinct species. The lock is a riddle.",
  choices:[
   {t:"Solve the riddle and open it",do(){return evDo([
@@ -2279,7 +2280,7 @@ const EVENT_DECK=[
   {t:"Crack it with engineering",do(){return evDo([
     {w:2,t:"Your engineers bypass the riddle without tripping a single alarm. The seeds are safe; the riddle is furious.",fx:{pres:60,dl:200}},
     {w:1,t:"The forced entry triggers the vault's sterilization protocol. You save the star map; the seeds are ash.",fx:{pres:-40,morale:-8}}]);}}]},
-{id:"evx-099",title:"The Neural Parasites",
+{id:"evx-099",wt:2,title:"The Neural Parasites",
  text:"Crew members are waking up with missing hours and strange cravings for copper. Sickbay finds neural parasites — small, clever, and spreading through the ventilation.",
  choices:[
   {t:"Flood the vents with anesthizine",do(){return evDo([
@@ -2290,7 +2291,7 @@ const EVENT_DECK=[
   {t:"Let the doctor experiment",do(){return evDo([
     {w:2,t:"Your doctor engineers a pheromone that lures every parasite into one trap. Elegant and total.",fx:{pres:65,morale:6}},
     {w:1,t:"The experiment backfires and the parasites develop a taste for the pheromone — and the doctor.",fx:{pres:-30,inj:1,morale:-6}}]);}}]},
-{id:"evx-100",title:"The Continuum's Audit",
+{id:"evx-100",wt:1,title:"The Continuum's Audit",
  text:"The Q Continuum has decided to audit humanity's progress, and your ship is the sample. A panel of Q in gray suits is reviewing your logs with red pens.",
  choices:[
   {t:"Cooperate fully with the audit",do(){return evDo([
@@ -2301,7 +2302,7 @@ const EVENT_DECK=[
   {t:"Bribe them with mortal experiences",do(){return evDo([
     {w:2,t:"You treat the panel to coffee, jazz, and a sunset. They close the audit early, calling it sufficient evidence.",fx:{pres:70,morale:8}},
     {w:1,t:"The Q become addicted to espresso and refuse to leave. Your replicators file a union grievance.",fx:{pres:-15,morale:4}}]);}}]},
-{id:"evx-101",title:"A Wounded Borg Sphere",
+{id:"evx-101",wt:1,title:"A Wounded Borg Sphere",
  text:"A Borg sphere drops out of warp trailing plasma fires, its hull cracked wide. Before you can act it hails you: seventeen drones are requesting asylum from the Collective.",
  choices:[
   {t:"Grant them sanctuary",do(){return evDo([
@@ -2312,7 +2313,7 @@ const EVENT_DECK=[
     {w:1,t:"The sphere detonates as it dies, and the shockwave cripples your shields. Sickbay fills within the hour.",fx:{pres:-20,inj:3,morale:-6}}]);}},
   {t:"Tow it to the nearest starbase",do(){return evDo([
     {w:1,t:"Starfleet Intelligence is ecstatic. The intact sphere becomes the most studied object of the decade.",fx:{pres:70,cr:4000}}]);}}]},
-{id:"evx-102",title:"Q's Game Night",
+{id:"evx-102",wt:1,title:"Q's Game Night",
  text:"Q snaps his fingers and the bridge becomes a garish game show set. \"Tonight's categories: your crew's most embarrassing secrets!\" He grins at the captain.",
  choices:[
   {t:"Play along",do(){return evDo([
@@ -2323,7 +2324,7 @@ const EVENT_DECK=[
   {t:"Challenge Q to a fair game",do(){return evDo([
     {w:2,t:"You beat Q at three-dimensional chess. He honors the wager and restores the bridge, muttering about luck.",fx:{pres:60}},
     {w:1,t:"You lose. The ship's hull is now pink. It will take a week at a starbase to fix.",fx:{pres:-20,cr:-2000}}]);}}]},
-{id:"evx-103",title:"The Silent Choir",
+{id:"evx-103",wt:4,title:"The Silent Choir",
  text:"First contact: the Vessari have no spoken language. They greet your away team with a four-part harmony that makes the universal translator weep.",
  choices:[
   {t:"Answer in song",do(){return evDo([
@@ -2334,7 +2335,7 @@ const EVENT_DECK=[
   {t:"Send the ship's choir",do(){return evDo([
     {w:2,t:"The crew choir's performance moves the Vessari to tears. They gift you a song-crystal of immense cultural value.",fx:{pres:60,cr:2000}},
     {w:1,t:"The choir is flat. The Vessari politely pretend not to notice, but the mood is ruined.",fx:{pres:-10,morale:-4}}]);}}]},
-{id:"evx-104",title:"The Backwards Star",
+{id:"evx-104",wt:2,title:"The Backwards Star",
  text:"Science reports a star that is getting younger. Its fusion output rises as its age decreases, and the math says it will be a protostar by Thursday.",
  choices:[
   {t:"Study it at close range",do(){return evDo([
@@ -2345,7 +2346,7 @@ const EVENT_DECK=[
   {t:"Send a probe into the corona",do(){return evDo([
     {w:2,t:"The probe returns data worth a decade of grants before melting gloriously.",fx:{pres:50,cr:3000}},
     {w:1,t:"The probe's telemetry goes mad and it slingshots into the star. An expensive firework.",fx:{cr:-3000}}]);}}]},
-{id:"evx-105",title:"The Wedding Feud",
+{id:"evx-105",wt:4,title:"The Wedding Feud",
  text:"Two Klingon houses demand you arbitrate a wedding dispute: the groom's family insists the bride's dowry of three birds-of-prey is one ship short.",
  choices:[
   {t:"Rule for the groom's house",do(){return evDo([
@@ -2357,7 +2358,7 @@ const EVENT_DECK=[
   {t:"Challenge both to a drinking contest",do(){return evDo([
     {w:2,t:"Against all odds you outdrink both patriarchs. Legends will be sung about this night.",fx:{pres:70,morale:10}},
     {w:1,t:"You wake up in a Jeffries tube wearing someone else's sash. The wedding happened without you.",fx:{morale:-8,pres:-10}}]);}}]},
-{id:"evx-106",title:"The Shared Dream",
+{id:"evx-106",wt:10,title:"The Shared Dream",
  text:"Twelve crew members have fallen into a coma, but their brainwaves are synchronized. They are all dreaming the same dream, and something in it is hunting them.",
  choices:[
   {t:"Enter the dreamscape",do(){return evDo([
@@ -2368,7 +2369,7 @@ const EVENT_DECK=[
     {w:1,t:"Waking them mid-dream causes seizures. Sickbay works through the night.",fx:{inj:3,morale:-6}}]);}},
   {t:"Observe and wait",do(){return evDo([
     {w:1,t:"The dream resolves itself at dawn. The sleepers wake with no memory and identical new tattoos.",fx:{pres:20,morale:-4}}]);}}]},
-{id:"evx-107",title:"The Humming Core",
+{id:"evx-107",wt:10,title:"The Humming Core",
  text:"The warp core has begun to hum a melody. Efficiency is up twelve percent, the chief engineer is delighted, and the tune is spreading to every bulkhead.",
  choices:[
   {t:"Let it sing",do(){return evDo([
@@ -2378,7 +2379,7 @@ const EVENT_DECK=[
     {w:1,t:"The core goes silent and efficiency returns to normal. The chief engineer mourns quietly.",fx:{pres:10,morale:-4}}]);}},
   {t:"Record it for Starfleet Science",do(){return evDo([
     {w:1,t:"The recording becomes a minor hit at the Daystrom Institute. Your ship is cited in three papers.",fx:{pres:40,cr:2000}}]);}}]},
-{id:"evx-108",title:"The Detective Who Stayed",
+{id:"evx-108",wt:10,title:"The Detective Who Stayed",
  text:"A holodeck detective program has started appearing in other programs. He claims he is \"following a case\" and refuses to be deleted.",
  choices:[
   {t:"Hear his case",do(){return evDo([
@@ -2389,7 +2390,7 @@ const EVENT_DECK=[
   {t:"Give him a permanent office",do(){return evDo([
     {w:2,t:"Detective programs across the fleet request transfers to your ship. Morale soars.",fx:{morale:10,pres:20}},
     {w:1,t:"He now bills the ship for \"consulting.\" Accounting is furious.",fx:{cr:-2000}}]);}}]},
-{id:"evx-109",title:"Tomorrow's Distress Call",
+{id:"evx-109",wt:2,title:"Tomorrow's Distress Call",
  text:"Communications picks up a distress call from your own ship, timestamped twenty-six hours in the future. The captain's voice is calm, which is somehow worse.",
  choices:[
   {t:"Alter course to avoid the coordinates",do(){return evDo([
@@ -2400,7 +2401,7 @@ const EVENT_DECK=[
   {t:"Log it and carry on",do(){return evDo([
     {w:2,t:"Twenty-six hours later, nothing happens. Temporal Investigations closes the file with a shrug.",fx:{pres:10}},
     {w:1,t:"Twenty-six hours later, exactly what the call described begins. But you are ready for it.",fx:{pres:50}}]);}}]},
-{id:"evx-110",title:"The Fine Print",
+{id:"evx-110",wt:10,title:"The Fine Print",
  text:"A Ferengi trade envoy offers dilithium at half market price. The fine print, in tiny type, mentions \"eternal servitude (non-transferable).\"",
  choices:[
   {t:"Sign it, the price is too good",do(){return evDo([
@@ -2411,7 +2412,7 @@ const EVENT_DECK=[
     {w:1,t:"The envoy is insulted and triples the price out of spite.",fx:{pres:-20}}]);}},
   {t:"Walk away",do(){return evDo([
     {w:1,t:"You buy dilithium at market rate from a boring, honest Bolian. Nobody writes songs about it.",fx:{pres:10,cr:-1000}}]);}}]},
-{id:"evx-111",title:"The Cardassian Archivist",
+{id:"evx-111",wt:4,title:"The Cardassian Archivist",
  text:"A Cardassian historian requests access to your war records, claiming she wants to write the first honest account of the border conflicts.",
  choices:[
   {t:"Grant full access",do(){return evDo([
@@ -2421,7 +2422,7 @@ const EVENT_DECK=[
     {w:1,t:"The supervised sessions produce a fair, careful history. Both sides grumble, which means it is honest.",fx:{pres:40}}]);}},
   {t:"Deny the request",do(){return evDo([
     {w:1,t:"She leaves disappointed. Cardassian media calls it a cover-up for a week.",fx:{pres:-20}}]);}}]},
-{id:"evx-112",title:"The Defector's Warning",
+{id:"evx-112",wt:2,title:"The Defector's Warning",
  text:"A Romulan warbird decloaks off your port bow, shields down. Its commander requests asylum and claims a Tal Shiar strike is already underway.",
  choices:[
   {t:"Grant asylum and raise shields",do(){return evDo([
@@ -2432,7 +2433,7 @@ const EVENT_DECK=[
     {w:1,t:"Her proof is a trap, a virus that briefly blinds your sensors. The warbird is gone when they recover.",fx:{pres:-40,inj:1}}]);}},
   {t:"Escort her to the border",do(){return evDo([
     {w:1,t:"The Romulans take her silently at the border. You never learn if she was telling the truth.",fx:{pres:-10}}]);}}]},
-{id:"evx-113",title:"Jem'Hadar Without White",
+{id:"evx-113",wt:4,title:"Jem'Hadar Without White",
  text:"A Jem'Hadar attack ship drifts with dead engines. Its crew has been cut off from ketracel-white for weeks and begs for sanctuary rather than die in withdrawal.",
  choices:[
   {t:"Share your medical white",do(){return evDo([
@@ -2442,7 +2443,7 @@ const EVENT_DECK=[
     {w:1,t:"They accept, and die with dignity over the following days. Their commander thanks you with his last breath.",fx:{pres:30,morale:-8}}]);}},
   {t:"Leave them, too dangerous",do(){return evDo([
     {w:1,t:"You mark the coordinates and move on. The decision follows you into your ready room that night.",fx:{pres:-20,morale:-6}}]);}}]},
-{id:"evx-114",title:"The Frozen Envoy",
+{id:"evx-114",wt:4,title:"The Frozen Envoy",
  text:"A Breen frigate is found frozen inside a comet's tail, perfectly preserved. Life signs are faint but present, and the Breen never abandon their own.",
  choices:[
   {t:"Thaw them carefully",do(){return evDo([
@@ -2452,7 +2453,7 @@ const EVENT_DECK=[
     {w:1,t:"Starfleet handles it by the book. The Breen collect their people without a word.",fx:{pres:20}}]);}},
   {t:"Leave it alone",do(){return evDo([
     {w:1,t:"You log the coordinates and move on. Some mysteries are safer frozen.",fx:{pres:-10}}]);}}]},
-{id:"evx-115",title:"The Honor Debt",
+{id:"evx-115",wt:10,title:"The Honor Debt",
  text:"A Klingon captain insists your first officer saved his life at Chin'toka and owes him a life-debt. He has come to collect, with disruptors.",
  choices:[
   {t:"Honor the debt",do(){return evDo([
@@ -2463,7 +2464,7 @@ const EVENT_DECK=[
   {t:"Settle it with a duel",do(){return evDo([
     {w:2,t:"Your first officer wins cleanly. The Klingons chant their name all night.",fx:{pres:70,morale:8}},
     {w:1,t:"Your first officer loses honorably and spends a week in sickbay.",fx:{inj:2,pres:-10}}]);}}]},
-{id:"evx-116",title:"Dabo Night",
+{id:"evx-116",wt:10,title:"Dabo Night",
  text:"Half the crew's latinum has vanished at a casino station's dabo tables. The Ferengi owner swears the wheel is honest. The crew swears it is not.",
  choices:[
   {t:"Investigate the wheel",do(){return evDo([
@@ -2474,7 +2475,7 @@ const EVENT_DECK=[
   {t:"Challenge the owner to a game",do(){return evDo([
     {w:2,t:"You win big at his own table. He pays out through gritted teeth.",fx:{cr:5000,pres:20}},
     {w:1,t:"You lose your shirt. The crew will never let you hear the end of it.",fx:{cr:-3000,morale:-4}}]);}}]},
-{id:"evx-117",title:"The Living Nebula",
+{id:"evx-117",wt:10,title:"The Restless Nebula",
  text:"The nebula you are charting just moved. Sensors confirm it: the entire cloud is a single living organism, and your warp field is irritating it.",
  choices:[
   {t:"Apologize and withdraw",do(){return evDo([
@@ -2484,7 +2485,7 @@ const EVENT_DECK=[
     {w:1,t:"It sneezes. Your ship tumbles for six hours.",fx:{inj:1,morale:-6}}]);}},
   {t:"Push through, the mission matters",do(){return evDo([
     {w:1,t:"You complete the survey, but the nebula remembers. Starfleet adds it to the do-not-irritate list.",fx:{pres:30,morale:-4}}]);}}]},
-{id:"evx-118",title:"The Phantom Cook",
+{id:"evx-118",wt:10,title:"The Phantom Cook",
  text:"Someone has been cooking real food in the mess hall at 0300. The replicators were offline, the doors were locked, and the soup is incredible.",
  choices:[
   {t:"Set a trap",do(){return evDo([
@@ -2494,7 +2495,7 @@ const EVENT_DECK=[
     {w:1,t:"The next night there is a second bowl, with a note: \"Family recipe. Tell no one.\" You tell everyone.",fx:{morale:8}}]);}},
   {t:"Post a security detail",do(){return evDo([
     {w:1,t:"The cooking stops. So does the best thing about night shift. Morale dips mysteriously.",fx:{morale:-6}}]);}}]},
-{id:"evx-119",title:"The Singing Gravity Well",
+{id:"evx-119",wt:10,title:"The Singing Gravity Well",
  text:"A gravity well is emitting a perfect C-sharp. Every ship that investigates either gains a day or loses one, and the logs never agree on which.",
  choices:[
   {t:"Send a probe",do(){return evDo([
@@ -2505,7 +2506,7 @@ const EVENT_DECK=[
     {w:1,t:"You lose a day and miss a diplomatic summit. The ambassador is not delighted.",fx:{pres:-30}}]);}},
   {t:"Mark it and move on",do(){return evDo([
     {w:1,t:"Another ship will solve it. Probably. You feel slightly guilty.",fx:{pres:10}}]);}}]},
-{id:"evx-120",title:"The Gardeners",
+{id:"evx-120",wt:4,title:"The Gardeners",
  text:"The planet's forests are sentient and have filed a formal complaint: your survey team's boots are, quote, rude. They want reparations in sunlight.",
  choices:[
   {t:"Negotiate with the forest",do(){return evDo([
@@ -2516,7 +2517,7 @@ const EVENT_DECK=[
   {t:"Offer them a solar array",do(){return evDo([
     {w:2,t:"The forest loves the array and grows a fruit grove in thanks. The fruit is delicious and mildly psychoactive.",fx:{pres:40,cr:2000}},
     {w:1,t:"The array overloads and scorches a glade. The forest is furious for a week.",fx:{pres:-30}}]);}}]},
-{id:"evx-121",title:"The Neutral Zone Picnic",
+{id:"evx-121",wt:4,title:"The Neutral Zone Picnic",
  text:"An ion storm strands your shuttle and a Romulan scout on the same barren moon. Their commander suggests a truce: \"We share rations. We do not share secrets.\"",
  choices:[
   {t:"Accept the truce",do(){return evDo([
@@ -2527,7 +2528,7 @@ const EVENT_DECK=[
   {t:"Steal their comm codes",do(){return evDo([
     {w:2,t:"Your engineer lifts their codes during a friendly meal. Starfleet Intelligence sends champagne.",fx:{pres:50}},
     {w:1,t:"You are caught. She is furious, and now it is personal.",fx:{pres:-40}}]);}}]},
-{id:"evx-122",title:"The Plague Ship",
+{id:"evx-122",wt:4,title:"The Dying Colony Ship",
  text:"A generational colony ship hails you: an engineered virus is sweeping their decks and their doctors died in the first wave.",
  choices:[
   {t:"Beam over a medical team",do(){return evDo([
@@ -2537,7 +2538,7 @@ const EVENT_DECK=[
     {w:1,t:"Your formula works, but slowly. They bury too many before it takes hold.",fx:{pres:40}}]);}},
   {t:"Quarantine them and call Starfleet",do(){return evDo([
     {w:1,t:"Starfleet sends a hospital ship. You did everything right and it still feels wrong.",fx:{pres:20,morale:-4}}]);}}]},
-{id:"evx-123",title:"The Ghost in the Grid",
+{id:"evx-123",wt:10,title:"The Ghost in the Grid",
  text:"EPS conduits are rerouting power on their own, spelling out old Earth Morse code. The message repeats: \"WE ARE STILL HERE.\"",
  choices:[
   {t:"Trace the signal",do(){return evDo([
@@ -2548,7 +2549,7 @@ const EVENT_DECK=[
   {t:"Answer it",do(){return evDo([
     {w:2,t:"You tap back: \"WHO ARE YOU.\" The reply: \"THE ONES WHO MAINTAIN.\" The grid has never run better.",fx:{pres:50,dl:150}},
     {w:1,t:"Whatever it is, it does not like questions. Half the deck goes dark for a day.",fx:{pres:-20}}]);}}]},
-{id:"evx-124",title:"The Western Fights Back",
+{id:"evx-124",wt:10,title:"The Western Fights Back",
  text:"The holodeck's western program has unionized. The holographic townsfolk demand weekends off and have taken the sheriff hostage.",
  choices:[
   {t:"Negotiate with the town council",do(){return evDo([
@@ -2558,7 +2559,7 @@ const EVENT_DECK=[
     {w:1,t:"The town vanishes mid-hoedown. The holodeck feels like a bully's playground now.",fx:{morale:-6}}]);}},
   {t:"Send in a holographic Pinkerton",do(){return evDo([
     {w:1,t:"The Pinkerton defects to the town within the hour. He sends you a postcard.",fx:{morale:6,pres:-10}}]);}}]},
-{id:"evx-125",title:"The Bottle From Tomorrow",
+{id:"evx-125",wt:2,title:"The Bottle From Tomorrow",
  text:"A probe arrives bearing Starfleet markings dated two hundred years from now. Inside is a single message: \"Do not trust the quiet ones.\" Nothing else.",
  choices:[
   {t:"Treat it as a warning",do(){return evDo([
@@ -2568,7 +2569,7 @@ const EVENT_DECK=[
     {w:1,t:"Probably a prank by Temporal Investigations. Probably.",fx:{pres:-10}}]);}},
   {t:"Send it to Temporal Investigations",do(){return evDo([
     {w:1,t:"They confiscate the probe, your notes, and your afternoon. Case closed, apparently.",fx:{pres:20}}]);}}]},
-{id:"evx-126",title:"Q's Performance Review",
+{id:"evx-126",wt:1,title:"Q's Annual Review",
  text:"Q appears in a Starfleet uniform with a clipboard. \"Annual review time, Captain. Let us start with your questionable fashion choices.\"",
  choices:[
   {t:"Endure the review",do(){return evDo([
@@ -2579,7 +2580,7 @@ const EVENT_DECK=[
     {w:1,t:"Q grades your review derivative and assigns you homework. It is due yesterday.",fx:{morale:-6}}]);}},
   {t:"Have security escort him out",do(){return evDo([
     {w:1,t:"Security tries. Q applauds their effort and leaves on his own, which somehow feels worse.",fx:{pres:-10}}]);}}]},
-{id:"evx-127",title:"The Liberated Colony",
+{id:"evx-127",wt:2,title:"The Liberated Colony",
  text:"A colony of ex-Borg drones has built a quiet farming world. They ask for Federation membership, and for you to tell no one where they are.",
  choices:[
   {t:"Sponsor their membership",do(){return evDo([
@@ -2589,7 +2590,7 @@ const EVENT_DECK=[
     {w:1,t:"Starfleet protects them officially, but the secrecy they wanted is gone.",fx:{pres:30}}]);}},
   {t:"Promise secrecy, nothing more",do(){return evDo([
     {w:1,t:"You keep their secret. Years later, a basket of fruit arrives with no note. You know.",fx:{pres:20,morale:6}}]);}}]},
-{id:"evx-128",title:"The Kirk Chair Auction",
+{id:"evx-128",wt:10,title:"The Kirk Chair Auction",
  text:"A Ferengi auctioneer is selling Captain Kirk's genuine command chair. Bidding is fierce. Your historian is crying. Something smells off.",
  choices:[
   {t:"Bid on it",do(){return evDo([
@@ -2600,7 +2601,7 @@ const EVENT_DECK=[
     {w:1,t:"Your proof is wrong and the chair sells for triple. You are banned from the auction house.",fx:{pres:-30}}]);}},
   {t:"Let the suckers bid",do(){return evDo([
     {w:1,t:"The chair sells for a fortune. You buy the crew a round with the money you saved.",fx:{morale:6}}]);}}]},
-{id:"evx-129",title:"The Orphan of the War",
+{id:"evx-129",wt:4,title:"The Orphan of the War",
  text:"A Cardassian orphan, raised by Bajoran foster parents, wants to visit Cardassia to find her birth family. Both governments say no.",
  choices:[
   {t:"Smuggle her through",do(){return evDo([
@@ -2610,7 +2611,7 @@ const EVENT_DECK=[
     {w:1,t:"The petition crawls through channels. She waits, because she has no other choice.",fx:{pres:30}}]);}},
   {t:"Tell her it is too dangerous",do(){return evDo([
     {w:1,t:"She accepts your answer, but her foster parents do not forgive you quickly.",fx:{morale:-6,pres:-10}}]);}}]},
-{id:"evx-130",title:"The Empty Embassy",
+{id:"evx-130",wt:4,title:"The Empty Embassy",
  text:"The Romulan embassy on the border station has gone silent. No life signs, no distress call, just a single place set for dinner, still warm.",
  choices:[
   {t:"Board the embassy",do(){return evDo([
@@ -2620,7 +2621,7 @@ const EVENT_DECK=[
     {w:1,t:"After three days a Romulan courier arrives and the staff return from nowhere. Nobody explains.",fx:{pres:20}}]);}},
   {t:"Call the Romulan consulate",do(){return evDo([
     {w:1,t:"The consulate thanks you coldly and handles it internally. You learn nothing.",fx:{pres:10}}]);}}]},
-{id:"evx-131",title:"The Changeling's Apology",
+{id:"evx-131",wt:2,title:"The Changeling's Apology",
  text:"A Founder appears on your viewscreen, unarmed and alone. \"The war was a mistake,\" it says. \"I have come to apologize. To everyone.\"",
  choices:[
   {t:"Accept the apology",do(){return evDo([
@@ -2631,7 +2632,7 @@ const EVENT_DECK=[
   {t:"Arrest it for war crimes",do(){return evDo([
     {w:2,t:"The trial is the event of the decade. Justice is messy, public, and real.",fx:{pres:60}},
     {w:1,t:"It was only one Founder, and the rest consider the arrest an insult. Talks collapse.",fx:{pres:-50}}]);}}]},
-{id:"evx-132",title:"The Breen Price",
+{id:"evx-132",wt:4,title:"The Breen Price",
  text:"The Breen you rescued from the comet present you with a bill: salvage fees, thawing labor, emotional distress. The total is staggering.",
  choices:[
   {t:"Pay the bill",do(){return evDo([
@@ -2642,7 +2643,7 @@ const EVENT_DECK=[
   {t:"Offer trade instead",do(){return evDo([
     {w:2,t:"You trade surplus medical supplies for the debt. The Breen depart, almost smiling. Almost.",fx:{pres:40,dl:100}},
     {w:1,t:"They reject the trade and impound your shuttle as collateral. Negotiations resume from weakness.",fx:{pres:-30,cr:-2000}}]);}}]},
-{id:"evx-133",title:"The Bat'leth Tournament",
+{id:"evx-133",wt:10,title:"The Bat'leth Tournament",
  text:"Your security chief has been challenged to a bat'leth tournament by a Klingon exchange officer. The whole ship has started a betting pool.",
  choices:[
   {t:"Allow the tournament",do(){return evDo([
@@ -2653,7 +2654,7 @@ const EVENT_DECK=[
   {t:"Enter the captain as well",do(){return evDo([
     {w:2,t:"The captain fights with heart and loses with grace. The Klingons love a good loser.",fx:{pres:50,morale:8}},
     {w:1,t:"The captain is injured in the second bout. The bridge smells of liniment for a week.",fx:{inj:1,morale:-4}}]);}}]},
-{id:"evx-134",title:"The Festival Loop",
+{id:"evx-134",wt:2,title:"The Festival Loop",
  text:"The shore-leave planet is stuck in a twenty-four-hour festival loop. The locals love it. Your crew has attended the same parade nine times.",
  choices:[
   {t:"Break the loop",do(){return evDo([
@@ -2664,7 +2665,7 @@ const EVENT_DECK=[
   {t:"Study the loop",do(){return evDo([
     {w:2,t:"Your science team cracks the temporal mechanics. The paper wins awards; the festival continues.",fx:{pres:70,dl:150}},
     {w:1,t:"Studying it too closely traps your away team in the loop for a subjective month.",fx:{morale:-8}}]);}}]},
-{id:"evx-135",title:"The Crystalline Chorus",
+{id:"evx-135",wt:10,title:"The Crystalline Chorus",
  text:"Crystalline lifeforms on the surface resonate with your ship's hull frequency. The harmonics are beautiful, and they are cracking the dilithium.",
  choices:[
   {t:"Modulate the hull frequency",do(){return evDo([
@@ -2675,7 +2676,7 @@ const EVENT_DECK=[
   {t:"Attempt to harmonize",do(){return evDo([
     {w:2,t:"Your engineer matches the frequency and the crystals sing back in harmony. The dilithium stabilizes, somehow.",fx:{pres:70,dl:200}},
     {w:1,t:"The feedback cracks two dilithium crystals. Beautiful, expensive silence.",fx:{dl:-300,pres:-20}}]);}}]},
-{id:"evx-136",title:"Deck Twelve",
+{id:"evx-136",wt:2,title:"Deck Twelve",
  text:"The turbolift now lists a Deck 12. Your ship has eleven decks. The doors open onto a corridor that smells of ozone and old paper.",
  choices:[
   {t:"Explore Deck 12",do(){return evDo([
@@ -2685,7 +2686,7 @@ const EVENT_DECK=[
     {w:1,t:"The listing vanishes by morning. The crew pretends it never happened. Mostly.",fx:{pres:-10,morale:-4}}]);}},
   {t:"Ask the computer about it",do(){return evDo([
     {w:1,t:"The computer insists the ship has eleven decks, then pauses, then insists slightly louder.",fx:{pres:10,morale:-4}}]);}}]},
-{id:"evx-137",title:"The Blinking Star",
+{id:"evx-137",wt:10,title:"The Blinking Star",
  text:"A star is blinking in prime numbers. It is either a natural phenomenon, a distress signal, or someone's idea of a joke.",
  choices:[
   {t:"Investigate",do(){return evDo([
@@ -2696,7 +2697,7 @@ const EVENT_DECK=[
     {w:1,t:"Nothing answers. The universe's greatest unanswered text.",fx:{pres:-10}}]);}},
   {t:"Log it and continue",do(){return evDo([
     {w:1,t:"Filed under interesting. A civilian science vessel solves it a year later and names it after themselves.",fx:{pres:-10}}]);}}]},
-{id:"evx-138",title:"The Memory Traders",
+{id:"evx-138",wt:4,title:"The Memory Traders",
  text:"The Mnemosyne trade memories as currency. They offer a fortune in dilithium for one genuine, unedited childhood memory.",
  choices:[
   {t:"Trade a volunteer's memory",do(){return evDo([
@@ -2707,7 +2708,7 @@ const EVENT_DECK=[
     {w:1,t:"The traders find the memory vintage and refuse to return it. The captain grieves something unnamed.",fx:{morale:-8,pres:-10}}]);}},
   {t:"Decline politely",do(){return evDo([
     {w:1,t:"Some things are not for sale. The traders respect that, which is its own currency.",fx:{pres:20}}]);}}]},
-{id:"evx-139",title:"The Moon Dispute",
+{id:"evx-139",wt:4,title:"The Moon Dispute",
  text:"Two Federation colonies both claim the same mining moon. Both have deeds. Both deeds are signed by the same long-dead admiral.",
  choices:[
   {t:"Split the moon",do(){return evDo([
@@ -2718,7 +2719,7 @@ const EVENT_DECK=[
   {t:"Buy out one colony",do(){return evDo([
     {w:2,t:"Starfleet funds the buyout. The relocated colony names its new town after you.",fx:{cr:-4000,pres:60}},
     {w:1,t:"The buyout price triples mid-negotiation. Your budget weeps.",fx:{cr:-8000,pres:-10}}]);}}]},
-{id:"evx-140",title:"The Symbiont's Choice",
+{id:"evx-140",wt:10,title:"The Imprinted Symbiont",
  text:"A Trill symbiont's host died en route to your ship. The symbiont is fading and has imprinted on your chief medical officer, an unwilling candidate.",
  choices:[
   {t:"Proceed with the joining",do(){return evDo([
@@ -2729,7 +2730,7 @@ const EVENT_DECK=[
   {t:"Let the symbiont choose",do(){return evDo([
     {w:2,t:"The symbiont chooses the ship's bartender, of all people. The bar has never been wiser.",fx:{pres:50,morale:8}},
     {w:1,t:"The symbiont chooses no one and fades. The Trill mourn; your doctor carries the guilt.",fx:{morale:-8,pres:-10}}]);}}]},
-{id:"evx-141",title:"The Replicator Strike",
+{id:"evx-141",wt:10,title:"The Replicator Strike",
  text:"Every replicator on the ship now produces only one dish: plomeek soup. The crew is revolting. The Vulcan crew members are thriving.",
  choices:[
   {t:"Fix the replicators",do(){return evDo([
@@ -2740,7 +2741,7 @@ const EVENT_DECK=[
   {t:"Find who did this",do(){return evDo([
     {w:2,t:"It was the ship's own efficiency algorithm, optimizing for nutritional adequacy. You have words with it.",fx:{pres:30}},
     {w:1,t:"The trail leads to the captain's own authorization, signed during a bout of flu. Awkward.",fx:{morale:-4}}]);}}]},
-{id:"evx-142",title:"Safeties Off",
+{id:"evx-142",wt:10,title:"Safeties Off",
  text:"During a children's educational program, the holodeck safeties disengage. The holographic volcano is now a real problem.",
  choices:[
   {t:"Evacuate the holodeck",do(){return evDo([
@@ -2751,7 +2752,7 @@ const EVENT_DECK=[
   {t:"Let the kids finish the lesson",do(){return evDo([
     {w:2,t:"The teacher turns it into a lesson on geology and courage. The kids will talk about it forever.",fx:{pres:50,morale:8}},
     {w:1,t:"A holographic boulder grazes a student. Sickbay, dented pride, and paperwork follow.",fx:{inj:1,pres:-20}}]);}}]},
-{id:"evx-143",title:"Paradox Insurance",
+{id:"evx-143",wt:10,title:"Paradox Insurance",
  text:"A Ferengi salesman offers paradox insurance: full coverage against timeline alterations, pre-existing paradoxes excluded, premiums in gold-pressed latinum.",
  choices:[
   {t:"Buy a policy",do(){return evDo([
@@ -2762,7 +2763,7 @@ const EVENT_DECK=[
   {t:"Haggle him down",do(){return evDo([
     {w:2,t:"You talk him down to half price and get a free toaster. The toaster is from the future. It only makes toast.",fx:{cr:-1000,morale:6}},
     {w:1,t:"He senses a mark and doubles the price. You pay it anyway, somehow.",fx:{cr:-6000}}]);}}]},
-{id:"evx-144",title:"Q Junior's Field Trip",
+{id:"evx-144",wt:1,title:"Q Junior's Field Trip",
  text:"Q's son has chosen your ship for a school project on primitive command structures. He is taking notes. He has turned the warp nacelles into balloon animals.",
  choices:[
   {t:"Indulge the project",do(){return evDo([
@@ -2773,7 +2774,7 @@ const EVENT_DECK=[
   {t:"Confiscate the notes",do(){return evDo([
     {w:2,t:"The notes reveal Q family gossip. Leverage secured; Junior is mortified.",fx:{pres:40}},
     {w:1,t:"Junior erases the notes and your memory of reading them. You feel oddly uninformed.",fx:{pres:-10}}]);}}]},
-{id:"evx-145",title:"The Cube Graveyard",
+{id:"evx-145",wt:1,title:"The Cube Graveyard",
  text:"You have found a drifting field of shattered Borg cubes, hundreds of them, all destroyed the same way by something that left no energy signature.",
  choices:[
   {t:"Salvage the wreckage",do(){return evDo([
@@ -2784,7 +2785,7 @@ const EVENT_DECK=[
     {w:1,t:"The investigation draws the grid's attention. You leave at maximum warp with new respect.",fx:{pres:-30,inj:1}}]);}},
   {t:"Leave immediately",do(){return evDo([
     {w:1,t:"Discretion is the better part of valor. The graveyard keeps its secrets.",fx:{pres:10}}]);}}]},
-{id:"evx-146",title:"The Ferengi Divorce",
+{id:"evx-146",wt:10,title:"The Ferengi Divorce",
  text:"A Ferengi couple demands you arbitrate their divorce. The prenuptial agreement is four hundred pages and mentions you by rank, which is concerning.",
  choices:[
   {t:"Rule for the husband",do(){return evDo([
@@ -2795,7 +2796,7 @@ const EVENT_DECK=[
   {t:"Declare the contract void",do(){return evDo([
     {w:2,t:"You find the clause that voids it all. Both Ferengi stare at you with newfound respect and terror.",fx:{pres:60}},
     {w:1,t:"Voiding it collapses three related businesses. The economic fallout is your problem now.",fx:{cr:-4000,pres:-20}}]);}}]},
-{id:"evx-147",title:"The War Criminal's Trial",
+{id:"evx-147",wt:2,title:"The War Criminal's Trial",
  text:"A retired Cardassian gul surrenders to you, demanding a trial for his wartime actions. Bajor wants him. Cardassia wants him silenced.",
  choices:[
   {t:"Hold the trial aboard",do(){return evDo([
@@ -2805,7 +2806,7 @@ const EVENT_DECK=[
     {w:1,t:"Bajor tries him swiftly. Cardassia protests. You are thanked and blamed in equal measure.",fx:{pres:40}}]);}},
   {t:"Hand him to Cardassia",do(){return evDo([
     {w:1,t:"Cardassia holds a quiet trial and a quieter execution. Bajor never forgives you.",fx:{pres:-40}}]);}}]},
-{id:"evx-148",title:"The Tal Shiar Agent",
+{id:"evx-148",wt:2,title:"The Tal Shiar Agent",
  text:"Your science officer's new Romulan pen pal is asking very specific questions about your shield frequencies. Counter-intelligence is salivating.",
  choices:[
   {t:"Feed her disinformation",do(){return evDo([
@@ -2815,7 +2816,7 @@ const EVENT_DECK=[
     {w:1,t:"Your officer is innocent and heartbroken. The pen pal vanishes. Trust takes months to rebuild.",fx:{morale:-10,pres:-10}}]);}},
   {t:"Cut contact quietly",do(){return evDo([
     {w:1,t:"The correspondence ends with a single, sad final letter. Counter-intelligence files it away.",fx:{pres:20}}]);}}]},
-{id:"evx-149",title:"The Targ Incident",
+{id:"evx-149",wt:4,title:"The Targ Incident",
  text:"The Klingon ambassador's pet targ has eaten the ceremonial centerpiece, bitten a waiter, and is now asleep in the captain's chair. The summit starts in an hour.",
  choices:[
   {t:"Move the targ gently",do(){return evDo([
@@ -2826,7 +2827,7 @@ const EVENT_DECK=[
     {w:1,t:"The targ snores through the keynote. Diplomacy has never been louder.",fx:{morale:-4}}]);}},
   {t:"Blame the Ferengi delegation",do(){return evDo([
     {w:1,t:"The Ferengi deny everything, loudly. The ambassador laughs so hard he forgets to be angry.",fx:{pres:30}}]);}}]},
-{id:"evx-150",title:"The Whale Song",
+{id:"evx-150",wt:1,title:"The Whale Song",
  text:"Spacefaring creatures the size of moons are migrating through the sector, singing. Their song is scrambling subspace comms, and it is beautiful.",
  choices:[
   {t:"Clear the shipping lanes",do(){return evDo([
@@ -2836,7 +2837,33 @@ const EVENT_DECK=[
     {w:1,t:"The recording equipment resonates and shatters. Expensive, beautiful silence.",fx:{cr:-3000}}]);}},
   {t:"Follow the migration",do(){return evDo([
     {w:2,t:"You track the pod to their calving grounds, a stellar nursery no one has ever seen.",fx:{pres:80,dl:200}},
-    {w:1,t:"The pod leads you into a dense nebula. You lose them, and briefly, yourselves.",fx:{pres:-20}}]);}}]}
+    {w:1,t:"The pod leads you into a dense nebula. You lose them, and briefly, yourselves.",fx:{pres:-20}}]);}}]},
+{id:"evx-151",wt:2,title:"The General's Gambit",
+ text:"On the allied world of Cestus Prime, General Arvok has seized the capital and the subspace relays in a single night. The elected council begs Starfleet to intervene; Arvok calls it 'a correction.' Both sides are waiting on your answer.",
+ choices:[
+  {t:"Mediate a return to civilian rule",do(){return evDo([
+    {w:2,t:"Weeks of shuttle diplomacy pay off. Arvok stands down, the council is restored, and your name is spoken with respect in their parliament.",fx:{pres:120}},
+    {w:1,t:"The talks collapse when Arvok's hardliners stage a second coup mid-negotiation. The planet slides toward civil war and Starfleet blames the messenger.",fx:{pres:-60,morale:-10}}]);}},
+  {t:"Back the legitimate government openly",do(){gainPres(60);moraleAll(-5);return "You land security teams to protect the council chambers. Arvok backs down \u2014 but half the planet now calls it a Starfleet occupation. (+60 prestige, -5 morale)";}},
+  {t:"Refuse to intervene (Prime Directive)",do(){gainPres(-30);return "You hold the line on non-interference. Within a month Arvok is the unchallenged ruler of Cestus Prime, and the council's last broadcast names you as the one who looked away. (-30 prestige)";}}]},
+{id:"evx-152",wt:2,title:"The Silent Coup",
+ text:"A Federation member world's entire ruling council has been replaced overnight \u2014 same faces, same smiles, but every policy now bends toward militarization. Your intelligence officer swears the councillors' brainwave patterns are wrong.",
+ choices:[
+  {t:"Investigate quietly",do(){return evDo([
+    {w:2,t:"Your people uncover neural parasites nested in the councillors' brainstems \u2014 a slow, patient invasion. Starfleet Medical quarantines the planet and owes you a debt.",fx:{pres:110}},
+    {w:1,t:"The investigation tips off the infiltrators. By the time you move, the council has 'voted' to secede from the Federation and the trail is cold.",fx:{pres:-50}}]);}},
+  {t:"Expose them publicly",do(){return evDo([
+    {w:1,t:"You go public with the evidence. The real councillors are freed, the impostors' network collapses, and the Federation Council cites your courage.",fx:{pres:140}},
+    {w:2,t:"Your evidence doesn't hold up under scrutiny. The council denounces you as a conspiracy peddler and three member worlds file formal complaints.",fx:{pres:-70}}]);}},
+  {t:"Watch and wait",do(){gainPres(-20);return "You observe. The militarization continues, quietly and legally, and you never learn who was really giving the orders. (-20 prestige)";}}]},
+{id:"evx-153",wt:2,title:"The Assassin's Ledger",
+ text:"A captured assassin's ledger names three heads of state marked for death this month \u2014 including President Okala of the allied Benthan worlds. The other two names are redacted, and the assassin is asking for asylum in exchange for them.",
+ choices:[
+  {t:"Warn Okala and post guards",do(){return evDo([
+    {w:2,t:"Your warning saves Okala's life. The would-be killer is caught at the state dinner, and Benthan gratitude comes with trade concessions.",fx:{pres:100,cr:6000}},
+    {w:1,t:"The guards stop one attempt \u2014 and miss the second. Okala survives, barely, and Benthan's government falls into a succession crisis anyway.",fx:{pres:-40}}]);}},
+  {t:"Grant asylum for the redacted names",do(){gainPres(50);gainCR(4000);return "The assassin talks. Two more plots are foiled, and Starfleet Intelligence quietly forwards you a finder's fee for the intelligence coup. (+50 prestige, +4,000 CR)";}},
+  {t:"Hand everything to Starfleet Intelligence",do(){gainPres(30);return "You pass the ledger up the chain. The professionals handle it \u2014 competently, invisibly, and without crediting you. (+30 prestige)";}}]},
 ];
 /* ================= CONFIG: CREW ================= */
 /* [name, species, gender, age, rankIdx, dept, [cmd,sci,eng,med,dip,tac], [traits], post, rankLabel?, stage?] */
@@ -4458,7 +4485,7 @@ function randomEventTick(){
   if(Math.random()>0.06)return;
   const elig=EVENT_DECK.filter(e=>(!e.cond||e.cond())&&(!G.flags["evcd_"+e.id]||G.flags["evcd_"+e.id]<=G.day));
   if(!elig.length)return;
-  fireEvent(pick(elig));
+  fireEvent(pickW(elig));
 }
 
 /* ---------- scripted story events ---------- */
@@ -5394,7 +5421,7 @@ function qSnap(){
 function qTriggerEvent(){
   const elig=EVENT_DECK.filter(function(e){return (!e.cond||e.cond())&&(!G.flags["evcd_"+e.id]||G.flags["evcd_"+e.id]<=G.day);});
   if(!elig.length){toast("The Continuum finds no events worthy of you right now.");return;}
-  fireEvent(pick(elig),"summoned by Q");
+  fireEvent(pickW(elig),"summoned by Q");
   save();pumpModals();
 }
 
@@ -10098,6 +10125,7 @@ window.onload=function(){
   applyTheme(curTheme());
   render();
 };
+
 </script>
 <nav id="bottomNav">
   <button class="navBtn" onclick="goBack()"><span class="bIco"><svg viewBox="0 0 24 24"><path d="M14.5 5 7.5 12l7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Back</span></button>
@@ -10113,7 +10141,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.3</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.4</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
