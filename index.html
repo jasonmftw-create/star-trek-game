@@ -4826,10 +4826,20 @@ function renderBuild(){
     const afford=G.credits>=c.cr&&G.dilithium>=c.dl;
     const rKey=(c.lock&&c.lock.indexOf("research:")===0)?c.lock.slice(9):null;
     const R=researchState();
+    let blockWhy="";
+    if(u.ok&&!afford){
+      const bits=[];
+      if(G.credits<c.cr)bits.push("need "+fmt(c.cr-G.credits)+" more CR");
+      if(G.dilithium<c.dl)bits.push("need "+fmt(c.dl-G.dilithium)+" more dilithium");
+      blockWhy="Cannot afford — "+bits.join(", ");
+    }else if(u.ok&&!yards.length){
+      blockWhy="No free shipyard — every yard is busy";
+    }
     h+='<div class="row">'+shipPic(k)+'<div class="grow"><div class="nm">'+c.name+'-class '+(u.ok?"":'<span class="badge bad">LOCKED</span>')+'</div>'+
       '<div class="sub2">'+fmt(c.cr)+' CR · '+fmt(c.dl)+' DL · '+days+' days · Hull '+c.hull+' · Tac '+c.tac+' · Sci '+c.sci+' · Warp '+c.speed+' · '+c.slots+' officers</div>'+
       (c.special?'<div class="sub2" style="color:var(--teal)">'+esc(c.special)+'</div>':"")+
-      (!u.ok?'<div class="sub2" style="color:var(--red)">'+esc(u.why)+'</div>':"")+'</div>'+
+      (!u.ok?'<div class="sub2" style="color:var(--red)">'+esc(u.why)+'</div>':"")+
+      (blockWhy?'<div class="sub2" style="color:var(--red)">'+esc(blockWhy)+'</div>':"")+'</div>'+
       (rKey&&!u.ok
         ?'<button class="btn small violet" '+((!R.active&&!R.done[rKey]&&G.credits>=RESEARCH_DEFS[rKey].cr&&G.dilithium>=RESEARCH_DEFS[rKey].dl)?"":"disabled")+' onclick="uiStartResearch(\''+rKey+'\')">Research</button></div>'
         :'<button class="btn small" '+(u.ok&&afford&&yards.length?"":"disabled")+' onclick="uiBuildShip(\''+k+'\')">Build</button></div>');
@@ -4839,9 +4849,19 @@ function renderBuild(){
   Object.keys(STATION_DEFS).forEach(k=>{
     const d=STATION_DEFS[k];if(d.unique)return;
     const afford=G.credits>=d.cr&&G.dilithium>=d.dl;
+    let sWhy="";
+    if(!afford){
+      const bits=[];
+      if(G.credits<d.cr)bits.push("need "+fmt(d.cr-G.credits)+" more CR");
+      if(G.dilithium<d.dl)bits.push("need "+fmt(d.dl-G.dilithium)+" more dilithium");
+      sWhy="Cannot afford — "+bits.join(", ");
+    }else if(stBuilding>=2){
+      sWhy="Construction crews at capacity — finish a project first (max 2)";
+    }
     h+='<div class="row">'+stationPic(k)+'<div class="grow"><div class="nm">'+d.name+'</div>'+
       '<div class="sub2">'+fmt(d.cr)+' CR · '+fmt(d.dl)+' DL · '+d.days+' days · Upkeep '+d.upkeep+'/d</div>'+
-      '<div class="sub2" style="color:var(--teal)">'+esc(d.desc)+'</div></div>'+
+      '<div class="sub2" style="color:var(--teal)">'+esc(d.desc)+'</div>'+
+      (sWhy?'<div class="sub2" style="color:var(--red)">'+esc(sWhy)+'</div>':"")+'</div>'+
       '<button class="btn small violet" '+(afford&&stBuilding<2?"":"disabled")+' onclick="uiBuildStation(\''+k+'\')">Build</button></div>';
   });
   h+='</div>';
@@ -6395,7 +6415,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.54</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.55</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
