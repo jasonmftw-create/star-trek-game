@@ -2975,6 +2975,12 @@ function battlePower(s){
 }
 function threatLabel(e,s){const r=e.pow/battlePower(s);
   return r>1.6?"OVERWHELMING":r>1.15?"SUPERIOR":r>0.85?"EVEN MATCH":"INFERIOR";}
+function estEngageOdds(s,e){
+  const p=battlePower(s),ep=e.pow;let w=0;const N=1500;
+  for(let i=0;i<N;i++)if(p*(0.85+Math.random()*0.3)>=ep*(0.85+Math.random()*0.3))w++;
+  return Math.round(w/N*100);
+}
+function estEscapeOdds(s){const c=SHIP_CLASSES[s.cls]||{};return Math.round(clamp(0.55+((c.speed||9)-9)*0.12,0.15,0.92)*100);}
 function anArt(n){return /^[AEIOUaeiou]/.test(n)?"an":"a";}
 function battleTick(){
   if(!battlesOn())return;
@@ -2997,6 +3003,8 @@ function battleHtml(s,e,z){
   return '<p class="dim">'+esc(z.blurb)+'</p>'+
     '<div class="kv"><span class="k">Contact</span><span class="v" style="color:var(--red)">'+esc(e.n)+'</span></div>'+
     '<div class="kv"><span class="k">Threat</span><span class="v">'+threatLabel(e,s)+'</span></div>'+
+    '<div class="kv"><span class="k">Victory odds</span><span class="v">~'+estEngageOdds(s,e)+'% if you engage</span></div>'+
+    '<div class="kv"><span class="k">Escape odds</span><span class="v">~'+estEscapeOdds(s)+'% clean getaway</span></div>'+
     '<div class="kv"><span class="k">Enemy power</span><span class="v">'+e.pow+'</span></div>'+
     '<div class="kv"><span class="k">'+esc(s.name)+'</span><span class="v">'+c.name+'-class · Power '+battlePower(s)+'</span></div>'+
     (s.damage>0?'<div class="kv"><span class="k">Hull damage</span><span class="v" style="color:var(--red)">'+Math.round(s.damage)+'%</span></div>':"")+
@@ -4583,26 +4591,28 @@ function renderMissions(){
        '<div class="prog"><i style="width:'+(t?Math.round((1-m.daysLeft/t.days)*100):0)+'%"></i></div>';});
   h+='</div>';
   const ready=G.ships.filter(s=>s.status==="active"&&!s.transit&&!s.mothballed);
-  h+='<div class="card"><h3>Launch Mission</h3><label>Starship</label><select onchange="_mShip=this.value||null;render()">'+
-    '<option value="">— select a ship —</option>'+
+  h+='<div class="card"><h3>Launch Mission</h3><p class="dim">Pick a ship to compare missions, or send the best fit straight from the list.</p><label>Starship</label><select onchange="_mShip=this.value||null;render()">'+
+    '<option value="">— all ships · best fit —</option>'+
     ready.map(s=>{const c=shipClass(s),crew=crewOfShip(s.id);
       const co=crew.some(o=>(o.roles||[]).indexOf("co")>=0||(o.roles||[]).indexOf("xo")>=0||o.rank>=5||o.rank===4);
       return '<option value="'+s.id+'"'+(_mShip===s.id?" selected":"")+'>'+esc(s.name)+' ('+c.name+', crew '+crew.length+'/'+c.slots+(co?", CO ✓":", NO CAPTAIN")+')</option>';}).join("")+'</select>';
-  if(_mShip){
-    const s=ship(_mShip);
-    if(!s||s.status!=="active"){h+='<p class="badge warn">Ship is no longer available.</p>';_mShip=null;}
-    else MISSION_DECK.forEach(t=>{
-      const od=missionOdds(s,t);
-      let bf=null,bc=-1;
-      ready.forEach(x=>{const ch=missionOdds(x,t).chance;if(ch>bc){bc=ch;bf=x;}});
-      const fitLine=bf?('Best fit: '+esc(bf.name)+' ('+bc+'%)'):'No ships available';
-      h+='<div class="row"><div class="grow"><div class="nm">'+esc(t.name)+'</div>'+
-        '<div class="sub2">'+t.type+' · Difficulty '+t.diff+' · '+t.days+' days · Est. success '+od.chance+'%'+(od.captain?" · "+esc(fullName(od.captain)):" · NO CAPTAIN")+'</div>'+
-        '<div class="sub2">Reward: '+fmt(t.cr)+' CR · '+fmt(t.dl)+' DL · '+t.pres+' prestige</div>'+
-        '<div class="sub2" style="color:var(--teal)">'+fitLine+'</div></div>'+
-        '<button class="btn small teal" onclick="missionBrief(\''+s.id+'\',\''+t.id+'\')">Brief</button></div>';
-    });
-  }
+  let sel=_mShip?ship(_mShip):null;
+  if(_mShip&&(!sel||sel.status!=="active")){h+='<p class="badge warn">Ship is no longer available.</p>';_mShip=null;sel=null;}
+  MISSION_DECK.forEach(t=>{
+    let bf=null,bc=-1;
+    ready.forEach(x=>{const ch=missionOdds(x,t).chance;if(ch>bc){bc=ch;bf=x;}});
+    const use=sel||bf;
+    const od=use?missionOdds(use,t):null;
+    const fitLine=bf?('Best fit: '+esc(bf.name)+' ('+bc+'%)'):'No ships available';
+    const btn=sel
+      ?'<button class="btn small teal" onclick="missionBrief(\''+sel.id+'\',\''+t.id+'\')">Brief</button>'
+      :(bf?'<button class="btn small teal" onclick="missionBrief(\''+bf.id+'\',\''+t.id+'\')">Send best fit</button>'
+          :'<button class="btn small" disabled>No ships</button>');
+    h+='<div class="row"><div class="grow"><div class="nm">'+esc(t.name)+'</div>'+
+      '<div class="sub2">'+t.type+' · Difficulty '+t.diff+' · '+t.days+' days'+(od?(' · Est. success '+od.chance+'%'+(od.captain?" · "+esc(fullName(od.captain)):" · NO CAPTAIN")):"")+'</div>'+
+      '<div class="sub2">Reward: '+fmt(t.cr)+' CR · '+fmt(t.dl)+' DL · '+t.pres+' prestige</div>'+
+      '<div class="sub2" style="color:var(--teal)">'+fitLine+'</div></div>'+btn+'</div>';
+  });
   return h+'</div>';
 }
 /* ================= AWAY MISSIONS ================= */
@@ -6053,6 +6063,7 @@ function shipModal(id){
        '<div class="btnRow"><button class="btn small ghost" onclick="uiCancelTransit(\''+s.id+'\')">Recall from transit</button></div>';
   }else{
     h+='<div class="kv"><span class="k">Posting</span><span class="v"><select id="postPick" onchange="setShipPost(\''+s.id+'\',this.value)">'+postOptions(s.post||"sol")+'</select></span></div>';
+    if(HOSTILE_ZONES[s.post||"sol"])h+='<p class="dim" style="color:var(--red)">Hostile territory ('+esc(HOSTILE_ZONES[s.post||"sol"].terr)+') — random RED ALERT battles can strike a ship posted here.</p>';
   }
   h+='<h4>Specifications</h4>'+bar("HULL",c.hull,140)+bar("TAC",c.tac,130)+bar("SCI",c.sci,110)+bar("WARP",c.speed*10,100);
   if(s.damage>0)h+='<div class="kv" data-hint="Hull damage from combat or hazards. At 40% or more the ship is flagged Damaged and cannot fly missions. Repairs happen at a shipyard: tap Begin repairs to start them now, or they begin automatically when a yard frees up."><span class="k">Hull damage</span><span class="v" style="color:var(--red)">'+Math.round(s.damage)+'%</span></div>';
@@ -6415,7 +6426,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.55</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.56</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
