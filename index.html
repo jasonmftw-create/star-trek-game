@@ -373,6 +373,17 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
 .toast{position:fixed;bottom:104px;left:50%;transform:translateX(-50%);background:var(--orange);
   color:#000;font-weight:800;padding:10px 20px;border-radius:16px;z-index:200;display:none;}
 @media(min-width:700px){ #hudStats{grid-template-columns:repeat(6,1fr);} }
+.mapModes{display:flex;gap:6px;justify-content:center;margin:8px 0 2px;}
+.mapMode{border:1px solid #2a3550;background:#0d1526;color:#8b93a7;border-radius:20px;padding:6px 18px;font-size:12px;font-weight:700;cursor:pointer;}
+.mapMode.on{background:#1b2f5e;color:#cfe6ff;border-color:#3f6fb5;}
+.mapModeDesc{text-align:center;font-size:12px;color:#8b93a7;margin:0 0 4px;min-height:16px;}
+.deployBar{display:flex;align-items:center;gap:8px;justify-content:center;background:#12233d;border:1px solid #2f5aa0;border-radius:12px;padding:8px 10px;margin:0 0 8px;font-size:13px;flex-wrap:wrap;}
+.hurtRing{fill:none;stroke:#ff5d5d;stroke-width:2;opacity:.9;animation:hring 1.6s ease-in-out infinite;}
+.alertRing{fill:none;stroke:#ff9f1c;stroke-width:2;opacity:.9;animation:hring 1.6s ease-in-out infinite;}
+.blipPulse{fill:none;stroke:#ff5d5d;stroke-width:1.5;opacity:.8;animation:hring 2.2s ease-in-out infinite;}
+@keyframes hring{0%,100%{opacity:.9}50%{opacity:.2}}
+@media (prefers-reduced-motion:reduce){.hurtRing,.alertRing,.blipPulse{animation:none;}}
+#mapZoom.zFar .mapShipLbl{display:none;}
 .mapToggles{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:2px 0 8px;}
 .mapTog{border:1px solid #2a3550;background:#0d1526;color:#8b93a7;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;}
 .mapTog.on{background:#12314a;color:#7fd4ff;border-color:#1f5f8b;}
@@ -5729,12 +5740,89 @@ let mapLayers={planets:true,territories:true,sectors:true,fleet:true,stations:tr
 try{const _ml=JSON.parse(localStorage.getItem("stfc_maplayers"));if(_ml)mapLayers=Object.assign(mapLayers,_ml);}catch(e){}
 function toggleMapLayer(k){mapLayers[k]=!mapLayers[k];try{localStorage.setItem("stfc_maplayers",JSON.stringify(mapLayers));}catch(e){}render();}
 function setMapView(v){mapView=v;mapZ=1;mapX=0;mapY=0;render();}
+let mapMode="explore";
+try{const _mm=localStorage.getItem("stfc_mapmode");if(_mm==="deploy"||_mm==="intel")mapMode=_mm;}catch(e){}
+let deployShip=null;
+const MODE_LAYERS={
+  explore:{planets:true,territories:true,sectors:true,fleet:true,stations:true,labels:true},
+  deploy:{planets:true,territories:true,sectors:false,fleet:true,stations:true,labels:true},
+  intel:{planets:true,territories:true,sectors:false,fleet:true,stations:false,labels:true}
+};
+const MODE_DESC={
+  explore:"The galaxy at a glance.",
+  deploy:"Tap one of your ships, then tap a glowing system to post it there.",
+  intel:"Threat picture \u2014 hostile territory, ships in harm's way, and fresh rumors."
+};
+const HOSTILE_TERR={t_borg:1,t_dominion:1,t_romulan:1,t_cardassian:1,neutralzone:1,kazon:1,hirogen:1};
+function setMapMode(m){mapMode=m;deployShip=null;Object.assign(mapLayers,MODE_LAYERS[m]);try{localStorage.setItem("stfc_mapmode",m);localStorage.setItem("stfc_maplayers",JSON.stringify(mapLayers));}catch(e){}render();}
+function mapModeBar(){
+  const ms=[["explore","Explore"],["deploy","Deploy"],["intel","Intel"]];
+  return '<div class="mapModes">'+ms.map(function(m){return '<button class="mapMode'+(mapMode===m[0]?" on":"")+'" onclick="setMapMode(\u0027"+m[0]+"\u0027)">'+m[1]+'</button>';}).join("")+'</div>'
+    +'<p class="mapModeDesc">'+MODE_DESC[mapMode]+'</p>';
+}
+function mapDeployBar(){
+  if(mapMode!=="deploy"||!deployShip)return "";
+  const ds=ship(deployShip);if(!ds)return "";
+  return '<div class="deployBar"><span>Posting <b>'+esc(ds.name)+'</b> \u2014 tap a system</span><button class="btn small" onclick="shipModal(\u0027"+deployShip+"\u0027)">Details</button><button class="btn small" onclick="mapDeployCancel()">Cancel</button></div>';
+}
+function mapShipClick(id){return (mapMode==="deploy"?"mapShipTap('":"shipModal('")+id+"')";}
+function mapShipTap(id){
+  const s=ship(id);if(!s)return;
+  if(mapMode!=="deploy"){shipModal(id);return;}
+  if(deployShip===id){shipModal(id);return;}
+  if(s.status==="mission"||s.transit){toast(s.name+" is "+(s.transit?"in transit":"on a mission")+" \u2014 wait until she is free.");return;}
+  if(s.mothballed){toast(s.name+" is mothballed \u2014 recommission her first.");return;}
+  deployShip=id;sfx("blip");toast("Tap a system to post "+s.name+" there.");
+  render();
+}
+function mapPoiClick(key){return (mapMode==="deploy"&&deployShip&&POST_COORDS[key])?"mapDeployPost('"+key+"')":"mapInfo('"+key+"')";}
+function mapQuadClick(qv){return (mapMode==="deploy"&&deployShip)?"mapDeployPost('"+qv+"')":"setMapView('"+qv+"')";}
+function mapDeployPost(post){
+  const s=ship(deployShip);deployShip=null;
+  if(!s){render();return;}
+  setShipPost(s.id,post);
+}
+function mapDeployCancel(){deployShip=null;render();}
+function mapTerrSVG(t){
+  const hostile=!!HOSTILE_TERR[t[0]];
+  if(mapMode==="intel"&&!hostile)return "";
+  const alert=hostile&&mapMode!=="explore";
+  const col=alert?"#ff5d5d":t[6];
+  return '<g class="poi" onclick="mapInfo(\u0027"+t[0]+"\u0027)"><ellipse cx="'+t[2]+'" cy="'+t[3]+'" rx="'+t[4]+'" ry="'+t[5]+'" fill="'+col+'" fill-opacity="'+(alert?"0.15":"0.07")+'" stroke="'+col+'" stroke-opacity="'+(alert?"0.85":"0.45")+'" stroke-width="1.5" stroke-dasharray="7 5"/>'
+    +'<g class="mapLblG" data-mx="'+t[7]+'" data-my="'+t[8]+'" data-dx="0" data-dy="0"><text x="0" y="0" text-anchor="middle" class="mapTerr">'+t[1]+'</text></g></g>';
+}
+function mapShipRing(s,x,y,post){
+  let r="";const cy=(+y)+5;
+  if(mapMode==="deploy"&&((s.damage||0)>0||s.status==="damaged"))r+='<circle cx="'+x+'" cy="'+cy+'" r="9" class="hurtRing"/>';
+  if(mapMode==="intel"&&HOSTILE_ZONES[post||"sol"])r+='<circle cx="'+x+'" cy="'+cy+'" r="9" class="alertRing"/>';
+  if(mapMode==="deploy"&&deployShip===s.id)r+='<circle cx="'+x+'" cy="'+cy+'" r="12" fill="none" stroke="#7fd4ff" stroke-width="2" stroke-dasharray="4 3"/>';
+  return r;
+}
+const INTEL_BLIPS=[
+  {x:332,y:84,t:"Borg cube",b:"Unconfirmed subspace report: a Borg cube on a direct course for the Alpha Quadrant. Starfleet has gone to yellow alert."},
+  {x:72,y:150,t:"Dominion patrols",b:"Jem'Hadar patrols massing near the Dominion border \u2014 three wings and rising. All ships advised to keep clear."},
+  {x:150,y:336,t:"Wolf 359 remnants",b:"Borg remnant signatures near Wolf 359 \u2014 salvage crews are advised to keep an armed escort."}
+];
+function mapIntelBlips(){
+  if(mapMode!=="intel")return "";
+  return INTEL_BLIPS.map(function(b,i){
+    return '<g onclick="intelRumor('+i+')" style="cursor:pointer"><path d="M'+b.x+' '+b.y+' l6 6 -6 6 -6 -6 Z" fill="#ff5d5d"/>'
+      +'<circle cx="'+b.x+'" cy="'+(b.y+6)+'" r="10" class="blipPulse"/>'
+      +'<g class="mapLblG" data-mx="'+b.x+'" data-my="'+(b.y+6)+'" data-dx="10" data-dy="4"><text x="0" y="0" class="mapShipLbl">'+b.t+'</text></g></g>';
+  }).join("");
+}
+function intelRumor(i){const b=INTEL_BLIPS[i];if(!b)return;sfx("tricorder");openModal("<h2>"+esc(b.t)+"</h2><div class=\"story\">"+esc(b.b)+"</div><button class=\"btn\" onclick=\"closeModal()\">Close</button>");}
+function mapHintText(){
+  if(mapMode==="deploy")return deployShip?"Tap a glowing system to post your ship there \u2014 or Cancel above.":"Tap one of your ships to begin reposting it.";
+  if(mapMode==="intel")return "Red zones are hostile. Pulsing rings mark ships in danger; red diamonds are fresh intel.";
+  return "Pinch to zoom \u00b7 drag to pan \u00b7 double-tap to reset \u00b7 tap a marker for details.";
+}
 function mapViewPills(){
   const vs=[["galaxy","Galaxy"],["alpha","Alpha"],["beta","Beta"],["gamma","Gamma"],["delta","Delta"]];
   return "<div class=\"mapPills\">"+vs.map(function(v){return "<button class=\"mapTog"+(mapView===v[0]?" on":"")+"\" onclick=\"setMapView('"+v[0]+"')\">"+v[1]+"</button>";}).join("")+"</div>";
 }
 const LAYER_DEFS=[["planets","Planets"],["territories","Territories"],["sectors","Sectors"],["fleet","Ships"],["stations","Stations"],["labels","Labels"]];
-function applyMapT(){const g=$("mapZoomG");if(g)g.setAttribute("transform","translate("+mapX+" "+mapY+") scale("+mapZ+")");const c=$("mapZoom");if(c)c.style.setProperty("--mz",mapZ);applyMapLabels();}
+function applyMapT(){const g=$("mapZoomG");if(g)g.setAttribute("transform","translate("+mapX+" "+mapY+") scale("+mapZ+")");const c=$("mapZoom");if(c){c.style.setProperty("--mz",mapZ);c.classList.toggle("zFar",mapZ<1.8);}applyMapLabels();}
 function clampMapPan(){const l=500*mapZ;mapX=Math.max(-l,Math.min(l,mapX));mapY=Math.max(-l,Math.min(l,mapY));}
 function initMapZoom(){
   const c=$("mapZoom");if(!c||c._zinit)return;c._zinit=true;
@@ -5894,7 +5982,7 @@ function renderQuadrant(q){
   const qp={};QPOIS[q].forEach(function(p){qp[p[0]]=[p[1],p[2]];});
   let pm="";
   QPOIS[q].forEach(function(p){
-    pm+="<g onclick=\"mapInfo('"+p[0]+"')\" style=\"cursor:pointer\">"
+    pm+="<g onclick=\""+mapPoiClick(p[0])+"\" style=\"cursor:pointer\">"
       +"<circle cx=\""+p[1]+"\" cy=\""+p[2]+"\" r=\"9\" fill=\"none\" stroke=\""+p[3]+"\" stroke-width=\"1\" opacity=\".55\"/>"
       +"<circle cx=\""+p[1]+"\" cy=\""+p[2]+"\" r=\"4.5\" fill=\""+p[3]+"\"/>"
       +"<g class=\"mapLblG\" data-mx=\""+p[1]+"\" data-my=\""+p[2]+"\" data-dx=\"12\" data-dy=\"4\"><text x=\"0\" y=\"0\" class=\"mapLbl\">"+p[4]+"</text></g></g>";
@@ -5909,7 +5997,7 @@ function renderQuadrant(q){
   }
   let terr="";
   if(mapLayers.territories)(QTERR[q]||[]).forEach(function(t){
-    terr+="<g class=\"poi\" onclick=\"mapInfo(\u0027"+t[0]+"\u0027)\"><ellipse cx=\""+t[2]+"\" cy=\""+t[3]+"\" rx=\""+t[4]+"\" ry=\""+t[5]+"\" fill=\""+t[6]+"\" fill-opacity=\"0.07\" stroke=\""+t[6]+"\" stroke-opacity=\"0.45\" stroke-width=\"1.5\" stroke-dasharray=\"7 5\"/><g class=\"mapLblG\" data-mx=\""+t[7]+"\" data-my=\""+t[8]+"\" data-dx=\"0\" data-dy=\"0\"><text x=\"0\" y=\"0\" text-anchor=\"middle\" class=\"mapTerr\">"+t[1]+"</text></g></g>";
+    terr+=mapTerrSVG(t);
   });
   let sect="";
   if(mapLayers.sectors)(QSECT[q]||[]).forEach(function(s){
@@ -5929,7 +6017,7 @@ function renderQuadrant(q){
     const d=post===q?24+rr()*30:10+rr()*14;
     const x=(pc[0]+Math.cos(a)*d).toFixed(1),yt=(pc[1]+Math.sin(a)*d*0.75-6).toFixed(1);
     const nm=esc(s.name.length>18?s.name.slice(0,17)+"\u2026":s.name);
-    fleet+="<g onclick=\"shipModal('"+s.id+"')\" style=\"cursor:pointer\"><path d=\"M"+x+" "+yt+" l5 11 -5 -3 -5 3 Z\" fill=\"#ffb703\"/>"
+    fleet+="<g onclick=\""+mapShipClick(s.id)+"\" style=\"cursor:pointer\"><path d=\"M"+x+" "+yt+" l5 11 -5 -3 -5 3 Z\" fill=\"#ffb703\"/>"+mapShipRing(s,x,yt,post)
       +"<g class=\"mapLblG\" data-mx=\""+x+"\" data-my=\""+yt+"\" data-dx=\"8\" data-dy=\"4\"><text x=\"0\" y=\"0\" class=\"mapShipLbl\">"+nm+"</text></g>"
       +"<title>"+esc(s.name)+"</title></g>";
   });
@@ -5949,6 +6037,7 @@ function renderQuadrant(q){
   });
   let h="<div class=\"mapTitle\">"+QNAME[q]+"</div><div class=\"mapSub\">Stardate "+G.stardate.toFixed(1)+" \u00b7 "+nShips+" ship"+(nShips===1?"":"s")+" \u00b7 "+nStn+" station"+(nStn===1?"":"s")+" in this quadrant</div>";
   h+=mapViewPills();
+  h+=mapModeBar()+mapDeployBar();
   h+="<div class=\"mapToggles\">"+LAYER_DEFS.map(function(l){return "<button class=\"mapTog"+(mapLayers[l[0]]?" on":"")+"\" onclick=\"toggleMapLayer(\u0027"+l[0]+"\u0027)\">"+l[1]+"</button>";}).join("")+"</div>";
   h+="<div class=\"mapWrap\"><div id=\"mapZoom\" class=\""+(mapLayers.labels?"":"noLabels")+"\" style=\"--mz:"+mapZ+"\"><svg viewBox=\"0 0 400 400\">"
     +stars
@@ -5956,7 +6045,7 @@ function renderQuadrant(q){
     +sect+terr+(mapLayers.planets?pm:"")+(mapLayers.fleet?fleet:"")+(mapLayers.stations?stnLayer:"")
     +"</g></svg></div></div>";
   h+="<div class=\"mapLegend\"><span><i class=\"lgDot\" style=\"background:#ffb703\"></i>Your ships</span>"+(q==="alpha"?"<span><i class=\"lgDot\" style=\"background:#7ee0ff\"></i>Wormhole</span>":"")+"<span><i class=\"lgSq\"></i>Your stations</span><span><i class=\"lgDot\" style=\"background:#4cc9f0\"></i>Notable systems</span></div>";
-  h+="<div class=\"mapHint\">Pinch to zoom \u00b7 drag to pan \u00b7 double-tap to reset \u00b7 tap a marker for details.</div>";
+  h+="<div class=\"mapHint\">"+mapHintText()+"</div>";
   return h;
 }
 function renderGalaxy(){
@@ -5967,7 +6056,7 @@ function renderGalaxy(){
   }
   const quads=[["q_alpha","ALPHA QUADRANT",300,324],["q_beta","BETA QUADRANT",100,324],["q_gamma","GAMMA QUADRANT",100,76],["q_delta","DELTA QUADRANT",300,76]];
   let ql="";
-  quads.forEach(q=>{const qv=q[0].replace("q_","");ql+="<g class=\"mapLblG\" data-mx=\""+q[2]+"\" data-my=\""+q[3]+"\" data-dx=\"0\" data-dy=\"0\"><text x=\"0\" y=\"0\" text-anchor=\"middle\" class=\"mapQ\" onclick=\"setMapView('"+qv+"')\" style=\"cursor:pointer\">"+q[1]+"</text></g>";});
+  quads.forEach(q=>{const qv=q[0].replace("q_","");ql+="<g class=\"mapLblG\" data-mx=\""+q[2]+"\" data-my=\""+q[3]+"\" data-dx=\"0\" data-dy=\"0\"><text x=\"0\" y=\"0\" text-anchor=\"middle\" class=\"mapQ\" onclick=\""+mapQuadClick(qv)+"\" style=\"cursor:pointer\">"+q[1]+"</text></g>";});
   const pois=[["sol",200,282,"#ffd166","Sol"],["qonos",118,296,"#ff5d5d","Qo'noS"],["romulus",158,322,"#57cc99","Romulus"],["bajor",252,296,"#4cc9f0","Bajor"],["ds9",284,270,"#ff9f1c","Deep Space 9"],["cardassia",288,312,"#e9c46a","Cardassia"],["ferenginar",312,268,"#e0a458","Ferenginar"],["borg",296,112,"#9d4edd","Borg Unicomplex"],["dominion",108,118,"#f3722c","Dominion"],["vulcan",236,322,"#ff9f1c","Vulcan"],["andoria",178,252,"#90e0ef","Andoria"],["betazed",250,248,"#b565ff","Betazed"],["trill",296,236,"#4cc9f0","Trill"],["risa",214,344,"#80ed99","Risa"],["khitomer",92,336,"#ef476f","Khitomer"],["ocampa",266,142,"#ffd97d","Ocampa"],["talax",332,152,"#f4a259","Talax"],["founders",140,90,"#e07a5f","Founders' Homeworld"],["wolf359",184,306,"#9e9e9e","Wolf 359"]];
 const TERR=[
  ["t_fed","UNITED FEDERATION OF PLANETS",210,290,95,58,"#4cc9f0",210,224],
@@ -5980,7 +6069,7 @@ const TERR=[
 ];
   let pm="";
   pois.forEach(p=>{
-    pm+="<g onclick=\"mapInfo('"+p[0]+"')\" style=\"cursor:pointer\">"
+    pm+="<g onclick=\""+mapPoiClick(p[0])+"\" style=\"cursor:pointer\">"
       +"<circle cx=\""+p[1]+"\" cy=\""+p[2]+"\" r=\"9\" fill=\"none\" stroke=\""+p[3]+"\" stroke-width=\"1\" opacity=\".55\"/>"
       +"<circle cx=\""+p[1]+"\" cy=\""+p[2]+"\" r=\"4.5\" fill=\""+p[3]+"\"/>"
       +"<g class=\"mapLblG\" data-mx=\""+p[1]+"\" data-my=\""+p[2]+"\" data-dx=\"12\" data-dy=\"4\"><text x=\"0\" y=\"0\" class=\"mapLbl\">"+p[4]+"</text></g></g>";
@@ -6002,7 +6091,7 @@ const TERR=[
     const d=post==="sol"?28+rr()*38:(isQ?26+rr()*40:15+rr()*15);
     const x=(pc[0]+Math.cos(a)*d).toFixed(1),yt=(pc[1]+Math.sin(a)*d*0.75-6).toFixed(1);
     const nm=esc(s.name.length>18?s.name.slice(0,17)+"\u2026":s.name);
-    fleet+="<g onclick=\"shipModal('"+s.id+"')\" style=\"cursor:pointer\"><path d=\"M"+x+" "+yt+" l5 11 -5 -3 -5 3 Z\" fill=\"#ffb703\"/>"
+    fleet+="<g onclick=\""+mapShipClick(s.id)+"\" style=\"cursor:pointer\"><path d=\"M"+x+" "+yt+" l5 11 -5 -3 -5 3 Z\" fill=\"#ffb703\"/>"+mapShipRing(s,x,yt,post)
       +"<g class=\"mapLblG\" data-mx=\""+x+"\" data-my=\""+yt+"\" data-dx=\"8\" data-dy=\"4\"><text x=\"0\" y=\"0\" class=\"mapShipLbl\">"+nm+"</text></g>"
       +"<title>"+esc(s.name)+"</title></g>";
   });
@@ -6019,9 +6108,10 @@ const TERR=[
   });
   let h="<div class=\"mapTitle\">Galactic Map</div><div class=\"mapSub\">Stardate "+G.stardate.toFixed(1)+" \u00b7 Milky Way \u00b7 viewed from galactic north</div>";
   h+=mapViewPills();
+  h+=mapModeBar()+mapDeployBar();
   let terr="";
   if(mapLayers.territories)TERR.forEach(t=>{
-    terr+="<g class=\"poi\" onclick=\"mapInfo(\u0027"+t[0]+"\u0027)\"><ellipse cx=\""+t[2]+"\" cy=\""+t[3]+"\" rx=\""+t[4]+"\" ry=\""+t[5]+"\" fill=\""+t[6]+"\" fill-opacity=\"0.07\" stroke=\""+t[6]+"\" stroke-opacity=\"0.45\" stroke-width=\"1.5\" stroke-dasharray=\"7 5\"/><g class=\"mapLblG\" data-mx=\""+t[7]+"\" data-my=\""+t[8]+"\" data-dx=\"0\" data-dy=\"0\"><text x=\"0\" y=\"0\" text-anchor=\"middle\" class=\"mapTerr\">"+t[1]+"</text></g></g>";
+    terr+=mapTerrSVG(t);
   });
   h+="<div class=\"mapToggles\">"+LAYER_DEFS.map(function(l){return "<button class=\"mapTog"+(mapLayers[l[0]]?" on":"")+"\" onclick=\"toggleMapLayer(\u0027"+l[0]+"\u0027)\">"+l[1]+"</button>";}).join("")+"</div>";
   h+="<div class=\"mapWrap\"><div id=\"mapZoom\" class=\""+(mapLayers.labels?"":"noLabels")+"\" style=\"--mz:"+mapZ+"\"><svg viewBox=\"0 0 400 400\">"
@@ -6031,10 +6121,10 @@ const TERR=[
     +"<circle cx=\"200\" cy=\"200\" r=\"70\" fill=\"url(#gcore)\"/>"
     +"<line x1=\"200\" y1=\"8\" x2=\"200\" y2=\"392\" class=\"mapDiv\"/>"
     +"<line x1=\"8\" y1=\"200\" x2=\"392\" y2=\"200\" class=\"mapDiv\"/>"
-    +ql+terr+(mapLayers.planets?pm:"")+wh+(mapLayers.fleet?fleet:"")+(mapLayers.stations?stnLayer:"")
+    +ql+terr+(mapLayers.planets?pm:"")+wh+mapIntelBlips()+(mapLayers.fleet?fleet:"")+(mapLayers.stations?stnLayer:"")
     +"</g></svg></div></div>";
   h+="<div class=\"mapLegend\"><span><i class=\"lgDot\" style=\"background:#ffb703\"></i>Your ships</span><span><i class=\"lgDot\" style=\"background:#7ee0ff\"></i>Wormhole</span><span><i class=\"lgSq\"></i>Your stations</span><span><i class=\"lgDot\" style=\"background:#4cc9f0\"></i>Notable systems</span></div>";
-  h+="<div class=\"mapHint\">Pinch to zoom \u00b7 drag to pan \u00b7 double-tap to reset \u00b7 tap a marker for details.</div>";
+  h+="<div class=\"mapHint\">"+mapHintText()+"</div>";
   return h;
 }
 function mapInfo(id){
@@ -6439,7 +6529,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.60</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.61</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
