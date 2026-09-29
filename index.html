@@ -2592,7 +2592,13 @@ const COMPLETION_TOGGLE_ROW='<div class="card"><h3>Gameplay</h3>'+
 
 function renderSettings(){
   const th=curTheme();
-  let h='<div class="card"><h3>Display Theme</h3><p class="dim">Reskin the entire LCARS interface. Applies instantly.</p><div class="btnRow">'+
+  let h='<div class="card"><h3>Q Mode — Sandbox</h3><p class="dim">The Q Continuum offers you omnipotence: bypass every lock and requirement, conjure resources out of thin air, resurrect the fallen, snap nuisances out of existence, and edit ships, stations and officers at will.</p>'+
+    '<div class="btnRow"><button class="btn'+(G.qmode?" on":"")+'" onclick="uiToggleQ()">'+(G.qmode?"Q Mode: ON — Relinquish omnipotence":"Q Mode: OFF — Accept omnipotence")+'</button></div>'+
+    '<div class="kv" style="margin-top:10px"><span class="k">Q Mode appearance</span><span class="v"><div class="btnRow">'+
+    [["full","Full Continuum"],["badge","Badge only"],["off","Off"]].map(function(o){return '<button class="btn small'+(G.qtheme===o[0]?" on":"")+'" onclick="uiSetQTheme(\''+o[0]+'\')">'+o[1]+'</button>';}).join("")+
+    '</div></span></div><p class="dim">Full Continuum: gold Q theme, glowing sigil in the header, drifting Continuum haze, and rotating Q quips. Badge only: just the sigil. Off: Q Mode with no visual change.</p></div>';
+  if(G.qmode)h+=renderQCard();
+  h+='<div class="card"><h3>Display Theme</h3><p class="dim">Reskin the entire LCARS interface. Applies instantly.</p><div class="btnRow">'+
     Object.keys(THEMES).map(k=>'<button class="btn small'+(th===k?" on":"")+'" onclick="uiSetTheme(\''+k+'\')">'+THEMES[k]+'</button>').join("")+'</div>'+
     '<p class="dim">Classic: the familiar orange-and-purple 24th-century palette. Picard Blue: the cooler Discovery / Picard era.<br>'+
     'Red Alert: pulsing red bridge lighting, flashing red screens. Yellow Alert: steady amber glow. Blue Alert: electric blue, silent running.<br>'+
@@ -2600,12 +2606,6 @@ function renderSettings(){
   h+=COMPLETION_TOGGLE_ROW;
   h+='<div class="kv"><span class="k">Random battles</span><span class="v"><button class="btn small'+(battlesOn()?" on":"")+'" onclick="uiToggleBattles()">'+(battlesOn()?"On":"Off")+'</button></span></div>'+
     '<p class="dim">When on, any active ship posted in hostile territory — Borg space, the Dominion, the Neutral Zone — risks a random enemy encounter each day. You choose: engage or run.</p></div>';
-  h+='<div class="card"><h3>Q Mode — Sandbox</h3><p class="dim">The Q Continuum offers you omnipotence: bypass every lock and requirement, conjure resources out of thin air, resurrect the fallen, snap nuisances out of existence, and edit ships, stations and officers at will.</p>'+
-    '<div class="btnRow"><button class="btn'+(G.qmode?" on":"")+'" onclick="uiToggleQ()">'+(G.qmode?"Q Mode: ON — Relinquish omnipotence":"Q Mode: OFF — Accept omnipotence")+'</button></div>'+
-    '<div class="kv" style="margin-top:10px"><span class="k">Q Mode appearance</span><span class="v"><div class="btnRow">'+
-    [["full","Full Continuum"],["badge","Badge only"],["off","Off"]].map(function(o){return '<button class="btn small'+(G.qtheme===o[0]?" on":"")+'" onclick="uiSetQTheme(\''+o[0]+'\')">'+o[1]+'</button>';}).join("")+
-    '</div></span></div><p class="dim">Full Continuum: gold Q theme, glowing sigil in the header, drifting Continuum haze, and rotating Q quips. Badge only: just the sigil. Off: Q Mode with no visual change.</p></div>';
-  if(G.qmode)h+=renderQCard();
   h+='<div class="card"><h3>Save Data</h3><div class="btnRow">'+
     '<button class="btn small ghost" onclick="uiSave()">Save now</button>'+
     '<button class="btn small ghost" onclick="uiExport()">Export save</button>'+
@@ -4837,6 +4837,16 @@ function renderBuild(){
     '<div class="kv"><span class="k">Free yard slots</span><span class="v">'+yards.length+' / '+activeStations("shipyard").length+'</span></div>'+
     '<div class="kv"><span class="k">Build-time modifier</span><span class="v">×'+buildTimeMod().toFixed(2)+'</span></div>'+
     '<div class="kv"><span class="k">Ship command cap</span><span class="v">'+activeShipCount()+' / '+shipCap()+'</span></div></div>';
+  let qh='';
+  if(G.builds.length){
+    qh+='<div class="card"><h3>Construction Queue</h3>';
+    G.builds.forEach(b=>{const c=SHIP_CLASSES[b.cls];
+      qh+='<div class="kv"><span class="k">'+esc(b.name)+' ('+c.name+')</span><span class="v">'+b.daysLeft+'d · '+(b.yardId?(station(b.yardId)||{name:"?"}).name:"?")+'</span></div>'+
+      '<div class="prog"><i style="width:'+Math.round((1-b.daysLeft/b.total)*100)+'%"></i></div>'+
+      (b.id==="titan0"?"":'<div class="btnRow"><button class="btn small ghost" onclick="uiCancelBuild(\'ship\',\''+b.id+'\')">Cancel build</button></div>');});
+    qh+='</div>';
+  }
+  h+=qh;
   h+='<div class="card"><h3>Commission Starship</h3>';
   Object.keys(SHIP_CLASSES).forEach(k=>{
     const c=SHIP_CLASSES[k];if(c.museumOnly)return;
@@ -4884,14 +4894,6 @@ function renderBuild(){
       '<button class="btn small violet" '+(afford&&stBuilding<2?"":"disabled")+' onclick="uiBuildStation(\''+k+'\')">Build</button></div>';
   });
   h+='</div>';
-  if(G.builds.length){
-    h+='<div class="card"><h3>Construction Queue</h3>';
-    G.builds.forEach(b=>{const c=SHIP_CLASSES[b.cls];
-      h+='<div class="kv"><span class="k">'+esc(b.name)+' ('+c.name+')</span><span class="v">'+b.daysLeft+'d · '+(b.yardId?(station(b.yardId)||{name:"?"}).name:"?")+'</span></div>'+
-      '<div class="prog"><i style="width:'+Math.round((1-b.daysLeft/b.total)*100)+'%"></i></div>'+
-      (b.id==="titan0"?"":'<div class="btnRow"><button class="btn small ghost" onclick="uiCancelBuild(\'ship\',\''+b.id+'\')">Cancel build</button></div>');});
-    h+='</div>';
-  }
   return h;
 }
 function uiBuildShip(cls){
@@ -6435,7 +6437,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.58</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.59</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
