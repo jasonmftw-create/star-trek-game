@@ -359,9 +359,7 @@ body{touch-action:pan-y;}
 .persOpts .optBody{margin-top:12px;display:grid;gap:12px;}
 .persOpts .optBody>*{min-width:0;}
 .persOpts select,.persOpts input{min-width:0;}
-.rankToggles{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
-.rankToggles .btn.small{font-size:11px;padding:5px 10px;min-height:30px;border-radius:10px;margin:1px;background:transparent;border:1px solid var(--purple);color:var(--purple);}
-.rankToggles .btn.small.on{background:var(--purple);border-color:var(--purple);color:#0b0b12;}
+
 .cellBadges{margin-top:4px;display:flex;flex-wrap:wrap;gap:3px;}
 .cellBadges .badge{font-size:10px;padding:2px 7px;}
 .seniorRow{border:1px solid rgba(255,255,255,.14)!important;border-left:4px solid var(--dc,#9a9ab0)!important;border-radius:10px;background:rgba(255,255,255,.035);}
@@ -593,6 +591,7 @@ function holidayTick(){
 /* ================= CONFIG: RANKS / DEPTS / TRAITS ================= */
 const RANKS=["Ensign","Lieutenant Junior Grade","Lieutenant","Lieutenant Commander","Commander",
   "Captain","Commodore","Rear Admiral","Vice Admiral","Admiral"];
+const RANK_ABBR=["En","Lt JG","Lt","Lt Cmdr","Cmdr","Capt","Cdre","R Adm","V Adm","Adm"];
 const DEPTS=["Command","Science","Medical","Engineering","Security","Operations"];
 const PLAYER_TITLES=[[0,"Commodore"],[200,"Rear Admiral"],[500,"Vice Admiral"],[1000,"Admiral"],[2000,"Fleet Admiral"]];
 const TRAITS=["Borg Expertise","Holographic","Android","Empath","Veteran of Wolf 359","Maquis Veteran",
@@ -4684,7 +4683,7 @@ function renderStations(){
 /* ---------- PERSONNEL tab ---------- */
 let persFilter="all";
 let persShow="all";
-let persHideRank={};
+let persRank="all";
 /* In-place list search: hides non-matching rows without re-rendering, so the
    search input (and the on-screen keyboard) is never disturbed while typing. */
 function liveSearch(input,listId,countId){
@@ -4719,7 +4718,7 @@ function renderPersonnel(){
   G.ships.forEach(s=>filtLabels["ship:"+s.id]=s.name);
   G.stations.forEach(s=>filtLabels["station:"+s.id]=s.name);
   const PERS_SHOWS=[["all","All"],["TOS","TOS"],["TNG","TNG"],["VOY","VOY"],["DS9","DS9"],["ENT","ENT"],["DISCO","DISCO"],["PRO","PRO"],["PIC","PIC"],["SFA","SFA"],["LD","LD"],["SNW","SNW"]];
-  let list=[],showPills="",rankPills="",_rh=0;
+  let list=[],showPills="",rankPills="";
   if(persFilter!=="memorial"){
     list=G.officers.filter(o=>!o.dead);
     if(persFilter==="all")list=list.filter(o=>o.stage==="adult"&&!o.retired);
@@ -4733,11 +4732,12 @@ function renderPersonnel(){
     if(persShow!=="all")list=list.filter(o=>officerShow(o)===persShow);
     list.sort((a,b)=>b.rank-a.rank||a.name.localeCompare(b.name));
     const _rankCounts={};list.forEach(o=>{_rankCounts[o.rank]=(_rankCounts[o.rank]||0)+1;});
-    rankPills='<div class="rankToggles">'+RANKS.map((r,i)=>'<button class="btn small'+(persHideRank[i]?"":" on")+'" onclick="persHideRank['+i+']=!persHideRank['+i+'];render()">'+esc(r)+' ('+(_rankCounts[i]||0)+')</button>').join("")+'</div>';
-    _rh=Object.keys(persHideRank).filter(k=>persHideRank[k]).length;
-    if(_rh)list=list.filter(o=>!persHideRank[o.rank]);
+    rankPills='<div class="cmdsubseg" style="margin:8px 0 0;">'+
+      '<button class="btn small'+(persRank==="all"?" on":"")+'" onclick="persRank=\'all\';render()">All ('+list.length+')</button>'+
+      RANKS.map((r,i)=>'<button class="btn small'+(persRank===i?" on":"")+'" onclick="persRank='+i+';render()">'+RANK_ABBR[i]+' ('+(_rankCounts[i]||0)+')</button>').join("")+'</div>';
+    if(persRank!=="all")list=list.filter(o=>o.rank===persRank);
   }
-  let h='<details class="card persOpts"><summary><span class="nm">Options</span><span class="dim">'+esc(filtLabels[persFilter]||persFilter)+' \u00b7 '+(persShow==="all"?"All eras":persShow)+(_rh?' \u00b7 '+_rh+' rank'+(_rh>1?"s":"")+' hidden':"")+'</span><span class="chev">\u25be</span></summary><div class="optBody">'+
+  let h='<details class="card persOpts"><summary><span class="nm">Options</span><span class="dim">'+esc(filtLabels[persFilter]||persFilter)+' \u00b7 '+(persShow==="all"?"All eras":persShow)+(persRank!=="all"?' \u00b7 '+RANK_ABBR[persRank]:"")+'</span><span class="chev">\u25be</span></summary><div class="optBody">'+
     '<div><label>Filter</label><select id="persSel" onchange="persFilter=this.value;render()">'+
     opts.map(o=>o.replace('value="'+persFilter+'"','value="'+persFilter+'" selected')).join("")+'</select></div>'+
     (showPills?'<div><label>Show</label>'+showPills+'</div>':"")+
@@ -6923,7 +6923,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.92</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.93</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
