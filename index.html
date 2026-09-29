@@ -3609,6 +3609,7 @@ function hudStat(k,v,c,sub){
 function setTab(t){
   if(t!==currentTab){sfx("door");navStack.push(currentTab);if(navStack.length>24)navStack.shift();}
   tabScrollY[currentTab]=window.scrollY||document.documentElement.scrollTop||0;
+  if(t!=="build")legacyFrom=null;
   currentTab=t;
   document.querySelectorAll(".tabBtn").forEach(b=>b.classList.toggle("active",b.dataset.tab===t));
   const v=$("view");
@@ -5259,7 +5260,14 @@ function uiLaunchShuttleMission(shid,tid){
 const SHIP_NAME_POOL=["Aldrin","Bellerophon","Cochrane","Drake","Endeavour","Farragut","Gagarin","Hood","Kearsarge","Lexington","Malinche","Nash","Proxima","Rabin","Sarek","Valiant","Yeager","Zheng He","Cuyahoga","Dauntless","Essex","Firebrand","Gettysburg","Hathaway","Kyushu","Lakota","Merrimac","Nobel","Orinoco","Potemkin","Sutherland","Tripoli","Ulysses","Venture","Zephyr","Okuda","Rutledge"];
 function renderBuild(){
   const yards=freeYards();
-  let h='<div class="card"><h3>Shipyard Capacity</h3>'+
+  let h="";
+  if(legacyFrom){
+    const ls=ship(legacyFrom);
+    if(ls&&(ls.mothballed||ls.status==="museum")){
+      h+='<div class="card" style="border:1px solid var(--teal)"><h3>Legacy build</h3><p class="dim">Commissioning the successor to '+esc(ls.name)+' ('+esc(ls.registry)+'). She will carry the name with the next registry letter: <b>'+esc(nextRegistry(ls.registry))+'</b>. Pick a class below — you can still edit the name and registry before the keel is laid.</p><div class="btnRow"><button class="btn small ghost" onclick="legacyFrom=null;render()">Cancel legacy</button></div></div>';
+    }else legacyFrom=null;
+  }
+  h+='<div class="card"><h3>Shipyard Capacity</h3>'+
     '<div class="kv"><span class="k">Free yard slots</span><span class="v">'+yards.length+' / '+activeStations("shipyard").length+'</span></div>'+
     '<div class="kv"><span class="k">Build-time modifier</span><span class="v">×'+buildTimeMod().toFixed(2)+'</span></div>'+
     '<div class="kv"><span class="k">Ship command cap</span><span class="v">'+activeShipCount()+' / '+shipCap()+'</span></div></div>';
@@ -5322,13 +5330,43 @@ function renderBuild(){
   h+='</div>';
   return h;
 }
+function nextRegistry(reg){
+  const up=String(reg||"").trim().toUpperCase();
+  const taken=r=>G.ships.some(s=>String(s.registry||"").toUpperCase()===r)||(G.builds||[]).some(b=>String(b.registry||"").toUpperCase()===r);
+  const bump=su=>{
+    if(!su)return "A";
+    const L=su.split("");let i=L.length-1,carry=true;
+    while(i>=0&&carry){
+      if(L[i]==="Z"){L[i]="A";i--;}
+      else{L[i]=String.fromCharCode(L[i].charCodeAt(0)+1);carry=false;}
+    }
+    if(carry)L.unshift("A");
+    return L.join("");
+  };
+  const m=/^([A-Z]+)-(\d+)(?:-([A-Z]+))?$/.exec(up);
+  if(!m||!up){
+    let base="NCC-"+Math.floor(Math.random()*16000+74000);
+    let suf="A",g=0;while(taken(base+"-"+suf)&&g<40){suf=bump(suf);g++;}
+    return base+"-"+suf;
+  }
+  const base=m[1]+"-"+m[2];let suf=bump(m[3]||""),g=0;
+  while(taken(base+"-"+suf)&&g<40){suf=bump(suf);g++;}
+  return base+"-"+suf;
+}
+function uiLegacyShip(id){
+  const s=ship(id);
+  if(!s||!(s.mothballed||s.status==="museum")){toast("Only mothballed or museum ships can found a legacy line.");return;}
+  legacyFrom=id;closeModal();setTab("build");
+  toast("Choose a class for "+s.name+"'s successor.");
+}
 function uiBuildShip(cls){
   const c=SHIP_CLASSES[cls],u=shipUnlocked(cls),yards=freeYards();
   if(!u.ok||!yards.length||G.credits<c.cr||G.dilithium<c.dl)return;
-  const sugN="USS "+pick(SHIP_NAME_POOL),sugR="NCC-"+ri(74000,89999);
+  let sugN="USS "+pick(SHIP_NAME_POOL),sugR="NCC-"+ri(74000,89999);
+  if(legacyFrom){const ls=ship(legacyFrom);if(ls&&(ls.mothballed||ls.status==="museum")){sugN=ls.name;sugR=nextRegistry(ls.registry);}}
   openModal('<h2>Commission '+c.name+'-class</h2>'+shipPic(cls,true)+'<div class="flavor">'+fmt(c.cr)+' CR · '+fmt(c.dl)+' DL · '+Math.ceil(c.days*buildTimeMod())+' days at '+esc(yards[0].name)+'</div>'+
-    '<label>Ship name</label><input type="text" id="bnName" value="'+sugN+'">'+
-    '<label>Registry</label><input type="text" id="bnReg" value="'+sugR+'">'+
+    '<label>Ship name</label><input type="text" id="bnName" value="'+esc(sugN)+'">'+
+    '<label>Registry</label><input type="text" id="bnReg" value="'+esc(sugR)+'">'+
     '<div class="btnRow"><button class="btn" onclick="uiBuildShipGo(\''+cls+'\',\''+yards[0].id+'\')">Lay the keel</button>'+
     '<button class="btn ghost" onclick="closeModal()">Cancel</button></div>');
 }
@@ -5340,7 +5378,7 @@ function uiBuildShipGo(cls,yardId){
   const days=Math.ceil(c.days*buildTimeMod());
   G.builds.push({id:uid("b"),kind:"ship",cls,name,registry:reg,daysLeft:days,total:days,yardId});
   log("build","Keel laid: "+name+" ("+reg+", "+c.name+"-class) at "+(station(yardId)||{name:"?"}).name+". ETA "+days+" days.");
-  closeModal();save();render();toast("Construction started.");
+  legacyFrom=null;closeModal();save();render();toast("Construction started.");
 }
 function uiBuildStation(type){
   const d=STATION_DEFS[type];
@@ -5738,6 +5776,7 @@ let cmdSub="status";
 let shipQuad="all";
 let stationQuad="all";
 let lostShow="all";
+let legacyFrom=null;
 let portraitTabForce=false;
 /* ================= CAPTAIN'S LOG ================= */
 function capLogAuto(t,b){
@@ -6856,6 +6895,7 @@ function shipModal(id){
     ((s.status==="active"||s.status==="damaged")?'<button class="btn small violet" onclick="uiMothball(\''+s.id+'\')">Mothball to Museum</button>':"")+
     (s.status!=="museum"?'<button class="btn small violet" onclick="uiSetFlagship(\''+s.id+'\')">'+(isFl?"Stand down flagship":"Set as flagship")+'</button>':"")+
     (s.status==="museum"?'<button class="btn small teal" onclick="uiRecommission(\''+s.id+'\')">Return to duty</button>':"")+
+    ((s.mothballed||s.status==="museum")?'<button class="btn small teal" onclick="uiLegacyShip(\''+s.id+'\')">Build legacy ship</button>':"")+
     '<button class="btn small ghost" onclick="closeModal()">Close</button></div>';
   openModal(h);
 }
@@ -7358,7 +7398,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v1.3</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v1.4</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
