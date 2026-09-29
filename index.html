@@ -903,6 +903,16 @@ const STATION_DEFS={
   sfcommand:{name:"Starfleet Command", cr:0, dl:0, days:0, upkeep:70, comp:1000, unique:true,
     desc:"The heart of Starfleet. Request supply requisitions of credits and dilithium."}
 };
+/* ---------- ship docking (v2.10): only service stations offer docking ----------
+   crew: fraction of missing crew restored per docked day (min 2)
+   heal: extra healDays reduction per day for injured officers aboard
+   morale: daily morale gain for officers aboard (cap 100)
+   rep: hull damage points repaired per day */
+const DOCK_DEFS={
+  starbase:{crew:0.08,heal:1,morale:1,rep:0,blurb:"Full starbase services: crew berths refill daily, the wounded mend, and spirits lift."},
+  shipyard:{crew:0,heal:0,morale:0,rep:8,blurb:"Drydock work crews repair 8% hull damage per day around the clock."},
+  medical:{crew:0,heal:3,morale:2,rep:0,blurb:"Hospital care: the wounded mend quickly and morale climbs."}
+};
 /* ================= CONFIG: MISSION DECK ================= */
 /* type, difficulty 20-95, duration days, rewards. shipStat/capSkill/dept drive success. */
 const MISSION_DECK=[
@@ -3601,7 +3611,7 @@ function tickDay(){
   G.day++; G.stardate+=1.0; // TNG scale: 1000 units per year
   if(G.tempCd>0)G.tempCd--;
   economyTick(); buildTick(); researchTick(); refitTick(); missionTick(); transitTick();
-  healTick(); ageTick(); romanceTick(); familyTick(); crewTick();
+  healTick(); dockedTick(); ageTick(); romanceTick(); familyTick(); crewTick();
   randomEventTick(); scriptedTick(); rankCheckTick(); battleTick(); socialTick(); arcTick(); holoTick(); holidayTick();
   if(G.shipOps&&G.shipOps.length)G.shipOps=G.shipOps.filter(function(m){return ship(m.shipId);});
 }
@@ -4313,6 +4323,24 @@ function healTick(){
   const rate=(hasStation("medical")?3:1)+G.ships.filter(s=>s.status==="active"&&s.cls==="mercy"&&!s.transit).length;
   crewActive().forEach(o=>{if(o.health==="injured"){o.healDays-=rate;
     if(o.healDays<=0){o.health="healthy";o.healDays=0;log("personnel",fullName(o)+" has been cleared for duty.");}}});
+}
+/* Daily servicing for ships docked at stations (v2.10). */
+function dockedTick(){
+  G.ships.forEach(function(s){
+    if(!s||!s.dock)return;
+    const st=station(s.dock);
+    if(!st||st.status!=="active"||st.mothballed||!DOCK_DEFS[st.type]){s.dock=null;return;}
+    const d=DOCK_DEFS[st.type],max=shipCompMax(s),cur=shipCrewN(s);
+    if(d.crew>0&&cur<max)s.crew=Math.min(max,cur+Math.max(2,Math.round((max-cur)*d.crew)));
+    if(d.rep>0&&(s.damage||0)>0){s.damage=Math.max(0,(s.damage||0)-d.rep);
+      if(s.damage===0&&s.status==="damaged"){s.status="active";
+        log("build",s.name+" has completed drydock repairs at "+st.name+" and is ready for duty.");}}
+    if(d.heal>0||d.morale>0)crewOfShip(s.id).forEach(function(o){
+      if(d.heal>0&&o.health==="injured"){o.healDays-=d.heal;
+        if(o.healDays<=0){o.health="healthy";o.healDays=0;log("personnel",fullName(o)+" has been cleared for duty.");}}
+      if(d.morale>0&&o.morale<100)o.morale=Math.min(100,o.morale+d.morale);
+    });
+  });
 }
 function ageTick(){
   crewActive().forEach(o=>{
@@ -5457,7 +5485,7 @@ function battleTick(){
   if(!battlesOn())return;
   var klaxoned=false;
   G.ships.forEach(function(s){
-    if(!s||s.status!=="active"||s.transit||s.mothballed)return;
+    if(!s||s.status!=="active"||s.transit||s.mothballed||s.dock)return;
     const z=HOSTILE_ZONES[s.post];if(!z)return;
     if(Math.random()<z.danger){
       const e=pick(ENEMY_POOLS[z.pool]);
@@ -8787,6 +8815,25 @@ function postOptions(cur){
   const gr=[["Quadrants",["alpha","beta","gamma","delta"]],["Systems",["sol","vulcan","andoria","betazed","trill","risa","wolf359","qonos","romulus","khitomer","bajor","ds9","cardassia","ferenginar","ocampa","talax","kazon","vidiians","malonprime","founders","borg","dominion","idran"]]];
   return gr.map(g=>'<optgroup label="'+g[0]+'">'+g[1].map(k=>'<option value="'+k+'"'+(k===cur?" selected":"")+'>'+POST_LABELS[k]+'</option>').join("")+"</optgroup>").join("");
 }
+/* Ship docking (v2.10): only stations in DOCK_DEFS offer berths. */
+function dockOptions(cur){
+  const elig=G.stations.filter(st=>st.status==="active"&&!st.mothballed&&DOCK_DEFS[st.type]);
+  return '<option value="">— Undocked —</option>'+elig.map(st=>'<option value="'+st.id+'"'+(st.id===cur?" selected":"")+'>'+esc(st.name)+' ('+STATION_DEFS[st.type].name+')</option>').join("");
+}
+function canDock(s){return s&&(s.status==="active"||s.status==="damaged")&&!s.transit&&!s.mothballed;}
+function setShipDock(id,v){
+  const s=ship(id);if(!s)return;
+  if(!v){
+    if(s.dock){const st=station(s.dock);log("command",s.name+" undocked"+(st?" from "+st.name:"")+".");s.dock=null;}
+  }else{
+    if(!canDock(s)){toast("Ship is not available to dock.");return;}
+    const st=station(v);
+    if(!st||st.status!=="active"||st.mothballed||!DOCK_DEFS[st.type]){toast("That station has no docking facilities.");return;}
+    s.dock=st.id;
+    log("command",s.name+" docked at "+st.name+". "+DOCK_DEFS[st.type].blurb);
+  }
+  save();shipModal(id);render();
+}
 function setShipPost(id,post){
   const s=ship(id);if(!s||!POST_COORDS[post])return;
   if(s.transit){toast("Ship is in transit — recall it first.");return;}
@@ -9189,17 +9236,23 @@ function shipModal(id){
         if(_mer)h+='<div class="kv"><span class="k">Route</span><span class="v">'+esc(POST_LABELS[_mer.origin]||_mer.origin)+' → '+esc(POST_LABELS[_mer.dest]||_mer.dest)+' · '+viaName(_mer.via)+(_mer.f<1?' · en route '+Math.round(_mer.f*100)+'%':' · arrived')+'</span></div><div class="prog"><i style="width:'+Math.round(_mer.f*100)+'%"></i></div>';
       }
     }
-    if(s.status==="active"&&!s.mothballed){
+    if(s.status==="active"&&!s.mothballed&&!s.dock){
       h+='<div class="kv"><span class="k">Orders</span><span class="v">'+sheetPick('Set course',postOptions(s.post||"sol"),(function(_sid){return function(v){orderCourse(_sid,v);};})(s.id))+'</span></div>';
     }else{
       h+='<div class="kv"><span class="k">Posting</span><span class="v">'+esc(POST_LABELS[s.post||"sol"]||"Deep Space")+'</span></div>';
     }
-    if(HOSTILE_ZONES[s.post||"sol"])h+='<p class="dim" style="color:var(--red)">Hostile territory ('+esc(HOSTILE_ZONES[s.post||"sol"].terr)+') — random RED ALERT battles can strike a ship posted here.</p>';
+    if(canDock(s)){
+      h+='<div class="kv"><span class="k">Docked at</span><span class="v">'+sheetPick('Dock at station',dockOptions(s.dock||""),(function(_sid){return function(v){setShipDock(_sid,v);};})(s.id))+'</span></div>';
+      if(s.dock){const _dst=station(s.dock);
+        if(_dst&&DOCK_DEFS[_dst.type])h+='<p class="dim">Docked at '+esc(_dst.name)+' — '+esc(DOCK_DEFS[_dst.type].blurb)+' Undock to resume operations.</p>';}
+      else h+='<p class="dim">Starbase, shipyard, and medical stations offer docking. Research arrays, embassies, academies, Starfleet Command, and gates do not.</p>';
+    }
+    if(!s.dock&&HOSTILE_ZONES[s.post||"sol"])h+='<p class="dim" style="color:var(--red)">Hostile territory ('+esc(HOSTILE_ZONES[s.post||"sol"].terr)+') — random RED ALERT battles can strike a ship posted here.</p>';
   }
   h+='<h4>Specifications</h4><div class="specGrid">'+bar("HULL",c.hull,140)+bar("TAC",c.tac,130)+bar("SCI",c.sci,110)+bar("WARP",c.speed*10,100)+'</div>';
   if(s.damage>0)h+='<div class="kv" data-hint="Hull damage from combat or hazards. At 40% or more the ship is flagged Damaged and cannot fly missions. Repairs happen at a shipyard: tap Begin repairs to start them now, or they begin automatically when a yard frees up."><span class="k">Hull damage</span><span class="v" style="color:var(--red)">'+Math.round(s.damage)+'%</span></div>';
-  if(s.status==="damaged")h+='<div class="btnRow"><button class="btn small teal" onclick="uiStartRepair(\''+s.id+'\')">Begin repairs</button></div><p class="dim">Starts repairs at a free shipyard now — otherwise they begin automatically when a yard frees up.</p>';
-  else if((s.damage||0)>0&&(s.status==="active"))h+='<div class="btnRow"><button class="btn small teal" onclick="uiStartRepair(\''+s.id+'\')">Begin repairs</button></div><p class="dim">Patch up minor hull damage at a free shipyard now.</p>';
+  if(s.status==="damaged"&&!s.dock)h+='<div class="btnRow"><button class="btn small teal" onclick="uiStartRepair(\''+s.id+'\')">Begin repairs</button></div><p class="dim">Starts repairs at a free shipyard now — otherwise they begin automatically when a yard frees up.</p>';
+  else if((s.damage||0)>0&&(s.status==="active")&&!s.dock)h+='<div class="btnRow"><button class="btn small teal" onclick="uiStartRepair(\''+s.id+'\')">Begin repairs</button></div><p class="dim">Patch up minor hull damage at a free shipyard now.</p>';
   if(s.status==="repair"){const _ry=station(s.yardId),_rtot=Math.max(1,Math.ceil(s.damage/12));
     h+='<div class="kv"><span class="k">In repair</span><span class="v">'+esc(_ry?_ry.name:"Shipyard")+' — '+s.daysLeft+'d left</span></div><div class="prog"><i style="width:'+Math.round((1-s.daysLeft/_rtot)*100)+'%"></i></div>';}
   if(c.special)h+='<p class="dim">'+esc(c.special)+'</p>';
@@ -9222,7 +9275,7 @@ function shipModal(id){
       '<div class="sub2">'+esc(_st.short)+' · '+shuttleStatusLabel(sh)+' · Crew '+_cr.length+'/'+_st.crew+(_pl?' · '+esc(_pl.name):"")+'</div></div></div>';
   });
   h+='<div class="btnRow"><button class="btn small" onclick="uiBuildShuttle(\'ship\',\''+s.id+'\')">Build shuttlecraft</button></div>';
-  const _canFly=s.status==="active"&&!s.transit&&!s.mothballed;
+  const _canFly=s.status==="active"&&!s.transit&&!s.mothballed&&!s.dock;
   let _ops="";
   if(_canFly)_ops+='<button class="btn small teal" onclick="_mShip=\''+s.id+'\';closeModal();setTab(\'missions\')">Launch mission</button>';
   _ops+='<button class="btn small teal" onclick="uiCrewAssign(\'ship\',\''+s.id+'\')">Assign crew</button>';
@@ -9285,6 +9338,17 @@ function stationModal(id){
         '<div class="prog" style="width:70px"><i style="width:'+Math.round((1-s.transit.daysLeft/s.transit.total)*100)+'%"></i></div></div>';
     });
     if(!tr.length)h+='<p class="dim">No ships in transit. Open any ship and choose \u201cSlipstream transit\u201d to send it through the gate.</p>';
+  }
+  if(DOCK_DEFS[st.type]){
+    const _docked=G.ships.filter(x=>x.dock===st.id);
+    if(_docked.length){
+      h+='<h4>Ships docked ('+_docked.length+')</h4>';
+      _docked.forEach(x=>{
+        h+='<div class="row" onclick="shipModal(\''+x.id+'\')" style="cursor:pointer;padding:6px;">'+shipPic(x.cls)+
+          '<div class="grow"><div class="nm">'+esc(x.name)+'</div>'+
+          '<div class="sub2">'+esc(SHIP_CLASSES[x.cls].name)+'-class · '+esc(DOCK_DEFS[st.type].blurb)+'</div></div></div>';
+      });
+    }else h+='<p class="dim">No ships docked. Open any ship and choose a berth under "Docked at".</p>';
   }
 h+='<div class="btnRow"><button class="btn small teal" onclick="uiCrewAssign(\'station\',\''+st.id+'\')">Assign crew</button><button class="btn small" onclick="uiBuildShuttle(\'station\',\''+st.id+'\')">Build shuttlecraft</button></div>';
   h+='<div class="btnRow"><button class="btn small peach" onclick="uiShoreLeave(\'station\',\''+st.id+'\')">Shore leave (500 CR)</button>'+
@@ -10061,7 +10125,7 @@ function renderDeck(){
 function deckStatusStrip(s){
   const c=shipClass(s);
   return '<div class="deckStrip"><div style="flex:1;">'+bar("HULL",Math.max(0,100-Math.round(s.damage||0)),100)+'</div>'+
-    '<div style="font-size:11px;opacity:.75;">'+esc(POST_LABELS[s.post||"sol"]||"Deep Space")+'</div></div>'+
+    '<div style="font-size:11px;opacity:.75;">'+(s.dock&&station(s.dock)?"Docked: "+esc(station(s.dock).name):esc(POST_LABELS[s.post||"sol"]||"Deep Space"))+'</div></div>'+
     ((s.damage||0)>0?'<div class="kv"><span class="k">Hull damage</span><span class="v" style="color:var(--red)">'+Math.round(s.damage)+'%</span></div>':"")+
     (HOSTILE_ZONES[s.post||"sol"]?'<p class="dim" style="color:var(--red)">Hostile territory ('+esc(HOSTILE_ZONES[s.post||"sol"].terr)+') — RED ALERT can sound at any time.</p>':"");
 }
@@ -11522,7 +11586,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.9</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.10</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
