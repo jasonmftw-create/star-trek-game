@@ -6621,6 +6621,23 @@ function setShipPost(id,post){
   if(s.transit){toast("Ship is in transit — recall it first.");return;}
   s.post=post;log("command",s.name+" posted to "+POST_LABELS[post]+".");save();shipModal(id);render();
 }
+function uiSetCourse(id){
+  const s=ship(id);if(!s)return;
+  if(s.transit){toast("Ship is in transit — recall it first.");return;}
+  if(s.status!=="active"||s.mothballed){toast("Ship can't take orders right now.");return;}
+  sheetPick("Set course",postOptions(s.post||"sol"),function(v){
+    const s2=ship(id);if(!s2||s2.transit||s2.status!=="active")return;
+    if(v===(s2.post||"sol")){toast("Already on station here.");return;}
+    const r=planTravel(s2,s2.post||"sol",v);
+    if(r.days<=0){setShipPost(id,v);return;}
+    if(G.dilithium<r.dl){toast("Need "+r.dl+" dilithium for the "+viaName(r.via)+".");return;}
+    G.dilithium-=r.dl;
+    s2.transit={daysLeft:r.days,total:r.days,dest:v,via:r.via};
+    sfx("warp");
+    log("command",s2.name+" has set course for "+POST_LABELS[v]+" — "+r.label+".");
+    save();shipModal(id);render();toast(s2.name+" en route to "+POST_LABELS[v]+".");
+  });
+}
 function setStationPost(id,post){
   const st=station(id);if(!st||!POST_COORDS[post])return;
   st.post=post;log("command",st.name+" relocated to "+POST_LABELS[post]+".");save();stationModal(id);render();
@@ -6699,7 +6716,8 @@ function transitTick(){
     if(s.transit.daysLeft>0)continue;
     const dest=s.transit.dest,via=s.transit.via;
     s.post=dest;s.transit=null;gainPres(10);
-    log("command",s.name+" emerged from "+(via==="gate"?"the slipstream":"the Bajoran wormhole")+" at "+POST_LABELS[dest]+".");
+    const _arr=via==="gate"?" emerged from the transwarp gate":via==="wormhole"?" emerged from the Bajoran wormhole":via==="slip"?" dropped out of quantum slipstream":" arrived";
+    log("command",s.name+_arr+" at "+POST_LABELS[dest]+".");
     capLogAuto("Transit complete",s.name+" arrived at "+POST_LABELS[dest]+" via "+(via==="gate"?"slipstream gate":"the Bajoran wormhole")+".");
     queueCompletion({kind:"transit",id:s.id,name:s.name,
       sub:(via==="gate"?"Slipstream transit complete":"Wormhole traversal complete")+" \u00b7 arrived at "+POST_LABELS[dest],
@@ -6757,7 +6775,7 @@ function doWormholeTransit(id){
 function uiCancelTransit(id){
   const s=ship(id);if(!s||!s.transit)return;
   const via=s.transit.via;s.transit=null;
-  log("command",s.name+" recalled from "+(via==="gate"?"slipstream":"wormhole")+" transit (dilithium spent is not refunded).");
+  log("command",s.name+" recalled from "+viaName(via)+" transit (dilithium spent is not refunded).");
   save();shipModal(id);render();
 }
 function applyMapLabels(){
@@ -6990,7 +7008,7 @@ function shipModal(id){
   const co=shipCO(s.id),xo=shipXO(s.id,co);
   let h='<h2>'+(isFl?'<span class="flagGlyph">'+CMDR_GLYPH+'</span>':"")+esc(s.name)+(isFl?' <span class="badge" style="background:var(--gold);color:#0b0b12;font-weight:bold;">FLAGSHIP</span>':"")+'</h2><div class="flavor">'+esc(s.registry)+' · '+c.name+'-class · '+shipStatusLabel(s)+'</div>'+shipArtFor(s,true);
   if(s.transit){
-    h+='<div class="kv"><span class="k">Transit</span><span class="v">'+(s.transit.via==="gate"?"Slipstream gate":"Bajoran wormhole")+' \u2192 '+esc(POST_LABELS[s.transit.dest]||"?")+' ('+s.transit.daysLeft+'d)</span></div>'+
+    h+='<div class="kv"><span class="k">Transit</span><span class="v">'+viaName(s.transit.via)+' → '+esc(POST_LABELS[s.transit.dest]||"?")+' ('+s.transit.daysLeft+'d)</span></div>'+
        '<div class="prog"><i style="width:'+Math.round((1-s.transit.daysLeft/s.transit.total)*100)+'%"></i></div>'+
        '<div class="btnRow"><button class="btn small ghost" onclick="uiCancelTransit(\''+s.id+'\')">Recall from transit</button></div>';
   }else{
@@ -7003,7 +7021,7 @@ function shipModal(id){
         if(_mer)h+='<div class="kv"><span class="k">Route</span><span class="v">'+esc(POST_LABELS[_mer.origin]||_mer.origin)+' → '+esc(POST_LABELS[_mer.dest]||_mer.dest)+' · '+viaName(_mer.via)+(_mer.f<1?' · en route '+Math.round(_mer.f*100)+'%':' · arrived')+'</span></div><div class="prog"><i style="width:'+Math.round(_mer.f*100)+'%"></i></div>';
       }
     }
-    h+='<div class="kv"><span class="k">Posting</span><span class="v">'+sheetPick('Posting',postOptions(s.post||"sol"),(function(_sid){return function(v){setShipPost(_sid,v);};})(s.id))+'</span></div>';
+    h+='<div class="kv"><span class="k">Posting</span><span class="v">'+esc(POST_LABELS[s.post||"sol"]||"Deep Space")+' <button class="btn small" onclick="uiSetCourse(\''+s.id+'\')">Set course</button></span></div>';
     if(HOSTILE_ZONES[s.post||"sol"])h+='<p class="dim" style="color:var(--red)">Hostile territory ('+esc(HOSTILE_ZONES[s.post||"sol"].terr)+') — random RED ALERT battles can strike a ship posted here.</p>';
   }
   h+='<h4>Specifications</h4><div class="specGrid">'+bar("HULL",c.hull,140)+bar("TAC",c.tac,130)+bar("SCI",c.sci,110)+bar("WARP",c.speed*10,100)+'</div>';
@@ -7536,7 +7554,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v1.7</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v1.8</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
