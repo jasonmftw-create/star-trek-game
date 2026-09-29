@@ -4335,8 +4335,10 @@ function breakBond(o){
 }
 function killOfficer(o,cause){
   if(o.dead)return;o.dead=true;breakBond(o);o.post={t:"gone"};o.health="healthy";o.shuttle=null;
-  G.memorial.unshift({kind:"officer",name:o.name,rank:rankName(o),species:o.species,cause,sd:G.stardate,
-    def:[o.name,o.species,o.gender,o.age,o.rank,o.dept,[o.stats.cmd,o.stats.sci,o.stats.eng,o.stats.med,o.stats.dip,o.stats.tac],(o.traits||[]).slice(),"pool",o.rankLabel||null,o.stage||"adult"]});
+  const _me={kind:"officer",name:o.name,rank:rankName(o),species:o.species,cause,sd:G.stardate,
+    def:[o.name,o.species,o.gender,o.age,o.rank,o.dept,[o.stats.cmd,o.stats.sci,o.stats.eng,o.stats.med,o.stats.dip,o.stats.tac],(o.traits||[]).slice(),"pool",o.rankLabel||null,o.stage||"adult"]};
+  G.memorial.unshift(_me);
+  aiComposeEulogy(o,cause,_me); // v2.8: fire-and-forget; falls back to no eulogy
   G.ledger.lost++;
   G.officers.forEach(x=>{if(x.friends)x.friends=x.friends.filter(id=>id!==o.id);if(x.rivals)x.rivals=x.rivals.filter(id=>id!==o.id);});
   log("combat","† "+fullName(o)+" — "+cause+". Their name is added to the Memorial Wall.");
@@ -4478,7 +4480,8 @@ function fireEvent(e,tag){
   G.flags["evcd_"+e.id]=G.day+30;G.ledger.events++;
   log("event","EVENT"+(tag?" ("+tag+")":"")+": "+e.title);
   interruptQueue.push({title:e.title,sub:"Sector event · Stardate "+sdStr(G.stardate),
-    html:"<p>"+esc(e.text)+"</p>",
+    evId:e.id,evText:e.text, // v2.8: lazy AI narration hook
+    html:'<p><span class="evText">'+esc(e.text)+"</span></p>",
     buttons:e.choices.map(c=>({t:c.t,fn:()=>{
       const res=c.do();save();
       return {title:e.title+" — Outcome",sub:"",html:"<p>"+esc(res)+"</p>",buttons:[{t:"Continue"}]};
@@ -4557,6 +4560,7 @@ function pumpModals(){
 }
 function showInterrupt(item){
   closeSheet();
+  const _aiTok=++aiEvToken; // v2.8: invalidates any pending event narration for a previous modal
   const box=$("modalBox");
   box.innerHTML='<h2>'+esc(item.title)+'</h2>'+(item.sub?'<div class="flavor">'+esc(item.sub)+'</div>':"")+
     '<div>'+item.html+'</div><div class="btnRow" style="margin-top:12px;">'+
@@ -4567,6 +4571,8 @@ function showInterrupt(item){
     const res=b.fn?b.fn():null;
     if(res)showInterrupt(res);else{$("modalRoot").classList.remove("open");pumpModals();}
   };});
+  // v2.8: lazy AI event narration — one call max in flight, only while this modal is on screen
+  if(item.evId&&aiHasKey()&&!aiEvBusy){aiEvBusy=true;aiNarrateEvent(item,_aiTok).finally(()=>{aiEvBusy=false});}
 }
 let modalBack=null; // optional BACK-button destination while a modal is open
 function openModal(html){modalBack=null;$("modalBox").innerHTML=html;$("modalRoot").classList.add("open");}
@@ -4873,6 +4879,52 @@ async function aiSend(oid){
     if(ty)ty.outerHTML='<div class="aiMsgO">'+esc(fb)+'</div><div class="dim" style="font-size:11px;margin:2px 0 8px;">(AI unreachable — '+esc(aiErrMsg(e))+')</div>';
   }
   aiChatScroll();
+}
+/* ---- AI flavor layer (v2.8): eulogies, award citations, event narration ----
+   Frugal by design: one short call each, only when the player is looking at
+   the moment (a death, an award tap, an event interrupt on screen). Every
+   feature falls back silently to the existing static text — no key, no call. */
+async function aiGenText(prompt,maxTokens){
+  const key=aiHasKey();if(!key)return null;
+  const models=aiModelList();
+  for(let i=0;i<models.length;i++){
+    try{
+      const t=await aiGenReq(models[i],key,{contents:[{role:"user",parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:maxTokens||160,temperature:0.9}});
+      if(models[i]!==G.aiModel){G.aiModel=models[i];save();}
+      return t;
+    }catch(e){if(!/HTTP 404/.test(String((e&&e.message)||e)))return null;}
+  }
+  return null;
+}
+/* Eulogy: composed once, at the moment of death, stored on the memorial entry. */
+async function aiComposeEulogy(o,cause,me){
+  if(!aiHasKey()||me.eulogy||me._euBusy)return;me._euBusy=true;
+  const cn=(G.commander&&G.commander.name)?G.commander.name:"your commanding officer";
+  const svc=(o.accolades||[]).slice(-3).map(a=>a.n).join("; ");
+  const msn=(o.missions&&o.missions.t)?("Flew "+o.missions.t+" missions ("+o.missions.s+" successful). "):"";
+  const p="Write a brief Starfleet memorial eulogy, 3 to 5 sentences, solemn and warm, plain prose with no stage directions and no quoted dialogue. It is spoken by "+cn+", fleet commander, at the memorial service for "+o.name+", "+rankName(o)+" ("+o.species+", "+o.dept+" department), who died as follows: "+cause+". "+msn+(svc?("Service record: "+svc+". "):"")+((o.traits||[]).length?("Noted traits: "+o.traits.join(", ")+"."):"");
+  try{const t=await aiGenText(p,220);if(t){me.eulogy=t;save();}}catch(e){}
+  me._euBusy=false;
+}
+/* Award citation: composed when the honor is tapped, stored on the accolade. */
+async function aiComposeCitation(o,a){
+  if(!aiHasKey())return;
+  const accs=o.accolades||[];const last=accs[accs.length-1];if(!last||last.cite||last._ciBusy)return;last._ciBusy=true;
+  const prior=accs.slice(0,-1).slice(-3).map(x=>x.n).join("; ");
+  const msn=(o.missions&&o.missions.t)?("Missions: "+o.missions.s+"/"+o.missions.t+" successful. "):"";
+  const p="Write a formal Starfleet award citation, 2 to 3 sentences, dignified plain prose, no stage directions. It accompanies the "+a.name+" being awarded to "+o.name+", "+rankName(o)+" ("+o.species+", "+o.dept+" department). "+msn+(prior?("Prior honors: "+prior+"."):"");
+  try{const t=await aiGenText(p,160);if(t){last.cite=t;save();}}catch(e){}
+  last._ciBusy=false;
+}
+/* Event narration: lazy — only when the event interrupt is actually on screen. */
+let aiEvToken=0,aiEvBusy=false;
+async function aiNarrateEvent(item,tok){
+  try{
+    const t=await aiGenText("You are the narrator of a Star Trek television episode. Rewrite this sector event briefing in 2 to 3 vivid sentences, professional Starfleet tone, plain prose, no stage directions and no dialogue: \""+String(item.evText||"").slice(0,500)+"\"",140);
+    if(!t||tok!==aiEvToken)return;
+    const box=document.getElementById("modalBox");const sp=box&&box.querySelector(".evText");
+    if(sp)sp.textContent=t;
+  }catch(e){}
 }
 /* ---- end AI CONVERSATIONS (v2.7) ---- */
 
@@ -7662,6 +7714,7 @@ function fallenModal(oi){
   let h='<div class="pfaceWrap">'+faceImg(m,"pfaceBig")+'<div style="flex:1;min-width:0;"><h2>† '+esc(m.name)+'<div class="rnkline">'+esc(m.rank)+'</div></h2>'+
     '<div class="flavor">'+esc(m.species)+'</div></div></div>';
   h+='<div class="sub2 dim">Lost in service — '+esc(m.cause)+' · Stardate '+sdStr(m.sd)+'</div>';
+  if(m.eulogy)h+='<h4>Eulogy</h4><p class="dim" style="font-style:italic;">'+esc(m.eulogy)+'</p>';
   h+='<h4>Temporal Extraction</h4>';
   if(rescued){
     h+='<p><span class="badge">✓ Rescued — serving in your fleet</span></p>';
@@ -7917,6 +7970,7 @@ function uiGiveAward(oid,aid){
   o.medals.push(a.name);
   o.morale=clamp(o.morale+a.morale,0,100);
   awardAccolade(o,"Awarded the "+a.name);
+  aiComposeCitation(o,a); // v2.8: fire-and-forget citation; falls back to no citation
   log("award",o.name+" was presented the "+a.name+" (+"+a.morale+" morale).");
   save();officerModal(oid);toast(o.name+" received the "+a.name+".");
 }
@@ -7942,7 +7996,7 @@ function officerModal(id){
     const sorted=o.accolades.slice().sort((a,b)=>{
       const na=parseInt(((String(a.d).match(/\d{3,4}/)||[])[0])||9999),nb=parseInt(((String(b.d).match(/\d{3,4}/)||[])[0])||9999);
       return na-nb;});
-    h+='<h4>Accolades & Service Record</h4>'+sorted.map(a=>'<div class="kv"><span class="k">'+esc(a.d)+'</span><span class="v">'+esc(a.n)+'</span></div>').join("");
+    h+='<h4>Accolades & Service Record</h4>'+sorted.map(a=>'<div class="kv"><span class="k">'+esc(a.d)+'</span><span class="v">'+esc(a.n)+(a.cite?'<br><span class="dim" style="font-style:italic;">'+esc(a.cite)+'</span>':"")+'</span></div>').join("");
   }
   h+='<div class="hr"></div><div class="kv"><span class="k">Posting</span><span class="v">'+esc(postName(o.post))+'</span></div>';
   if(o.shuttle&&shuttle(o.shuttle))h+='<div class="kv"><span class="k">Shuttle duty</span><span class="v">'+esc(shuttle(o.shuttle).name)+' <button class="btn small ghost" onclick="uiRecallOfficer(\''+o.id+'\')">Recall</button></span></div>';
@@ -11284,7 +11338,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.7.3</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.8</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
