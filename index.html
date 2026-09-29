@@ -6151,16 +6151,16 @@ function renderGalaxy(){
   for(let i=0;i<150;i++){
     stars+="<circle cx=\""+(R()*400).toFixed(1)+"\" cy=\""+(R()*400).toFixed(1)+"\" r=\""+(R()*1.1+0.3).toFixed(2)+"\" fill=\"#ffffff\" opacity=\""+(R()*0.5+0.25).toFixed(2)+"\"/>";
   }
-  const quads=[["q_alpha","ALPHA QUADRANT",100,324],["q_beta","BETA QUADRANT",300,324],["q_gamma","GAMMA QUADRANT",100,76],["q_delta","DELTA QUADRANT",300,76]];
+  const quads=[["q_alpha","ALPHA QUADRANT",100,360],["q_beta","BETA QUADRANT",300,360],["q_gamma","GAMMA QUADRANT",100,76],["q_delta","DELTA QUADRANT",300,76]];
   let ql="";
   quads.forEach(q=>{const qv=q[0].replace("q_","");ql+="<g class=\"mapLblG\" data-mx=\""+q[2]+"\" data-my=\""+q[3]+"\" data-dx=\"0\" data-dy=\"0\"><text x=\"0\" y=\"0\" text-anchor=\"middle\" class=\"mapQ\" onclick=\""+mapQuadClick(qv)+"\" style=\"cursor:pointer\">"+q[1]+"</text></g>";});
-  const pois=[["sol",200,282,"#ffd166","Sol"],["qonos",292,318,"#ff5d5d","Qo'noS"],["romulus",272,266,"#2f8f5b","Romulus"],["bajor",148,290,"#4cc9f0","Bajor"],["ds9",166,270,"#ff9f1c","Deep Space 9"],["cardassia",105,328,"#e9c46a","Cardassia"],["ferenginar",122,232,"#b5cc4e","Ferenginar"],["borg",296,112,"#58b368","Borg Unicomplex"],["dominion",108,118,"#a855f7","Dominion"],["vulcan",230,306,"#ff9f1c","Vulcan"],["andoria",132,244,"#90e0ef","Andoria"],["betazed",148,266,"#b565ff","Betazed"],["trill",138,250,"#4cc9f0","Trill"],["risa",160,322,"#80ed99","Risa"],["khitomer",305,298,"#ef476f","Khitomer"],["ocampa",266,142,"#ffd97d","Ocampa"],["talax",332,152,"#f4a259","Talax"],["founders",140,90,"#e07a5f","Founders' Homeworld"],["wolf359",170,300,"#9e9e9e","Wolf 359"]];
+  const pois=[["sol",200,282,"#ffd166","Sol",-26,16],["qonos",292,318,"#ff5d5d","Qo'noS",-52,10],["romulus",272,266,"#2f8f5b","Romulus",12,-10],["bajor",148,290,"#4cc9f0","Bajor",-38,-2],["ds9",166,270,"#ff9f1c","Deep Space 9",14,-14],["cardassia",105,328,"#e9c46a","Cardassia",-62,6],["ferenginar",122,232,"#b5cc4e","Ferenginar",-64,-8],["borg",296,112,"#58b368","Borg Unicomplex",-105,4],["dominion",108,118,"#a855f7","Dominion"],["vulcan",230,306,"#ff9f1c","Vulcan",14,-14],["andoria",132,244,"#90e0ef","Andoria",-48,0],["betazed",148,266,"#b565ff","Betazed",-48,0],["trill",138,250,"#4cc9f0","Trill",12,-14],["risa",160,322,"#80ed99","Risa",16,4],["khitomer",305,298,"#ef476f","Khitomer",14,12],["ocampa",266,142,"#ffd97d","Ocampa"],["talax",332,152,"#f4a259","Talax"],["founders",140,90,"#e07a5f","Founders' Homeworld"],["wolf359",170,300,"#9e9e9e","Wolf 359",-58,4]];
 const TERR=[
- ["t_fed","UNITED FEDERATION OF PLANETS",140,295,95,60,"#4cc9f0",140,228],
- ["t_klingon","KLINGON EMPIRE",295,312,55,42,"#ff5d5d",295,262],
- ["t_romulan","ROMULAN STAR EMPIRE",272,264,50,34,"#2f8f5b",272,310],
- ["t_cardassian","CARDASSIAN UNION",105,328,42,30,"#e9c46a",105,364],
- ["t_ferengi","FERENGI ALLIANCE",122,232,36,26,"#b5cc4e",122,262],
+ ["t_fed","UNITED FEDERATION OF PLANETS",140,295,95,60,"#4cc9f0",230,215],
+ ["t_klingon","KLINGON EMPIRE",295,312,55,42,"#ff5d5d",295,342],
+ ["t_romulan","ROMULAN STAR EMPIRE",272,264,50,34,"#2f8f5b",250,235],
+ ["t_cardassian","CARDASSIAN UNION",105,328,42,30,"#e9c46a",105,385],
+ ["t_ferengi","FERENGI ALLIANCE",122,232,36,26,"#b5cc4e",55,255],
  ["t_borg","BORG COLLECTIVE",296,112,58,48,"#58b368",296,56],
  ["t_dominion","THE DOMINION",120,105,62,48,"#a855f7",120,49]
 ];
@@ -6169,7 +6169,7 @@ const TERR=[
     pm+="<g onclick=\""+mapPoiClick(p[0])+"\" style=\"cursor:pointer\">"
       +"<circle cx=\""+p[1]+"\" cy=\""+p[2]+"\" r=\"9\" fill=\"none\" stroke=\""+p[3]+"\" stroke-width=\"1\" opacity=\".55\"/>"
       +"<circle cx=\""+p[1]+"\" cy=\""+p[2]+"\" r=\"4.5\" fill=\""+p[3]+"\"/>"
-      +"<g class=\"mapLblG\" data-mx=\""+p[1]+"\" data-my=\""+p[2]+"\" data-dx=\"12\" data-dy=\"4\"><text x=\"0\" y=\"0\" class=\"mapLbl\">"+p[4]+"</text></g></g>";
+      +"<g class=\"mapLblG\" data-mx=\""+p[1]+"\" data-my=\""+p[2]+"\" data-dx=\"+(p[5]==null?12:p[5])+\" data-dy=\"+(p[6]==null?4:p[6])+\"\"><text x=\"0\" y=\"0\" class=\"mapLbl\">"+p[4]+"</text></g></g>";
   });
   let wh="";
   if(mapLayers.planets){
@@ -6177,7 +6177,7 @@ const TERR=[
       +"<circle cx=\"176\" cy=\"280\" r=\"12\" fill=\"none\" stroke=\"#7ee0ff\" stroke-width=\"2\" opacity=\".75\"/>"
       +"<circle cx=\"176\" cy=\"280\" r=\"7\" fill=\"none\" stroke=\"#bff1ff\" stroke-width=\"1.5\" opacity=\".9\"/>"
       +"<circle cx=\"176\" cy=\"280\" r=\"3\" fill=\"#eafcff\"/>"
-      +"<g class=\"mapLblG\" data-mx=\"176\" data-my=\"280\" data-dx=\"15\" data-dy=\"4\"><text x=\"0\" y=\"0\" class=\"mapLbl\">Wormhole</text></g></g>";
+      +"<g class=\"mapLblG\" data-mx=\"176\" data-my=\"280\" data-dx=\"16\" data-dy=\"12\"><text x=\"0\" y=\"0\" class=\"mapLbl\">Wormhole</text></g></g>";
   }
   let fleet="";
   G.ships.forEach(s=>{
@@ -6630,7 +6630,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.67</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.68</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
