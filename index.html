@@ -4774,6 +4774,8 @@ async function aiRawProbe(){
 }
 async function uiTestAiKey(){
   const st=document.getElementById("aiKeyStatus");
+  const el=document.getElementById("aiKeyIn");
+  if(el&&el.value.trim()&&el.value.trim()!==G.aiKey){G.aiKey=el.value.trim();save();}
   if(st)st.textContent="Testing…";
   try{const t=await aiRawProbe();if(st)st.textContent=/OK/.test(t)?"Connected — AI conversations are ready.":"Connected, but the reply looked odd. Try again.";}
   catch(e){if(st)st.textContent="Test failed: "+aiErrMsg(e);}
@@ -11268,7 +11270,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.7</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.7.1</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
