@@ -6621,22 +6621,18 @@ function setShipPost(id,post){
   if(s.transit){toast("Ship is in transit — recall it first.");return;}
   s.post=post;log("command",s.name+" posted to "+POST_LABELS[post]+".");save();shipModal(id);render();
 }
-function uiSetCourse(id){
+function orderCourse(id,v){
   const s=ship(id);if(!s)return;
-  if(s.transit){toast("Ship is in transit — recall it first.");return;}
-  if(s.status!=="active"||s.mothballed){toast("Ship can't take orders right now.");return;}
-  sheetPick("Set course",postOptions(s.post||"sol"),function(v){
-    const s2=ship(id);if(!s2||s2.transit||s2.status!=="active")return;
-    if(v===(s2.post||"sol")){toast("Already on station here.");return;}
-    const r=planTravel(s2,s2.post||"sol",v);
-    if(r.days<=0){setShipPost(id,v);return;}
-    if(G.dilithium<r.dl){toast("Need "+r.dl+" dilithium for the "+viaName(r.via)+".");return;}
-    G.dilithium-=r.dl;
-    s2.transit={daysLeft:r.days,total:r.days,dest:v,via:r.via};
-    sfx("warp");
-    log("command",s2.name+" has set course for "+POST_LABELS[v]+" — "+r.label+".");
-    save();shipModal(id);render();toast(s2.name+" en route to "+POST_LABELS[v]+".");
-  });
+  if(s.transit||s.status!=="active"||s.mothballed){toast("Ship can't take orders right now.");shipModal(id);return;}
+  if(v===(s.post||"sol")){toast("Already on station here.");shipModal(id);return;}
+  const r=planTravel(s,s.post||"sol",v);
+  if(r.days<=0){setShipPost(id,v);return;}
+  if(G.dilithium<r.dl){toast("Need "+r.dl+" dilithium for the "+viaName(r.via)+".");shipModal(id);return;}
+  G.dilithium-=r.dl;
+  s.transit={daysLeft:r.days,total:r.days,dest:v,via:r.via};
+  sfx("warp");
+  log("command",s.name+" has set course for "+POST_LABELS[v]+" — "+r.label+".");
+  save();shipModal(id);render();toast(s.name+" en route to "+POST_LABELS[v]+".");
 }
 function setStationPost(id,post){
   const st=station(id);if(!st||!POST_COORDS[post])return;
@@ -7021,7 +7017,11 @@ function shipModal(id){
         if(_mer)h+='<div class="kv"><span class="k">Route</span><span class="v">'+esc(POST_LABELS[_mer.origin]||_mer.origin)+' → '+esc(POST_LABELS[_mer.dest]||_mer.dest)+' · '+viaName(_mer.via)+(_mer.f<1?' · en route '+Math.round(_mer.f*100)+'%':' · arrived')+'</span></div><div class="prog"><i style="width:'+Math.round(_mer.f*100)+'%"></i></div>';
       }
     }
-    h+='<div class="kv"><span class="k">Posting</span><span class="v">'+esc(POST_LABELS[s.post||"sol"]||"Deep Space")+' <button class="btn small" onclick="uiSetCourse(\''+s.id+'\')">Set course</button></span></div>';
+    if(s.status==="active"&&!s.mothballed){
+      h+='<div class="kv"><span class="k">Orders</span><span class="v">'+sheetPick('Set course',postOptions(s.post||"sol"),(function(_sid){return function(v){orderCourse(_sid,v);};})(s.id))+'</span></div>';
+    }else{
+      h+='<div class="kv"><span class="k">Posting</span><span class="v">'+esc(POST_LABELS[s.post||"sol"]||"Deep Space")+'</span></div>';
+    }
     if(HOSTILE_ZONES[s.post||"sol"])h+='<p class="dim" style="color:var(--red)">Hostile territory ('+esc(HOSTILE_ZONES[s.post||"sol"].terr)+') — random RED ALERT battles can strike a ship posted here.</p>';
   }
   h+='<h4>Specifications</h4><div class="specGrid">'+bar("HULL",c.hull,140)+bar("TAC",c.tac,130)+bar("SCI",c.sci,110)+bar("WARP",c.speed*10,100)+'</div>';
@@ -7554,7 +7554,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v1.8</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v1.9</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
