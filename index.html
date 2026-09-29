@@ -4347,7 +4347,7 @@ function renderNeedsAttention(){
   let rows="";
   if(idle.length)rows+='<div class="row" style="cursor:pointer" onclick="setTab(\'ships\')"><div class="grow"><div class="nm">'+idle.length+' idle ship'+(idle.length>1?"s":"")+'</div><div class="sub2">Ready for orders — tap to view</div></div></div>';
   if(fin)rows+='<div class="row" style="cursor:pointer" onclick="setTab(\'command\')"><div class="grow"><div class="nm">'+fin+' build'+(fin>1?"s":"")+' finishing within 5 days</div><div class="sub2">Tap to review construction</div></div></div>';
-  if(req)rows+='<div class="row" style="cursor:pointer" onclick="cmdSub=\'inst\';render()"><div class="grow"><div class="nm">Requisition ready</div><div class="sub2">Starfleet Command — tap to claim</div></div></div>';
+  if(req)rows+='<div class="row" style="cursor:pointer" onclick="uiClaimRequisition()"><div class="grow"><div class="nm">Requisition ready</div><div class="sub2">Starfleet Command — tap to claim +2,500 CR, +120 DL, +8 prestige</div></div></div>';
   if(low.length)rows+='<div class="row" style="cursor:pointer" onclick="setTab(\'personnel\')"><div class="grow"><div class="nm">'+low.length+' officer'+(low.length>1?"s":"")+' with low loyalty</div><div class="sub2">Tap to hold audiences and raise morale</div></div></div>';
   if(!rows)return "";
   return '<div class="card"><h3>Needs Attention</h3>'+rows+'</div>';
@@ -6294,13 +6294,23 @@ function uiEnrollCadets(id){
   log("crew","A new cadet class enrolled at Starfleet Academy (graduates in 40 days).");
   stationModal(id);renderAll();
 }
+function uiClaimRequisition(){
+  const st=G.stations.find(x=>x.type==="sfcommand"&&x.status==="active");
+  if(!st||(st.reqCd||0)>0){toast("No requisition ready right now — Starfleet Command needs more time.");return;}
+  st.reqCd=25;
+  gainCR(2500);gainDL(120);gainPres(8);
+  log("build","Starfleet Command approved your requisition: +2,500 CR, +120 DL, +8 prestige.");
+  save();render();
+  toast("Requisition approved: +2,500 CR, +120 DL, +8 prestige.");
+}
 function uiRequestRequisition(id){
   const st=station(id);if(!st||st.type!=="sfcommand"||st.status!=="active")return;
   if(st.reqCd>0){toast("Requisition denied — Starfleet Command needs "+st.reqCd+" more days.");return;}
   st.reqCd=25;
   gainCR(2500);gainDL(120);gainPres(8);
   log("build","Starfleet Command approved your requisition: +2,500 CR, +120 DL, +8 prestige.");
-  stationModal(id);renderAll();
+  save();stationModal(id);render();
+  toast("Requisition approved: +2,500 CR, +120 DL, +8 prestige.");
 }
 function uiShoreLeave(kind,id){
   if(G.credits<500){toast("Not enough credits.");return;}
@@ -6385,7 +6395,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.53</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.54</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
