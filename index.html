@@ -374,8 +374,8 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
   color:#000;font-weight:800;padding:10px 20px;border-radius:16px;z-index:200;display:none;}
 @media(min-width:700px){ #hudStats{grid-template-columns:repeat(6,1fr);} }
 .mapModes{display:flex;gap:6px;justify-content:center;margin:8px 0 2px;}
-.mapMode{border:1px solid #2a3550;background:#0d1526;color:#8b93a7;border-radius:20px;padding:6px 18px;font-size:12px;font-weight:700;cursor:pointer;}
-.mapMode.on{background:#1b2f5e;color:#cfe6ff;border-color:#3f6fb5;}
+.mapMode{border:1px solid #4a3f7a;background:#141126;color:#b9aef2;border-radius:20px;padding:6px 18px;font-size:12px;font-weight:700;cursor:pointer;}
+.mapMode.on{background:linear-gradient(180deg,#6d5bd0,#4a3fa0);color:#fff;border-color:#8b7cf6;box-shadow:0 0 10px rgba(139,124,246,.45);}
 .mapModeDesc{text-align:center;font-size:12px;color:#8b93a7;margin:0 0 4px;min-height:16px;}
 .deployBar{display:flex;align-items:center;gap:8px;justify-content:center;background:#12233d;border:1px solid #2f5aa0;border-radius:12px;padding:8px 10px;margin:0 0 8px;font-size:13px;flex-wrap:wrap;}
 .hurtRing{fill:none;stroke:#ff5d5d;stroke-width:2;opacity:.9;animation:hring 1.6s ease-in-out infinite;}
@@ -5757,13 +5757,13 @@ const HOSTILE_TERR={t_borg:1,t_dominion:1,t_romulan:1,t_cardassian:1,neutralzone
 function setMapMode(m){mapMode=m;deployShip=null;Object.assign(mapLayers,MODE_LAYERS[m]);try{localStorage.setItem("stfc_mapmode",m);localStorage.setItem("stfc_maplayers",JSON.stringify(mapLayers));}catch(e){}render();}
 function mapModeBar(){
   const ms=[["explore","Explore"],["deploy","Deploy"],["intel","Intel"]];
-  return '<div class="mapModes">'+ms.map(function(m){return '<button class="mapMode'+(mapMode===m[0]?" on":"")+'" onclick="setMapMode(\u0027"+m[0]+"\u0027)">'+m[1]+'</button>';}).join("")+'</div>'
+  return '<div class="mapModes">'+ms.map(function(m){return '<button class="mapMode'+(mapMode===m[0]?" on":"")+'" onclick="setMapMode(\u0027'+m[0]+'\u0027)">'+m[1]+'</button>';}).join("")+'</div>'
     +'<p class="mapModeDesc">'+MODE_DESC[mapMode]+'</p>';
 }
 function mapDeployBar(){
   if(mapMode!=="deploy"||!deployShip)return "";
   const ds=ship(deployShip);if(!ds)return "";
-  return '<div class="deployBar"><span>Posting <b>'+esc(ds.name)+'</b> \u2014 tap a system</span><button class="btn small" onclick="shipModal(\u0027"+deployShip+"\u0027)">Details</button><button class="btn small" onclick="mapDeployCancel()">Cancel</button></div>';
+  return '<div class="deployBar"><span>Posting <b>'+esc(ds.name)+'</b> \u2014 tap a system</span><button class="btn small" onclick="shipModal(\u0027'+deployShip+'\u0027)">Details</button><button class="btn small" onclick="mapDeployCancel()">Cancel</button></div>';
 }
 function mapShipClick(id){return (mapMode==="deploy"?"mapShipTap('":"shipModal('")+id+"')";}
 function mapShipTap(id){
@@ -5788,7 +5788,7 @@ function mapTerrSVG(t){
   if(mapMode==="intel"&&!hostile)return "";
   const alert=hostile&&mapMode!=="explore";
   const col=alert?"#ff5d5d":t[6];
-  return '<g class="poi" onclick="mapInfo(\u0027"+t[0]+"\u0027)"><ellipse cx="'+t[2]+'" cy="'+t[3]+'" rx="'+t[4]+'" ry="'+t[5]+'" fill="'+col+'" fill-opacity="'+(alert?"0.15":"0.07")+'" stroke="'+col+'" stroke-opacity="'+(alert?"0.85":"0.45")+'" stroke-width="1.5" stroke-dasharray="7 5"/>'
+  return '<g class="poi" onclick="mapInfo(\u0027'+t[0]+'\u0027)"><ellipse cx="'+t[2]+'" cy="'+t[3]+'" rx="'+t[4]+'" ry="'+t[5]+'" fill="'+col+'" fill-opacity="'+(alert?"0.15":"0.07")+'" stroke="'+col+'" stroke-opacity="'+(alert?"0.85":"0.45")+'" stroke-width="1.5" stroke-dasharray="7 5"/>'
     +'<g class="mapLblG" data-mx="'+t[7]+'" data-my="'+t[8]+'" data-dx="0" data-dy="0"><text x="0" y="0" text-anchor="middle" class="mapTerr">'+t[1]+'</text></g></g>';
 }
 function mapShipRing(s,x,y,post){
@@ -6529,7 +6529,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.61</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.62</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
