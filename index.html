@@ -1685,6 +1685,16 @@ function economyTick(){
     }
     if(st.type==="sfcommand"&&st.reqCd>0)st.reqCd--;
   });
+  // Create-A-Cadet custom cadets graduate on their own schedule
+  G.officers.forEach(o=>{
+    if(o.dead||o.retired||o.stage!=="cadet"||!(o.gradDays>0))return;
+    o.gradDays--;
+    if(o.gradDays<=0){o.stage="adult";o.rankLabel=null;o.timeInGrade=0;
+      if(!o.accolades)o.accolades=[];
+      o.accolades.push({n:"Graduated Starfleet Academy",d:String(sdYear(G.stardate))});
+      log("crew","Cadet "+o.name+" graduates Starfleet Academy and is commissioned as Ensign.");
+      toast("Cadet "+o.name+" graduated — commissioned as Ensign.");}
+  });
 }
 function buildTick(){
   // ship construction
@@ -4444,7 +4454,8 @@ function cmdrInstitutions(){
       (ac.cadets?bar("CLASS",ac.cadets.total-ac.cadets.daysLeft,ac.cadets.total):"")+
       '<div class="btnRow">'+(ac.cadets
         ?'<button class="btn small ghost" disabled>Cadet class in training</button>'
-        :'<button class="btn small teal" onclick="event.stopPropagation();uiEnrollCadets(\'academy\')">Enroll cadet class (1,500 CR)</button>')+'</div></div>';
+        :'<button class="btn small teal" onclick="event.stopPropagation();uiEnrollCadets(\'academy\')">Enroll cadet class (1,500 CR)</button>')+
+        '<button class="btn small peach" onclick="event.stopPropagation();uiCreateCadet()">Create-A-Cadet (1,000 CR)</button></div></div>';
   }
   if(sc&&sc.status==="active"){
     h+='<div class="card"><h3>Starfleet Command</h3>'+
@@ -5614,7 +5625,7 @@ function crewPortraitFor(o){
   for(let i=0;i<nm.length;i++)hsh=(hsh*31+nm.charCodeAt(i))>>>0;
   return "portraits/"+key+"-"+g+"-"+String(hsh%50+1).padStart(2,"0")+".jpg";
 }
-function portraitSrc(name,entry){var pick=portraitPick(name,entry);if(pick==="alt"&&typeof PORTRAITS_ALT!=="undefined"&&PORTRAITS_ALT[name])return PORTRAITS_ALT[name];if(typeof PORTRAITS!=="undefined"&&PORTRAITS[name])return PORTRAITS[name];if(entry){var cp=crewPortraitFor(entry);if(cp)return cp;}return "";}
+function portraitSrc(name,entry){var pick=portraitPick(name,entry);if(pick==="alt"&&typeof PORTRAITS_ALT!=="undefined"&&PORTRAITS_ALT[name])return PORTRAITS_ALT[name];if(typeof PORTRAITS!=="undefined"&&PORTRAITS[name])return PORTRAITS[name];if(entry&&entry.customPic)return entry.customPic;if(entry){var cp=crewPortraitFor(entry);if(cp)return cp;}return "";}
 function portraitVerCur(name,entry){return portraitPick(name,entry);}
 function portraitToggleHtml(name,entry){const info=PORTRAIT_VER_INFO[name];if(!info||typeof PORTRAITS_ALT==="undefined"||!PORTRAITS_ALT[name])return "";const cur=portraitVerCur(name,entry);const q=name.replace(/'/g,"\\'");return '<div class="kv"><span class="k">Portrait</span><span class="v"><span class="seg"><button class="btn small'+(cur==="main"?" on":"")+'" onclick="uiPortraitVer(\''+q+'\',\'main\',this)">'+info.main+'</button><button class="btn small'+(cur==="alt"?" on":"")+'" onclick="uiPortraitVer(\''+q+'\',\'alt\',this)">'+info.alt+'</button></span></span></div>';}
 function uiPortraitVer(name,ver,btn){if(!G.portraitVer)G.portraitVer={};if(ver==="alt")G.portraitVer[name]="alt";else delete G.portraitVer[name];save();var wrap=btn.closest(".pfaceWrap");if(wrap){var img=wrap.querySelector("img.pfaceBig");if(img)img.src=portraitSrc(name);}var seg=btn.parentElement;if(seg)seg.querySelectorAll("button").forEach(function(b){b.classList.toggle("on",b===btn);});render();}
@@ -5681,6 +5692,7 @@ function officerModal(id){
      bar("MED",o.stats.med)+bar("DIP",o.stats.dip)+bar("TAC",o.stats.tac);
   if(o.traits.length)h+='<div style="margin:6px 0;">'+o.traits.map(t=>'<span class="badge violet">'+esc(t)+'</span>').join("")+'</div>';
   if(o.medals.length)h+='<div style="margin:6px 0;">'+o.medals.map(m=>'<span class="badge rank medal">'+esc(m)+'</span>').join("")+'</div>';
+  if(o.backstory)h+='<h4>Backstory</h4><p class="dim" style="margin:4px 0;">'+esc(o.backstory)+'</p>';
   if(o.accolades&&o.accolades.length){
     const sorted=o.accolades.slice().sort((a,b)=>{
       const na=parseInt(((String(a.d).match(/\d{3,4}/)||[])[0])||9999),nb=parseInt(((String(b.d).match(/\d{3,4}/)||[])[0])||9999);
@@ -6678,7 +6690,8 @@ function stationModal(id){
     if(st.cadets)h+=bar("CLASS",st.cadets.total-st.cadets.daysLeft,st.cadets.total);
     h+='<div class="btnRow">'+(st.cadets
       ?'<button class="btn small ghost" disabled>Cadet class in training</button>'
-      :'<button class="btn small teal" onclick="uiEnrollCadets(\'"+st.id+"\')">Enroll cadet class (1,500 CR)</button>')+'</div>';
+      :'<button class="btn small teal" onclick="uiEnrollCadets(\'"+st.id+"\')">Enroll cadet class (1,500 CR)</button>')+
+      '<button class="btn small peach" onclick="uiCreateCadet()">Create-A-Cadet (1,000 CR)</button></div>';
   }
   if(st.type==="sfcommand"&&st.status==="active"){
     h+='<div class="kv"><span class="k">Requisition</span><span class="v">'+(st.reqCd>0?"Ready in "+st.reqCd+"d":"Available now")+'</span></div>';
@@ -6871,6 +6884,179 @@ function graduateCadets(st){
   log("crew","Cadet class graduated from Starfleet Academy: "+names.join(", ")+" report to the personnel pool as ensigns.");
   toast("Cadet class graduated: "+n+" new ensigns in the personnel pool.");
 }
+/* ---------- Create-A-Cadet ---------- */
+const CAC_COST=1000,CAC_GRAD_DAYS=30,CAC_PTS=90,CAC_STAT_MIN=20,CAC_STAT_MAX=70,CAC_STAT_BASE=35;
+const CAC_HOME={human:"Earth",klingon:"Qo'noS",vulcan:"Vulcan",romulan:"Romulus",borg:"a liberated Borg vessel",ferengi:"Ferenginar",andorian:"Andoria",synth:"Coppelius",tellarite:"Tellar Prime",trill:"Trill",hologram:"a Daystrom Institute hololab",talaxian:"Talax",ocampa:"the Ocampa homeworld",hirogen:"a Hirogen hunting vessel",kazon:"a Kazon raider",jemhadar:"a Dominion hatchery",vorta:"a Vorta cloning facility",changeling:"the Great Link"};
+const CAC_STATLBL={cmd:"Command",sci:"Science",eng:"Engineering",med:"Medical",dip:"Diplomacy",tac:"Tactical"};
+let cacDraft=null;
+function cacSpeciesLabel(key){const f=CADET_SPECIES.find(s=>s[0]===key);return f?f[1]:key;}
+function cacRandomName(){
+  const d=cacDraft,names=CMDR_NAMES[d.species]||CMDR_NAMES.human,g=d.gender;
+  const first=pick(g==="f"?names.f:names.m);let nm=first;
+  if(names.last)nm=first+" "+pick(names.last);
+  else if(names.house)nm=first+", of House "+pick(names.house);
+  else if(names.clan)nm=first+" "+pick(names.clan);
+  else if(names.sym)nm=first+" "+pick(names.sym);
+  else if(names.desig)nm=pick(names.desig);
+  d.name=nm;
+  const ni=$("cacName");if(ni)ni.value=nm;
+}
+function uiCreateCadet(){
+  const ac=station("academy");if(!ac||ac.status!=="active"){toast("Starfleet Academy is not active.");return;}
+  cacDraft={step:0,name:"",nameTouched:false,gender:"m",species:"human",portrait:0,age:20,
+    stats:{cmd:CAC_STAT_BASE,sci:CAC_STAT_BASE,eng:CAC_STAT_BASE,med:CAC_STAT_BASE,dip:CAC_STAT_BASE,tac:CAC_STAT_BASE},
+    pts:CAC_PTS,dept:"Command",traits:[],backstory:""};
+  cacRandomName();
+  openModal(cacHTML());
+}
+function cacRefresh(){$("modalBox").innerHTML=cacHTML();}
+function cacSet(k,v){cacDraft[k]=v;if(k==="species"||k==="gender")cacDraft.portrait=0;if(k==="species"&&!cacDraft.nameTouched)cacRandomName();cacRefresh();}
+function cacAge(dl){cacDraft.age=clamp(cacDraft.age+dl,18,24);cacRefresh();}
+function cacNameEdit(v){cacDraft.name=v;cacDraft.nameTouched=true;}
+function cacBack(){cacDraft.step--;cacRefresh();}
+function cacNext(){
+  const d=cacDraft;
+  if(d.step===0){const ni=$("cacName");if(ni)d.name=ni.value.trim();if(!d.name){toast("Give your cadet a name.");return;}}
+  if(d.step===4){const ta=$("cacBio");if(ta)d.backstory=ta.value.trim();}
+  d.step++;cacRefresh();
+}
+function cacHTML(){
+  const d=cacDraft;
+  const titles=["1 · Identity","2 · Portrait","3 · Skills","4 · Career","5 · Backstory","6 · Review"];
+  let h="<h2>Create-A-Cadet</h2>";
+  h+='<div class="sub2" style="margin-bottom:10px;">'+titles[d.step]+' — Starfleet Academy applicant</div>';
+  if(d.step===0)h+=cacStepIdentity();
+  else if(d.step===1)h+=cacStepPortrait();
+  else if(d.step===2)h+=cacStepSkills();
+  else if(d.step===3)h+=cacStepCareer();
+  else if(d.step===4)h+=cacStepBio();
+  else h+=cacStepReview();
+  h+='<div class="btnRow" style="margin-top:14px;">';
+  if(d.step>0)h+='<button class="btn ghost" onclick="cacBack()">Back</button>';
+  else h+='<button class="btn ghost" onclick="closeModal()">Cancel</button>';
+  if(d.step<5)h+='<button class="btn teal" onclick="cacNext()">Next</button>';
+  h+='</div>';
+  return h;
+}
+function cacStepIdentity(){
+  const d=cacDraft;
+  let h='<h3>Name</h3><div class="row"><input id="cacName" class="txtIn" style="flex:1;min-width:0;" value="'+esc(d.name)+'" oninput="cacNameEdit(this.value)" maxlength="40" placeholder="Cadet name...">'+
+    '<button class="btn small ghost" onclick="cacDraft.nameTouched=false;cacRandomName()">Random</button></div>';
+  h+='<h3>Gender</h3><div class="btnRow">'+
+    '<button class="btn small '+(d.gender==="m"?"peach":"ghost")+'" onclick="cacSet(\'gender\',\'m\')">Male</button>'+
+    '<button class="btn small '+(d.gender==="f"?"peach":"ghost")+'" onclick="cacSet(\'gender\',\'f\')">Female</button></div>';
+  h+='<h3>Species</h3><div class="cmdrGrid">'+CADET_SPECIES.map(sp=>
+    '<div class="cmdrOpt'+(d.species===sp[0]?" sel":"")+'" onclick="cacSet(\'species\',\''+sp[0]+'\')">'+
+    '<img src="'+crewPoolUrls(sp[0]+"-"+d.gender)[0]+'" alt="">'+
+    '<div class="cmdrLbl">'+sp[1]+'</div></div>').join("")+'</div>';
+  h+='<h3>Age</h3><div class="btnRow"><button class="btn small ghost" onclick="cacAge(-1)">−</button>'+
+    '<div class="nm" style="min-width:60px;text-align:center;">'+d.age+'</div>'+
+    '<button class="btn small ghost" onclick="cacAge(1)">+</button></div>';
+  return h;
+}
+function cacStepPortrait(){
+  const d=cacDraft,arr=crewPoolUrls(d.species+"-"+d.gender);
+  let h='<h3>Portrait — '+esc(cacSpeciesLabel(d.species))+' '+(d.gender==="m"?"Male":"Female")+'</h3>';
+  h+='<div class="cmdrGrid">'+arr.map((src,i)=>
+    '<div class="cmdrOpt'+(d.portrait===i?" sel":"")+'" onclick="cacSet(\'portrait\','+i+')"><img src="'+src+'" alt=""></div>').join("")+'</div>';
+  return h;
+}
+function cacStat(k,delta){
+  const d=cacDraft,v=d.stats[k];
+  if(delta>0&&(v>=CAC_STAT_MAX||d.pts<=0))return;
+  if(delta<0&&v<=CAC_STAT_MIN)return;
+  d.stats[k]=v+delta;d.pts-=delta;
+  cacRefresh();
+}
+function cacStepSkills(){
+  const d=cacDraft;
+  let h='<h3>Skill points — <span style="color:var(--peach)">'+d.pts+' left</span></h3>'+
+    '<div class="sub2">Every cadet starts at '+CAC_STAT_BASE+'. Raise what matters, up to '+CAC_STAT_MAX+'.</div>';
+  Object.keys(CAC_STATLBL).forEach(k=>{
+    h+='<div class="kv"><span class="k">'+CAC_STATLBL[k]+'</span><span class="v"><div class="btnRow" style="margin:0;">'+
+      '<button class="btn small ghost" onclick="cacStat(\''+k+'\',-1)">−</button>'+
+      '<div class="nm" style="min-width:36px;text-align:center;">'+d.stats[k]+'</div>'+
+      '<button class="btn small ghost" onclick="cacStat(\''+k+'\',1)">+</button></div></span></div>'+
+      bar(CAC_STATLBL[k].slice(0,3).toUpperCase(),d.stats[k],100);
+  });
+  return h;
+}
+function cacTrait(t){
+  const d=cacDraft,i=d.traits.indexOf(t);
+  if(i>=0)d.traits.splice(i,1);
+  else if(d.traits.length<2)d.traits.push(t);
+  else{toast("Two traits maximum.");return;}
+  cacRefresh();
+}
+function cacStepCareer(){
+  const d=cacDraft;
+  let h='<h3>Department</h3><div class="btnRow" style="flex-wrap:wrap;">'+DEPTS.map(dp=>
+    '<button class="btn small '+(d.dept===dp?"peach":"ghost")+'" onclick="cacSet(\'dept\',\''+dp+'\')">'+dp+'</button>').join("")+'</div>';
+  h+='<h3>Traits — pick up to 2</h3><div style="margin:6px 0;line-height:2.1;">'+TRAITS.map(t=>{
+    const on=d.traits.includes(t);
+    return '<span class="badge '+(on?"peach":"violet")+'" style="cursor:pointer;'+(on?"":"opacity:.55;")+'" onclick="cacTrait(\''+t+'\')">'+esc(t)+'</span>';
+  }).join(" ")+'</div>';
+  if(!d.traits.length)h+='<div class="sub2">No traits selected — a clean slate.</div>';
+  return h;
+}
+function cacStepBio(){
+  const d=cacDraft;
+  return '<h3>Backstory</h3><div class="sub2">Write their story — or let the Academy records inspire you.</div>'+
+    '<textarea id="cacBio" class="txtIn" rows="6" style="width:100%;box-sizing:border-box;" oninput="cacDraft.backstory=this.value" maxlength="600" placeholder="Where did they grow up? Why Starfleet?">'+esc(d.backstory)+'</textarea>'+
+    '<div class="btnRow"><button class="btn small ghost" onclick="cacInspire()">Inspire me</button></div>';
+}
+function cacInspire(){
+  const d=cacDraft,first=(d.name||"Cadet").split(" ")[0],full=d.name||"Cadet";
+  const fem=d.gender==="f";
+  const he=fem?"she":"he",him=fem?"her":"him",his=fem?"her":"his",He=fem?"She":"He";
+  const home=CAC_HOME[d.species]||"their homeworld",sp=cacSpeciesLabel(d.species);
+  const tr=d.traits.length?d.traits[0].toLowerCase():"grit";
+  const T=[
+    full+" grew up on "+home+" with stars in "+his+" eyes. When a Starfleet crew saved "+his+" colony as a child, "+he+" swore "+he+" would wear the uniform one day — and never wavered.",
+    "The "+d.dept+" track nearly broke "+first+": "+he+" failed the Kobayashi Maru twice before an instructor with a soft spot for "+tr+" took a chance on "+him+". The rest is Academy legend.",
+    first+" was the first "+sp+" in three generations to leave "+home+". "+He+" carries a holo of home everywhere — and a reputation for "+tr+" that precedes "+him+".",
+    "Expelled from flight school, reinstated by admiral's order — "+full+" has made a career of impossible comebacks before even graduating. The "+d.dept+" division doesn't know what hit it.",
+    first+"'s "+tr+" made "+him+" a natural for "+d.dept+", but it was "+his+" time volunteering at a "+home+" relief camp that sealed the calling.",
+    "Raised on stories of the "+sp+" diaspora, "+full+" joined Starfleet to prove that "+sp+" courage belongs on the bridge — starting in "+d.dept+".",
+    first+" speaks four languages and fixes warp coils for fun. "+He+" chose "+d.dept+" because, in "+his+" words, 'that's where the interesting problems live.'",
+    "A chance encounter with a retired captain on "+home+" changed everything: one long night of stories, and "+first+" enlisted the next morning. "+He+" still writes to "+him+" every week.",
+    full+" earned an Academy commendation for "+tr+" as a sophomore — then gave the medal to a classmate who needed the confidence more. That's just who "+he+" is.",
+    first+" doesn't talk about "+home+" much. What "+he+" will tell you: "+he+" came to the Academy to become someone the "+sp+" people could be proud of — and "+he+"'s not leaving until "+he+" is."
+  ];
+  d.backstory=pick(T);
+  const ta=$("cacBio");if(ta)ta.value=d.backstory;
+}
+function cacStepReview(){
+  const d=cacDraft,src=crewPoolUrls(d.species+"-"+d.gender)[d.portrait];
+  let h='<div class="pfaceWrap"><img class="pfaceBig" src="'+src+'" alt="">'+
+    '<div style="flex:1;min-width:0;"><div class="nm">'+esc(d.name||"Unnamed Cadet")+'</div>'+
+    '<div class="flavor">'+esc(cacSpeciesLabel(d.species))+' · '+(d.gender==="m"?"Male":"Female")+' · Age '+d.age+'</div>'+
+    '<div class="flavor">'+esc(d.dept)+' track · '+(d.traits.length?esc(d.traits.join(", ")):"No traits")+'</div></div></div>';
+  h+='<h4>Attributes</h4>'+bar("CMD",d.stats.cmd)+bar("SCI",d.stats.sci)+bar("ENG",d.stats.eng)+bar("MED",d.stats.med)+bar("DIP",d.stats.dip)+bar("TAC",d.stats.tac);
+  if(d.backstory)h+='<h4>Backstory</h4><p class="dim" style="margin:4px 0;">'+esc(d.backstory)+'</p>';
+  h+='<div class="kv"><span class="k">Tuition</span><span class="v">1,000 CR</span></div>'+
+    '<div class="kv"><span class="k">Training</span><span class="v">Graduates as Ensign in '+CAC_GRAD_DAYS+' days</span></div>';
+  h+='<div class="btnRow" style="margin-top:10px;"><button class="btn teal" onclick="cacEnroll()">Enroll at the Academy (1,000 CR)</button></div>';
+  return h;
+}
+function cacEnroll(){
+  const d=cacDraft;
+  const ta=$("cacBio");if(ta)d.backstory=ta.value.trim();
+  const ni=$("cacName");if(ni&&d.step===0)d.name=ni.value.trim();
+  const name=(d.name||"").trim()||"Unnamed Cadet";
+  if(G.credits<CAC_COST){toast("Not enough credits (1,000 CR needed).");return;}
+  gainCR(-CAC_COST);
+  const o=MK([name,cacSpeciesLabel(d.species),d.gender==="f"?"F":"M",d.age,0,d.dept,
+    [d.stats.cmd,d.stats.sci,d.stats.eng,d.stats.med,d.stats.dip,d.stats.tac],d.traits.slice(),"pool","Cadet","cadet"]);
+  o.customPic=crewPoolUrls(d.species+"-"+d.gender)[d.portrait];
+  o.gradDays=CAC_GRAD_DAYS;
+  if(d.backstory)o.backstory=d.backstory;
+  o.accolades.push({n:"Admitted to Starfleet Academy (Create-A-Cadet)",d:String(sdYear(G.stardate))});
+  G.officers.push(o);
+  log("crew","Custom cadet "+name+" ("+cacSpeciesLabel(d.species)+", "+d.dept+" track) enrolled at Starfleet Academy — graduates in "+CAC_GRAD_DAYS+" days.");
+  save();closeModal();renderAll();
+  toast(name+" enrolled at Starfleet Academy.");
+}
 function uiEnrollCadets(id){
   const st=station(id);if(!st||st.type!=="academy"||st.status!=="active")return;
   if(st.cadets){toast("A cadet class is already in training.");return;}
@@ -6981,7 +7167,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.99</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v1.0</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
