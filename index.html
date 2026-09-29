@@ -5063,6 +5063,18 @@ const MEMORIAL_STATIC=[
  {name:"Jadzia Dax",rank:"Lt. Commander",species:"Trill",cause:"Murdered by Gul Dukat aboard Deep Space 9",when:"2374"},
  {name:"Tasha Yar",rank:"Lieutenant",species:"Human",cause:"Killed by the entity Armus on Vagra II",when:"2364"}
 ];
+/* Officer seed defs for the six memorial tributes, so temporal extraction can
+   bring them back. NOT added to CANON_CREW — they must not seed as active
+   officers in new games. MK format: [name,species,gender,age,rank,dept,
+   [cmd,sci,eng,med,dip,tac],traits,post,rankLabel] */
+const TRIBUTE_DEFS=[
+ ["James T. Kirk","Human","M",35,5,"Command",[98,72,62,50,95,88],["Diplomat","Tactician","Living Legend"],"hq","Captain"],
+ ["Sarek","Vulcan","M",102,5,"Command",[80,92,50,62,100,40],["Diplomat","Living Legend"],"hq","Ambassador"],
+ ["Jonathan Archer","Human","M",40,9,"Command",[92,72,62,55,88,72],["Diplomat","Pioneer","Living Legend"],"hq","Admiral"],
+ ["Charles Tucker III","Human","M",40,4,"Engineering",[72,66,98,52,60,62],["Miracle Worker","Living Legend"],"hq","Commander"],
+ ["Jadzia Dax","Trill","F",33,3,"Science",[76,96,72,60,72,62],["Joined Trill","Living Legend"],"hq","Lt. Commander"],
+ ["Tasha Yar","Human","F",27,2,"Security",[76,62,60,50,56,92],["Tactician","Living Legend"],"hq","Lieutenant"]
+];
 /* ---------- historical ships & stations: gone before your command began ---------- */
 const HISTORICAL_SHIPS=[
  {name:"Enterprise",reg:"NX-01",art:"nx",cls:"NX class",fate:"Retired 2161 after the Romulan War and the founding of the Federation. Now preserved at the Fleet Museum."},
@@ -5163,7 +5175,7 @@ function uiTemporalExtractGo(idx){
 /* ---------- temporal extraction for the fallen (your own dead officers) ---------- */
 function seedDefFor(name){
   if(typeof CANON_CREW==="undefined")return null;
-  const all=CANON_CREW.concat(typeof ORIGINAL_CREW!=="undefined"?ORIGINAL_CREW:[],typeof AUX_CREW!=="undefined"?AUX_CREW:[]);
+  const all=CANON_CREW.concat(typeof ORIGINAL_CREW!=="undefined"?ORIGINAL_CREW:[],typeof AUX_CREW!=="undefined"?AUX_CREW:[],typeof TRIBUTE_DEFS!=="undefined"?TRIBUTE_DEFS:[]);
   return all.find(d=>d[0]===name)||null;
 }
 function fallenDefs(m){return (m&&m.def)||seedDefFor(m?m.name:"");}
@@ -5224,13 +5236,71 @@ function uiFallenExtractGo(oi){
   }
   save();fallenModal(oi);render();
 }
+/* ---------- temporal extraction for the memorial tributes (Kirk, Sarek, Archer, Trip, Jadzia, Tasha) ---------- */
+function tributeRescued(s){return !!(G.rescued&&G.rescued[s.name]);}
+function tributeBadge(s){
+  if(tributeRescued(s))return '<span class="badge good">Serving in your fleet</span>';
+  return G.tempCd>0?'<span class="badge warn">Array recharging — '+G.tempCd+'d</span>'
+    :'<span class="badge">Temporal extraction available</span>';
+}
+function tributeModal(si){
+  const s=MEMORIAL_STATIC[si];if(!s)return;
+  const rescued=tributeRescued(s);
+  const acc=(typeof CANON_ACCOLADES!=="undefined"&&CANON_ACCOLADES[s.name]||[]).map(a=>'<div class="kv"><span class="k">'+esc(a[1])+'</span><span class="v">'+esc(a[0])+'</span></div>').join("");
+  portraitTabForce=true;
+  let h='<div class="pfaceWrap">'+faceImg(s,"pfaceBig")+'<div style="flex:1;min-width:0;"><h2>† '+esc(s.name)+'<div class="rnkline">'+esc(s.rank)+'</div></h2>'+
+    '<div class="flavor">'+esc(s.species)+'</div></div></div>';
+  if(typeof PORTRAITS_ALT!=="undefined"&&PORTRAITS_ALT[s.name])h+=portraitToggleHtml(s.name,s);
+  h+='<div class="sub2 dim">'+esc(s.cause)+' · '+esc(s.when)+'</div>';
+  if(acc)h+='<h4>Service Record</h4>'+acc;
+  h+='<h4>Temporal Extraction</h4>';
+  if(rescued){
+    h+='<p><span class="badge">✓ Rescued — serving in your fleet</span></p>';
+  }else{
+    h+='<p class="dim">Starfleet Temporal Mechanics can pull '+esc(s.name)+' from moments before their death in '+esc(s.when)+' into 2379. Cost: '+TEMP_COST_PRES+' prestige + '+TEMP_COST_DIL+' dilithium. Success rate 85%. The array needs '+TEMP_CD+' days to recharge between extractions.</p>';
+    if(G.tempCd>0)h+='<p><span class="badge bad">Array recharging — '+G.tempCd+'d remaining</span></p>';
+    else if(G.prestige<TEMP_COST_PRES||G.dilithium<TEMP_COST_DIL)
+      h+='<p><span class="badge bad">Requires '+TEMP_COST_PRES+' prestige + '+TEMP_COST_DIL+' dilithium</span></p>';
+    else h+='<button class="btn" onclick="uiTributeExtract('+si+')">⟳ Initiate Temporal Extraction</button>';
+  }
+  h+='<div style="margin-top:8px;"><button class="btn ghost" onclick="closeModal()">Close</button></div>';
+  portraitTabForce=false;
+  openModal(h);
+}
+function uiTributeExtract(si){
+  const s=MEMORIAL_STATIC[si];if(!s)return;
+  openModal('<h2>Temporal Extraction</h2><p>Pull <b>† '+esc(s.name)+'</b> ('+esc(s.rank)+') from moments before their death in '+esc(s.when)+' into 2379?</p>'+
+    '<p class="dim">Cost: '+TEMP_COST_PRES+' prestige + '+TEMP_COST_DIL+' dilithium · 85% success · array recharges '+TEMP_CD+' days.<br>On failure the window collapses: −25 prestige, and the Department of Temporal Investigations will file a formal protest.</p>'+
+    '<button class="btn" onclick="uiTributeExtractGo('+si+')">Confirm Extraction</button> '+
+    '<button class="btn ghost" onclick="tributeModal('+si+')">Cancel</button>');
+}
+function uiTributeExtractGo(si){
+  const s=MEMORIAL_STATIC[si];if(!s)return;
+  const def=(typeof TRIBUTE_DEFS!=="undefined"?TRIBUTE_DEFS:[]).find(d=>d[0]===s.name);
+  if(!def||tributeRescued(s)||G.tempCd>0||G.prestige<TEMP_COST_PRES||G.dilithium<TEMP_COST_DIL){tributeModal(si);return;}
+  gainPres(-TEMP_COST_PRES);G.dilithium=Math.max(0,G.dilithium-TEMP_COST_DIL);G.tempCd=TEMP_CD;
+  sfx("temporal");
+  if(Math.random()<TEMP_ODDS){
+    const off=MK(def);
+    awardAccolade(off,"Temporal extraction — rescued from death ("+s.cause+")");
+    G.officers.push(off);
+    if(!G.rescued)G.rescued={};G.rescued[s.name]=1;
+    log("personnel","⟳ TEMPORAL EXTRACTION SUCCESS: "+fullName(off)+" pulled from moments before their death and reports for duty.");
+    toast(s.name+" rescued from death!");
+  }else{
+    gainPres(-25);
+    log("event","⟳ Temporal extraction of "+s.name+" FAILED — the window collapsed. The Department of Temporal Investigations has filed a formal protest. (−25 prestige)");
+    toast("Extraction failed. The DTI is not pleased.");
+  }
+  save();tributeModal(si);render();
+}
 function renderMemorial(){
   const offs=G.memorial.filter(m=>!m.kind||m.kind==="officer");
   const ships=G.memorial.filter(m=>m.kind==="ship");
   const sts=G.memorial.filter(m=>m.kind==="station");
   const dsOf=m=>esc(((m.name||"")+" "+(m.cause||"")+" "+(m.sub||"")+" "+(m.rank||"")+" "+(m.species||"")).toLowerCase());
   const entry=(m,sub,sec,oi)=>'<div class="row" data-search="'+dsOf(m)+'" data-sec="'+sec+'" style="padding:6px;'+(oi>=0?'cursor:pointer;':'cursor:default;')+'"'+(oi>=0?' onclick="fallenModal('+oi+')"':"")+'>'+faceImg(m,"pfaceSm")+'<div class="grow"><div class="nm">† '+esc(m.name)+'</div>'+(sub?'<div class="sub2">'+esc(sub)+'</div>':"")+'<div class="sub2 dim">'+esc((m.lost==="decommissioned"?"Decommissioned":"Lost in service")+" — "+m.cause)+' · Stardate '+sdStr(m.sd)+'</div>'+(oi>=0?'<div style="margin-top:4px;">'+fallenBadge(m)+'</div>':"")+'</div></div>';
-  const sentry=(m)=>'<div class="row" data-search="'+dsOf(m)+'" data-sec="lost" style="padding:6px;cursor:default;">'+faceImg(m,"pfaceSm")+'<div class="grow"><div class="nm">† '+esc(m.name)+'</div><div class="sub2">'+esc(m.rank+" · "+m.species)+'</div><div class="sub2 dim">'+esc(m.cause)+' · '+esc(m.when)+'</div></div></div>';
+  const sentry=(m,si)=>'<div class="row" data-search="'+dsOf(m)+'" data-sec="lost" style="padding:6px;cursor:pointer;" onclick="tributeModal('+si+')">'+faceImg(m,"pfaceSm")+'<div class="grow"><div class="nm">† '+esc(m.name)+'</div><div class="sub2">'+esc(m.rank+" · "+m.species)+'</div><div class="sub2 dim">'+esc(m.cause)+' · '+esc(m.when)+'</div><div style="margin-top:4px;">'+tributeBadge(m)+'</div></div></div>';
 
   let h='<div class="card"><h3>Memorial</h3><p class="dim">"They are gone, but their light travels on." — In honored memory of all who served.</p>'+
     '<label>Search</label><input type="search" placeholder="Search the memorial…" oninput="liveSearch(this,\'memList\')"></div><div id="memList">';
@@ -6630,7 +6700,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.69</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.70</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
