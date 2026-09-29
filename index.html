@@ -351,6 +351,13 @@ body{touch-action:pan-y;}
 .fleetList .row{padding:10px 2px;}
 .warnRow{margin-top:5px;display:flex;flex-wrap:wrap;gap:4px;}
 .fleetList .row.omRow{background:rgba(153,153,255,.07);box-shadow:inset 3px 0 0 var(--violet);}
+.persOpts summary{list-style:none;display:flex;align-items:center;gap:10px;cursor:pointer;}
+.persOpts summary::-webkit-details-marker{display:none;}
+.persOpts summary .chev{margin-left:auto;color:var(--dim);transition:transform .15s;}
+.persOpts[open] summary .chev{transform:rotate(180deg);}
+.persOpts .optBody{margin-top:12px;display:grid;gap:12px;}
+.cellBadges{margin-top:4px;display:flex;flex-wrap:wrap;gap:3px;}
+.cellBadges .badge{font-size:10px;padding:2px 7px;}
 .seniorRow{border:1px solid rgba(255,255,255,.14)!important;border-left:4px solid var(--dc,#9a9ab0)!important;border-radius:10px;background:rgba(255,255,255,.035);}
 .offGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 14px;}
 .offCell{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--line);border-radius:10px;cursor:pointer;background:#101828;min-width:0;}
@@ -4700,42 +4707,51 @@ function renderPersonnel(){
   const opts=['<option value="all">Everyone active</option>','<option value="pool">Unassigned pool</option>','<option value="kids">Children & cadets</option>','<option value="retired">Retired</option>','<option value="memorial">Memorial</option>'];
   G.ships.forEach(s=>opts.push('<option value="ship:'+s.id+'">'+esc(s.name)+'</option>'));
   G.stations.forEach(s=>opts.push('<option value="station:'+s.id+'">'+esc(s.name)+'</option>'));
-  let h='<div class="card"><label>Filter</label><select id="persSel" onchange="persFilter=this.value;render()">'+
-    opts.map(o=>o.replace('value="'+persFilter+'"','value="'+persFilter+'" selected')).join("")+'</select></div>';
+  const filtLabels={all:"Everyone active",pool:"Unassigned pool",kids:"Children & cadets",retired:"Retired",memorial:"Memorial"};
+  G.ships.forEach(s=>filtLabels["ship:"+s.id]=s.name);
+  G.stations.forEach(s=>filtLabels["station:"+s.id]=s.name);
+  const PERS_SHOWS=[["all","All"],["TOS","TOS"],["TNG","TNG"],["VOY","VOY"],["DS9","DS9"],["ENT","ENT"],["DISCO","DISCO"],["PRO","PRO"],["PIC","PIC"],["SFA","SFA"],["LD","LD"],["SNW","SNW"]];
+  let list=[],showPills="";
+  if(persFilter!=="memorial"){
+    list=G.officers.filter(o=>!o.dead);
+    if(persFilter==="all")list=list.filter(o=>o.stage==="adult"&&!o.retired);
+    else if(persFilter==="pool")list=list.filter(o=>o.post.t==="pool"&&o.stage==="adult"&&!o.retired);
+    else if(persFilter==="kids")list=list.filter(o=>(o.stage==="child"||o.stage==="cadet")&&!o.dead);
+    else if(persFilter==="retired")list=list.filter(o=>o.retired);
+    else if(persFilter.startsWith("ship:"))list=list.filter(o=>o.post.t==="ship"&&o.post.id===persFilter.slice(5)&&o.stage==="adult");
+    else if(persFilter.startsWith("station:"))list=list.filter(o=>o.post.t==="station"&&o.post.id===persFilter.slice(8)&&o.stage==="adult");
+    const _showCounts={};list.forEach(o=>{const _s=officerShow(o);if(_s)_showCounts[_s]=(_showCounts[_s]||0)+1;});
+    showPills='<div class="cmdsubseg" style="margin:8px 0 0;">'+PERS_SHOWS.map(s=>'<button class="btn small'+(persShow===s[0]?" on":"")+'" onclick="persShow=\''+s[0]+'\';render()">'+s[1]+' ('+(s[0]==="all"?list.length:(_showCounts[s[0]]||0))+')</button>').join("")+'</div>';
+    if(persShow!=="all")list=list.filter(o=>officerShow(o)===persShow);
+    list.sort((a,b)=>b.rank-a.rank||a.name.localeCompare(b.name));
+  }
+  let h='<details class="card persOpts"><summary><span class="nm">Options</span><span class="dim">'+esc(filtLabels[persFilter]||persFilter)+' \u00b7 '+(persShow==="all"?"All eras":persShow)+'</span><span class="chev">\u25be</span></summary><div class="optBody">'+
+    '<div><label>Filter</label><select id="persSel" onchange="persFilter=this.value;render()">'+
+    opts.map(o=>o.replace('value="'+persFilter+'"','value="'+persFilter+'" selected')).join("")+'</select></div>'+
+    (showPills?'<div><label>Show</label>'+showPills+'</div>':"")+
+    (persFilter!=="memorial"?'<div><label>Search</label><input type="search" placeholder="Search by name, species, or department\u2026" oninput="liveSearch(this,\'persList\',\'persCount\')"></div>':"")+
+    '</div></details>';
   if(persFilter==="memorial"){
     h+='<div class="card"><h3>Memorial Wall</h3>'+(G.memorial.filter(m=>!m.kind||m.kind==="officer").map(m=>
-      '<div class="logItem c-combat"><b>† '+esc(m.rank+" "+m.name)+'</b> <span class="dim">('+esc(m.species)+')</span><br><span class="dim">'+esc(m.cause)+' · Stardate '+sdStr(m.sd)+'</span></div>').join("")||'<p class="dim">No names on the wall. May it stay that way.</p>')+'</div>';
+      '<div class="logItem c-combat"><b>\u2020 '+esc(m.rank+" "+m.name)+'</b> <span class="dim">('+esc(m.species)+')</span><br><span class="dim">'+esc(m.cause)+' \u00b7 Stardate '+sdStr(m.sd)+'</span></div>').join("")||'<p class="dim">No names on the wall. May it stay that way.</p>')+'</div>';
     return h;
   }
-  let list=G.officers.filter(o=>!o.dead);
-  if(persFilter==="all")list=list.filter(o=>o.stage==="adult"&&!o.retired);
-  else if(persFilter==="pool")list=list.filter(o=>o.post.t==="pool"&&o.stage==="adult"&&!o.retired);
-  else if(persFilter==="kids")list=list.filter(o=>(o.stage==="child"||o.stage==="cadet")&&!o.dead);
-  else if(persFilter==="retired")list=list.filter(o=>o.retired);
-  else if(persFilter.startsWith("ship:"))list=list.filter(o=>o.post.t==="ship"&&o.post.id===persFilter.slice(5)&&o.stage==="adult");
-  else if(persFilter.startsWith("station:"))list=list.filter(o=>o.post.t==="station"&&o.post.id===persFilter.slice(8)&&o.stage==="adult");
-  const _showCounts={};list.forEach(o=>{const _s=officerShow(o);if(_s)_showCounts[_s]=(_showCounts[_s]||0)+1;});
-  const PERS_SHOWS=[["all","All"],["TOS","TOS"],["TNG","TNG"],["VOY","VOY"],["DS9","DS9"],["ENT","ENT"],["DISCO","DISCO"],["PRO","PRO"],["PIC","PIC"],["SFA","SFA"],["LD","LD"],["SNW","SNW"]];
-  h+='<div class="card"><label>Show</label><div class="cmdsubseg" style="margin:8px 0 0;">'+PERS_SHOWS.map(s=>'<button class="btn small'+(persShow===s[0]?" on":"")+'" onclick="persShow=\''+s[0]+'\';render()">'+s[1]+' ('+(s[0]==="all"?list.length:(_showCounts[s[0]]||0))+')</button>').join("")+'</div></div>';
-  if(persShow!=="all")list=list.filter(o=>officerShow(o)===persShow);
-  list.sort((a,b)=>b.rank-a.rank||a.name.localeCompare(b.name));
-  h+='<div class="card"><label>Search</label><input type="search" placeholder="Search by name, species, or department…" oninput="liveSearch(this,\'persList\',\'persCount\')"></div>';
-  h+='<div class="card"><h3><span id="persCount">'+list.length+'</span> officer'+(list.length===1?"":"s")+'</h3><div id="persList">';
+  h+='<div class="card"><h3><span id="persCount">'+list.length+'</span> officer'+(list.length===1?"":"s")+'</h3><div id="persList" class="offGrid">';
   list.forEach(o=>{
     const badges=[];const _os=officerShow(o);
     if(o.request&&G.day>=(o.request.deferUntil||0))badges.push('<span class="badge violet">Requests an audience</span>');
     if(readyForPromotion(o))badges.push('<span class="badge good">Ready for promotion</span>');
     if(o.health==="injured")badges.push('<span class="badge bad">Injured</span>');
-    if(o.rel)badges.push('<span class="badge love">'+o.rel.stage+' — '+esc((officer(o.rel.partner)||{name:"?"}).name)+'</span>');
+    if(o.rel)badges.push('<span class="badge love">'+o.rel.stage+' \u2014 '+esc((officer(o.rel.partner)||{name:"?"}).name)+'</span>');
     if(o.kids.length)badges.push('<span class="badge">'+o.kids.length+' child'+(o.kids.length>1?"ren":"")+'</span>');
     o.medals.forEach(m=>badges.push('<span class="badge rank medal">'+esc(m)+'</span>'));
     if(o.stage!=="adult")badges.push('<span class="badge">'+o.stage+', age '+Math.floor(o.age)+'</span>');
     if(o.retired)badges.push('<span class="badge">Retired</span>');
     const ds=esc((o.name+" "+(o.species||"")+" "+(o.dept||"")+(_os?" "+_os:"")+" "+(RANKS[o.rank]||"")).toLowerCase());
-    h+='<div class="row" data-search="'+ds+'" onclick="officerModal(\''+o.id+'\')" style="cursor:pointer;">'+faceImg(o,"pface")+'<div class="grow">'+
+    h+='<div class="offCell" data-search="'+ds+'" onclick="officerModal(\''+o.id+'\')">'+faceImg(o,"pfaceSm")+'<div class="grow">'+
       '<div class="nm">'+nameHtml(o)+'</div>'+
-      '<div class="sub2">'+esc(o.species)+' · '+esc(o.dept)+(_os?' · '+_os:'')+' · '+esc(postName(o.post))+(o.stage==="adult"?" · Morale "+o.morale:"")+'</div>'+
-      (badges.length?'<div style="margin-top:3px;">'+badges.join("")+'</div>':"")+'</div></div>';
+      '<div class="sub2">'+esc(o.species)+' \u00b7 '+esc(o.dept)+(_os?' \u00b7 '+_os:'')+'</div>'+
+      (badges.length?'<div class="cellBadges">'+badges.join("")+'</div>':"")+'</div></div>';
   });
   return h+'</div><div id="persListNoRes" style="display:none;"><p class="dim">No officers match your search.</p></div></div>';
 }
@@ -6901,7 +6917,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.87</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.88</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
