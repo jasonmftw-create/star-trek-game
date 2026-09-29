@@ -261,7 +261,11 @@ div.meetFace{display:flex;align-items:center;justify-content:center;font-size:42
   transform:translateX(105%);transition:transform .22s ease-out;
   padding:18px 14px calc(18px + env(safe-area-inset-bottom));overflow-y:auto;}
 #menuDrawer.open{transform:none;}
-#menuDrawer h2{color:var(--peach);margin:0 0 12px;font-size:19px;letter-spacing:2px;text-transform:uppercase;}
+#menuDrawer h2{color:var(--peach);margin:0;font-size:19px;letter-spacing:2px;text-transform:uppercase;}
+#drawerHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+#drawerClose{background:none;border:2px solid var(--dim);color:var(--peach);border-radius:10px;
+  font-size:20px;line-height:1;padding:6px 12px;cursor:pointer;font-weight:800;}
+#drawerClose:active{background:var(--orange);color:#000;border-color:var(--orange);}
 .menuItem{display:flex;align-items:center;gap:12px;width:100%;text-align:left;
   background:#000;color:var(--peach);border:2px solid #000;border-radius:12px;
   font-size:16px;font-weight:800;letter-spacing:1px;padding:13px 14px;margin:0 0 8px;cursor:pointer;}
@@ -4104,6 +4108,14 @@ function closeTabMenu(){
   $("menuShade").classList.remove("open");
   $("menuDrawer").classList.remove("open");
 }
+function toggleTabMenu(){
+  if($("menuDrawer").classList.contains("open"))closeTabMenu();else openTabMenu();
+}
+document.addEventListener("keydown",function(e){
+  if(e.key!=="Escape"&&e.key!=="Esc")return;
+  if($("menuDrawer").classList.contains("open")){closeTabMenu();return;}
+  if($("modalRoot").classList.contains("open"))closeModal(true);
+});
 function render(){renderHUD();
   const v=$("view");
   if(currentTab==="command")v.innerHTML=renderCommand();
@@ -6366,14 +6378,14 @@ window.onload=function(){
   <button class="tabBtn" data-tab="ships" onclick="navGo('ships')"><span class="bIco"><svg viewBox="0 0 24 24" fill="currentColor"><ellipse cx="12" cy="7.5" rx="6.5" ry="5.5"/><rect x="10.8" y="12" width="2.4" height="5"/><rect x="3.2" y="11" width="2.6" height="9" rx="1.3"/><rect x="18.2" y="11" width="2.6" height="9" rx="1.3"/><rect x="5.8" y="12.5" width="5.4" height="1.6"/><rect x="12.8" y="12.5" width="5.4" height="1.6"/></svg></span><span>Ships</span></button>
   <button class="tabBtn" data-tab="stations" onclick="navGo('stations')"><span class="bIco"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3.5v3.6M12 16.9v3.6M3.5 12h3.6M16.9 12h3.6" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="2.4"/></svg></span><span>Stations</span></button>
   <button class="tabBtn" data-tab="galaxy" onclick="navGo('galaxy')"><span class="bIco"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8" opacity=".55"/><ellipse cx="12" cy="12" rx="2.8" ry="1.7" fill="currentColor"/><path d="M12 12C8.5 11 6 8.6 5.4 5.2M12 12c3.5 1 6 3.4 6.6 6.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span><span>Galaxy</span></button>
-  <button class="menuBtn" onclick="openTabMenu()"><span class="bIco"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></span><span>Menu</span></button>
+  <button class="menuBtn" onclick="toggleTabMenu()"><span class="bIco"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></span><span>Menu</span></button>
 </nav>
 <div id="menuShade" onclick="closeTabMenu()"></div>
 <div id="meetRoot" style="display:none;"></div>
 <aside id="menuDrawer">
-  <h2>Menu</h2>
+  <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.52</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.53</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
