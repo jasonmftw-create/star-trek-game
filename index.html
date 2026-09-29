@@ -342,8 +342,9 @@ body{touch-action:pan-y;}
 .offCell:active{border-color:var(--orange);}
 .offCell.isH{border-color:var(--orange);box-shadow:0 0 6px var(--orange);}
 .offCell img.pfaceSm,.offCell .pfaceInit{width:40px;height:40px;flex:none;}
+.offCell .grow{flex:1;min-width:0;}
 .offCell .onm{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.offCell .osub{font-size:11px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.offCell .osub{font-size:11px;color:var(--dim);line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .txtIn{flex:1;background:#000;border:1px solid var(--orange);color:var(--peach);border-radius:8px;padding:9px;font-size:16px;min-width:0;}
 .badge{display:inline-block;font-size:13px;font-weight:700;padding:3px 10px;border-radius:10px;
   background:var(--panel2);color:var(--teal);border:1px solid var(--line);margin:1px 2px 1px 0;}
@@ -6812,7 +6813,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.77</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.78</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
