@@ -532,6 +532,8 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
 .opRow .sub2{font-size:12px;opacity:.7;}
 .deckBtnRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
 .deckFoot{font-size:11px;opacity:.55;text-align:center;margin-top:18px;}
+.deckRoomImg{width:100%;display:block;border-radius:12px;margin:8px 0 4px;max-height:230px;object-fit:cover;border:1px solid var(--line);background:#000;}
+.deckCap{font-size:11px;opacity:.55;text-align:center;margin-bottom:8px;letter-spacing:.5px;}
 
 </style>
 </head>
@@ -7607,6 +7609,22 @@ function deckRoomDef(id){return DECK_ROOMS.find(r=>r.id===id)||DECK_ROOMS[0];}
 function deckCount(s){const c=shipClass(s);return clamp(4+Math.round((c.slots||10)/3),4,10);}
 function deckOfRoom(s,room){const n=deckCount(s);return 1+Math.round(room.frac*(n-1));}
 
+/* ship class -> on-screen era for interior set photos */
+const DECK_ERA={constitution:"snw",nx:"ent",excelsior:"tng",constellation:"tng",galaxy:"tng",nebula:"tng",
+akira:"tng",saber:"tng",steamrunner:"tng",norway:"tng",sovereign:"tng",luna:"tng",california:"tng",mercy:"tng",
+parliament:"tng",harbinger:"tng",ark:"tng",forge:"tng",shepherd:"tng",relay:"tng",tempest:"tng",
+defiant:"ds9",intrepid:"voy",nova:"voy",prometheus:"voy",protostar:"voy",vesta:"pic",odyssey:"pic",
+brel:"klingon",ktinga:"klingon",rombop:"romulan"};
+const DECK_ERA_NAMES={snw:"Strange New Worlds",ent:"Enterprise",tng:"The Next Generation",ds9:"Deep Space Nine",
+voy:"Voyager",pic:"Picard",klingon:"Klingon",romulan:"Romulan"};
+function deckEra(s){return DECK_ERA[(s&&s.cls)||""]||"tng";}
+function deckEraName(s){return DECK_ERA_NAMES[deckEra(s)]||"Starfleet";}
+function deckRoomImg(s,rid){
+  const era=deckEra(s);
+  return '<img class="deckRoomImg" src="interiors/'+era+'/'+rid+'.jpg" alt="'+deckEraName(s)+' '+rid+' as seen on screen" loading="lazy" onerror="this.style.display=\'none\'">'+
+    '<div class="deckCap">'+deckEraName(s)+' · as seen on screen</div>';
+}
+
 /* ---- where is everyone? ---- */
 function deckRoomFor(o){
   const R=o.roles||[],D=o.dept,has=x=>R.indexOf(x)>=0;
@@ -7717,6 +7735,7 @@ function deckRoomHtml(s,rid){
   let h="";
   if(DECK.enc)h+=deckEncHtml(s,DECK.enc);
   h+='<div class="deckSec">'+esc(def.name)+' · Deck '+deckOfRoom(s,def)+'</div>';
+  h+=deckRoomImg(s,rid);
   h+='<div class="sceneCard"><div class="flavor">'+esc(def.blurb)+'</div>';
   h+='<div class="sceneProse"><i>'+esc(line)+'</i></div>';
   if(occ.length){
@@ -8348,7 +8367,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.0</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.1</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
