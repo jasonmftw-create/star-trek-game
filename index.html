@@ -851,22 +851,22 @@ const MISSION_DECK=[
  {id:"vela-survey",name:"Dilithium Survey: Vela Expanse",type:"Science",diff:40,days:14,cr:3000,dl:400,pres:35,
   shipStat:"sci",capSkill:"sci",dept:"Science",
   brief:"Geological scans hint at untapped dilithium veins in the Vela Expanse. Survey, sample, and stake the Federation's claim before the Ferengi do."},
- {id:"border-patrol",name:"Border Patrol: Klingon Frontier",type:"Combat Patrol",diff:60,days:18,cr:5000,dl:200,pres:50,
+ {id:"border-patrol",dest:"khitomer",name:"Border Patrol: Klingon Frontier",type:"Combat Patrol",diff:60,days:18,cr:5000,dl:200,pres:50,
   shipStat:"tac",capSkill:"tac",dept:"Security",
   brief:"Renegade Klingon houses are testing the border. Show the flag, run silent drills, and remind them the Khitomer Accords have teeth."},
  {id:"plague-relief",name:"Plague Relief: Cor Caroli V",type:"Rescue",diff:45,days:10,cr:3500,dl:100,pres:55,
   shipStat:"hull",capSkill:"med",dept:"Medical",
   brief:"A viral outbreak is burning through Cor Caroli V's colony. Deliver vaccines, set up triage, and keep your crew's immune systems to themselves."},
- {id:"ds9-convoy",name:"Supply Convoy: Deep Space 9",type:"Supply",diff:25,days:8,cr:2500,dl:80,pres:20,
+ {id:"ds9-convoy",dest:"ds9",name:"Supply Convoy: Deep Space 9",type:"Supply",diff:25,days:8,cr:2500,dl:80,pres:20,
   shipStat:"hull",capSkill:"cmd",dept:"Operations",
   brief:"DS9 needs industrial replicators and a truly unreasonable amount of jumja sticks. Escort the convoy through the badlands of bureaucracy."},
- {id:"romulan-watch",name:"Observe Romulan Fleet Movements",type:"Intelligence",diff:70,days:22,cr:4500,dl:250,pres:65,
+ {id:"romulan-watch",dest:"romulus",name:"Observe Romulan Fleet Movements",type:"Intelligence",diff:70,days:22,cr:4500,dl:250,pres:65,
   shipStat:"tac",capSkill:"dip",dept:"Security",
   brief:"Three warbirds are running dark near the Neutral Zone. Watch, record, and do not — under any circumstances — get caught doing it."},
  {id:"azure-nebula",name:"Study the Azure Nebula",type:"Science",diff:50,days:16,cr:3500,dl:180,pres:45,
   shipStat:"sci",capSkill:"sci",dept:"Science",
   brief:"The Azure Nebula emits chroniton particles in a pattern that spells nothing, which is exactly why Science wants a closer look."},
- {id:"tell-ando",name:"Mediate the Tellarite-Andorian Dispute",type:"Diplomacy",diff:65,days:14,cr:5500,dl:120,pres:75,
+ {id:"tell-ando",dest:"andoria",name:"Mediate the Tellarite-Andorian Dispute",type:"Diplomacy",diff:65,days:14,cr:5500,dl:120,pres:75,
   shipStat:"hull",capSkill:"dip",dept:"Command",
   brief:"The Tellarites and Andorians are arguing over a moon neither of them can pronounce. Talk them down before someone quotes Shakespeare at someone."},
  {id:"borg-remnant",name:"Hunt Borg Remnant Scout",type:"Combat Patrol",diff:85,days:25,cr:8000,dl:500,pres:120,
@@ -875,10 +875,10 @@ const MISSION_DECK=[
  {id:"deneva-evac",name:"Evacuate the Deneva Colony",type:"Rescue",diff:55,days:12,cr:4000,dl:150,pres:60,
   shipStat:"hull",capSkill:"cmd",dept:"Medical",
   brief:"Deneva's star is going unstable ahead of schedule. Beam out twelve thousand colonists, their livestock, and one extremely uncooperative targ."},
- {id:"gamma-rim",name:"Deep Survey: Gamma Quadrant Rim",type:"Exploration",diff:75,days:35,cr:9000,dl:400,pres:110,
+ {id:"gamma-rim",dest:"gamma",name:"Deep Survey: Gamma Quadrant Rim",type:"Exploration",diff:75,days:35,cr:9000,dl:400,pres:110,
   shipStat:"sci",capSkill:"cmd",dept:"Science",
   brief:"Beyond the wormhole's shadow lies unmapped space and rumors of a subspace sinkhole. Go boldly. Bring extra probes."},
- {id:"ferengi-escort",name:"Escort Ferengi Trade Delegation",type:"Supply",diff:30,days:10,cr:6000,dl:200,pres:25,
+ {id:"ferengi-escort",dest:"ferenginar",name:"Escort Ferengi Trade Delegation",type:"Supply",diff:30,days:10,cr:6000,dl:200,pres:25,
   shipStat:"hull",capSkill:"dip",dept:"Operations",
   brief:"DaiMon Brac wants safe passage and has promised — in writing, witnessed — not to sell anything to anyone en route. Supervise closely."},
  {id:"temporal-anom",name:"Investigate Temporal Anomaly",type:"Science",diff:80,days:18,cr:5000,dl:300,pres:95,
@@ -2423,6 +2423,7 @@ function resolveMission(m){
     moraleAll(-8);}}
   gainCR(cr);gainDL(dl);gainPres(pres);
   crew.forEach(o=>{o.missions.t++;o.timeInGrade+=t.days;if(outcome==="Critical Success"||outcome==="Success")o.missions.s++;});
+  if(m.dest&&POST_COORDS[m.dest]&&m.dest!==s.post){log("mission",s.name+" has taken up station at "+POST_LABELS[m.dest]+".");s.post=m.dest;}
   s.missionId=null;if(s.status==="mission")s.status="active";
   s.msn=(s.msn||0)+1;if(outcome==="Critical Success"||outcome==="Success")s.msnWon=(s.msnWon||0)+1;
   G.ledger.missions++;
@@ -5215,27 +5216,62 @@ function awayResolve(){
   openModal('<h2>Away Mission &mdash; '+outcome+'</h2><p>'+detail+'</p><div class="kv"><span class="k">Prestige</span><span class="v">+'+pres+'</span></div><div class="btnRow"><button class="btn violet" onclick="closeModal();render()">Continue</button></div>');
 }
 
+var msnDraft=null;
 function missionBrief(sid,tid){
   const s=ship(sid),t=MISSION_DECK.find(x=>x.id===tid),od=missionOdds(s,t);
-  openModal('<h2>'+esc(t.name)+'</h2><div class="flavor">'+t.type+' · '+t.days+' days · Difficulty '+t.diff+'</div>'+
+  const _md=s.cls==="protostar"?Math.max(1,Math.ceil(t.days*0.75)):t.days;
+  msnDraft={sid:sid,tid:tid,dest:t.dest||s.post||"sol"};
+  openModal('<h2>'+esc(t.name)+'</h2><div class="flavor">'+t.type+' · '+_md+' days · Difficulty '+t.diff+'</div>'+
     '<p><i>"'+esc(t.brief)+'"</i></p><div class="hr"></div>'+
     '<div class="kv"><span class="k">Ship</span><span class="v">'+esc(s.name)+' ('+shipClass(s).name+'-class)</span></div>'+
+    '<div class="kv"><span class="k">From</span><span class="v">'+esc(POST_LABELS[s.post||"sol"]||"Deep Space")+'</span></div>'+
+    '<div class="kv"><span class="k">Destination</span><span class="v"><button class="btn small" id="msnDestBtn" onclick="msnPickDest()">'+esc(POST_LABELS[msnDraft.dest]||"Deep Space")+'</button></span></div>'+
+    '<div class="kv"><span class="k">Route</span><span class="v" id="msnRoute"></span></div>'+
     '<div class="kv"><span class="k">Commanding</span><span class="v">'+(od.captain?esc(fullName(od.captain)):"None — risky")+'</span></div>'+
     '<div class="kv"><span class="k">Crew aboard</span><span class="v">'+od.crew.length+' / '+shipClass(s).slots+'</span></div>'+
         '<div class="kv" data-hint="Your estimated chance of success, 5 to 98 percent. Based on the ship\'s stats, the captain\'s skill, how many of the right department crew are aboard, and crew morale. Nothing is ever guaranteed."><span class="k">Estimated success</span><span class="v">'+od.chance+'%</span></div>'+
     '<div class="kv"><span class="k">Reward</span><span class="v">'+fmt(t.cr)+' CR · '+fmt(t.dl)+' DL · '+t.pres+' pres.</span></div>'+
-    '<div class="btnRow"><button class="btn teal" onclick="uiLaunchMission(\''+sid+'\',\''+tid+'\')">Launch mission</button>'+
+    '<div class="btnRow"><button class="btn teal" id="msnLaunch" onclick="uiLaunchMission(\''+sid+'\',\''+tid+'\')">Launch mission</button>'+
     '<button class="btn ghost" onclick="closeModal()">Cancel</button></div>');
+  msnRefreshRoute();
+}
+function msnPickDest(){
+  if(!msnDraft)return;
+  sheetPick("Destination",postOptions(msnDraft.dest),function(v){
+    msnDraft.dest=v;
+    const b=document.getElementById("msnDestBtn");
+    if(b)b.textContent=POST_LABELS[v]||v;
+    msnRefreshRoute();
+  });
+}
+function msnRefreshRoute(){
+  if(!msnDraft)return;
+  const s=ship(msnDraft.sid),t=MISSION_DECK.find(function(x){return x.id===msnDraft.tid;});
+  if(!s||!t)return;
+  const _md=s.cls==="protostar"?Math.max(1,Math.ceil(t.days*0.75)):t.days;
+  const r=planTravel(s,s.post||"sol",msnDraft.dest);
+  const el=document.getElementById("msnRoute"),btn=document.getElementById("msnLaunch");
+  const fits=r.days<=_md;
+  if(el)el.innerHTML=esc(r.label)+(fits?"":' — <b style="color:var(--red)">too far for a '+_md+'-day mission</b>');
+  if(btn){btn.disabled=!fits;btn.style.opacity=fits?1:0.4;}
 }
 function uiLaunchMission(sid,tid){
   const s=ship(sid),t=MISSION_DECK.find(x=>x.id===tid);
   if(!s||s.status!=="active"||s.transit){toast("Ship unavailable.");return;}
   if(s.mothballed){toast("Ship is mothballed.");return;}
+  const origin=s.post||"sol";
+  const dest=(msnDraft&&msnDraft.sid===sid&&msnDraft.tid===tid)?msnDraft.dest:(t.dest||origin);
+  const _md=s.cls==="protostar"?Math.max(1,Math.ceil(t.days*0.75)):t.days; // proto-drive: 25% faster
+  const r=planTravel(s,origin,dest);
+  if(r.days>_md){toast("Out of reach: "+r.label+".");return;}
+  if(G.dilithium<r.dl){toast("Need "+r.dl+" dilithium for the "+viaName(r.via)+".");return;}
+  G.dilithium-=r.dl;
   sfx("warp");
   s.status="mission";s.missionId=tid;
-  const _md=s.cls==="protostar"?Math.max(1,Math.ceil(t.days*0.75)):t.days; // proto-drive: 25% faster
-  G.missions.push({id:uid("m"),tIdx:tid,shipId:sid,daysLeft:_md,total:_md});
-  log("mission",s.name+" has departed on mission: "+t.name+" ("+_md+" days).");
+  G.missions.push({id:uid("m"),tIdx:tid,shipId:sid,daysLeft:_md,total:_md,
+    origin:origin,dest:dest,travel:r.days,via:r.via});
+  log("mission",s.name+" has departed on mission: "+t.name+" ("+_md+" days) — "+r.label+".");
+  msnDraft=null;
   closeModal();save();render();toast(s.name+" underway.");
 }
 function shuttleOdds(sh,t){
@@ -6311,7 +6347,7 @@ qonos:{t:"Qo'noS",b:"Homeworld of the Klingon Empire. The High Council rules fro
 romulus:{t:"Romulus",b:"Homeworld of the Romulan Star Empire, guarded by the Neutral Zone and the Tal Shiar."},
 bajor:{t:"Bajor",b:"Homeworld of the Bajorans, rebuilding after the Cardassian Occupation."},
 ds9:{t:"Deep Space 9",b:"Federation-administered station guarding the Bajoran wormhole. Formerly the Cardassian ore-processing station Terok Nor."},
-wormhole:{t:"Bajoran Wormhole",b:"A stable wormhole linking the Bajor system to the Gamma Quadrant \u2014 the Celestial Temple of the Prophets. Ships posted at Bajor or Deep Space 9 can traverse it in just 3 days; ships in the Gamma Quadrant can ride it home. The only shortcut to Dominion space."},
+wormhole:{t:"Bajoran Wormhole",b:"A stable wormhole linking the Bajor system to the Idran system in the Gamma Quadrant \u2014 the Celestial Temple of the Prophets. Ships posted at Bajor or Deep Space 9 can traverse it in just 3 days; ships in the Gamma Quadrant can ride it home, and mission planners can route Alpha-Quadrant to Gamma-Quadrant missions through it via DS9. The only shortcut to Dominion space."},
 cardassia:{t:"Cardassia Prime",b:"Seat of the Cardassian Union \u2014 rebuilding after the devastation of the Dominion War."},
 ferenginar:{t:"Ferenginar",b:"Homeworld of the Ferengi Alliance. Constant rain, constant profit."},
 borg:{t:"Borg Unicomplex",b:"The heart of the Borg Collective, deep in the Delta Quadrant. Resistance was futile."},
@@ -6571,13 +6607,13 @@ function initMapZoom(){
 }
 
 
-const POST_COORDS={sol:[200,282],alpha:[100,290],beta:[300,290],gamma:[100,110],delta:[300,110],qonos:[292,318],romulus:[272,266],bajor:[148,290],ds9:[166,270],cardassia:[105,328],ferenginar:[122,232],borg:[296,112],dominion:[108,118],vulcan:[230,306],andoria:[132,244],betazed:[148,266],trill:[138,250],risa:[160,322],khitomer:[305,298],ocampa:[342,42],talax:[332,152],kazon:[238,92],vidiians:[368,96],malonprime:[270,175],founders:[140,90],wolf359:[170,300]};
-const POST_LABELS={sol:"Sol",alpha:"Alpha Quadrant",beta:"Beta Quadrant",gamma:"Gamma Quadrant",delta:"Delta Quadrant",qonos:"Qo'noS",romulus:"Romulus",bajor:"Bajor",ds9:"Deep Space 9",cardassia:"Cardassia Prime",ferenginar:"Ferenginar",borg:"Borg Unicomplex",dominion:"Dominion",vulcan:"Vulcan",andoria:"Andoria",betazed:"Betazed",trill:"Trill",risa:"Risa",khitomer:"Khitomer",ocampa:"Ocampa",talax:"New Talax",kazon:"Kazon",vidiians:"Vidiians",malonprime:"Malon Prime",founders:"Founders' Homeworld",wolf359:"Wolf 359"};
+const POST_COORDS={sol:[200,282],alpha:[100,290],beta:[300,290],gamma:[100,110],delta:[300,110],qonos:[292,318],romulus:[272,266],bajor:[148,290],ds9:[166,270],cardassia:[105,328],ferenginar:[122,232],borg:[296,112],dominion:[108,118],vulcan:[230,306],andoria:[132,244],betazed:[148,266],trill:[138,250],risa:[160,322],khitomer:[305,298],ocampa:[342,42],talax:[332,152],kazon:[238,92],vidiians:[368,96],malonprime:[270,175],founders:[140,90],wolf359:[170,300],idran:[122,102]};
+const POST_LABELS={sol:"Sol",alpha:"Alpha Quadrant",beta:"Beta Quadrant",gamma:"Gamma Quadrant",delta:"Delta Quadrant",qonos:"Qo'noS",romulus:"Romulus",bajor:"Bajor",ds9:"Deep Space 9",cardassia:"Cardassia Prime",ferenginar:"Ferenginar",borg:"Borg Unicomplex",dominion:"Dominion",vulcan:"Vulcan",andoria:"Andoria",betazed:"Betazed",trill:"Trill",risa:"Risa",khitomer:"Khitomer",ocampa:"Ocampa",talax:"New Talax",kazon:"Kazon",vidiians:"Vidiians",malonprime:"Malon Prime",founders:"Founders' Homeworld",wolf359:"Wolf 359",idran:"Idran System"};
 function shipPostName(s){return POST_LABELS[s.post]||POST_LABELS.sol;}
-const POST_QUAD={sol:"alpha",alpha:"alpha",beta:"beta",gamma:"gamma",delta:"delta",qonos:"beta",romulus:"beta",khitomer:"beta",bajor:"alpha",ds9:"alpha",cardassia:"alpha",ferenginar:"alpha",vulcan:"alpha",andoria:"alpha",betazed:"alpha",trill:"alpha",risa:"alpha",wolf359:"alpha",ocampa:"delta",talax:"delta",kazon:"delta",vidiians:"delta",malonprime:"delta",borg:"delta",founders:"gamma",dominion:"gamma"};
+const POST_QUAD={sol:"alpha",alpha:"alpha",beta:"beta",gamma:"gamma",delta:"delta",qonos:"beta",romulus:"beta",khitomer:"beta",bajor:"alpha",ds9:"alpha",cardassia:"alpha",ferenginar:"alpha",vulcan:"alpha",andoria:"alpha",betazed:"alpha",trill:"alpha",risa:"alpha",wolf359:"alpha",ocampa:"delta",talax:"delta",kazon:"delta",vidiians:"delta",malonprime:"delta",borg:"delta",founders:"gamma",dominion:"gamma",idran:"gamma"};
 function postQuadOf(s){return POST_QUAD[s.post]||"alpha";}
 function postOptions(cur){
-  const gr=[["Quadrants",["alpha","beta","gamma","delta"]],["Systems",["sol","vulcan","andoria","betazed","trill","risa","wolf359","qonos","romulus","khitomer","bajor","ds9","cardassia","ferenginar","ocampa","talax","kazon","vidiians","malonprime","founders","borg","dominion"]]];
+  const gr=[["Quadrants",["alpha","beta","gamma","delta"]],["Systems",["sol","vulcan","andoria","betazed","trill","risa","wolf359","qonos","romulus","khitomer","bajor","ds9","cardassia","ferenginar","ocampa","talax","kazon","vidiians","malonprime","founders","borg","dominion","idran"]]];
   return gr.map(g=>'<optgroup label="'+g[0]+'">'+g[1].map(k=>'<option value="'+k+'"'+(k===cur?" selected":"")+'>'+POST_LABELS[k]+'</option>').join("")+"</optgroup>").join("");
 }
 function setShipPost(id,post){
@@ -6591,7 +6627,71 @@ function setStationPost(id,post){
 }
 /* ---------- slipstream gate & wormhole transit ---------- */
 const GATE_COST_DL=100,GATE_DAYS=14,WORM_COST_DL=25,WORM_DAYS=3;
-const WORM_ALPHA=["bajor","ds9"],WORM_GAMMA=["gamma","founders","dominion"];
+/* ---------- mission travel: distances, drives & route planning ---------- */
+const PX_TO_LY=250;                 // full-map pixels -> light years
+const WARP_LY_DAY=200;              // conventional warp cruise
+const SLIP_LY_DAY=5000;             // quantum slipstream (Vesta-class)
+function hasSlipstream(s){return !!s&&s.cls==="vesta";}
+function postDist(a,b){             // light years between two postings
+  const A=POST_COORDS[a]||POST_COORDS.sol,B=POST_COORDS[b]||POST_COORDS.sol;
+  const dx=A[0]-B[0],dy=A[1]-B[1];
+  return Math.round(Math.sqrt(dx*dx+dy*dy)*PX_TO_LY);
+}
+function fmtLy(ly){return fmt(ly)+" ly";}
+function viaName(v){return v==="slip"?"Quantum slipstream drive":v==="gate"?"Transwarp jump gate":v==="wormhole"?"Bajoran wormhole":v==="warp"?"Warp cruise":"On station";}
+function wormRouteOk(a,b){          // can the Bajoran wormhole shortcut this leg?
+  const qa=POST_QUAD[a]||"alpha",qb=POST_QUAD[b]||"alpha";
+  return (qa==="alpha"&&qb==="gamma")||(qa==="gamma"&&qb==="alpha");
+}
+/* Fastest available route for one ship from origin->dest.
+   returns {via,days,dl,dist,label}; via: local|warp|slip|gate|wormhole */
+function planTravel(s,origin,dest){
+  if(!dest||dest===origin||!POST_COORDS[dest])
+    return {via:"local",days:0,dl:0,dist:0,label:"Already on station — no travel needed."};
+  const dist=postDist(origin,dest);
+  const warpDays=Math.max(1,Math.ceil(dist/WARP_LY_DAY));
+  const opts=[{via:"warp",days:warpDays,dl:0,
+    label:"Warp cruise · "+fmtLy(dist)+" · "+warpDays+"d"}];
+  if(hasSlipstream(s)){
+    const sd=Math.max(1,Math.ceil(dist/SLIP_LY_DAY));
+    opts.push({via:"slip",days:sd,dl:0,
+      label:"Quantum slipstream drive · "+fmtLy(dist)+" · "+sd+"d"});
+  }
+  if(hasStation("gate"))
+    opts.push({via:"gate",days:GATE_DAYS,dl:GATE_COST_DL,
+      label:"Transwarp jump gate · "+GATE_DAYS+"d · -"+GATE_COST_DL+" dilithium"});
+  if(wormRouteOk(origin,dest))
+    opts.push({via:"wormhole",days:WORM_DAYS,dl:WORM_COST_DL,
+      label:"Bajoran wormhole (via DS9) · "+WORM_DAYS+"d · -"+WORM_COST_DL+" dilithium"});
+  opts.sort(function(x,y){return (x.days-y.days)||(x.dl-y.dl);});
+  const r=opts[0];r.dist=dist;return r;
+}
+/* null, or {origin,dest,via,f} for a ship currently travelling (mission or transit) */
+function shipEnRoute(s){
+  if(s.status==="mission"){
+    const m=G.missions.find(function(m){return m.shipId===s.id&&!m.kind;});
+    if(m&&m.dest&&m.dest!==(m.origin||s.post)&&POST_COORDS[m.dest])
+      return {origin:m.origin||s.post||"sol",dest:m.dest,via:m.via||"warp",
+        f:clamp(m.travel>0?(m.total-m.daysLeft)/m.travel:1,0,1)};
+  }else if(s.transit&&s.transit.dest&&s.transit.dest!==s.post&&POST_COORDS[s.transit.dest]){
+    return {origin:s.post||"sol",dest:s.transit.dest,via:s.transit.via||"warp",
+      f:clamp(s.transit.total>0?1-(s.transit.daysLeft/s.transit.total):1,0,1)};
+  }
+  return null;
+}
+/* full-galaxy-map pixel coords for a ship, interpolated while travelling */
+function shipMapXY(s){
+  const r=shipEnRoute(s),a=POST_COORDS[(r&&r.origin)||s.post]||POST_COORDS.sol;
+  const b=(r&&POST_COORDS[r.dest])||a,f=r?r.f:0;
+  return [a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f];
+}
+/* which quadrant view should plot this ship (travel: origin until arrived) */
+function shipPlotQuad(s){
+  const r=shipEnRoute(s);
+  if(r)return (r.f>=1?(POST_QUAD[r.dest]||"alpha"):(POST_QUAD[r.origin]||"alpha"));
+  return postQuadOf(s);
+}
+const WORM_ALPHA=["bajor","ds9"],WORM_GAMMA=["gamma","founders","dominion","idran"];
 function transitTick(){
   for(const s of G.ships){
     if(!s||!s.transit)continue;
@@ -6702,12 +6802,13 @@ function renderQuadrant(q){
       +"<g class=\"mapLblG\" data-mx=\""+p[1]+"\" data-my=\""+p[2]+"\" data-dx=\""+(p[5]==null?12:p[5])+"\" data-dy=\""+(p[6]==null?4:p[6])+"\"\"><text x=\"0\" y=\"0\" class=\"mapLbl\">"+p[4]+"</text></g></g>";
   });
   let wh="";
-  if(q==="alpha"&&mapLayers.planets){
+  if(mapLayers.planets&&(q==="alpha"||q==="gamma")){
+    const _wxy=q==="alpha"?[273,233]:[118,118],_wl=q==="alpha"?[15,4]:[-46,-14];
     wh="<g onclick=\"mapInfo('wormhole')\" style=\"cursor:pointer\">"
-      +"<circle cx=\"273\" cy=\"233\" r=\"12\" fill=\"none\" stroke=\"#7ee0ff\" stroke-width=\"2\" opacity=\".75\"/>"
-      +"<circle cx=\"273\" cy=\"233\" r=\"7\" fill=\"none\" stroke=\"#bff1ff\" stroke-width=\"1.5\" opacity=\".9\"/>"
-      +"<circle cx=\"273\" cy=\"233\" r=\"3\" fill=\"#eafcff\"/>"
-      +"<g class=\"mapLblG\" data-mx=\"273\" data-my=\"233\" data-dx=\"15\" data-dy=\"4\"><text x=\"0\" y=\"0\" class=\"mapLbl\">Wormhole</text></g></g>";
+      +"<circle cx=\""+_wxy[0]+"\" cy=\""+_wxy[1]+"\" r=\"12\" fill=\"none\" stroke=\"#7ee0ff\" stroke-width=\"2\" opacity=\".75\"/>"
+      +"<circle cx=\""+_wxy[0]+"\" cy=\""+_wxy[1]+"\" r=\"7\" fill=\"none\" stroke=\"#bff1ff\" stroke-width=\"1.5\" opacity=\".9\"/>"
+      +"<circle cx=\""+_wxy[0]+"\" cy=\""+_wxy[1]+"\" r=\"3\" fill=\"#eafcff\"/>"
+      +"<g class=\"mapLblG\" data-mx=\""+_wxy[0]+"\" data-my=\""+_wxy[1]+"\" data-dx=\""+_wl[0]+"\" data-dy=\""+_wl[1]+"\"><text x=\"0\" y=\"0\" class=\"mapLbl\">Wormhole</text></g></g>";
   }
   let terr="";
   if(mapLayers.territories)(QTERR[q]||[]).forEach(function(t){
@@ -6723,9 +6824,10 @@ function renderQuadrant(q){
   let fleet="",nShips=0;
   G.ships.forEach(function(s){
     if(s.status==="museum")return;
-    if(postQuadOf(s)!==q)return;
+    if(shipPlotQuad(s)!==q)return;
     nShips++;
     const post=s.post||"sol";
+    const _rt=shipEnRoute(s);
     const pc=post===q?[200,200]:(qp[post]||[200,200]);
     const rr=rng(hashStr("qship"+s.id+"@"+post)),a=rr()*Math.PI*2;
     const d=post===q?24+rr()*30:10+rr()*14;
@@ -6733,7 +6835,7 @@ function renderQuadrant(q){
     const nm=esc(s.name.length>18?s.name.slice(0,17)+"\u2026":s.name);
     fleet+="<g onclick=\""+mapShipClick(s.id)+"\" style=\"cursor:pointer\"><path d=\"M"+x+" "+yt+" l5 11 -5 -3 -5 3 Z\" fill=\"#ffb703\"/>"+mapShipRing(s,x,yt,post)
       +"<g class=\"mapLblG\" data-mx=\""+x+"\" data-my=\""+yt+"\" data-dx=\"8\" data-dy=\"4\"><text x=\"0\" y=\"0\" class=\"mapShipLbl\">"+nm+"</text></g>"
-      +"<title>"+esc(s.name)+"</title></g>";
+      +"<title>"+esc(s.name)+(_rt&&_rt.f<1?" → "+esc(POST_LABELS[_rt.dest]||_rt.dest):"")+"</title></g>";
   });
   let stnLayer="",nStn=0;
   G.stations.forEach(function(s){
@@ -6756,9 +6858,9 @@ function renderQuadrant(q){
   h+="<div class=\"mapWrap\"><div id=\"mapZoom\" class=\""+(mapLayers.labels?"":"noLabels")+"\" style=\"--mz:"+mapZ+"\"><svg viewBox=\"0 0 400 400\">"+galaxyImg()
     +stars
     +"<g id=\"mapZoomG\" transform=\"translate("+mapX+" "+mapY+") scale("+mapZ+")\">"
-    +sect+terr+(mapLayers.planets?pm:"")+(mapLayers.fleet?fleet:"")+(mapLayers.stations?stnLayer:"")
+    +sect+terr+(mapLayers.planets?pm:"")+wh+(mapLayers.fleet?fleet:"")+(mapLayers.stations?stnLayer:"")
     +"</g></svg></div>"+mapDeployFloat()+"</div>";
-  h+="<div class=\"mapLegend\"><span><i class=\"lgDot\" style=\"background:#ffb703\"></i>Your ships</span>"+(q==="alpha"?"<span><i class=\"lgDot\" style=\"background:#7ee0ff\"></i>Wormhole</span>":"")+"<span><i class=\"lgSq\"></i>Your stations</span><span><i class=\"lgDot\" style=\"background:#4cc9f0\"></i>Notable systems</span></div>";
+  h+="<div class=\"mapLegend\"><span><i class=\"lgDot\" style=\"background:#ffb703\"></i>Your ships</span>"+(q==="alpha"||q==="gamma"?"<span><i class=\"lgDot\" style=\"background:#7ee0ff\"></i>Wormhole</span>":"")+"<span><i class=\"lgSq\"></i>Your stations</span><span><i class=\"lgDot\" style=\"background:#4cc9f0\"></i>Notable systems</span></div>";
   h+="<div class=\"mapHint\">"+mapHintText()+"</div>";
   return h;
 }
@@ -6771,7 +6873,7 @@ function renderGalaxy(){
   const quads=[["q_alpha","ALPHA QUADRANT",100,360],["q_beta","BETA QUADRANT",300,360],["q_gamma","GAMMA QUADRANT",100,76],["q_delta","DELTA QUADRANT",300,76]];
   let ql="";
   quads.forEach(q=>{const qv=q[0].replace("q_","");ql+="<g class=\"mapLblG\" data-mx=\""+q[2]+"\" data-my=\""+q[3]+"\" data-dx=\"0\" data-dy=\"0\"><text x=\"0\" y=\"0\" text-anchor=\"middle\" class=\"mapQ\" onclick=\""+mapQuadClick(qv)+"\" style=\"cursor:pointer\">"+q[1]+"</text></g>";});
-  const pois=[["sol",200,282,"#ffd166","Sol",-26,16],["qonos",292,318,"#ff5d5d","Qo'noS",-52,10],["romulus",272,266,"#2f8f5b","Romulus",12,-10],["bajor",148,290,"#4cc9f0","Bajor",-38,-2],["ds9",166,270,"#ff9f1c","Deep Space 9",14,-14],["cardassia",105,328,"#e9c46a","Cardassia",-62,6],["ferenginar",122,232,"#b5cc4e","Ferenginar",-64,-8],["borg",296,112,"#58b368","Borg Unicomplex",-105,4],["dominion",108,118,"#a855f7","Dominion"],["vulcan",230,306,"#ff9f1c","Vulcan",14,-14],["andoria",132,244,"#90e0ef","Andoria",-48,0],["betazed",148,266,"#b565ff","Betazed",-48,0],["trill",138,250,"#4cc9f0","Trill",12,-14],["risa",160,322,"#80ed99","Risa",16,4],["khitomer",305,298,"#ef476f","Khitomer",14,12],["ocampa",342,42,"#ffd97d","Ocampa"],["talax",332,152,"#f4a259","New Talax",-70,4],["kazon",238,92,"#f4a259","Kazon"],["vidiians",368,96,"#b08968","Vidiians",-58,22],["malonprime",270,175,"#8a9a5b","Malon Prime"],["founders",140,90,"#e07a5f","Founders' Homeworld"],["wolf359",170,300,"#9e9e9e","Wolf 359",-58,4]];
+  const pois=[["sol",200,282,"#ffd166","Sol",-26,16],["qonos",292,318,"#ff5d5d","Qo'noS",-52,10],["romulus",272,266,"#2f8f5b","Romulus",12,-10],["bajor",148,290,"#4cc9f0","Bajor",-38,-2],["ds9",166,270,"#ff9f1c","Deep Space 9",14,-14],["cardassia",105,328,"#e9c46a","Cardassia",-62,6],["ferenginar",122,232,"#b5cc4e","Ferenginar",-64,-8],["borg",296,112,"#58b368","Borg Unicomplex",-105,4],["dominion",108,118,"#a855f7","Dominion"],["vulcan",230,306,"#ff9f1c","Vulcan",14,-14],["andoria",132,244,"#90e0ef","Andoria",-48,0],["betazed",148,266,"#b565ff","Betazed",-48,0],["trill",138,250,"#4cc9f0","Trill",12,-14],["risa",160,322,"#80ed99","Risa",16,4],["khitomer",305,298,"#ef476f","Khitomer",14,12],["ocampa",342,42,"#ffd97d","Ocampa"],["talax",332,152,"#f4a259","New Talax",-70,4],["kazon",238,92,"#f4a259","Kazon"],["vidiians",368,96,"#b08968","Vidiians",-58,22],["malonprime",270,175,"#8a9a5b","Malon Prime"],["founders",140,90,"#e07a5f","Founders' Homeworld"],["idran",122,102,"#4cc9f0","Idran System",14,-14],["wolf359",170,300,"#9e9e9e","Wolf 359",-58,4]];
 const TERR=[
  ["t_fed","UNITED FEDERATION OF PLANETS",140,295,95,60,"#4cc9f0",230,215],
  ["t_klingon","KLINGON EMPIRE",295,312,55,42,"#ff5d5d",295,342],
@@ -6794,12 +6896,19 @@ const TERR=[
       +"<circle cx=\"176\" cy=\"280\" r=\"12\" fill=\"none\" stroke=\"#7ee0ff\" stroke-width=\"2\" opacity=\".75\"/>"
       +"<circle cx=\"176\" cy=\"280\" r=\"7\" fill=\"none\" stroke=\"#bff1ff\" stroke-width=\"1.5\" opacity=\".9\"/>"
       +"<circle cx=\"176\" cy=\"280\" r=\"3\" fill=\"#eafcff\"/>"
-      +"<g class=\"mapLblG\" data-mx=\"176\" data-my=\"280\" data-dx=\"16\" data-dy=\"12\"><text x=\"0\" y=\"0\" class=\"mapLbl\">Wormhole</text></g></g>";
+      +"<g class=\"mapLblG\" data-mx=\"176\" data-my=\"280\" data-dx=\"16\" data-dy=\"12\"><text x=\"0\" y=\"0\" class=\"mapLbl\">Wormhole</text></g></g>"
+"<g onclick=\"mapInfo('wormhole')\" style=\"cursor:pointer\">"
+      +"<circle cx=\"122\" cy=\"102\" r=\"12\" fill=\"none\" stroke=\"#7ee0ff\" stroke-width=\"2\" opacity=\".75\"/>"
+      +"<circle cx=\"122\" cy=\"102\" r=\"7\" fill=\"none\" stroke=\"#bff1ff\" stroke-width=\"1.5\" opacity=\".9\"/>"
+      +"<circle cx=\"122\" cy=\"102\" r=\"3\" fill=\"#eafcff\"/>"
+      +"<title>Bajoran Wormhole — Gamma terminus</title></g>";
   }
-  let fleet="";
+  let fleet="",routes="";
   G.ships.forEach(s=>{
     if(s.status==="museum")return;
-    const post=s.post||"sol",pc=POST_COORDS[post]||POST_COORDS.sol;
+    const post=s.post||"sol",pc=shipMapXY(s);
+    const _rt=shipEnRoute(s);
+    if(_rt&&_rt.f<1&&POST_COORDS[_rt.dest]){const _oa=POST_COORDS[_rt.origin]||POST_COORDS.sol,_ob=POST_COORDS[_rt.dest];routes+="<line x1=\""+_oa[0]+"\" y1=\""+_oa[1]+"\" x2=\""+_ob[0]+"\" y2=\""+_ob[1]+"\" stroke=\"#7ee0ff\" stroke-width=\"1\" stroke-dasharray=\"4 3\" opacity=\".55\"/>";}
     const isQ=post==="alpha"||post==="beta"||post==="gamma"||post==="delta";
     const rr=rng(hashStr("ship"+s.id+"@"+post)),a=rr()*Math.PI*2;
     const d=post==="sol"?28+rr()*38:(isQ?26+rr()*40:15+rr()*15);
@@ -6807,7 +6916,7 @@ const TERR=[
     const nm=esc(s.name.length>18?s.name.slice(0,17)+"\u2026":s.name);
     fleet+="<g onclick=\""+mapShipClick(s.id)+"\" style=\"cursor:pointer\"><path d=\"M"+x+" "+yt+" l5 11 -5 -3 -5 3 Z\" fill=\"#ffb703\"/>"+mapShipRing(s,x,yt,post)
       +"<g class=\"mapLblG\" data-mx=\""+x+"\" data-my=\""+yt+"\" data-dx=\"8\" data-dy=\"4\"><text x=\"0\" y=\"0\" class=\"mapShipLbl\">"+nm+"</text></g>"
-      +"<title>"+esc(s.name)+"</title></g>";
+      +"<title>"+esc(s.name)+(_rt&&_rt.f<1?" → "+esc(POST_LABELS[_rt.dest]||_rt.dest):"")+"</title></g>";
   });
   let stnLayer="";
   G.stations.forEach(s=>{
@@ -6839,7 +6948,7 @@ const TERR=[
     +"<text x=\"214\" y=\"190\" text-anchor=\"middle\" class=\"mapGreek\">\u03b4</text>"
     +"<text x=\"186\" y=\"218\" text-anchor=\"middle\" class=\"mapGreek\">\u03b1</text>"
     +"<text x=\"214\" y=\"218\" text-anchor=\"middle\" class=\"mapGreek\">\u03b2</text>"
-    +ql+terr+(mapLayers.planets?pm:"")+wh+mapIntelBlips()+(mapLayers.fleet?fleet:"")+(mapLayers.stations?stnLayer:"")+mapDeployFlash()
+    +ql+terr+(mapLayers.planets?pm:"")+wh+mapIntelBlips()+(mapLayers.fleet?routes+fleet:"")+(mapLayers.stations?stnLayer:"")+mapDeployFlash()
     +"</g></svg></div>"+mapDeployFloat()+"</div>";
   h+="<div class=\"mapLegend\"><span><i class=\"lgDot\" style=\"background:#ffb703\"></i>Your ships</span><span><i class=\"lgDot\" style=\"background:#7ee0ff\"></i>Wormhole</span><span><i class=\"lgSq\"></i>Your stations</span><span><i class=\"lgDot\" style=\"background:#4cc9f0\"></i>Notable systems</span></div>";
   h+="<div class=\"mapHint\">"+mapHintText()+"</div>";
@@ -6885,6 +6994,15 @@ function shipModal(id){
        '<div class="prog"><i style="width:'+Math.round((1-s.transit.daysLeft/s.transit.total)*100)+'%"></i></div>'+
        '<div class="btnRow"><button class="btn small ghost" onclick="uiCancelTransit(\''+s.id+'\')">Recall from transit</button></div>';
   }else{
+    if(s.status==="mission"){
+      const _mm=G.missions.find(function(m){return m.shipId===s.id&&!m.kind;});
+      const _mt=_mm?MISSION_DECK.find(function(x){return x.id===_mm.tIdx;}):null;
+      if(_mm&&_mt){
+        const _mer=shipEnRoute(s);
+        h+='<div class="kv"><span class="k">Mission</span><span class="v">'+esc(_mt.name)+' — '+_mm.daysLeft+'d left</span></div>';
+        if(_mer)h+='<div class="kv"><span class="k">Route</span><span class="v">'+esc(POST_LABELS[_mer.origin]||_mer.origin)+' → '+esc(POST_LABELS[_mer.dest]||_mer.dest)+' · '+viaName(_mer.via)+(_mer.f<1?' · en route '+Math.round(_mer.f*100)+'%':' · arrived')+'</span></div><div class="prog"><i style="width:'+Math.round(_mer.f*100)+'%"></i></div>';
+      }
+    }
     h+='<div class="kv"><span class="k">Posting</span><span class="v">'+sheetPick('Posting',postOptions(s.post||"sol"),(function(_sid){return function(v){setShipPost(_sid,v);};})(s.id))+'</span></div>';
     if(HOSTILE_ZONES[s.post||"sol"])h+='<p class="dim" style="color:var(--red)">Hostile territory ('+esc(HOSTILE_ZONES[s.post||"sol"].terr)+') — random RED ALERT battles can strike a ship posted here.</p>';
   }
@@ -7418,7 +7536,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v1.6</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v1.7</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
