@@ -4304,7 +4304,7 @@ function randomCmdrName(){
 }
 function cmdrImg(cls){
   const key=G.commander.species+"-"+G.commander.gender;
-  const arr=(typeof CMDR_PORTRAITS!=="undefined"&&CMDR_PORTRAITS[key])?CMDR_PORTRAITS[key]:((typeof CREW_PORTRAITS!=="undefined"&&CREW_PORTRAITS[key])?CREW_PORTRAITS[key]:null);
+  const arr=(typeof CMDR_PORTRAITS!=="undefined"&&CMDR_PORTRAITS[key])?CMDR_PORTRAITS[key]:crewPoolUrls(key);
   const src=arr?(arr[G.commander.portrait||0]||arr[0]):"";
   if(src)return '<img class="'+cls+'" src="'+src+'" alt="">';
   return '<div class="'+cls+' pfaceInit">?</div>';
@@ -4317,7 +4317,7 @@ function openCmdrAppearance(){
 }
 function cmdrAppearanceHTML(){
   const d=cmdrDraft,g=d.gender,key=d.species+"-"+g;
-  const arr=(typeof CMDR_PORTRAITS!=="undefined"&&CMDR_PORTRAITS[key])?CMDR_PORTRAITS[key]:((typeof CREW_PORTRAITS!=="undefined"&&CREW_PORTRAITS[key])?CREW_PORTRAITS[key]:[]);
+  const arr=(typeof CMDR_PORTRAITS!=="undefined"&&CMDR_PORTRAITS[key])?CMDR_PORTRAITS[key]:crewPoolUrls(key);
   const prevSrc=arr[d.portrait]||arr[0]||"";
   let h='<h2>Commander Appearance</h2>';
   h+='<div class="pfaceWrap">'+(prevSrc?'<img class="pfaceBig" src="'+prevSrc+'" alt="">':'<div class="pfaceBig pfaceInit">?</div>')+
@@ -4327,7 +4327,7 @@ function cmdrAppearanceHTML(){
     '<button class="btn small '+(g==="m"?"peach":"ghost")+'" onclick="cmdrDraftGender(\'m\')">Male</button>'+
     '<button class="btn small '+(g==="f"?"peach":"ghost")+'" onclick="cmdrDraftGender(\'f\')">Female</button></div>';
   h+='<h3>2 · Species</h3><div class="cmdrGrid">'+CMDR_SPECIES.map(sp=>{
-    const k2=sp[0]+"-"+g,a2=(typeof CMDR_PORTRAITS!=="undefined"&&CMDR_PORTRAITS[k2])?CMDR_PORTRAITS[k2]:((typeof CREW_PORTRAITS!=="undefined"&&CREW_PORTRAITS[k2])?CREW_PORTRAITS[k2]:null),src=a2?a2[0]:"";
+    const k2=sp[0]+"-"+g,a2=(typeof CMDR_PORTRAITS!=="undefined"&&CMDR_PORTRAITS[k2])?CMDR_PORTRAITS[k2]:crewPoolUrls(k2),src=a2?a2[0]:"";
     return '<div class="cmdrOpt'+(d.species===sp[0]?" sel":"")+'" onclick="cmdrDraftSpecies(\''+sp[0]+'\')">'+
       (src?'<img src="'+src+'" alt="">':'<div class="pfaceInit" style="width:100%;aspect-ratio:1;font-size:22px;">?</div>')+
       '<div class="cmdrLbl">'+sp[1]+'</div></div>';
@@ -5602,14 +5602,17 @@ function portraitPick(name,entry){
   return "main";
 }
 const SPECIES_PKEY={"Human":"human","Klingon":"klingon","Vulcan":"vulcan","Romulan":"romulan","Liberated Borg":"borg","Ferengi":"ferengi","Andorian":"andorian","Android":"synth","Android / Synth":"synth","Tellarite":"tellarite","Trill":"trill","Hologram":"hologram","Talaxian":"talaxian","Ocampa":"ocampa","Hirogen":"hirogen","Kazon":"kazon","Jem'Hadar":"jemhadar","Vorta":"vorta","Changeling":"changeling"};
+function crewPoolUrls(key){
+  const out=[];for(let i=1;i<=50;i++)out.push("portraits/"+key+"-"+String(i).padStart(2,"0")+".jpg");
+  return out;
+}
 function crewPortraitFor(o){
-  if(typeof CREW_PORTRAITS==="undefined")return null;
+  if(o.stage==="child")return null;
   const key=SPECIES_PKEY[o.species];if(!key)return null;
   const g=(o.gender==="F"||o.gender==="f")?"f":"m";
-  const arr=CREW_PORTRAITS[key+"-"+g];if(!arr||!arr.length)return null;
   let hsh=0;const nm=o.name||"";
   for(let i=0;i<nm.length;i++)hsh=(hsh*31+nm.charCodeAt(i))>>>0;
-  return arr[hsh%arr.length];
+  return "portraits/"+key+"-"+g+"-"+String(hsh%50+1).padStart(2,"0")+".jpg";
 }
 function portraitSrc(name,entry){var pick=portraitPick(name,entry);if(pick==="alt"&&typeof PORTRAITS_ALT!=="undefined"&&PORTRAITS_ALT[name])return PORTRAITS_ALT[name];if(typeof PORTRAITS!=="undefined"&&PORTRAITS[name])return PORTRAITS[name];if(entry){var cp=crewPortraitFor(entry);if(cp)return cp;}return "";}
 function portraitVerCur(name,entry){return portraitPick(name,entry);}
@@ -6978,7 +6981,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.98</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.99</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
