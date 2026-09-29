@@ -4947,16 +4947,30 @@ function uiBuildShipGo(cls,yardId){
 function uiBuildStation(type){
   const d=STATION_DEFS[type];
   if(G.credits<d.cr||G.dilithium<d.dl)return;
-  gainCR(-d.cr);gainDL(-d.dl);
   const n=G.stations.filter(s=>s.type===type).length+1;
-  const st={id:uid("st"),name:d.name+" "+["","II","III","IV","V"][Math.min(n-1,4)]+"-"+ri(10,99),type,status:"construction",daysLeft:d.days,comp:d.comp};
-  if(type==="starbase")st.name="Starbase "+pick(["Khitomer","Archon","Meridian","Pioneer","Horizon","Valiant","Sentinel"]);
-  if(type==="shipyard")st.name=pick(["Antares","San Francisco","Beta Antares"])+" Shipyard";
-  if(type==="medical")st.name=pick(["Nightingale","Bashir","Pulaski","Chapel"])+" Medical Station";
-  if(type==="research")st.name=pick(["Sagan","Hawking","Le Guin"])+" Research Array";
+  let nm=d.name+" "+["","II","III","IV","V"][Math.min(n-1,4)]+"-"+ri(10,99);
+  if(type==="starbase")nm="Starbase "+pick(["Khitomer","Archon","Meridian","Pioneer","Horizon","Valiant","Sentinel"]);
+  if(type==="shipyard")nm=pick(["Antares","San Francisco","Beta Antares"])+" Shipyard";
+  if(type==="medical")nm=pick(["Nightingale","Bashir","Pulaski","Chapel"])+" Medical Station";
+  if(type==="research")nm=pick(["Sagan","Hawking","Le Guin"])+" Research Array";
+  openModal('<h2>Construct '+d.name+'</h2>'+stationPic(type,true)+'<div class="flavor">'+fmt(d.cr)+' CR · '+fmt(d.dl)+' DL · '+d.days+' days · Upkeep '+d.upkeep+'/d</div>'+
+    '<label>Station name</label><input type="text" id="bsName" value="'+esc(nm)+'">'+
+    '<label>Placement</label><select id="bsPost">'+postOptions("sol")+'</select>'+
+    '<p class="dim">Choose where the station will be built. You can relocate it later from its station panel.</p>'+
+    '<div class="btnRow"><button class="btn violet" onclick="uiBuildStationGo(\''+type+'\')">Begin construction</button>'+
+    '<button class="btn ghost" onclick="closeModal()">Cancel</button></div>');
+}
+function uiBuildStationGo(type){
+  const d=STATION_DEFS[type];
+  if(G.credits<d.cr||G.dilithium<d.dl){closeModal();return;}
+  const post=$("bsPost")?$("bsPost").value:"sol";
+  if(!POST_COORDS[post]){toast("Pick a valid placement.");return;}
+  gainCR(-d.cr);gainDL(-d.dl);
+  const nm=$("bsName")?$("bsName").value.trim():"";
+  const st={id:uid("st"),name:nm||(d.name+" "+ri(10,99)),type,status:"construction",daysLeft:d.days,comp:d.comp,post:post};
   G.stations.push(st);
-  log("build","Construction begun: "+st.name+" ("+d.name+"). ETA "+d.days+" days.");
-  save();render();toast("Station construction started.");
+  log("build","Construction begun: "+st.name+" ("+d.name+") at "+POST_LABELS[post]+". ETA "+d.days+" days.");
+  closeModal();save();render();toast("Station construction started.");
 }
 function buildRefund(cr,dl){return {cr:Math.floor(cr/2),dl:Math.floor(dl/2)};}
 function uiCancelBuild(kind,id){
@@ -6030,19 +6044,23 @@ function initMapZoom(){
 }
 
 
-const POST_COORDS={sol:[200,282],alpha:[100,290],beta:[300,290],gamma:[100,110],delta:[300,110],qonos:[292,318],romulus:[272,266],bajor:[148,290],ds9:[166,270],cardassia:[105,328],ferenginar:[122,232],borg:[296,112],dominion:[108,118],vulcan:[230,306],andoria:[132,244],betazed:[148,266],trill:[138,250],risa:[160,322],khitomer:[305,298],ocampa:[266,142],talax:[332,152],founders:[140,90],wolf359:[170,300]};
-const POST_LABELS={sol:"Sol",alpha:"Alpha Quadrant",beta:"Beta Quadrant",gamma:"Gamma Quadrant",delta:"Delta Quadrant",qonos:"Qo'noS",romulus:"Romulus",bajor:"Bajor",ds9:"Deep Space 9",cardassia:"Cardassia Prime",ferenginar:"Ferenginar",borg:"Borg Unicomplex",dominion:"Dominion",vulcan:"Vulcan",andoria:"Andoria",betazed:"Betazed",trill:"Trill",risa:"Risa",khitomer:"Khitomer",ocampa:"Ocampa",talax:"New Talax",founders:"Founders' Homeworld",wolf359:"Wolf 359"};
+const POST_COORDS={sol:[200,282],alpha:[100,290],beta:[300,290],gamma:[100,110],delta:[300,110],qonos:[292,318],romulus:[272,266],bajor:[148,290],ds9:[166,270],cardassia:[105,328],ferenginar:[122,232],borg:[296,112],dominion:[108,118],vulcan:[230,306],andoria:[132,244],betazed:[148,266],trill:[138,250],risa:[160,322],khitomer:[305,298],ocampa:[342,42],talax:[332,152],kazon:[238,92],vidiians:[368,96],malonprime:[270,175],founders:[140,90],wolf359:[170,300]};
+const POST_LABELS={sol:"Sol",alpha:"Alpha Quadrant",beta:"Beta Quadrant",gamma:"Gamma Quadrant",delta:"Delta Quadrant",qonos:"Qo'noS",romulus:"Romulus",bajor:"Bajor",ds9:"Deep Space 9",cardassia:"Cardassia Prime",ferenginar:"Ferenginar",borg:"Borg Unicomplex",dominion:"Dominion",vulcan:"Vulcan",andoria:"Andoria",betazed:"Betazed",trill:"Trill",risa:"Risa",khitomer:"Khitomer",ocampa:"Ocampa",talax:"New Talax",kazon:"Kazon",vidiians:"Vidiians",malonprime:"Malon Prime",founders:"Founders' Homeworld",wolf359:"Wolf 359"};
 function shipPostName(s){return POST_LABELS[s.post]||POST_LABELS.sol;}
-const POST_QUAD={sol:"alpha",alpha:"alpha",beta:"beta",gamma:"gamma",delta:"delta",qonos:"beta",romulus:"beta",khitomer:"beta",bajor:"alpha",ds9:"alpha",cardassia:"alpha",ferenginar:"alpha",vulcan:"alpha",andoria:"alpha",betazed:"alpha",trill:"alpha",risa:"alpha",wolf359:"alpha",ocampa:"delta",talax:"delta",borg:"delta",founders:"gamma",dominion:"gamma"};
+const POST_QUAD={sol:"alpha",alpha:"alpha",beta:"beta",gamma:"gamma",delta:"delta",qonos:"beta",romulus:"beta",khitomer:"beta",bajor:"alpha",ds9:"alpha",cardassia:"alpha",ferenginar:"alpha",vulcan:"alpha",andoria:"alpha",betazed:"alpha",trill:"alpha",risa:"alpha",wolf359:"alpha",ocampa:"delta",talax:"delta",kazon:"delta",vidiians:"delta",malonprime:"delta",borg:"delta",founders:"gamma",dominion:"gamma"};
 function postQuadOf(s){return POST_QUAD[s.post]||"alpha";}
 function postOptions(cur){
-  const gr=[["Quadrants",["alpha","beta","gamma","delta"]],["Systems",["sol","vulcan","andoria","betazed","trill","risa","wolf359","qonos","romulus","khitomer","bajor","ds9","cardassia","ferenginar","ocampa","talax","founders","borg","dominion"]]];
+  const gr=[["Quadrants",["alpha","beta","gamma","delta"]],["Systems",["sol","vulcan","andoria","betazed","trill","risa","wolf359","qonos","romulus","khitomer","bajor","ds9","cardassia","ferenginar","ocampa","talax","kazon","vidiians","malonprime","founders","borg","dominion"]]];
   return gr.map(g=>'<optgroup label="'+g[0]+'">'+g[1].map(k=>'<option value="'+k+'"'+(k===cur?" selected":"")+'>'+POST_LABELS[k]+'</option>').join("")+"</optgroup>").join("");
 }
 function setShipPost(id,post){
   const s=ship(id);if(!s||!POST_COORDS[post])return;
   if(s.transit){toast("Ship is in transit — recall it first.");return;}
   s.post=post;log("command",s.name+" posted to "+POST_LABELS[post]+".");save();shipModal(id);render();
+}
+function setStationPost(id,post){
+  const st=station(id);if(!st||!POST_COORDS[post])return;
+  st.post=post;log("command",st.name+" relocated to "+POST_LABELS[post]+".");save();stationModal(id);render();
 }
 /* ---------- slipstream gate & wormhole transit ---------- */
 const GATE_COST_DL=100,GATE_DAYS=14,WORM_COST_DL=25,WORM_DAYS=3;
@@ -6378,6 +6396,7 @@ function stationModal(id){
   const st=station(id);if(!st)return;const d=STATION_DEFS[st.type],crew=crewOfStation(st.id);
   const co=stationCO(st.id),xo=stationXO(st.id,co);
   let h='<h2>'+esc(st.name)+'</h2><div class="flavor">'+d.name+' · '+(st.mothballed?"Mothballed":st.status==="active"?"Operational":"Under construction — "+st.daysLeft+"d")+'</div>'+stationPic(stationArtKey(st),true);
+  h+='<div class="kv"><span class="k">Posting</span><span class="v"><select id="postPick" onchange="setStationPost(\''+st.id+'\',this.value)">'+postOptions(st.post||"sol")+'</select></span></div>';
   h+='<p class="dim">'+esc(d.desc)+'</p>';
   if(st.blurb)h+='<p class="dim"><i>'+esc(st.blurb)+'</i></p>';
   h+='<h4>Crew ('+crew.length+')</h4>';
@@ -6702,7 +6721,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.72</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.73</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
