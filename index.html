@@ -2553,10 +2553,12 @@ function showInterrupt(item){
     if(res)showInterrupt(res);else{$("modalRoot").classList.remove("open");pumpModals();}
   };});
 }
-function openModal(html){$("modalBox").innerHTML=html;$("modalRoot").classList.add("open");}
+let modalBack=null; // optional BACK-button destination while a modal is open
+function openModal(html){modalBack=null;$("modalBox").innerHTML=html;$("modalRoot").classList.add("open");}
 function closeModal(force){
   // block shade-click dismissal while story interrupts are queued
   if(force&&interruptQueue.length)return;
+  modalBack=null;
   $("modalRoot").classList.remove("open");
 }
 /* ===== completion celebrations ===== */
@@ -3371,7 +3373,11 @@ function setTab(t){
 function navGo(t){closeModal();closeTabMenu();setTab(t);}
 function goBack(){
   if($("menuDrawer").classList.contains("open")){closeTabMenu();return;}
-  if($("modalRoot").classList.contains("open")){closeModal();return;}
+  if($("modalRoot").classList.contains("open")){
+    if(modalBack){const f=modalBack;modalBack=null;f();}
+    else closeModal();
+    return;
+  }
   if(currentTab==="command")return;
   const prev=navStack.pop();
   if(prev!==undefined){tabScrollY[currentTab]=window.scrollY||document.documentElement.scrollTop||0;
@@ -5723,6 +5729,7 @@ function uiCrewAssign(kind,id){
   });
   h+='</div><div class="btnRow"><button class="btn small ghost" onclick="'+(kind==="ship"?"shipModal":"stationModal")+'(\''+id+'\')">Back</button></div>';
   openModal(h);
+  modalBack=function(){(kind==="ship"?shipModal(id):stationModal(id));};
 }
 function uiBilletOfficers(kind,id,bid){
   const tgt=kind==="ship"?ship(id):station(id);if(!tgt)return;
@@ -5740,20 +5747,21 @@ function uiBilletOfficers(kind,id,bid){
   else h+='<div class="offGrid">';
   crew.forEach(o=>{
     const isH=holder&&holder.id===o.id;
-    h+='<div class="offCell'+(isH?" isH":"")+'" data-search="'+bds(o)+'" data-sec="crew" onclick="uiSetBillet(\''+kind+'\',\''+id+'\',\''+bid+'\',\''+o.id+'\')">'+faceImg(o,"pfaceSm")+'<div class="grow"><div class="onm">'+(isH?"✓ ":"")+nameHtml(o)+'</div><div class="osub">'+esc(RANKS[o.rank])+' · '+esc(o.dept)+' · Fit '+fitScore(o,bid)+((o.roles&&o.roles.length)?" · "+esc(o.roles.map(billetLabel).join(", ")):"")+'</div></div></div>';
+    h+='<div class="offCell'+(isH?" isH":"")+'" data-search="'+bds(o)+'" data-sec="crew" onclick="uiSetBillet(\''+kind+'\',\''+id+'\',\''+bid+'\',\''+o.id+'\')">'+faceImg(o,"pfaceSm")+'<div class="grow"><div class="onm">'+(isH?"✓ ":"")+esc(o.name)+'</div><div class="osub">'+esc(rankName(o))+' · '+esc(o.dept)+' · Fit '+fitScore(o,bid)+((o.roles&&o.roles.length)?" · "+esc(o.roles.map(billetLabel).join(", ")):"")+'</div></div></div>';
   });
   if(crew.length)h+='</div>';
   h+='</div>';
   if(pool.length){
     h+='<div data-seccard="pool"><h4>Unassigned officers ('+pool.length+')</h4><p class="dim" style="margin:4px 0 8px;">Assigning one transfers them to '+esc(tgt.name)+'.</p><div class="offGrid">';
     pool.forEach(o=>{
-      h+='<div class="offCell" data-search="'+bds(o)+'" data-sec="pool" onclick="uiSetBillet(\''+kind+'\',\''+id+'\',\''+bid+'\',\''+o.id+'\')">'+faceImg(o,"pfaceSm")+'<div class="grow"><div class="onm">'+nameHtml(o)+'</div><div class="osub">'+esc(RANKS[o.rank])+' · '+esc(o.dept)+' · Fit '+fitScore(o,bid)+'</div></div></div>';
+      h+='<div class="offCell" data-search="'+bds(o)+'" data-sec="pool" onclick="uiSetBillet(\''+kind+'\',\''+id+'\',\''+bid+'\',\''+o.id+'\')">'+faceImg(o,"pfaceSm")+'<div class="grow"><div class="onm">'+esc(o.name)+'</div><div class="osub">'+esc(rankName(o))+' · '+esc(o.dept)+' · Fit '+fitScore(o,bid)+'</div></div></div>';
     });
     h+='</div></div>';
   }
   h+='</div><div id="bilListNoRes" style="display:none;"><p class="dim">No officers match your search.</p></div>';
   h+='<div class="btnRow"><button class="btn small ghost" onclick="uiCrewAssign(\''+kind+'\',\''+id+'\')">Back to positions</button></div>';
   openModal(h);
+  modalBack=function(){uiCrewAssign(kind,id);};
 }
 
 
@@ -6736,7 +6744,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.75</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.76</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
