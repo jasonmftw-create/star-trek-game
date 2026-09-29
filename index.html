@@ -7932,6 +7932,7 @@ function officerModal(id){
   if(o.dead)h+='<p class="badge bad">Deceased — see Memorial Wall</p>';
   if(o.retired)h+='<p><span class="badge">Retired with honors</span></p>';
   if(o.request&&!o.dead&&!o.retired)h+='<p><span class="badge violet">Requests an audience — use Request meeting below</span></p>';
+  if(!o.dead)h+='<div class="shipHero"><button class="btn heroGold" onclick="aiTalk(\''+o.id+'\')">Talk</button></div>';
   h+='<h4>Attributes</h4>'+bar("CMD",o.stats.cmd)+bar("SCI",o.stats.sci)+bar("ENG",o.stats.eng)+
      bar("MED",o.stats.med)+bar("DIP",o.stats.dip)+bar("TAC",o.stats.tac);
   if(o.traits.length)h+='<div style="margin:6px 0;">'+o.traits.map(t=>'<span class="badge violet">'+esc(t)+'</span>').join("")+'</div>';
@@ -7979,20 +7980,21 @@ function officerModal(id){
     const cur=o.post.t==="pool"?"pool":o.post.t==="hq"?"hq":o.post.t+":"+o.post.id;
     h+='<div class="hr"></div><label>Assignment / Transfer</label>'+sheetPick('Assignment / Transfer',postingOptions(cur),(function(_oid){return function(v){uiAssign(_oid,v);};})(o.id));
     h+='<div class="kv"><span class="k">Positions</span><span class="v">'+((o.roles&&o.roles.length)?esc(o.roles.map(billetLabel).join(", ")):'<span class="dim">Unassigned</span>')+'</span></div>';
-    h+='<div class="btnRow"><button class="btn small violet" onclick="uiRolePicker(\''+o.id+'\')">Assign positions</button>';
+    let _cmd='<button class="btn small violet" onclick="uiRolePicker(\''+o.id+'\')">Assign positions</button>';
     if(!o.rankLabel&&o.rank<9)
-      h+='<button class="btn small teal" '+(G.prestige>=cost?"":"disabled")+' onclick="uiPromote(\''+o.id+'\')">Promote ('+cost+' pres.)</button>';
+      _cmd+='<button class="btn small teal" '+(G.prestige>=cost?"":"disabled")+' onclick="uiPromote(\''+o.id+'\')">Promote ('+cost+' pres.)</button>';
     if(!o.rankLabel&&o.rank>0)
-      h+='<button class="btn small ghost" onclick="uiDemote(\''+o.id+'\')">Demote</button>';     const mLast=(G.meetings||{})[o.id];const mCd=mLast!==undefined&&G.stardate-mLast<MEET_CD;
-    h+='<button class="btn small teal" '+(mCd?"disabled":"")+' onclick="uiRequestMeeting(\''+o.id+'\')">Request meeting'+(mCd?" ("+Math.ceil(MEET_CD-(G.stardate-mLast))+"d)":"")+'</button>';h+='<button class="btn small gold" onclick="aiTalk(\''+o.id+'\')">Talk</button>';h+='<button class="btn small violet" onclick="uiAwardPicker(\''+o.id+'\')">Award honor</button>';
+      _cmd+='<button class="btn small ghost" onclick="uiDemote(\''+o.id+'\')">Demote</button>';
+    const mLast=(G.meetings||{})[o.id];const mCd=mLast!==undefined&&G.stardate-mLast<MEET_CD;
+    _cmd+='<button class="btn small teal" '+(mCd?"disabled":"")+' onclick="uiRequestMeeting(\''+o.id+'\')">Request meeting'+(mCd?" ("+Math.ceil(MEET_CD-(G.stardate-mLast))+"d)":"")+'</button>';
+    _cmd+='<button class="btn small violet" onclick="uiAwardPicker(\''+o.id+'\')">Award honor</button>';
     if(o.rankLabel==="Civilian")
-      h+='<button class="btn small peach" onclick="uiCommission(\''+o.id+'\',\'civ\')">Grant field commission</button>';
+      _cmd+='<button class="btn small peach" onclick="uiCommission(\''+o.id+'\',\'civ\')">Grant field commission</button>';
     if(o.rankLabel==="Cadet")
-      h+='<button class="btn small peach" onclick="uiCommission(\''+o.id+'\',\'cadet\')">Graduate to Ensign</button>';
-    h+='</div>';
+      _cmd+='<button class="btn small peach" onclick="uiCommission(\''+o.id+'\',\'cadet\')">Graduate to Ensign</button>';
+    h+='<div class="shipSecLbl">Command</div><div class="opsGrid">'+_cmd+'</div>';
     if(readyForPromotion(o))h+='<p><span class="badge good">Ready for promotion</span></p>';
   }
-  if(!o.dead&&!(adult&&!o.retired))h+='<div class="btnRow"><button class="btn small gold" onclick="aiTalk(\''+o.id+'\')">Talk</button></div>';
   h+='<div class="btnRow"><button class="btn ghost" onclick="closeModal()">Close</button></div>';
   const _wasOpen=$("modalRoot").classList.contains("open");
   const _prevHtml=$("modalBox").innerHTML,_prevBack=modalBack;
@@ -11282,7 +11284,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.7.2</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.7.3</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
