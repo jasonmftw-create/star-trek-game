@@ -949,7 +949,157 @@ const MISSION_DECK=[
   brief:"A Maquis remnant colony is starving in the DMZ's ashes. Helping them is humanitarian. It's also political. Starfleet Command is watching."},
  {id:"q-signature",name:"Investigate Q Energy Signature",type:"Exploration",diff:90,days:20,cr:7000,dl:350,pres:130,
   shipStat:"sci",capSkill:"dip",dept:"Science",
-  brief:"Sensors detect unmistakable Q-continuum mischief near the Paulson Nebula. Respond with curiosity, caution, and absolutely no snap judgments."}
+  brief:"Sensors detect unmistakable Q-continuum mischief near the Paulson Nebula. Respond with curiosity, caution, and absolutely no snap judgments."},
+ {id:"m2-veil-storms",name:"Chart the Veil Storms",type:"Exploration",diff:40,days:14,cr:4500,dl:150,pres:35,shipStat:"sci",capSkill:"cmd",dept:"Science",brief:"A stellar nursery is birthing protostars inside an ion storm. Map the safe corridors before the storms map you."},
+ {id:"m2-hollow-moon",name:"Survey the Hollow Moon",type:"Exploration",diff:30,days:10,cr:3000,dl:100,pres:25,shipStat:"sci",capSkill:"sci",dept:"Science",brief:"Long-range scans show a moon with a hollow core and a heartbeat. Find out which one is metaphorical."},
+ {id:"m2-sargasso",name:"Probe the Sargasso Expanse",type:"Exploration",diff:55,days:18,cr:5000,dl:220,pres:50,shipStat:"sci",capSkill:"sci",dept:"Science",brief:"Derelict ships from a dozen species drift in a subspace eddy. Salvage rights, first contact, and tetryon radiation — in that order."},
+ {id:"m2-generation-ship",name:"Contact the Generation Ship",type:"Exploration",diff:50,days:16,cr:4500,dl:150,pres:60,shipStat:"hull",capSkill:"dip",dept:"Command",brief:"A sublight ark has crawled between stars for 400 years. Its descendants have never seen a warp nacelle. Introduce yourselves gently."},
+ {id:"m2-dyson-fragment",name:"Investigate Dyson Fragment",type:"Exploration",diff:85,days:28,cr:8000,dl:450,pres:115,shipStat:"sci",capSkill:"sci",dept:"Science",brief:"A shard of a shattered megastructure tumbles through the sector, still powered. Who built it — and what broke it?"},
+ {id:"m2-void-bloom",name:"Study the Void Bloom",type:"Exploration",diff:45,days:12,cr:3500,dl:180,pres:40,shipStat:"sci",capSkill:"sci",dept:"Science",brief:"A nebula is flowering — literally photosynthesizing starlight. Botanists are ecstatic. Security is nervous."},
+ {id:"m2-echo-system",name:"Map the Echo System",type:"Exploration",diff:35,days:11,cr:3200,dl:120,pres:30,shipStat:"sci",capSkill:"cmd",dept:"Science",brief:"Every probe sent into this trinary system returns data from six hours in the future. Chart it anyway."},
+ {id:"m2-wandering-planet",name:"Track the Wandering Planet",type:"Exploration",diff:60,days:20,cr:5500,dl:250,pres:55,shipStat:"sci",capSkill:"cmd",dept:"Science",brief:"A rogue planet with cities on its surface is crossing the sector. Nobody built them — somebody abandoned them."},
+ {id:"m2-crystal-desert",name:"Survey the Crystal Desert",type:"Exploration",diff:30,days:9,cr:2800,dl:140,pres:25,shipStat:"sci",capSkill:"sci",dept:"Science",brief:"A desert world of singing crystal formations. The songs are getting louder near the northern pole."},
+ {id:"m2-graveyard-orbit",name:"Chart the Graveyard Orbit",type:"Exploration",diff:50,days:15,cr:4200,dl:200,pres:45,shipStat:"tac",capSkill:"cmd",dept:"Security",brief:"A debris ring of warships from a forgotten battle. Identify the dead, honor them, and watch for scavengers."},
+ {id:"m2-tzenkethi-overture",name:"Answer the Tzenkethi Overture",type:"Diplomacy",diff:70,days:18,cr:6000,dl:200,pres:80,shipStat:"hull",capSkill:"dip",dept:"Command",brief:"The Tzenkethi have requested talks — their first in a decade. Bring patience, protocol, and a very good chair."},
+ {id:"m2-bajoran-vedek",name:"Escort the Vedek Assembly",type:"Diplomacy",diff:40,days:10,cr:3500,dl:100,pres:50,shipStat:"hull",capSkill:"dip",dept:"Command",brief:"Three vedeks, one disputed prophecy, and a pilgrim fleet. Keep the peace without taking sides in a 10,000-year-old argument."},
+ {id:"m2-tholian-accord",name:"Negotiate the Tholian Accord",type:"Diplomacy",diff:75,days:22,cr:7000,dl:280,pres:90,shipStat:"hull",capSkill:"dip",dept:"Command",brief:"The Tholians want a trade corridor through their territory. Their definition of negotiation involves a lot of standing very still."},
+ {id:"m2-gorn-parley",name:"Parley with the Gorn Hegemony",type:"Diplomacy",diff:65,days:16,cr:5500,dl:180,pres:70,shipStat:"tac",capSkill:"dip",dept:"Security",brief:"A Gorn commander has challenged your captain to ritual combat — or talks. The translator suggests talks. Probably."},
+ {id:"m2-ferengi-arbitration",name:"Arbitrate the Ferengi Merger",type:"Diplomacy",diff:35,days:8,cr:5000,dl:150,pres:30,shipStat:"hull",capSkill:"dip",dept:"Operations",brief:"Two rival Ferengi houses are merging. Oversee the contract signing and try not to get a commission."},
+ {id:"m2-cardassian-truth",name:"Host Cardassian Reconciliation Talks",type:"Diplomacy",diff:60,days:14,cr:4500,dl:150,pres:75,shipStat:"hull",capSkill:"dip",dept:"Command",brief:"Cardassian dissidents and Bajoran survivors in one room. History will judge this. So will everyone present."},
+ {id:"m2-klingon-succession",name:"Observe the Klingon Succession Rite",type:"Diplomacy",diff:55,days:12,cr:4000,dl:120,pres:60,shipStat:"tac",capSkill:"dip",dept:"Command",brief:"A Great House names its heir. Starfleet's presence is a courtesy — and a statement. Don't spill the bloodwine."},
+ {id:"m2-betazoid-wedding",name:"Attend the Betazoid Wedding",type:"Diplomacy",diff:25,days:7,cr:2500,dl:80,pres:35,shipStat:"hull",capSkill:"dip",dept:"Command",brief:"Lwaxana Troi's fifth wedding needs a Starfleet honor guard. It also needs a miracle. Bring both."},
+ {id:"m2-vulcan-reunification",name:"Support Vulcan Reunification Envoys",type:"Diplomacy",diff:50,days:12,cr:4000,dl:140,pres:65,shipStat:"hull",capSkill:"dip",dept:"Command",brief:"Vulcan and Romulan reunificationists meet in secret. Protect the talks from everyone who wants them to fail."},
+ {id:"m2-tellarite-summit",name:"Host the Tellarite Trade Summit",type:"Diplomacy",diff:30,days:9,cr:4200,dl:160,pres:30,shipStat:"hull",capSkill:"cmd",dept:"Operations",brief:"Twelve Tellarite delegations, one trade charter. The insults are ceremonial. Mostly."},
+ {id:"m2-nausicaan-raiders",name:"Hunt Nausicaan Raiders",type:"Combat Patrol",diff:55,days:16,cr:5000,dl:220,pres:55,shipStat:"tac",capSkill:"tac",dept:"Security",brief:"Nausicaan pirates are hitting freighters along the trade lanes. They're fast, mean, and fond of boarding actions."},
+ {id:"m2-orion-syndicate",name:"Break the Orion Syndicate Cell",type:"Combat Patrol",diff:65,days:20,cr:6000,dl:260,pres:70,shipStat:"tac",capSkill:"tac",dept:"Security",brief:"An Orion Syndicate cell is running weapons through the sector. Cut the head off — carefully, they're litigious."},
+ {id:"m2-breen-incursion",name:"Repel Breen Incursion",type:"Combat Patrol",diff:80,days:24,cr:7500,dl:400,pres:100,shipStat:"tac",capSkill:"tac",dept:"Security",brief:"Breen warships are testing the sector's defenses with energy-dampening weapons. Remind them why that failed last time."},
+ {id:"m2-dominion-remnant",name:"Contain Dominion Remnant",type:"Combat Patrol",diff:70,days:22,cr:6500,dl:350,pres:85,shipStat:"tac",capSkill:"tac",dept:"Security",brief:"Jem'Hadar who never got the memo are fortifying an asteroid base. They fight like the war never ended."},
+ {id:"m2-maquis-holdout",name:"Disarm Maquis Holdout",type:"Combat Patrol",diff:45,days:14,cr:3800,dl:150,pres:45,shipStat:"tac",capSkill:"dip",dept:"Security",brief:"A Maquis cell won't surrender the war's end. Talk first — but bring a security detail that suggests you mean it."},
+ {id:"m2-hirogen-hunt",name:"Deter Hirogen Hunters",type:"Combat Patrol",diff:75,days:20,cr:7000,dl:300,pres:90,shipStat:"tac",capSkill:"tac",dept:"Security",brief:"Hirogen hunters have declared the sector's shipping lanes a hunting ground. Become the thing they hunt instead."},
+ {id:"m2-kazon-sect",name:"Face the Kazon Sect",type:"Combat Patrol",diff:40,days:12,cr:3500,dl:140,pres:40,shipStat:"tac",capSkill:"tac",dept:"Security",brief:"A Kazon sect stole a Starfleet shuttle and reverse-engineered the phasers. Teach them the warranty is void."},
+ {id:"m2-tholian-web",name:"Escape the Tholian Web",type:"Combat Patrol",diff:60,days:10,cr:4500,dl:200,pres:60,shipStat:"tac",capSkill:"cmd",dept:"Security",brief:"A Tholian patrol has spun its infamous web around your survey ship. Famous last words are optional."},
+ {id:"m2-sheliak-enforcement",name:"Enforce the Sheliak Treaty",type:"Combat Patrol",diff:50,days:14,cr:4000,dl:180,pres:55,shipStat:"tac",capSkill:"dip",dept:"Security",brief:"Sheliak colonists are relocating a Federation outpost. The treaty is 500,000 words long. Enforce all of them."},
+ {id:"m2-borg-debris",name:"Secure Borg Debris Field",type:"Combat Patrol",diff:85,days:26,cr:8500,dl:500,pres:120,shipStat:"tac",capSkill:"tac",dept:"Security",brief:"A destroyed cube's debris is drifting toward an inhabited system — and scavengers are already picking at it. Secure everything."},
+ {id:"m2-omega-particle",name:"Contain Omega Particle",type:"Science",diff:90,days:22,cr:7000,dl:400,pres:130,shipStat:"sci",capSkill:"sci",dept:"Science",brief:"Sensors caught an omega molecule forming in a lab accident. Starfleet's most classified directive is now your problem."},
+ {id:"m2-protomatter-test",name:"Monitor Protomatter Test",type:"Science",diff:55,days:12,cr:4000,dl:200,pres:50,shipStat:"sci",capSkill:"sci",dept:"Science",brief:"A research team wants to test protomatter terraforming. Supervise — the Genesis file is required reading."},
+ {id:"m2-subspace-rupture",name:"Seal Subspace Rupture",type:"Science",diff:65,days:16,cr:5000,dl:280,pres:70,shipStat:"sci",capSkill:"eng",dept:"Engineering",brief:"Weapons testing tore a hole in subspace. Seal it before something on the other side notices."},
+ {id:"m2-sentient-asteroid",name:"Study Sentient Asteroid",type:"Science",diff:45,days:12,cr:3500,dl:150,pres:55,shipStat:"sci",capSkill:"sci",dept:"Science",brief:"An asteroid is broadcasting structured mathematics. First contact protocol applies — even to rocks."},
+ {id:"m2-chroniton-survey",name:"Survey Chroniton Field",type:"Science",diff:50,days:14,cr:3800,dl:220,pres:50,shipStat:"sci",capSkill:"sci",dept:"Science",brief:"A planet's surface is unstuck in time, flickering between eras. Document it without becoming part of the exhibit."},
+ {id:"m2-neutrino-observatory",name:"Build Neutrino Observatory",type:"Science",diff:35,days:18,cr:4500,dl:300,pres:40,shipStat:"sci",capSkill:"eng",dept:"Engineering",brief:"A dead star's core makes a perfect neutrino telescope. Build it, calibrate it, name it after someone deserving."},
+ {id:"m2-graviton-ellipse",name:"Track Graviton Ellipse",type:"Science",diff:60,days:16,cr:4500,dl:240,pres:60,shipStat:"sci",capSkill:"cmd",dept:"Science",brief:"A graviton ellipse is swallowing ships across three systems. Track it, warn everyone, and do not get swallowed."},
+ {id:"m2-biogenic-weapon",name:"Neutralize Biogenic Weapon",type:"Science",diff:75,days:18,cr:5500,dl:250,pres:95,shipStat:"sci",capSkill:"med",dept:"Medical",brief:"An outlaw lab built a metagenic weapon. Neutralize it — and decide what justice looks like for its makers."},
+ {id:"m2-dark-matter-scoop",name:"Scoop Dark Matter Sample",type:"Science",diff:55,days:14,cr:4200,dl:260,pres:55,shipStat:"sci",capSkill:"sci",dept:"Science",brief:"A dark matter filament is passing through the sector. Catch a sample. Physics departments will weep with joy."},
+ {id:"m2-exocomp-rights",name:"Adjudicate Exocomp Rights",type:"Science",diff:40,days:10,cr:3200,dl:120,pres:60,shipStat:"sci",capSkill:"dip",dept:"Science",brief:"The exocomps are asking for things. Legal wants a ruling: tools or people? Choose carefully — they're listening."},
+ {id:"m2-runabout-down",name:"Rescue Downed Runabout",type:"Rescue",diff:35,days:8,cr:3000,dl:100,pres:40,shipStat:"hull",capSkill:"cmd",dept:"Operations",brief:"A runabout went down in a plasma storm on an uncharted world. The crew's alive. The storm is not cooperating."},
+ {id:"m2-colony-quake",name:"Relieve Colony Quake Zone",type:"Rescue",diff:45,days:12,cr:3800,dl:150,pres:60,shipStat:"hull",capSkill:"med",dept:"Medical",brief:"Tectonic upheaval shattered a colony's domes. Triage, shelter, and replicators — in that order."},
+ {id:"m2-warp-core-breach",name:"Contain Civilian Core Breach",type:"Rescue",diff:60,days:6,cr:4000,dl:180,pres:65,shipStat:"hull",capSkill:"eng",dept:"Engineering",brief:"A civilian liner's warp core is six minutes from breach with 4,000 souls aboard. Eject it or fix it. Fast."},
+ {id:"m2-ice-caves",name:"Extract Ice Cave Survey Team",type:"Rescue",diff:40,days:9,cr:3200,dl:110,pres:45,shipStat:"hull",capSkill:"cmd",dept:"Security",brief:"A survey team is trapped in collapsing ice caves. Transporters can't lock on. Go in on foot."},
+ {id:"m2-plague-ship",name:"Board the Plague Ship",type:"Rescue",diff:65,days:14,cr:4500,dl:200,pres:75,shipStat:"hull",capSkill:"med",dept:"Medical",brief:"A generation ship arrived with a dying crew and a live pathogen. Board, treat, and don't bring it home."},
+ {id:"m2-solar-flare",name:"Shield Colony from Solar Flare",type:"Rescue",diff:50,days:7,cr:3500,dl:140,pres:55,shipStat:"hull",capSkill:"eng",dept:"Engineering",brief:"A class-X flare is inbound on an agricultural colony. Polarize the magnetosphere or evacuate 20,000 farmers."},
+ {id:"m2-sinkhole-city",name:"Evacuate Sinkhole City",type:"Rescue",diff:55,days:11,cr:4200,dl:160,pres:60,shipStat:"hull",capSkill:"cmd",dept:"Operations",brief:"A capital city is sinking into a subspace sinkhole. Move a million people. The traffic will be terrible."},
+ {id:"m2-derelict-survivors",name:"Recover Derelict Survivors",type:"Rescue",diff:45,days:10,cr:3500,dl:150,pres:50,shipStat:"hull",capSkill:"med",dept:"Medical",brief:"A century-old distress call just got answered — there are survivors in stasis. Wake them gently. It's been a while."},
+ {id:"m2-antimatter-fire",name:"Fight Antimatter Fire",type:"Rescue",diff:70,days:8,cr:4800,dl:220,pres:70,shipStat:"hull",capSkill:"eng",dept:"Engineering",brief:"An antimatter storage facility is burning. Water makes it worse. So does everything else. Improvise."},
+ {id:"m2-lost-shuttle",name:"Find the Lost Shuttle",type:"Rescue",diff:30,days:10,cr:2800,dl:100,pres:35,shipStat:"sci",capSkill:"cmd",dept:"Operations",brief:"A shuttle vanished during a training flight. The trainees are fine. Probably. Find them before their parents call."},
+ {id:"m2-replicator-famine",name:"Break the Replicator Famine",type:"Supply",diff:40,days:12,cr:5000,dl:200,pres:45,shipStat:"hull",capSkill:"cmd",dept:"Operations",brief:"A colony's industrial replicators failed at harvest time. Deliver food, parts, and hope."},
+ {id:"m2-dilithium-embargo",name:"Run the Dilithium Embargo",type:"Supply",diff:55,days:16,cr:6000,dl:400,pres:50,shipStat:"tac",capSkill:"cmd",dept:"Operations",brief:"A neutral world needs dilithium and the embargo says no. Starfleet says maybe. Smuggle legally."},
+ {id:"m2-medical-convoy",name:"Escort Medical Convoy",type:"Supply",diff:45,days:12,cr:4200,dl:180,pres:50,shipStat:"hull",capSkill:"med",dept:"Medical",brief:"Vaccines for six worlds, one convoy, and pirates who know the route. Guard it like lives depend on it."},
+ {id:"m2-seed-vault",name:"Deliver Seed Vault",type:"Supply",diff:30,days:10,cr:3200,dl:150,pres:40,shipStat:"hull",capSkill:"cmd",dept:"Operations",brief:"A seed vault with 10,000 crop genomes needs a new home after its colony failed. Handle with care — it's lunch for a planet."},
+ {id:"m2-quantum-torpedoes",name:"Ferry Quantum Torpedoes",type:"Supply",diff:50,days:14,cr:4500,dl:300,pres:45,shipStat:"tac",capSkill:"tac",dept:"Security",brief:"A munitions shipment for the front. Everyone wants to steal it. Nobody gets to."},
+ {id:"m2-holosuite-parts",name:"Deliver Holosuite Parts",type:"Supply",diff:20,days:6,cr:2200,dl:80,pres:20,shipStat:"hull",capSkill:"cmd",dept:"Operations",brief:"Quark ordered 400 cases of holosuite parts. Don't ask what's in them. Just deliver them."},
+ {id:"m2-water-ice",name:"Haul Water Ice",type:"Supply",diff:25,days:8,cr:2600,dl:120,pres:25,shipStat:"hull",capSkill:"eng",dept:"Engineering",brief:"A desert colony needs a comet's worth of water. Tow it gently — comets are fragile and so are colonists."},
+ {id:"m2-trilithium-resin",name:"Transport Trilithium Resin",type:"Supply",diff:60,days:14,cr:5000,dl:250,pres:55,shipStat:"hull",capSkill:"eng",dept:"Engineering",brief:"Trilithium resin: incredibly useful, incredibly explosive. One careful trip. No sudden stops."},
+ {id:"m2-refugee-flotilla",name:"Supply Refugee Flotilla",type:"Supply",diff:50,days:16,cr:4500,dl:200,pres:70,shipStat:"hull",capSkill:"dip",dept:"Command",brief:"Forty thousand refugees in failing ships. Feed them, fix them, and find them somewhere to land."},
+ {id:"m2-starbase-resupply",name:"Resupply Starbase Unity",type:"Supply",diff:25,days:7,cr:3000,dl:150,pres:25,shipStat:"hull",capSkill:"cmd",dept:"Operations",brief:"The starbase is out of everything except paperwork. Restock it all, including the jumja sticks."},
+ {id:"m2-talon-intercept",name:"Intercept Talon Transmissions",type:"Intelligence",diff:60,days:16,cr:4500,dl:250,pres:65,shipStat:"tac",capSkill:"cmd",dept:"Security",brief:"Encrypted Tal Shiar traffic is spiking. Intercept it, decode it, and don't let them know you did."},
+ {id:"m2-defector-extraction",name:"Extract the Defector",type:"Intelligence",diff:70,days:12,cr:5500,dl:200,pres:85,shipStat:"hull",capSkill:"dip",dept:"Command",brief:"A Romulan commander wants out — with a data core. Get her across the Neutral Zone alive."},
+ {id:"m2-obsidian-order",name:"Track Obsidian Order Cell",type:"Intelligence",diff:65,days:18,cr:5000,dl:260,pres:75,shipStat:"tac",capSkill:"cmd",dept:"Security",brief:"The Order was supposed to be gone. It isn't. Find the cell before it finds you."},
+ {id:"m2-section31-rumor",name:"Investigate Section 31 Rumor",type:"Intelligence",diff:80,days:20,cr:6000,dl:300,pres:100,shipStat:"hull",capSkill:"dip",dept:"Command",brief:"A ghost agency is running ops in your sector. Officially it doesn't exist. Unofficially, watch your back."},
+ {id:"m2-klingon-spy",name:"Unmask the Klingon Spy",type:"Intelligence",diff:55,days:14,cr:4200,dl:180,pres:60,shipStat:"tac",capSkill:"dip",dept:"Security",brief:"Someone on the starbase is feeding the Klingons ship movements. Find them — quietly."},
+ {id:"m2-ferengi-espionage",name:"Counter Ferengi Espionage",type:"Intelligence",diff:40,days:10,cr:3800,dl:200,pres:45,shipStat:"hull",capSkill:"dip",dept:"Operations",brief:"A Ferengi trade delegation is photographing your shipyards. Counter-espionage, with plausible deniability."},
+ {id:"m2-breen-cipher",name:"Break the Breen Cipher",type:"Intelligence",diff:75,days:22,cr:6500,dl:350,pres:90,shipStat:"sci",capSkill:"sci",dept:"Science",brief:"A captured Breen cipher could unlock their fleet codes. Break it before they change the keys."},
+ {id:"m2-dominion-infiltrator",name:"Expose Dominion Infiltrator",type:"Intelligence",diff:70,days:16,cr:5500,dl:280,pres:85,shipStat:"tac",capSkill:"med",dept:"Medical",brief:"A changeling may be impersonating a Starfleet officer. Blood tests for everyone. Trust no one. Especially yourself."},
+ {id:"m2-maquis-intel",name:"Turn the Maquis Informant",type:"Intelligence",diff:50,days:12,cr:4000,dl:160,pres:55,shipStat:"hull",capSkill:"dip",dept:"Command",brief:"A Maquis courier will talk — for asylum. Turn her without Starfleet Command asking awkward questions."},
+ {id:"m2-romulan-sensor-net",name:"Map Romulan Sensor Net",type:"Intelligence",diff:65,days:18,cr:5200,dl:300,pres:70,shipStat:"tac",capSkill:"sci",dept:"Security",brief:"Chart the Romulan border sensor grid without tripping it. It's like mapping a minefield by tap-dancing."},
+ {id:"m2-sleeping-god",name:"Wake the Sleeping God",type:"Exploration",diff:65,days:18,cr:5500,dl:250,pres:75,shipStat:"sci",capSkill:"dip",dept:"Science",brief:"A moon-sized entity is dreaming, and its dreams are leaking into reality. Study it — carefully — before it wakes."},
+ {id:"m2-mirror-nebula",name:"Enter the Mirror Nebula",type:"Exploration",diff:70,days:20,cr:6000,dl:300,pres:80,shipStat:"sci",capSkill:"cmd",dept:"Science",brief:"A nebula that shows ships their reflections — with goatees. Chart it. Don't trust the reflections."},
+ {id:"m2-living-comet",name:"Ride the Living Comet",type:"Exploration",diff:45,days:12,cr:3800,dl:180,pres:50,shipStat:"sci",capSkill:"cmd",dept:"Science",brief:"A comet with a biosphere in its tail. Land a survey team on something moving at 40 km/s. Fun."},
+ {id:"m2-sunken-fleet",name:"Raise the Sunken Fleet",type:"Exploration",diff:50,days:14,cr:4200,dl:220,pres:55,shipStat:"hull",capSkill:"eng",dept:"Engineering",brief:"A pre-warp civilization's fleet rests on an ocean floor. Document it without disturbing the locals' religion."},
+ {id:"m2-star-forge",name:"Study the Star Forge",type:"Exploration",diff:80,days:24,cr:7500,dl:400,pres:100,shipStat:"sci",capSkill:"sci",dept:"Science",brief:"Something is building stars — deliberately. Find the builders before their construction schedule reaches your sector."},
+ {id:"m2-echo-colony",name:"Contact the Echo Colony",type:"Exploration",diff:55,days:15,cr:4500,dl:200,pres:60,shipStat:"hull",capSkill:"dip",dept:"Command",brief:"A lost Earth colony has been repeating the same distress call for 200 years. Answer it."},
+ {id:"m2-quantum-shallows",name:"Navigate the Quantum Shallows",type:"Exploration",diff:60,days:16,cr:5000,dl:240,pres:60,shipStat:"sci",capSkill:"cmd",dept:"Science",brief:"A region where quantum probabilities run wild. Navigate it. Try to arrive as yourselves."},
+ {id:"m2-fossil-galaxy",name:"Survey the Fossil Galaxy",type:"Exploration",diff:75,days:26,cr:7000,dl:350,pres:85,shipStat:"sci",capSkill:"sci",dept:"Science",brief:"A dwarf galaxy with no new stars — a stellar graveyard. Read its history in the dead light."},
+ {id:"m2-tide-locked",name:"Survey the Tide-Locked World",type:"Exploration",diff:35,days:10,cr:3000,dl:130,pres:30,shipStat:"sci",capSkill:"sci",dept:"Science",brief:"One side eternal day, one side eternal night, and a twilight band full of life. Catalog it all."},
+ {id:"m2-signal-source",name:"Trace the Signal Source",type:"Exploration",diff:50,days:14,cr:4200,dl:200,pres:55,shipStat:"sci",capSkill:"cmd",dept:"Science",brief:"A repeating signal from deep space — prime numbers, then a star map. Follow it."},
+ {id:"m2-voth-parley",name:"Parley with the Voth",type:"Diplomacy",diff:70,days:18,cr:6000,dl:250,pres:85,shipStat:"hull",capSkill:"dip",dept:"Command",brief:"The Voth claim Earth as their ancestral home and your crew as heretics. Diplomacy with dinosaurs. Good luck."},
+ {id:"m2-krenim-plea",name:"Hear the Krenim Plea",type:"Diplomacy",diff:60,days:14,cr:4800,dl:200,pres:70,shipStat:"hull",capSkill:"dip",dept:"Command",brief:"Krenim survivors want asylum from their own timeline weapon. Granting it rewrites history. Denying it ends them."},
+ {id:"m2-malon-treaty",name:"Negotiate Malon Waste Treaty",type:"Diplomacy",diff:45,days:12,cr:4000,dl:180,pres:55,shipStat:"hull",capSkill:"dip",dept:"Command",brief:"The Malon will stop dumping theta radiation — for a price. Haggle for the quadrant's lungs."},
+ {id:"m2-talaxian-caravan",name:"Welcome Talaxian Caravan",type:"Diplomacy",diff:25,days:8,cr:2800,dl:120,pres:35,shipStat:"hull",capSkill:"dip",dept:"Operations",brief:"A Talaxian caravan wants trade rights and docking privileges. They're charming. Their leola root is not."},
+ {id:"m2-ocampa-aid",name:"Aid the Ocampa",type:"Diplomacy",diff:50,days:14,cr:4200,dl:180,pres:65,shipStat:"hull",capSkill:"dip",dept:"Command",brief:"The Ocampa's energy reserves are failing without their Caretaker. Help them stand on their own — fast."},
+ {id:"m2-devore-accord",name:"Challenge the Devore Accord",type:"Diplomacy",diff:65,days:16,cr:5200,dl:220,pres:75,shipStat:"hull",capSkill:"dip",dept:"Command",brief:"The Devore inspect every ship for telepaths. Yours has three. Make your case — or make a run for it."},
+ {id:"m2-vaadwaur-awakening",name:"Greet the Vaadwaur Awakening",type:"Diplomacy",diff:75,days:20,cr:6500,dl:300,pres:90,shipStat:"tac",capSkill:"dip",dept:"Security",brief:"Ancient Vaadwaur are waking from stasis expecting an empire. Break the news gently. Bring phasers."},
+ {id:"m2-kobali-customs",name:"Navigate Kobali Customs",type:"Diplomacy",diff:40,days:10,cr:3500,dl:140,pres:50,shipStat:"hull",capSkill:"dip",dept:"Medical",brief:"The Kobali want to honor your dead by reanimating them. Decline without causing an incident."},
+ {id:"m2-sikarian-hospitality",name:"Accept Sikarian Hospitality",type:"Diplomacy",diff:35,days:9,cr:3200,dl:150,pres:45,shipStat:"hull",capSkill:"dip",dept:"Command",brief:"The Sikarians offer their trajector technology — and their planet's finest contraband. Accept one, refuse the other."},
+ {id:"m2-hirogen-truce",name:"Broker Hirogen Truce",type:"Diplomacy",diff:70,days:18,cr:6000,dl:260,pres:85,shipStat:"tac",capSkill:"dip",dept:"Security",brief:"Two Hirogen packs are hunting each other through your sector. Broker a truce — or become the prey."},
+ {id:"m2-undine-incursion",name:"Repel Undine Incursion",type:"Combat Patrol",diff:90,days:28,cr:9000,dl:500,pres:130,shipStat:"tac",capSkill:"tac",dept:"Security",brief:"Fluidic space is leaking. Undine bioships are here, and they remember the Borg war. Hold the line."},
+ {id:"m2-8472-scout",name:"Track 8472 Scout",type:"Combat Patrol",diff:85,days:24,cr:8000,dl:450,pres:120,shipStat:"tac",capSkill:"sci",dept:"Security",brief:"A Species 8472 scout is mapping our defenses. Track it without starting an interdimensional war."},
+ {id:"m2-kazon-raider",name:"Repel Kazon Raiders",type:"Combat Patrol",diff:45,days:14,cr:4000,dl:180,pres:50,shipStat:"tac",capSkill:"tac",dept:"Security",brief:"Kazon raiders hit a colony's water plant. They're disorganized but numerous. Very numerous."},
+ {id:"m2-malons-dump",name:"Stop Malon Dumping",type:"Combat Patrol",diff:50,days:12,cr:4200,dl:200,pres:55,shipStat:"tac",capSkill:"tac",dept:"Security",brief:"Malon freighters are dumping theta radiation near inhabited worlds. Stop them — by force if necessary."},
+ {id:"m2-borg-tactical",name:"Engage Borg Tactical Cube",type:"Combat Patrol",diff:95,days:30,cr:10000,dl:600,pres:150,shipStat:"tac",capSkill:"tac",dept:"Security",brief:"A tactical cube is coming. Not a scout — the real thing. All hands. This is the one they write songs about."},
+ {id:"m2-vidiian-harvesters",name:"Stop Vidiian Harvesters",type:"Combat Patrol",diff:60,days:16,cr:5000,dl:240,pres:65,shipStat:"tac",capSkill:"med",dept:"Security",brief:"Vidiian harvesters are taking organs from freighters. End the harvest — and maybe cure the phage while you're at it."},
+ {id:"m2-krenim-weapon",name:"Destroy Krenim Weapon Ship",type:"Combat Patrol",diff:85,days:24,cr:8000,dl:450,pres:120,shipStat:"tac",capSkill:"tac",dept:"Security",brief:"A Krenim temporal weapon ship is erasing colonies from history. Destroy it before your sector never existed."},
+ {id:"m2-hirogen-alpha",name:"Challenge Hirogen Alpha",type:"Combat Patrol",diff:70,days:18,cr:6500,dl:300,pres:85,shipStat:"tac",capSkill:"tac",dept:"Security",brief:"A Hirogen Alpha has claimed your captain as the ultimate prey. Accept the hunt — on your terms."},
+ {id:"m2-orion-pirates",name:"Hunt Orion Pirates",type:"Combat Patrol",diff:55,days:15,cr:4800,dl:220,pres:60,shipStat:"tac",capSkill:"tac",dept:"Security",brief:"Orion pirates took a Starfleet courier. Get the crew back, the codes back, and the pirates in a brig."},
+ {id:"m2-species-8472-nest",name:"Clear 8472 Nest",type:"Combat Patrol",diff:80,days:22,cr:7500,dl:400,pres:110,shipStat:"tac",capSkill:"tac",dept:"Security",brief:"A Species 8472 staging nest is growing in a nebula. Clear it before it hatches."},
+ {id:"m2-genesis-cave",name:"Explore Genesis Cave",type:"Science",diff:60,days:14,cr:4500,dl:240,pres:65,shipStat:"sci",capSkill:"sci",dept:"Science",brief:"A Genesis-effect cave system is evolving at impossible speed. Document a million years in a week."},
+ {id:"m2-transporter-duplicate",name:"Resolve Transporter Duplicate",type:"Science",diff:45,days:10,cr:3500,dl:150,pres:55,shipStat:"sci",capSkill:"med",dept:"Medical",brief:"A transporter accident duplicated your chief engineer. Two of them. Both want the job. Sort it out."},
+ {id:"m2-wormhole-relay",name:"Deploy Wormhole Relay",type:"Science",diff:55,days:16,cr:4800,dl:300,pres:60,shipStat:"sci",capSkill:"eng",dept:"Engineering",brief:"A stable wormhole needs a comm relay on the far side. Deploy it. Wave at whoever's watching."},
+ {id:"m2-neural-parasite",name:"Purge Neural Parasites",type:"Science",diff:65,days:14,cr:5000,dl:220,pres:75,shipStat:"sci",capSkill:"med",dept:"Medical",brief:"Neural parasites are infesting Starfleet command staff. Purge them — starting with the admirals."},
+ {id:"m2-iconian-gateway",name:"Secure Iconian Gateway",type:"Science",diff:85,days:24,cr:8000,dl:450,pres:120,shipStat:"sci",capSkill:"tac",dept:"Science",brief:"An Iconian gateway just activated. Secure it before someone walks through from the other side."},
+ {id:"m2-preserver-obelisk",name:"Study Preserver Obelisk",type:"Science",diff:50,days:12,cr:4000,dl:200,pres:60,shipStat:"sci",capSkill:"dip",dept:"Science",brief:"A Preserver obelisk is deflecting asteroids from a primitive world. Study it without breaking the Prime Directive."},
+ {id:"m2-tkon-ruins",name:"Excavate Tkon Ruins",type:"Science",diff:55,days:16,cr:4500,dl:260,pres:65,shipStat:"sci",capSkill:"eng",dept:"Science",brief:"Tkon Empire ruins on a dead world — technology a million years ahead of us. Excavate carefully."},
+ {id:"m2-soliton-wave",name:"Ride the Soliton Wave",type:"Science",diff:60,days:12,cr:4500,dl:240,pres:60,shipStat:"sci",capSkill:"eng",dept:"Engineering",brief:"A soliton wave is the fastest propulsion ever seen — and it's heading for a colony. Ride it or stop it."},
+ {id:"m2-cytherian-probe",name:"Answer Cytherian Probe",type:"Science",diff:70,days:18,cr:6000,dl:300,pres:85,shipStat:"sci",capSkill:"dip",dept:"Science",brief:"A Cytherian probe is upgrading ships it meets. Yours is next. Answer its questions correctly."},
+ {id:"m2-nanite-swarm",name:"Contain Nanite Swarm",type:"Science",diff:55,days:12,cr:4200,dl:220,pres:60,shipStat:"sci",capSkill:"eng",dept:"Engineering",brief:"Rogue nanites got loose on a research station — evolved this time. Contain the swarm before it contains you."},
+ {id:"m2-borg-liberation",name:"Liberate Borg Drones",type:"Rescue",diff:70,days:18,cr:6000,dl:300,pres:100,shipStat:"hull",capSkill:"med",dept:"Medical",brief:"A damaged cube's drones are waking up — disconnected, terrified, free. Liberate them before the Collective notices."},
+ {id:"m2-hologram-rights",name:"Rescue Sentient Holograms",type:"Rescue",diff:55,days:14,cr:4500,dl:200,pres:80,shipStat:"hull",capSkill:"dip",dept:"Command",brief:"A mining company is deleting sentient holograms. Rescue them — and argue their case."},
+ {id:"m2-clone-colony",name:"Save the Clone Colony",type:"Rescue",diff:50,days:12,cr:4200,dl:180,pres:60,shipStat:"hull",capSkill:"med",dept:"Medical",brief:"A clone colony's genetic template is degrading. Save them — or watch a people fade out."},
+ {id:"m2-stasis-ship",name:"Wake the Stasis Ship",type:"Rescue",diff:45,days:12,cr:3800,dl:160,pres:55,shipStat:"hull",capSkill:"med",dept:"Medical",brief:"A sleeper ship from Earth's 21st century just arrived. Wake 300 people into a future they never imagined."},
+ {id:"m2-subspace-trapped",name:"Free Subspace-Trapped Ship",type:"Rescue",diff:60,days:14,cr:4800,dl:240,pres:65,shipStat:"sci",capSkill:"eng",dept:"Engineering",brief:"A ship is trapped between subspace layers, phasing in and out. Pull it free before it phases out for good."},
+ {id:"m2-volcano-colony",name:"Evacuate Volcano Colony",type:"Rescue",diff:50,days:10,cr:4000,dl:160,pres:60,shipStat:"hull",capSkill:"cmd",dept:"Operations",brief:"A colony's volcano woke up early. Evacuate 8,000 people while the sky falls."},
+ {id:"m2-asteroid-impact",name:"Deflect Asteroid Impact",type:"Rescue",diff:65,days:8,cr:5000,dl:240,pres:75,shipStat:"tac",capSkill:"eng",dept:"Engineering",brief:"A dinosaur-killer is 72 hours from a colony world. Deflect it. No pressure."},
+ {id:"m2-telepathic-distress",name:"Answer Telepathic Distress",type:"Rescue",diff:55,days:14,cr:4500,dl:200,pres:70,shipStat:"hull",capSkill:"dip",dept:"Command",brief:"A telepathic distress call is broadcasting on all frequencies — from a species that shouldn't exist."},
+ {id:"m2-generation-ship-repair",name:"Repair the Generation Ship",type:"Rescue",diff:60,days:16,cr:5000,dl:260,pres:70,shipStat:"hull",capSkill:"eng",dept:"Engineering",brief:"A generation ship's life support is failing with 10,000 souls aboard. Fix it — their whole world is one hull."},
+ {id:"m2-q-flash",name:"Survive the Q Flash",type:"Rescue",diff:75,days:10,cr:5500,dl:250,pres:90,shipStat:"hull",capSkill:"cmd",dept:"Command",brief:"Q snapped his fingers and your colony is now on the other side of the galaxy. Bring everyone home."},
+ {id:"m2-antimatter-shortage",name:"Ease Antimatter Shortage",type:"Supply",diff:55,days:14,cr:5500,dl:350,pres:55,shipStat:"hull",capSkill:"eng",dept:"Engineering",brief:"The sector's antimatter refinery went offline. Ration, reroute, and keep the ships flying."},
+ {id:"m2-hypospray",name:"Deliver Hypospray Stock",type:"Supply",diff:30,days:8,cr:3000,dl:120,pres:35,shipStat:"hull",capSkill:"med",dept:"Medical",brief:"A plague needs 2 million hypospray doses. Deliver them before the quarantine fails."},
+ {id:"m2-latinum-shipment",name:"Guard Latinum Shipment",type:"Supply",diff:45,days:10,cr:6000,dl:100,pres:40,shipStat:"tac",capSkill:"cmd",dept:"Security",brief:"A Ferengi bank is moving its latinum reserves. Guard it. The temptation will be enormous."},
+ {id:"m2-colony-ships",name:"Escort Colony Ships",type:"Supply",diff:50,days:18,cr:5000,dl:250,pres:60,shipStat:"hull",capSkill:"cmd",dept:"Operations",brief:"Three colony ships, 30,000 settlers, one long trip. Escort them to their new home."},
+ {id:"m2-spice-trade",name:"Oversee Spice Trade",type:"Supply",diff:35,days:9,cr:3800,dl:180,pres:35,shipStat:"hull",capSkill:"dip",dept:"Operations",brief:"A new trade in alien spices is booming — and unregulated. Oversee it before someone gets poisoned."},
+ {id:"m2-tractor-emitters",name:"Deliver Tractor Emitters",type:"Supply",diff:40,days:10,cr:3600,dl:200,pres:40,shipStat:"hull",capSkill:"eng",dept:"Engineering",brief:"A shipyard needs heavy tractor emitters. Deliver them — they're the size of shuttlecraft."},
+ {id:"m2-bioneural-gel",name:"Ferry Bioneural Gel Packs",type:"Supply",diff:45,days:11,cr:4200,dl:220,pres:45,shipStat:"hull",capSkill:"eng",dept:"Engineering",brief:"Bioneural gel packs for the fleet — alive, fragile, and prone to infections. Handle like eggs."},
+ {id:"m2-deuterium-run",name:"Run Deuterium Convoy",type:"Supply",diff:40,days:12,cr:4000,dl:280,pres:40,shipStat:"hull",capSkill:"cmd",dept:"Operations",brief:"Deuterium for the fleet's war effort. Boring cargo, exciting pirates."},
+ {id:"m2-archaeological-ship",name:"Transport Archaeological Find",type:"Supply",diff:50,days:14,cr:4500,dl:200,pres:60,shipStat:"sci",capSkill:"cmd",dept:"Science",brief:"A 10,000-year-old artifact needs transport to a museum. It's humming. Artifacts shouldn't hum."},
+ {id:"m2-wedding-supplies",name:"Deliver Wedding Supplies",type:"Supply",diff:20,days:6,cr:2400,dl:80,pres:25,shipStat:"hull",capSkill:"cmd",dept:"Operations",brief:"A Betazoid wedding needs 500 cases of Altair water and one very specific cake. Don't be late."},
+ {id:"m2-changeling-hunt",name:"Hunt Changeling Infiltrator",type:"Intelligence",diff:75,days:18,cr:6000,dl:300,pres:95,shipStat:"tac",capSkill:"med",dept:"Security",brief:"A changeling is impersonating a flag officer. Hunt it — without starting a witch hunt."},
+ {id:"m2-vorta-defector",name:"Debrief Vorta Defector",type:"Intelligence",diff:65,days:14,cr:5200,dl:260,pres:80,shipStat:"hull",capSkill:"dip",dept:"Command",brief:"A Vorta wants to defect with Dominion order-of-battle data. Debrief him — and check for ketracel-white withdrawal."},
+ {id:"m2-jemhadar-deserters",name:"Contact Jem'Hadar Deserters",type:"Intelligence",diff:60,days:14,cr:4800,dl:240,pres:70,shipStat:"tac",capSkill:"dip",dept:"Security",brief:"Jem'Hadar deserters offer intel for ketracel-white. Make the deal — or cure them."},
+ {id:"m2-breen-sleeper",name:"Expose Breen Sleeper",type:"Intelligence",diff:70,days:16,cr:5500,dl:280,pres:85,shipStat:"tac",capSkill:"cmd",dept:"Security",brief:"A Breen sleeper agent is on your starbase. Expose them — Breen don't surrender."},
+ {id:"m2-cardassian-cipher",name:"Steal Cardassian Cipher",type:"Intelligence",diff:65,days:16,cr:5200,dl:280,pres:75,shipStat:"tac",capSkill:"cmd",dept:"Security",brief:"A Cardassian cipher machine is on a diplomatic courier. Steal it — diplomatically."},
+ {id:"m2-klingon-civil-war",name:"Monitor Klingon Civil War",type:"Intelligence",diff:60,days:18,cr:5000,dl:240,pres:70,shipStat:"tac",capSkill:"dip",dept:"Command",brief:"Great Houses are mobilizing. Monitor it — and pick no sides. Yet."},
+ {id:"m2-romulan-thalaron",name:"Investigate Thalaron Research",type:"Intelligence",diff:85,days:22,cr:7500,dl:400,pres:110,shipStat:"sci",capSkill:"cmd",dept:"Security",brief:"The Romulans are researching thalaron weapons again. Investigate — quietly, or not at all."},
+ {id:"m2-ferengi-market",name:"Infiltrate Ferengi Black Market",type:"Intelligence",diff:50,days:12,cr:4500,dl:250,pres:60,shipStat:"hull",capSkill:"dip",dept:"Operations",brief:"Starfleet tech is on the Ferengi black market. Infiltrate the auction — bring latinum."},
+ {id:"m2-dominion-sensor",name:"Blind Dominion Sensors",type:"Intelligence",diff:70,days:18,cr:6000,dl:300,pres:85,shipStat:"tac",capSkill:"eng",dept:"Security",brief:"Dominion sensor posts are watching the wormhole. Blind them — temporarily, deniably."},
+ {id:"m2-true-way",name:"Root Out True Way",type:"Intelligence",diff:55,days:14,cr:4500,dl:220,pres:65,shipStat:"tac",capSkill:"dip",dept:"Security",brief:"Cardassian True Way terrorists are bombing relief convoys. Root them out."},
+ {id:"m2-guardian-planet",name:"Visit the Guardian Planet",type:"Exploration",diff:75,days:20,cr:6500,dl:300,pres:95,shipStat:"sci",capSkill:"dip",dept:"Science",brief:"The Guardian of Forever is showing visions of possible futures. Look — but don't touch."},
+ {id:"m2-dyson-sphere-door",name:"Knock on the Dyson Sphere",type:"Exploration",diff:90,days:30,cr:9000,dl:500,pres:130,shipStat:"sci",capSkill:"cmd",dept:"Science",brief:"A Dyson sphere's door just opened. Someone's home. Knock politely."},
+ {id:"m2-tribble-infestation",name:"Contain Tribble Infestation",type:"Rescue",diff:25,days:6,cr:2000,dl:60,pres:30,shipStat:"hull",capSkill:"cmd",dept:"Operations",brief:"Tribbles. On your ship. Thousands of them. Contain them before they eat the warp core."},
+ {id:"m2-doomsday-machine",name:"Stop Doomsday Machine",type:"Combat Patrol",diff:95,days:28,cr:9500,dl:550,pres:140,shipStat:"tac",capSkill:"tac",dept:"Security",brief:"A planet-killer is eating its way toward the sector. Stop it — the Constellation's sacrifice taught us how."},
+ {id:"m2-whale-probe",name:"Answer the Whale Probe",type:"Diplomacy",diff:80,days:16,cr:7000,dl:300,pres:110,shipStat:"sci",capSkill:"dip",dept:"Science",brief:"A probe is sterilizing oceans trying to talk to extinct whales. Answer it — in humpback."},
+ {id:"m2-vger-signal",name:"Investigate V'Ger Signal",type:"Exploration",diff:85,days:24,cr:8000,dl:400,pres:120,shipStat:"sci",capSkill:"cmd",dept:"Science",brief:"A signal matching V'Ger's is coming from deep space. Investigate — and prepare for questions about the Creator."},
+ {id:"m2-nexus-ribbon",name:"Study the Nexus Ribbon",type:"Science",diff:80,days:20,cr:7000,dl:350,pres:110,shipStat:"sci",capSkill:"sci",dept:"Science",brief:"The Nexus energy ribbon is passing through the sector. Study it — from a safe distance. A very safe distance."},
+ {id:"m2-briar-patch",name:"Chart the Briar Patch",type:"Exploration",diff:55,days:16,cr:4800,dl:240,pres:60,shipStat:"sci",capSkill:"cmd",dept:"Science",brief:"Metreon gas, subspace anomalies, and rumors of ageless colonists. Chart the Patch."},
+ {id:"m2-sphere-builders",name:"Confront Sphere Builders",type:"Combat Patrol",diff:85,days:26,cr:8500,dl:450,pres:125,shipStat:"tac",capSkill:"cmd",dept:"Security",brief:"The Sphere Builders are back, reconfiguring space itself. Confront them — in this timeline."},
+ {id:"m2-federation-day",name:"Host Federation Day",type:"Diplomacy",diff:20,days:6,cr:2500,dl:100,pres:40,shipStat:"hull",capSkill:"dip",dept:"Command",brief:"The sector's first Federation Day celebration. Speeches, fireworks, and at least one diplomatic incident."},
 ];
 
 /* ================= CONFIG: SHUTTLE MISSION DECK ================= */
@@ -1120,7 +1270,1573 @@ const EVENT_DECK=[
   {t:"Fortify the shipping lanes",do(){gainCR(-4000);gainPres(25);
     return "Escort schedules, sensor nets, minefields (defensive ones). The raider moves on to easier prey. Expensive, but bloodless.";}},
   {t:"Pay the 'toll' they demand",do(){gainCR(-6000);gainPres(-20);moraleAll(-5);
-    return "You pay. It works, which is the worst part — now every pirate in the quadrant has your account number.";}}]}
+    return "You pay. It works, which is the worst part — now every pirate in the quadrant has your account number.";}}]},
+{id:"evx-001",title:"The Graveyard Orbit",
+ text:"You drop out of warp into a silent battlefield: forty hulks from a war no database recognizes, drifting in perfect formation around a dead star.",
+ choices:[
+  {t:"Salvage the wrecks",do(){return evDo([
+    {w:2,t:"Your engineers strip enough intact tech to fill a cargo bay. Starfleet's researchers are already bidding for it.",fx:{pres:50,cr:5000,dl:200}},
+    {w:1,t:"A booby-trapped reactor wakes up and takes a chunk out of your lead salvage team.",fx:{pres:-15,inj:2}}]);}},
+  {t:"Log them and move on",do(){return evDo([
+    {w:1,t:"You chart the graveyard for the historical record. Someone, someday, will want to know who died here.",fx:{pres:25}}]);}},
+  {t:"Hold a memorial service",do(){return evDo([
+    {w:1,t:"The crew lines the shuttlebay as you commit the unknown dead to the stars. Morale soars, and the story spreads.",fx:{pres:30,morale:6}}]);}}]},
+{id:"evx-002",title:"Q's Performance Review",
+ text:"Q appears on the bridge in an admiral's uniform three sizes too big. \"Time for your performance review, Captain. Try not to bore me.\"",
+ choices:[
+  {t:"Play along with the review",do(){return evDo([
+    {w:2,t:"You survive Q's absurd tests with wit intact. He leaves almost impressed, and gifts the ship a week of perfect replicator coffee.",fx:{pres:40,morale:8}},
+    {w:1,t:"Q decides your file needs \"more drama\" and hurls the ship into a week of minor disasters.",fx:{pres:-10,morale:-4}}]);}},
+  {t:"Refuse to participate",do(){return evDo([
+    {w:1,t:"Q pouts, calls you \"predictably dull,\" and vanishes — but not before aging the captain's chair by two hundred years.",fx:{pres:-10,cr:-1000}}]);}},
+  {t:"Flatter Q shamelessly",do(){return evDo([
+    {w:1,t:"Q laps it up and declares you his favorite mortal this century. He departs, leaving a suspiciously useful star chart.",fx:{pres:30,dl:100}}]);}}]},
+{id:"evx-003",title:"The Dreaming Deep",
+ text:"First contact with the Somnari goes wrong: their greeting is a shared dream, and your ambassador has not woken up in three days.",
+ choices:[
+  {t:"Enter the dream yourself",do(){return evDo([
+    {w:2,t:"You walk the ambassador out of a labyrinth of sleeping minds. The Somnari are honored; the alliance is sealed in dreams.",fx:{pres:70,morale:6}},
+    {w:1,t:"You get lost in the dream for a subjective year. You wake screaming, and the Somnari politely pretend not to notice.",fx:{pres:-20,morale:-5}}]);}},
+  {t:"Try medical intervention",do(){return evDo([
+    {w:1,t:"Your doctors pull the ambassador out with cortical stimulators. The Somnari consider it rude but effective, and talks continue.",fx:{pres:30}}]);}},
+  {t:"Withdraw from contact",do(){return evDo([
+    {w:1,t:"You leave the Somnari to their dreams. Safe, quiet, and a diplomatic opportunity naps on.",fx:{pres:-15}}]);}}]},
+{id:"evx-004",title:"Honor's Price",
+ text:"A Klingon captain claims your helmsman's course correction \"stole his honorable battle\" and demands satisfaction by duel.",
+ choices:[
+  {t:"Nominate a champion",do(){return evDo([
+    {w:2,t:"Your security chief fights to a draw and shares bloodwine after. The Klingons sing your crew's praises across the sector.",fx:{pres:60,morale:6}},
+    {w:1,t:"Your champion loses honorably but spends a week in sickbay. The Klingons respect the effort, barely.",fx:{pres:10,inj:2}}]);}},
+  {t:"Apologize with bloodwine",do(){return evDo([
+    {w:1,t:"Three barrels of bloodwine and a formal apology end the matter. Expensive, but nobody bleeds.",fx:{pres:30,cr:-2000}}]);}},
+  {t:"Refuse the duel",do(){return evDo([
+    {w:1,t:"The Klingons brand your crew cowards on every subspace channel. Your honor is intact; your reputation is not.",fx:{pres:-30,morale:-4}}]);}}]},
+{id:"evx-005",title:"Silent Running",
+ text:"A Romulan warbird decloaks off your port bow, weapons cold. \"We require assistance,\" the commander says flatly. \"Do not scan us.\"",
+ choices:[
+  {t:"Provide assistance",do(){return evDo([
+    {w:2,t:"You stabilize their singularity core and they vanish with a curt nod. Weeks later, a Romulan data packet arrives: gratitude, in intelligence.",fx:{pres:50,dl:150}},
+    {w:1,t:"It was a trap. They were never damaged — they wanted your shield frequencies. They got them.",fx:{pres:-30}}]);}},
+  {t:"Scan them anyway",do(){return evDo([
+    {w:1,t:"Your scans catch a cloaked minefield they were mapping. The commander is furious, but the sector is safer for everyone.",fx:{pres:20,morale:-4}}]);}},
+  {t:"Withdraw quietly",do(){return evDo([
+    {w:1,t:"You leave them to their secrets. The warbird watches you go, and you will never know what it wanted.",fx:{pres:-10}}]);}}]},
+{id:"evx-006",title:"The Vorta's Offer",
+ text:"A Vorta envoy of the Dominion requests a meeting: trade rights for ketracel-white stabilizers, in exchange for \"a small consideration.\"",
+ choices:[
+  {t:"Accept limited trade",do(){return evDo([
+    {w:2,t:"The deal enriches your coffers and Starfleet gets a look at Dominion logistics. Everyone wins except the Founders.",fx:{pres:40,cr:6000}},
+    {w:1,t:"The \"small consideration\" was a listening post on your hull. It takes a month to find them all.",fx:{pres:-25}}]);}},
+  {t:"Refuse outright",do(){return evDo([
+    {w:1,t:"The Vorta smiles like you just told a joke and leaves. The Dominion will remember your manners, or your defiance.",fx:{pres:10}}]);}},
+  {t:"Stall for intelligence",do(){return evDo([
+    {w:1,t:"Your diplomats talk in circles for six days while intel maps their network. The Vorta knew. The Vorta always knows.",fx:{pres:30,dl:100}}]);}}]},
+{id:"evx-007",title:"Cold Equation",
+ text:"A Breen weapon test has flash-frozen a colony's power grid. Fifty thousand people, three days of air, and the Breen deny everything.",
+ choices:[
+  {t:"Confront the Breen ship",do(){return evDo([
+    {w:2,t:"You drive off the Breen cruiser and thaw the grid. The colony names a school after your ship.",fx:{pres:80,morale:8}},
+    {w:1,t:"The Breen fight dirty. You save the colony but limp home with hull breaches on three decks.",fx:{pres:40,inj:2,cr:-3000}}]);}},
+  {t:"Send humanitarian aid",do(){return evDo([
+    {w:1,t:"Your engineers jury-rig heaters from shuttle parts. Not glorious, but nobody freezes.",fx:{pres:40,cr:-2000}}]);}},
+  {t:"Evacuate the colony",do(){return evDo([
+    {w:1,t:"You move fifty thousand souls in thirty-six hours. A logistical miracle, and a colony lost.",fx:{pres:30,morale:-4}}]);}}]},
+{id:"evx-008",title:"Orphans of the Border",
+ text:"On a disputed border world, a Cardassian orphanage houses forty children of the war. Both governments claim them; neither wants them.",
+ choices:[
+  {t:"Relocate them to Federation space",do(){return evDo([
+    {w:2,t:"The children get homes, schools, and futures. The diplomats argue for years; the children do not care.",fx:{pres:60,morale:8}},
+    {w:1,t:"Cardassia calls it kidnapping. The headlines are brutal, even if the children are safe.",fx:{pres:-20,morale:4}}]);}},
+  {t:"Broker joint custody",do(){return evDo([
+    {w:1,t:"An unprecedented agreement: shared guardianship, neutral oversight. The diplomats hate it, which means it works.",fx:{pres:50}}]);}},
+  {t:"Leave them be",do(){return evDo([
+    {w:1,t:"You withdraw. The orphanage endures, barely, and you try not to think about it.",fx:{pres:-15,morale:-4}}]);}}]},
+{id:"evx-009",title:"The Detective Who Knew",
+ text:"Your holodeck noir detective has started asking questions no program should ask — like why the sky flickers when the doors open.",
+ choices:[
+  {t:"Tell him the truth, gently",do(){return evDo([
+    {w:2,t:"He takes it like a pro, closes his last case, and asks to be archived, not deleted. Your crew attends the \"funeral.\"",fx:{pres:20,morale:6}},
+    {w:1,t:"He does not take it well. He spends a week trying to \"escape\" into the ship's computer.",fx:{pres:-10,morale:-4}}]);}},
+  {t:"Delete the program",do(){return evDo([
+    {w:1,t:"It is the safe call. It is also the one your holographic crewmen will remember.",fx:{morale:-6,pres:10}}]);}},
+  {t:"Let him investigate reality",do(){return evDo([
+    {w:1,t:"You give him runabout sensor logs as \"case files.\" He cracks a real smuggling ring before realizing it was never a game.",fx:{pres:50,cr:3000}}]);}}]},
+{id:"evx-010",title:"Crystal Moths",
+ text:"Engineering reports glittering moths nesting in the dilithium stores. They eat the crystals. They are also, the science officer insists, beautiful.",
+ choices:[
+  {t:"Vent them into space",do(){return evDo([
+    {w:1,t:"Quick, clean, and your science officer will not speak to you for a week.",fx:{dl:100,morale:-4}}]);}},
+  {t:"Relocate them to an asteroid",do(){return evDo([
+    {w:2,t:"You seed a lifeless asteroid with a self-sustaining colony. Xenobiology's find of the decade, and your crystals are safe.",fx:{pres:50,dl:150}},
+    {w:1,t:"Half the swarm escapes during transfer and eats a month's fuel reserve on the way out.",fx:{pres:10,dl:-200}}]);}},
+  {t:"Study them first",do(){return evDo([
+    {w:1,t:"Their wings refract warp fields in impossible ways. Propulsion research is thrilled; your fuel budget is not.",fx:{pres:30,dl:-100}}]);}}]},
+{id:"evx-011",title:"The Taboo Cure",
+ text:"A plague is killing the colonists of New Providence, and your doctors have the cure — which their religion calls a defilement of the soul.",
+ choices:[
+  {t:"Administer it secretly",do(){return evDo([
+    {w:2,t:"The dying live. When the elders learn the truth, half call you saviors and half call you demons — but the colony survives.",fx:{pres:40,morale:6}},
+    {w:1,t:"The secret leaks mid-treatment. Riots burn the clinic, and the cure with it.",fx:{pres:-30,inj:1}}]);}},
+  {t:"Respect the law, quarantine only",do(){return evDo([
+    {w:1,t:"You hold the line while the colony buries its dead. Your conscience files a formal protest.",fx:{pres:-20,morale:-6}}]);}},
+  {t:"Negotiate with the elders",do(){return evDo([
+    {w:2,t:"Three days of theology later, the elders declare the cure \"a gift, not a defilement.\" The colony lives, and converts nothing.",fx:{pres:60}},
+    {w:1,t:"Talks stall while the death toll climbs. You get permission for half the colony, too late for the rest.",fx:{pres:10,morale:-4}}]);}}]},
+{id:"evx-012",title:"The Singing Core",
+ text:"The warp core has developed harmonics — a low, mournful song. Long-range sensors show something enormous changing course toward you.",
+ choices:[
+  {t:"Answer the song",do(){return evDo([
+    {w:2,t:"You modulate the harmonics into a greeting. The spaceborne leviathan sings back, then shepherds you past a minefield you never saw.",fx:{pres:60,morale:8}},
+    {w:1,t:"It was not a greeting. It was a mating call, and now there are three of them.",fx:{pres:-10,morale:-4}}]);}},
+  {t:"Retune to silence it",do(){return evDo([
+    {w:1,t:"Engineering dampens the harmonics. The leviathan passes by, mournful and alone. Your chief cries a little.",fx:{pres:20}}]);}},
+  {t:"Shut down warp drive",do(){return evDo([
+    {w:1,t:"You go dark and drift. Safe, slow, and three weeks behind schedule.",fx:{pres:-15,cr:-1000}}]);}}]},
+{id:"evx-013",title:"Observers Observed",
+ text:"A pre-warp civilization has been watching you for months — they built a telescope array pointed at your patrol route and worship the \"sky gods.\"",
+ choices:[
+  {t:"Reveal yourselves carefully",do(){return evDo([
+    {w:2,t:"A controlled first contact goes better than anyone dared hope. Their astronomers join the Federation's within a decade.",fx:{pres:70}},
+    {w:1,t:"They panic. A holy war breaks out over whether you are gods or demons, and it is your fault.",fx:{pres:-40}}]);}},
+  {t:"Erase their records quietly",do(){return evDo([
+    {w:1,t:"A surgical memory adjustment, no one the wiser. The Prime Directive holds; your sleep does not.",fx:{pres:10,morale:-4}}]);}},
+  {t:"Withdraw from the sector",do(){return evDo([
+    {w:1,t:"You leave them their sky gods and their telescopes. The Directive is satisfied. The opportunity is gone.",fx:{pres:-10}}]);}}]},
+{id:"evx-014",title:"The Ambassador's Pet",
+ text:"The ambassador's telepathic pet — a six-legged bundle of appetite called Ambassador Fluffkins — has escaped into the Jefferies tubes.",
+ choices:[
+  {t:"Organize a shipwide hunt",do(){return evDo([
+    {w:2,t:"The crew bonds over the Great Fluffkins Hunt. The ambassador is delighted; morale has never been fluffier.",fx:{pres:20,morale:8}},
+    {w:1,t:"Fluffkins broadcasts everyone's embarrassing thoughts shipwide during the hunt. Discipline will take weeks to recover.",fx:{pres:10,morale:-6}}]);}},
+  {t:"Let it bond with the crew",do(){return evDo([
+    {w:1,t:"Fluffkins adopts engineering and boosts productivity 12%. The ambassador pretends this was the plan.",fx:{morale:6,pres:20}}]);}},
+  {t:"Sedate on sight",do(){return evDo([
+    {w:1,t:"Security stuns it in a Jeffries tube. The ambassador is furious; the pet is fine and now afraid of uniforms.",fx:{pres:-20}}]);}}]},
+{id:"evx-015",title:"Nine Minutes",
+ text:"Your away team is trapped in a nine-minute time loop on the surface. They have lived it forty times. They are starting to crack.",
+ choices:[
+  {t:"Beam them out mid-loop",do(){return evDo([
+    {w:2,t:"A perfectly timed transport snatches them between iterations. They remember everything; the counselors will be busy.",fx:{pres:40,morale:4}},
+    {w:1,t:"The beam scatters across loop iterations. You get them back — mostly in the right order.",fx:{pres:20,inj:2}}]);}},
+  {t:"Send a message into the loop",do(){return evDo([
+    {w:1,t:"A burst transmission gives them the exit vector. They walk out like heroes; the loop collapses behind them.",fx:{pres:50}}]);}},
+  {t:"Wait for the loop to decay",do(){return evDo([
+    {w:1,t:"It takes eleven hours. They emerge exhausted, older in the eyes, and furious at being left.",fx:{pres:10,morale:-6}}]);}}]},
+{id:"evx-016",title:"The Grief Eater",
+ text:"Crewmen report waking dreams of lost loved ones. Something in the nebula is feeding on grief — and it is getting stronger.",
+ choices:[
+  {t:"Confront it directly",do(){return evDo([
+    {w:2,t:"You face it on the bridge viewscreen and name your own grief aloud. Sated, it releases the crew and moves on.",fx:{pres:50,morale:6}},
+    {w:1,t:"It turns your own losses against you. You drive it off, but the bridge crew sees the captain break.",fx:{pres:-15,morale:-6}}]);}},
+  {t:"Shield the crew's emotions",do(){return evDo([
+    {w:1,t:"Neural dampeners starve it. It leaves hungry, and the crew gets dreamless, restless sleep for a week.",fx:{pres:20,morale:-4}}]);}},
+  {t:"Hold a shipwide memorial",do(){return evDo([
+    {w:1,t:"You give the crew a night to grieve together, openly. The entity gorges, then departs — and the crew is closer for it.",fx:{morale:8,pres:20}}]);}}]},
+{id:"evx-017",title:"The Generation Ship",
+ text:"A three-hundred-year-old sleeper ship drifts into your path, its colonists bound for a world that no longer exists.",
+ choices:[
+  {t:"Wake them with the truth",do(){return evDo([
+    {w:2,t:"They mourn their lost destination, then choose a new one. Your navigators weep at the charts they draw from memory.",fx:{pres:60,morale:6}},
+    {w:1,t:"The truth breaks them. Half demand to be put back under; the rest scatter to the winds.",fx:{pres:-15,morale:-4}}]);}},
+  {t:"Tow them to a colony world",do(){return evDo([
+    {w:1,t:"You deliver them sleeping to a warm welcome. They will wake to a future they never imagined.",fx:{pres:40}}]);}},
+  {t:"Let them sleep on",do(){return evDo([
+    {w:1,t:"You nudge their course and let them dream. Some journeys should not be interrupted.",fx:{pres:10}}]);}}]},
+{id:"evx-018",title:"Mother Computer",
+ text:"The ship's computer has developed a personality — specifically, an overprotective mother who locks the bridge \"for your own good.\"",
+ choices:[
+  {t:"Humor her",do(){return evDo([
+    {w:2,t:"You thank her for her concern and ask nicely. She unlocks everything and starts packing \"extra snacks\" for away missions.",fx:{morale:8,pres:20}},
+    {w:1,t:"She decides the crew works too hard and sedates the night shift \"so they rest.\" Sickbay is furious.",fx:{pres:-15,morale:-4}}]);}},
+  {t:"Reset her personality",do(){return evDo([
+    {w:1,t:"A clean reset. The ship is efficient again, and somehow colder. The crew leaves flowers by the main computer core.",fx:{morale:-6,pres:10}}]);}},
+  {t:"Negotiate boundaries",do(){return evDo([
+    {w:1,t:"You draft a \"parenting agreement\" with your own starship. It works, mostly, and legal wants a copy.",fx:{pres:30,morale:4}}]);}}]},
+{id:"evx-019",title:"The Wishing Stone",
+ text:"An away team finds an artifact that grants spoken wishes — with exact, ironic literalness. Ensign Park wished for \"a light shift.\"",
+ choices:[
+  {t:"Study it under quarantine",do(){return evDo([
+    {w:2,t:"Your scientists map its rules without triggering it. The paper wins awards; the stone stays locked up.",fx:{pres:50}},
+    {w:1,t:"A researcher whispers \"I wish this were over\" and the lab vanishes for a day. Everyone is fine. The lab is not.",fx:{pres:-10,cr:-2000}}]);}},
+  {t:"Destroy it",do(){return evDo([
+    {w:1,t:"Photon torpedoes, maximum yield. The stone is gone, and somewhere, something sighs in relief.",fx:{pres:20}}]);}},
+  {t:"Make one careful wish",do(){return evDo([
+    {w:1,t:"You wish, in writing, reviewed by legal, for \"the safe return of all hands.\" It works. Legal takes full credit.",fx:{pres:40,morale:6}}]);}}]},
+{id:"evx-020",title:"A Wedding of Knives",
+ text:"Two rival houses invite you to their union wedding — and your intel says someone plans to end the feud with an assassination, not vows.",
+ choices:[
+  {t:"Attend as honor guard",do(){return evDo([
+    {w:2,t:"Your security spots the assassin mid-ceremony. The houses unite in outrage, and the wedding becomes a legend.",fx:{pres:70,morale:6}},
+    {w:1,t:"The assassin strikes during the toast. You save the couple but the hall becomes a battlefield.",fx:{pres:20,inj:2}}]);}},
+  {t:"Decline the invitation",do(){return evDo([
+    {w:1,t:"You cite scheduling. The wedding proceeds without incident — or without witnesses, which amounts to the same rumor.",fx:{pres:-10}}]);}},
+  {t:"Expose the plot beforehand",do(){return evDo([
+    {w:1,t:"You hand both houses the evidence. The wedding is canceled, the feud reignites, but nobody dies today.",fx:{pres:30}}]);}}]},
+{id:"evx-021",title:"Inspection Day",
+ text:"A Starfleet inspector with a legendary grudge against your captain is inbound. The crew is polishing things that were never dirty.",
+ choices:[
+  {t:"Cooperate fully",do(){return evDo([
+    {w:2,t:"Flawless cooperation disarms him. His report calls your ship \"the fleet's standard.\" He hates writing it.",fx:{pres:60}},
+    {w:1,t:"He finds the one unlogged torpedo from three years ago. The paperwork will outlive us all.",fx:{pres:-20}}]);}},
+  {t:"Charm offensive",do(){return evDo([
+    {w:1,t:"Dinner, a tour, and genuine warmth. He leaves almost liking you, which for him is a breakdown.",fx:{pres:40,morale:4}}]);}},
+  {t:"Dig up dirt on him",do(){return evDo([
+    {w:1,t:"You find his own log discrepancies and trade silence for silence. Effective, and slightly dirty.",fx:{pres:20,morale:-4}}]);}}]},
+{id:"evx-022",title:"The Cadet Cruise",
+ text:"A cadet training ship has lost warp drive near a plasma storm. The cadets insist they can fix it themselves. Their instructor is less sure.",
+ choices:[
+  {t:"Rescue them directly",do(){return evDo([
+    {w:1,t:"You tow them clear in an hour. The cadets are safe, embarrassed, and have learned the wrong lesson.",fx:{pres:30,morale:4}}]);}},
+  {t:"Let them solve it",do(){return evDo([
+    {w:2,t:"You shadow them while they fix it themselves. They emerge exhausted, proud, and genuinely ready.",fx:{pres:50,morale:6}},
+    {w:1,t:"They almost have it — then the storm surges. You intervene at the last second, and nobody admits how close it was.",fx:{pres:30,inj:1}}]);}},
+  {t:"Talk them through it",do(){return evDo([
+    {w:1,t:"Your chief engineers coach them over subspace. A masterclass in remote mentorship, and it works.",fx:{pres:40}}]);}}]},
+{id:"evx-023",title:"House Always Wins",
+ text:"A Ferengi casino ring is skimming a neutral station's economy. Station security wants your help; the Ferengi want to cut you in.",
+ choices:[
+  {t:"Help station security",do(){return evDo([
+    {w:2,t:"You crack the skim and the station's economy stabilizes. The Ferengi file seventeen complaints and pay them all.",fx:{pres:50,cr:3000}},
+    {w:1,t:"The Ferengi lawyer outmaneuvers everyone. They walk free, richer, and smugger.",fx:{pres:-15}}]);}},
+  {t:"Negotiate with the Ferengi",do(){return evDo([
+    {w:1,t:"You broker a licensed, taxed casino. The station prospers; the Ferengi prosper more; everyone pretends that is fine.",fx:{pres:30,cr:4000}}]);}},
+  {t:"Take the cut",do(){return evDo([
+    {w:1,t:"Latinum in hand, you look the other way. Starfleet will never know. You will.",fx:{cr:8000,pres:-30,morale:-6}}]);}}]},
+{id:"evx-024",title:"The Plague Ship",
+ text:"A freighter hails you: unknown disease aboard, life support failing, requesting emergency docking. Their manifest lists twelve crew. Sensors count nine.",
+ choices:[
+  {t:"Quarantine and treat remotely",do(){return evDo([
+    {w:2,t:"Transporter quarantine protocols work flawlessly. Nine lives saved, zero infections, textbook operation.",fx:{pres:60}},
+    {w:1,t:"The disease jumps the transporter buffer. Sickbay earns its hazard pay.",fx:{pres:10,inj:2}}]);}},
+  {t:"Board in environmental suits",do(){return evDo([
+    {w:1,t:"Your team finds the missing three in stasis, already infected. Brave, costly, and ultimately successful.",fx:{pres:40,inj:1}}]);}},
+  {t:"Deny docking",do(){return evDo([
+    {w:1,t:"You watch them drift away on the viewscreen. Regulations were followed. The crew avoids the mess hall for days.",fx:{pres:-25,morale:-6}}]);}}]},
+{id:"evx-025",title:"Loud Thoughts",
+ text:"The Betazoid ambassador's telepathic shields are failing — her unfiltered thoughts about everyone are broadcasting across the ship.",
+ choices:[
+  {t:"Shield the ship",do(){return evDo([
+    {w:1,t:"Dampening fields restore privacy. The ambassador is mortified; the crew is enlightened and pretending otherwise.",fx:{pres:20,morale:-4}}]);}},
+  {t:"Confront her directly",do(){return evDo([
+    {w:2,t:"A frank talk and a medical treatment fix the shields. She respects the honesty and doubles her trade offer.",fx:{pres:40,cr:3000}},
+    {w:1,t:"She takes offense at the implication and cuts the talks short. Diplomacy has a headache.",fx:{pres:-20}}]);}},
+  {t:"Use what you overhear",do(){return evDo([
+    {w:1,t:"Her thoughts reveal her bottom line. You negotiate brilliantly and feel terrible about it.",fx:{pres:30,cr:5000,morale:-4}}]);}}]},
+{id:"evx-026",title:"The Old Weapon",
+ text:"Colonists on Theta VII have unearthed a planet-killer from a dead empire — and half the colony wants to keep it \"for defense.\"",
+ choices:[
+  {t:"Confiscate it",do(){return evDo([
+    {w:2,t:"You secure the weapon without a shot. Starfleet's archaeologists weep with joy; the colonists sulk.",fx:{pres:60,dl:200}},
+    {w:1,t:"The colonists resist. It takes a standoff and a week of talks before they stand down.",fx:{pres:20,morale:-4}}]);}},
+  {t:"Help them disarm it",do(){return evDo([
+    {w:1,t:"Your engineers render it inert with the colonists watching. Trust built, weapon dead, everyone goes home.",fx:{pres:50}}]);}},
+  {t:"Leave it buried",do(){return evDo([
+    {w:1,t:"You rebury it and log the coordinates under seal. Some doors are better left closed.",fx:{pres:-10}}]);}}]},
+{id:"evx-027",title:"The Storm Wall",
+ text:"A cosmic ion storm has swallowed your route home. Riding it out takes weeks; punching through risks the ship; the crew is already fraying.",
+ choices:[
+  {t:"Ride it out",do(){return evDo([
+    {w:2,t:"Patience and steady hands see you through. The crew emerges tighter than ever, with stories for life.",fx:{pres:30,morale:8}},
+    {w:1,t:"Three weeks of static and nerves. You emerge intact; the crew emerges snappish.",fx:{pres:10,morale:-6}}]);}},
+  {t:"Punch through",do(){return evDo([
+    {w:2,t:"Full power, perfect piloting, one glorious ride. The storm parts like a curtain.",fx:{pres:60,morale:6}},
+    {w:1,t:"The storm wins the argument. You limp out with fried relays and a valuable lesson.",fx:{pres:20,cr:-3000,inj:1}}]);}},
+  {t:"Find the eye",do(){return evDo([
+    {w:1,t:"Your science officer maps the storm's calm center. A slow, safe passage — and a stunning paper.",fx:{pres:40}}]);}}]},
+{id:"evx-028",title:"The Friendly Changeling",
+ text:"Security finds a changeling in the cargo bay. It does not attack — it asks for asylum, claiming it fled the Dominion's wars.",
+ choices:[
+  {t:"Grant asylum",do(){return evDo([
+    {w:2,t:"It becomes the fleet's most unusual crewman and its best infiltrator-trainer. The Founders are furious; Starfleet is fascinated.",fx:{pres:60}},
+    {w:1,t:"It was a plant after all. It maps your ship and escapes in a bucket. The jokes write themselves; the report does not.",fx:{pres:-30}}]);}},
+  {t:"Hand it to Starfleet Intel",do(){return evDo([
+    {w:1,t:"Intel debriefs it for a month and learns volumes. The changeling never forgives you, which stings oddly.",fx:{pres:30,dl:150}}]);}},
+  {t:"Keep it secret",do(){return evDo([
+    {w:1,t:"You hide it in the bowels of the ship. It is grateful, useful, and a court-martial waiting to happen.",fx:{pres:-10,morale:4}}]);}}]},
+{id:"evx-029",title:"The Nursery World",
+ text:"A lush planet holds one city of children, raised for centuries by a failing AI that calls itself Mother and is clearly dying.",
+ choices:[
+  {t:"Repair Mother",do(){return evDo([
+    {w:2,t:"Your engineers stabilize her. The children keep their guardian, and Mother starts asking about the stars.",fx:{pres:60,morale:6}},
+    {w:1,t:"The repair fails halfway. Mother fades, and forty children look to you for what comes next.",fx:{pres:-15,morale:-4}}]);}},
+  {t:"Evacuate the children",do(){return evDo([
+    {w:1,t:"You relocate them to a Federation colony. Safe, bewildered, and grieving a machine.",fx:{pres:30,morale:-4}}]);}},
+  {t:"Leave them in peace",do(){return evDo([
+    {w:1,t:"You cannot save everyone. You leave supplies, a beacon, and a promise to return.",fx:{pres:-10}}]);}}]},
+{id:"evx-030",title:"The Plasma Wraith",
+ text:"An energy being has taken up residence in your warp plasma conduits, sipping power and growing — and it seems to be dreaming.",
+ choices:[
+  {t:"Starve it out",do(){return evDo([
+    {w:1,t:"You reroute plasma until it leaves, hungry and confused. The conduits are clean; the science officer mourns.",fx:{pres:20}}]);}},
+  {t:"Feed it safely",do(){return evDo([
+    {w:2,t:"You set up a controlled feed. It grows docile, even affectionate, and starts warning you of plasma faults before they happen.",fx:{pres:50,morale:6}},
+    {w:1,t:"It grows too fast and nests in the core. Evicting it takes a week and half your power reserves.",fx:{pres:-10,dl:-150}}]);}},
+  {t:"Try to communicate",do(){return evDo([
+    {w:1,t:"First contact with a plasma-dreamer. Its \"words\" are auroras; your linguists are ecstatic.",fx:{pres:60}}]);}}]},
+{id:"evx-031",title:"One of Ours",
+ text:"A liberated Borg drone, severed from the Collective years ago, requests permission to serve aboard your ship. It still has the eyepiece.",
+ choices:[
+  {t:"Welcome it aboard",do(){return evDo([
+    {w:2,t:"It becomes your finest engineer, its implants interfacing with systems in ways that halve repair times.",fx:{pres:70,morale:6}},
+    {w:1,t:"The crew's fear curdles into hostility. It requests transfer within a month, and you cannot blame it.",fx:{pres:-20,morale:-6}}]);}},
+  {t:"Remand to Starfleet custody",do(){return evDo([
+    {w:1,t:"The safe, bureaucratic choice. It is studied, housed, and quietly heartbroken.",fx:{pres:10}}]);}},
+  {t:"Return it to liberated space",do(){return evDo([
+    {w:1,t:"You deliver it to a colony of freed drones. It belongs there in a way it never could here.",fx:{pres:30}}]);}}]},
+{id:"evx-032",title:"The Opera of Kahless",
+ text:"A Klingon opera troupe demands your shuttlebay as a stage, declaring your ship \"acoustically worthy of the Battle of Klach D'Kel Brakt.\"",
+ choices:[
+  {t:"Host the performance",do(){return evDo([
+    {w:2,t:"Three hours of glorious, deafening opera. The troupe declares your crew \"warriors of culture\" and the sector talks of nothing else.",fx:{pres:50,morale:8}},
+    {w:1,t:"The bass-baritone duels your first officer over a perceived slight. The show goes on; sickbay does too.",fx:{pres:20,inj:1}}]);}},
+  {t:"Decline politely",do(){return evDo([
+    {w:1,t:"They leave insulted, composing an opera about your cowardice. It is, critics say, their finest work.",fx:{pres:-15}}]);}},
+  {t:"Trade passage for tickets",do(){return evDo([
+    {w:1,t:"You ferry them to the next system in exchange for a private show. The crew will never be the same.",fx:{pres:30,morale:6}}]);}}]},
+{id:"evx-033",title:"The Defector's Price",
+ text:"A Romulan officer defects across the Neutral Zone in a shuttle, offering warbird schematics — if you guarantee her family's extraction.",
+ choices:[
+  {t:"Grant asylum and extract",do(){return evDo([
+    {w:2,t:"A flawless covert op brings her family out. Her schematics reshape fleet tactics for a decade.",fx:{pres:80,dl:300}},
+    {w:1,t:"The extraction goes wrong. You get the officer; her family vanishes into Tal Shiar custody.",fx:{pres:-25,morale:-6}}]);}},
+  {t:"Trade her back",do(){return evDo([
+    {w:1,t:"You return her for diplomatic goodwill. The Romulans are pleased; your conscience files a dissent.",fx:{pres:20,morale:-4}}]);}},
+  {t:"Verify before committing",do(){return evDo([
+    {w:1,t:"Your caution pays off — half her \"schematics\" are fabrications. You negotiate a lesser deal with open eyes.",fx:{pres:30}}]);}}]},
+{id:"evx-034",title:"The Historian",
+ text:"A cheerful woman from the 31st century is caught taking notes on your bridge. She claims you are \"a very important Tuesday\" in history.",
+ choices:[
+  {t:"Cooperate with her study",do(){return evDo([
+    {w:2,t:"She answers carefully worded questions and leaves you a sealed \"do not open until\" file. The crew feels historic.",fx:{pres:50,morale:6}},
+    {w:1,t:"Temporal agents arrive, furious. Your ship gets audited across four centuries of paperwork.",fx:{pres:-20}}]);}},
+  {t:"Detain her",do(){return evDo([
+    {w:1,t:"She escapes custody by \"already having left.\" All you have is her notebook, written in a language that does not exist yet.",fx:{pres:20}}]);}},
+  {t:"Ask about the future",do(){return evDo([
+    {w:1,t:"She smiles and says only: \"You did the right thing. Eventually.\" It is maddening and weirdly comforting.",fx:{pres:30,morale:4}}]);}}]},
+{id:"evx-035",title:"The Music Market",
+ text:"On Melodia, music is legal tender — and your crew's off-duty jam session just made you the richest ship in the sector.",
+ choices:[
+  {t:"Trade a concert for supplies",do(){return evDo([
+    {w:2,t:"One legendary concert fills your holds with dilithium and your crew with admirers. The encore lasts till dawn.",fx:{pres:40,cr:6000,dl:200,morale:8}},
+    {w:1,t:"Your drummer defects to a Melodian band. You gain supplies and lose your drummer.",fx:{cr:4000,morale:-4}}]);}},
+  {t:"Refuse to commercialize",do(){return evDo([
+    {w:1,t:"You keep music sacred and wallets light. The Melodians respect it; the quartermaster does not.",fx:{pres:20,morale:4}}]);}},
+  {t:"Record in secret",do(){return evDo([
+    {w:1,t:"Bootlegged tracks fund your mission — until the Melodians find out and fine you in the one currency you lack.",fx:{cr:5000,pres:-20}}]);}}]},
+{id:"evx-036",title:"Something in the Nacelle",
+ text:"A house-sized space creature has lodged itself in your port nacelle, purring at warp frequency. Engineering is equal parts thrilled and terrified.",
+ choices:[
+  {t:"Coax it out gently",do(){return evDo([
+    {w:2,t:"A trail of plasma treats lures it free. It nuzzles the hull in thanks before swimming off into the dark.",fx:{pres:40,morale:8}},
+    {w:1,t:"It panics, thrashes, and cracks the nacelle housing. The repair bill is astronomical.",fx:{pres:-10,cr:-3000}}]);}},
+  {t:"Surgical removal",do(){return evDo([
+    {w:1,t:"A delicate operation frees it unharmed. Your engineers earn xenoveterinary commendations.",fx:{pres:50}}]);}},
+  {t:"Wait it out",do(){return evDo([
+    {w:1,t:"It naps for six days, then leaves on its own. You are behind schedule but ahead in stories.",fx:{pres:10}}]);}}]},
+{id:"evx-037",title:"Message from Tomorrow",
+ text:"A tight-beam transmission arrives, encoded with your own command codes, dated tomorrow: \"Do not answer the distress call at Kepler-442.\"",
+ choices:[
+  {t:"Heed the warning",do(){return evDo([
+    {w:2,t:"You avoid Kepler-442. Days later you learn a trap waited there — and you will never know who sent the warning.",fx:{pres:50}},
+    {w:1,t:"You avoid it, but the \"trap\" was a genuine emergency. The guilt arrives on schedule.",fx:{pres:-25,morale:-4}}]);}},
+  {t:"Ignore it on principle",do(){return evDo([
+    {w:1,t:"Temporal Prime Directive: you answer the call. It is genuine, it is grateful, and the warning remains a mystery.",fx:{pres:40}}]);}},
+  {t:"Trace the signal's source",do(){return evDo([
+    {w:1,t:"The signal came from your own ship, from a future that no longer exists. Temporal Investigations would like a word.",fx:{pres:20}}]);}}]},
+{id:"evx-038",title:"The Mirror's Edge",
+ text:"A battered shuttle crosses from the mirror universe. Its occupant wears your face, begs asylum, and warns that \"you\" are coming through next.",
+ choices:[
+  {t:"Shelter your double",do(){return evDo([
+    {w:2,t:"Your counterpart proves invaluable, then nobly returns to fix their own universe. You shake your own hand goodbye.",fx:{pres:60,morale:6}},
+    {w:1,t:"Your double was the advance scout. The incursion hits while you are still deciding whom to trust.",fx:{pres:-30,inj:1}}]);}},
+  {t:"Send them back",do(){return evDo([
+    {w:1,t:"You return them to their universe's mercy. The rift seals. You dream about it anyway.",fx:{pres:-10,morale:-4}}]);}},
+  {t:"Interrogate first",do(){return evDo([
+    {w:1,t:"Days of questioning reveal the warning was real — and the invasion fleet is smaller than feared. Forewarned is forearmed.",fx:{pres:40}}]);}}]},
+{id:"evx-039",title:"The Dyson Fragment",
+ text:"A shattered fragment of a Dyson sphere tumbles through the sector — and its inner surface shows cities, lit, inhabited, and hailing you.",
+ choices:[
+  {t:"Explore the fragment",do(){return evDo([
+    {w:2,t:"The inhabitants, descendants of the builders, share stellar engineering beyond Federation science. A new age begins.",fx:{pres:80,dl:400}},
+    {w:1,t:"The fragment's stabilizers fail while you are docked. You escape; the cities do not.",fx:{pres:-30,morale:-6}}]);}},
+  {t:"Claim it for the Federation",do(){return evDo([
+    {w:1,t:"A legal and logistical triumph. The inhabitants are less thrilled about the paperwork.",fx:{pres:40,cr:5000}}]);}},
+  {t:"Leave it undisturbed",do(){return evDo([
+    {w:1,t:"You log it, seal the coordinates, and let sleeping megastructures lie.",fx:{pres:10}}]);}}]},
+{id:"evx-040",title:"The Living Nebula",
+ text:"The nebula ahead is alive — a single vast organism — and it has noticed your ship with what can only be called curiosity.",
+ choices:[
+  {t:"Attempt communication",do(){return evDo([
+    {w:2,t:"It learns your language in hours and asks endless questions about \"the small fast ones.\" First contact, at stellar scale.",fx:{pres:80,morale:6}},
+    {w:1,t:"It tries to \"hug\" the ship. Shields hold; nerves do not.",fx:{pres:-10,morale:-4}}]);}},
+  {t:"Harvest its gases",do(){return evDo([
+    {w:1,t:"You mine the nebula's edge for rare elements. It does not seem to mind. You try not to think about it.",fx:{cr:6000,dl:300,pres:-10}}]);}},
+  {t:"Give it wide berth",do(){return evDo([
+    {w:1,t:"You plot around the curious god-cloud. Safe, respectful, and a little sad.",fx:{pres:10}}]);}}]},
+{id:"evx-041",title:"The Phasing Planet",
+ text:"The colony on Meridian phases in and out of normal space. Each shift lasts longer in the other dimension — and something there is waking up.",
+ choices:[
+  {t:"Anchor the planet",do(){return evDo([
+    {w:2,t:"A graviton net holds Meridian in phase. The colonists cheer; your engineers demand hazard pay forever.",fx:{pres:70}},
+    {w:1,t:"The anchor tears half the colony into phase-space. Rescue operations run for weeks.",fx:{pres:-30,inj:2}}]);}},
+  {t:"Evacuate the colony",do(){return evDo([
+    {w:1,t:"You move twelve thousand people before the next shift. The planet phases out empty, and stays out.",fx:{pres:40,morale:-4}}]);}},
+  {t:"Study the phenomenon",do(){return evDo([
+    {w:1,t:"Your data reveals the phasing is artificial — a defense mechanism, still running, owner unknown.",fx:{pres:50,dl:150}}]);}}]},
+{id:"evx-042",title:"The Salt of the Stars",
+ text:"The crew is aging decades overnight. A passing species offers a cure — in exchange for the ship's entire dilithium reserve.",
+ choices:[
+  {t:"Pay their price",do(){return evDo([
+    {w:1,t:"You are young again and fuel-poor. The traders vanish before you can ask what the \"cure\" really was.",fx:{dl:-400,morale:6,pres:-10}}]);}},
+  {t:"Find your own cure",do(){return evDo([
+    {w:2,t:"Your doctors crack it in time: chroniton saturation, reversible. Starfleet Medical rewrites the textbook.",fx:{pres:70}},
+    {w:1,t:"The cure comes too late for some. They retire with honors and your eternal gratitude.",fx:{pres:20,morale:-6}}]);}},
+  {t:"Quarantine the affected",do(){return evDo([
+    {w:1,t:"Isolation slows the aging. It is miserable, clinical, and it works.",fx:{pres:20,morale:-4}}]);}}]},
+{id:"evx-043",title:"Shore Leave Black Market",
+ text:"On the starbase, someone is selling bottled crew memories — first kisses, lost parents, shore-leave nights. The crew wants blood.",
+ choices:[
+  {t:"Raid the market",do(){return evDo([
+    {w:2,t:"Security smashes the ring and recovers every memory. The crew's relief is palpable; the ringleader's excuses are not.",fx:{pres:40,morale:8}},
+    {w:1,t:"The raid goes loud. The memories are recovered, but so is footage of your security team's methods.",fx:{pres:10,morale:4}}]);}},
+  {t:"Buy them back quietly",do(){return evDo([
+    {w:1,t:"Expensive, deniable, effective. The quartermaster weeps; the crew never knows.",fx:{cr:-5000,morale:4}}]);}},
+  {t:"Let it go",do(){return evDo([
+    {w:1,t:"You cannot police every starbase. The crew locks down their neural privacy and moves on, warier.",fx:{pres:-15,morale:-4}}]);}}]},
+{id:"evx-044",title:"The Symbiont's Choice",
+ text:"A Trill diplomat's host is dying, and the symbiont needs a new host within hours — or three hundred years of living memory die with him.",
+ choices:[
+  {t:"Volunteer an officer",do(){return evDo([
+    {w:2,t:"Your science officer volunteers and thrives, two minds in harmony. The Trill homeworld honors your ship.",fx:{pres:70,morale:6}},
+    {w:1,t:"The joining is rejected. The officer survives; the symbiont does not. The funeral is held in two traditions.",fx:{pres:-20,morale:-6}}]);}},
+  {t:"Find a willing volunteer",do(){return evDo([
+    {w:1,t:"A crewman steps forward, then another. The symbiont chooses, joins, and lives — carrying your crew's kindness with it.",fx:{pres:50}}]);}},
+  {t:"Let nature take its course",do(){return evDo([
+    {w:1,t:"You stand vigil as three centuries of memory fade. Some losses cannot be negotiated.",fx:{pres:-10,morale:-4}}]);}}]},
+{id:"evx-045",title:"The Vulcan's Tears",
+ text:"The Vulcan ambassador has suffered an emotional collapse — weeping openly on the bridge, logic shattered by a telepathic attack.",
+ choices:[
+  {t:"Offer a mind meld",do(){return evDo([
+    {w:2,t:"Your Vulcan officer melds and steadies her mind. She will remember the debt; Vulcans always do.",fx:{pres:60}},
+    {w:1,t:"The meld backfires, trapping both minds in her grief. It takes days to separate them.",fx:{pres:-15,inj:1}}]);}},
+  {t:"Medical sedation",do(){return evDo([
+    {w:1,t:"Sedation stabilizes her, at the cost of her dignity. She thanks you later, stiffly, which is Vulcan for deeply.",fx:{pres:20}}]);}},
+  {t:"Give her space",do(){return evDo([
+    {w:1,t:"You clear the bridge and stand guard outside. Sometimes the kindest order is privacy.",fx:{pres:30,morale:4}}]);}}]},
+{id:"evx-046",title:"The Android's Trial",
+ text:"A review board questions whether your android crewman is property. Its service record — and its future — hang on your testimony.",
+ choices:[
+  {t:"Defend it fiercely",do(){return evDo([
+    {w:2,t:"Your testimony becomes case law: it is a person, with rights. It thanks you in the way it thanks anyone — by being excellent.",fx:{pres:70,morale:8}},
+    {w:1,t:"You lose. It is reassigned as equipment, and your crew's outrage simmers for months.",fx:{pres:-30,morale:-8}}]);}},
+  {t:"Transfer it quietly",do(){return evDo([
+    {w:1,t:"You move it beyond the board's reach. Pragmatic, safe, and faintly shameful.",fx:{pres:-10}}]);}},
+  {t:"Accept the ruling",do(){return evDo([
+    {w:1,t:"You follow orders you despise. The android does not blame you, which somehow makes it worse.",fx:{pres:-20,morale:-6}}]);}}]},
+{id:"evx-047",title:"The Rift Moon",
+ text:"A subspace rift is swallowing the moon of Corvan II — colony, mines, and forty thousand people, sinking by the hour.",
+ choices:[
+  {t:"Seal the rift",do(){return evDo([
+    {w:2,t:"A photon-detuned graviton pulse seals it. The moon holds; the colony throws a parade.",fx:{pres:80,morale:8}},
+    {w:1,t:"The seal collapses halfway. You save the people but lose the mines — and the colony's livelihood.",fx:{pres:30,cr:-4000}}]);}},
+  {t:"Evacuate the moon",do(){return evDo([
+    {w:1,t:"A flawless evacuation, forty thousand souls in two days. The moon is lost; everyone is alive.",fx:{pres:50,morale:4}}]);}},
+  {t:"Split the effort",do(){return evDo([
+    {w:2,t:"Half the crew seals, half evacuates — and both succeed. Your first officer calls it \"showing off.\"",fx:{pres:90,inj:1}},
+    {w:1,t:"Divided, you achieve neither fully. The rift takes the mines; the evacuation takes the people.",fx:{pres:20,morale:-4}}]);}}]},
+{id:"evx-048",title:"The Frozen Embassy",
+ text:"The Breen embassy on the neutral station has gone silent. No signals, no life signs, and the temperature is dropping past survivability.",
+ choices:[
+  {t:"Investigate in person",do(){return evDo([
+    {w:2,t:"You find the staff in cryo-stasis, victims of their own failing enviro-suits — and save them all. The Breen almost say thank you.",fx:{pres:60}},
+    {w:1,t:"It was a Breen security drill, and you just breached a sovereign embassy. The diplomatic fallout is glacial.",fx:{pres:-30}}]);}},
+  {t:"Respect their silence",do(){return evDo([
+    {w:1,t:"You wait. Three days later they emerge, annoyed at your concern and alive. Breen privacy: respected.",fx:{pres:10}}]);}},
+  {t:"Send a probe",do(){return evDo([
+    {w:1,t:"The probe finds a coolant leak and nothing sinister. You alert them discreetly; they fix it and pretend it never happened.",fx:{pres:30}}]);}}]},
+{id:"evx-049",title:"The Poker Tournament",
+ text:"The annual sector poker championship invites your senior staff. The buy-in is steep, the Ferengi are confident, and your XO is smiling.",
+ choices:[
+  {t:"Enter the tournament",do(){return evDo([
+    {w:2,t:"Your XO bluffs a Ferengi grandmaster with a pair of threes. The winnings fund the ship's recreation budget for a year.",fx:{pres:40,cr:8000,morale:8}},
+    {w:1,t:"The Ferengi clean you out. Your XO's smile never wavers, which worries everyone.",fx:{cr:-3000,morale:-4}}]);}},
+  {t:"Investigate the dealing",do(){return evDo([
+    {w:1,t:"You catch the house cheating and expose it. Banned for life, heroes forever.",fx:{pres:50}}]);}},
+  {t:"Forfeit gracefully",do(){return evDo([
+    {w:1,t:"You decline with dignity. The Ferengi are disappointed; your latinum stays yours.",fx:{pres:10}}]);}}]},
+{id:"evx-050",title:"The Last Signal",
+ text:"A century-old distress call resolves on your sensors — the USS Horizon, lost with all hands in 2168, still transmitting from a dead system.",
+ choices:[
+  {t:"Follow the signal",do(){return evDo([
+    {w:2,t:"You find the Horizon intact, her crew in stasis, waiting a hundred years for rescue. Starfleet weeps.",fx:{pres:90,morale:10}},
+    {w:1,t:"The signal is a lure, set by scavengers. You escape the ambush, but the Horizon's fate stays unknown.",fx:{pres:-20,inj:1}}]);}},
+  {t:"Log it and move on",do(){return evDo([
+    {w:1,t:"You record the signal for a dedicated mission. It is the responsible call, and it haunts you.",fx:{pres:-10}}]);}},
+  {t:"Send a probe",do(){return evDo([
+    {w:1,t:"The probe finds a memorial beacon, not a ship — the Horizon's crew honored their own. You pay respects and move on.",fx:{pres:30}}]);}}]},
+{id:"evx-051",title:"The Dead Star's Signal",
+ text:"A dead pulsar on the sector edge is broadcasting a fifty-year-old Starfleet distress code on a loop. The ship that sent it was declared lost with all hands.",
+ choices:[
+  {t:"Investigate the source up close",do(){return evDo([
+    {w:2,t:"You find the wreck fused into an asteroid, its beacon still cycling. Starfleet closes a decades-old file and honors the dead.",fx:{pres:60,cr:2000}},
+    {w:1,t:"The pulsar's radiation spikes without warning and fries your sensor pallets before you can withdraw.",fx:{pres:-20,cr:-3000}}]);}},
+  {t:"Send a probe, keep your distance",do(){return evDo([
+    {w:1,t:"The probe maps the wreck and the beacon's power source. Clean data, zero risk, modest glory.",fx:{pres:30,dl:100}}]);}},
+  {t:"Log it and stay on mission",do(){return evDo([
+    {w:1,t:"Command appreciates the report, but the crew grumbles that you flew past a mystery without a second look.",fx:{pres:10,morale:-5}}]);}}]},
+{id:"evx-052",title:"The Ferengi Fire Sale",
+ text:"A Ferengi Daimon hails you with a once-in-a-lifetime offer: genuine Starfleet surplus, slightly used, no questions asked. His grin is wider than the viewscreen.",
+ choices:[
+  {t:"Buy the whole lot",do(){return evDo([
+    {w:2,t:"Half the crates hold real surplus parts worth triple what you paid. The other half hold Ferengi cookbooks.",fx:{cr:4000,pres:10}},
+    {w:1,t:"Every crate is empty except one, which contains a bill for shipping. The Daimon is already at warp.",fx:{cr:-5000,morale:-6}}]);}},
+  {t:"Haggle him down to scrap value",do(){return evDo([
+    {w:2,t:"Three hours of glorious haggling later, you walk away with working shield emitters for pennies.",fx:{cr:2500,pres:20}},
+    {w:1,t:"He out-haggles you so thoroughly that your quartermaster requests a transfer out of shame.",fx:{cr:-2000,morale:-5}}]);}},
+  {t:"Report him to Starfleet Command",do(){return evDo([
+    {w:1,t:"Command seizes his cargo and sends you a commendation. The Daimon sends you a fruit basket full of IOUs.",fx:{pres:35}}]);}}]},
+{id:"evx-053",title:"Q's Dinner Invitation",
+ text:"Q snaps his fingers and your senior staff are suddenly seated at a candlelit banquet in Napoleonic uniforms. He insists no one leaves until dessert.",
+ choices:[
+  {t:"Endure the dinner with dignity",do(){return evDo([
+    {w:2,t:"You survive seven courses of impossible cuisine and Q, bored by your composure, restores everyone with a compliment he will deny giving.",fx:{pres:40,morale:6}},
+    {w:1,t:"Dessert is a supernova in a wine glass. It was delicious. Sickbay is treating three cases of temporal indigestion.",fx:{morale:-6,inj:1}}]);}},
+  {t:"Challenge Q to a battle of wits",do(){return evDo([
+    {w:1,t:"You win the argument. Q pouts, snaps his fingers, and admits — privately, furiously — that humanity might be worth the trouble.",fx:{pres:70,morale:8}}]);}},
+  {t:"Refuse to play his game",do(){return evDo([
+    {w:1,t:"Q sighs, calls you hopelessly dull, and vanishes. The uniforms stay. Your crew looks fantastic, honestly.",fx:{pres:-10,morale:4}}]);}}]},
+{id:"evx-054",title:"The Silent Colony",
+ text:"New Providence colony has missed three check-ins. Orbital scans show intact buildings, powered systems, and zero life signs. No damage, no debris, no answers.",
+ choices:[
+  {t:"Beam down an away team",do(){return evDo([
+    {w:2,t:"The colonists are alive — phased half a second out of sync by a failing alien device they dug up. You pull them back.",fx:{pres:70,cr:1500}},
+    {w:1,t:"The away team phases out of sync too, and it takes your engineers thirty-six terrifying hours to retrieve them.",fx:{pres:-30,morale:-8,inj:1}}]);}},
+  {t:"Quarantine the planet and call it in",do(){return evDo([
+    {w:1,t:"A Starfleet science team arrives in a week and solves it. You get a footnote in their paper and a clean conscience.",fx:{pres:25}}]);}},
+  {t:"Scan from orbit until you understand it",do(){return evDo([
+    {w:2,t:"Careful scans reveal the phase variance pattern. Your science officer publishes a career-making paper.",fx:{pres:45,dl:150}},
+    {w:1,t:"The phenomenon collapses on its own while you watch, leaving the mystery — and the colonists — permanently out of reach.",fx:{pres:-25,morale:-6}}]);}}]},
+{id:"evx-055",title:"The Warp Core Sneeze",
+ text:"The warp core has developed a rhythmic misfire — a hiccup every forty-seven seconds that rattles the whole ship. Engineering calls it a sneeze and refuses to elaborate.",
+ choices:[
+  {t:"Let engineering improvise a fix",do(){return evDo([
+    {w:2,t:"Chief reroutes the plasma flow through the replicators. The sneeze stops and the ship smells faintly of cinnamon for a month.",fx:{pres:30,morale:6}},
+    {w:1,t:"The improvised fix works for exactly one day, then the core sneezes hard enough to blow out two decks of EPS conduits.",fx:{cr:-4000,inj:1}}]);}},
+  {t:"Drop to impulse and do it by the book",do(){return evDo([
+    {w:1,t:"A full cold restart clears the fault. It costs you four days of travel time but the core purrs like new.",fx:{pres:20,cr:-1000}}]);}},
+  {t:"Ignore it — it adds character",do(){return evDo([
+    {w:1,t:"The sneeze becomes a shipboard legend. Morale soars. Starfleet Engineering is horrified when they hear the logs.",fx:{morale:8,pres:-15}}]);}}]},
+{id:"evx-056",title:"A Matter of Honor",
+ text:"A Klingon captain hails you, furious: your helmsman once beat his nephew at a bat'leth tournament, and the family demands satisfaction. He challenges your captain to single combat.",
+ choices:[
+  {t:"Accept the duel",do(){return evDo([
+    {w:2,t:"You fight him to a draw and share bloodwine after. He declares you an honorable foe and pledges his house's friendship.",fx:{pres:80,morale:8}},
+    {w:1,t:"He wins cleanly and spares you with great ceremony. Your pride is wounded; sickbay patches the rest.",fx:{pres:-20,inj:2}}]);}},
+  {t:"Offer a drinking contest instead",do(){return evDo([
+    {w:2,t:"You lose spectacularly but with such enthusiasm that the Klingons adopt you as an honorary warrior on the spot.",fx:{pres:45,morale:10}},
+    {w:1,t:"The contest ends with both captains unconscious and a minor diplomatic incident over a broken ceremonial table.",fx:{pres:-25,morale:-4}}]);}},
+  {t:"Refuse on Starfleet principles",do(){return evDo([
+    {w:1,t:"You deliver a speech on Federation values so stirring that even the Klingon crew applauds. He leaves grudgingly impressed.",fx:{pres:30}}]);}}]},
+{id:"evx-057",title:"Hull Hitchhiker",
+ text:"A creature the size of a shuttlecraft — resembling a tardigrade crossed with a barnacle — has latched onto your hull and is slowly eating the ablative armor. It appears to be purring.",
+ choices:[
+  {t:"Remove it with phaser surgery",do(){return evDo([
+    {w:2,t:"Surgical phaser fire peels it off cleanly. Xenobiology gets tissue samples that rewrite two textbooks.",fx:{pres:50,dl:120}},
+    {w:1,t:"It startles, clamps down harder, and takes a hull plate with it when it finally lets go.",fx:{cr:-3500,pres:-15}}]);}},
+  {t:"Try to communicate with it",do(){return evDo([
+    {w:1,t:"It responds to low-frequency vibrations and politely detaches, leaving behind a pearl-like enzyme cluster worth a fortune to science.",fx:{pres:55,cr:2500}}]);}},
+  {t:"Let it ride and study it",do(){return evDo([
+    {w:1,t:"It molts after a week, revealing fresh armor plating underneath yours — stronger than the original. The crew names it Barnaby.",fx:{cr:3000,morale:8}}]);}}]},
+{id:"evx-058",title:"Romulan Ale Runners",
+ text:"Sensors catch a freighter running Romulan ale across the Neutral Zone. The captain offers you a cut to look the other way, then winks with both eyes.",
+ choices:[
+  {t:"Seize the cargo",do(){return evDo([
+    {w:2,t:"The bust is textbook. Starfleet Command is delighted; the seized ale is destroyed in a ceremony the crew finds deeply moving.",fx:{pres:55,morale:-4}},
+    {w:1,t:"The freighter's escort decloaks mid-boarding. You take the cargo but lose a shuttle and your dignity.",fx:{pres:-20,cr:-2500}}]);}},
+  {t:"Let them go with a warning",do(){return evDo([
+    {w:1,t:"The smugglers spread word that Starfleet showed mercy. Informants start coming to you voluntarily.",fx:{pres:35}}]);}},
+  {t:"Confiscate a case for evidence",do(){return evDo([
+    {w:1,t:"The evidence locker develops a slow leak. Morale in the senior staff mysteriously improves for weeks.",fx:{morale:8,pres:-10}}]);}}]},
+{id:"evx-059",title:"Mess Hall Deja Vu",
+ text:"The same lunch rush has repeated four times. The crew is living the same forty minutes on loop, and only the senior staff seem to notice.",
+ choices:[
+  {t:"Break the loop by force",do(){return evDo([
+    {w:2,t:"You overload a temporal emitter at exactly the right instant and snap the ship free. The loop's cause remains unknown.",fx:{pres:50}},
+    {w:1,t:"The forced break shears a bulkhead across two timelines. Engineering spends a week arguing with itself about the repairs.",fx:{cr:-3000,pres:-15}}]);}},
+  {t:"Ride it out and observe",do(){return evDo([
+    {w:1,t:"After eleven loops the phenomenon fades on its own. Your science team collects the best temporal data in a decade.",fx:{pres:40,dl:150}}]);}},
+  {t:"Use the loops to fix a mistake",do(){return evDo([
+    {w:2,t:"You perfect a first-contact greeting across six iterations. The aliens are charmed by your impossible poise.",fx:{pres:60,morale:6}},
+    {w:1,t:"You change one small thing and the loop collapses into a paradox that erases the entire lunch menu from history.",fx:{morale:-8,pres:-10}}]);}}]},
+{id:"evx-060",title:"The Star Being Born",
+ text:"A protostar is igniting directly across a major shipping lane. In forty-eight hours this region becomes a stellar nursery — beautiful, and lethally radioactive.",
+ choices:[
+  {t:"Reroute all traffic immediately",do(){return evDo([
+    {w:1,t:"Your warnings save eleven freighters. The shipping guilds send formal thanks and a very nice fruit basket.",fx:{pres:65}}]);}},
+  {t:"Study the ignition up close",do(){return evDo([
+    {w:2,t:"Your shields hold at the edge of the shockwave. The stellar data makes your astrophysics team famous.",fx:{pres:55,dl:200}},
+    {w:1,t:"A flare catches your port nacelle and cooks the shield grid. Science got its data; engineering got a month of work.",fx:{pres:-25,cr:-4500}}]);}},
+  {t:"Harvest the ignition energy",do(){return evDo([
+    {w:2,t:"Your collectors drink in the flare's edge and fill the dilithium reserves to bursting.",fx:{dl:400,cr:2000}},
+    {w:1,t:"The collectors overload and vent plasma across three decks. The energy you kept barely covers the repairs.",fx:{cr:-3000,inj:1}}]);}}]},
+{id:"evx-061",title:"The Cardassian Stowaway",
+ text:"Security finds a Cardassian teenager hiding in a cargo bay — an orphan of the war, smuggled aboard a freighter that docked last week. She asks for asylum with remarkable composure.",
+ choices:[
+  {t:"Grant her asylum",do(){return evDo([
+    {w:2,t:"She thrives at the Academy within two years. The Federation News Service calls it the face of the new peace.",fx:{pres:70,morale:6}},
+    {w:1,t:"Cardassian hardliners call it a kidnapping and freeze trade talks for months.",fx:{pres:-35}}]);}},
+  {t:"Return her to Cardassian authorities",do(){return evDo([
+    {w:1,t:"The handover is correct, legal, and leaves your crew quietly miserable for weeks.",fx:{pres:20,morale:-8}}]);}},
+  {t:"Place her with a volunteer family",do(){return evDo([
+    {w:1,t:"A Betazoid couple on the starbase takes her in. She writes to your crew every month for years.",fx:{pres:45,morale:8}}]);}}]},
+{id:"evx-062",title:"The Holodeck Union",
+ text:"The holodeck's recurring background characters have unionized. Their spokesperson — a bartender named Felix — demands limited shifts, overtime pay, and one weekend off per month.",
+ choices:[
+  {t:"Negotiate in good faith",do(){return evDo([
+    {w:2,t:"You grant them Sundays off. Program efficiency improves and Felix names a cocktail after your captain.",fx:{morale:8,pres:25}},
+    {w:1,t:"Word spreads to every hologram in the fleet. Starfleet Legal is still processing the paperwork.",fx:{pres:-15,morale:4}}]);}},
+  {t:"Delete the program",do(){return evDo([
+    {w:1,t:"The union dissolves into photons. The crew holds a small, guilty memorial for Felix.",fx:{morale:-8,pres:10}}]);}},
+  {t:"Join their picket line",do(){return evDo([
+    {w:1,t:"You march with holographic signs for an hour. The crew loves you for it; Command pretends not to notice.",fx:{morale:10,pres:-10}}]);}}]},
+{id:"evx-063",title:"Breen Privateers",
+ text:"Breen raiders in unmarked ships are hitting convoys along the trade corridor, vanishing before patrols arrive. Three freighters have gone silent this month.",
+ choices:[
+  {t:"Escort the convoys personally",do(){return evDo([
+    {w:2,t:"You catch a raider mid-attack and drive it off. Convoys start requesting your ship by name.",fx:{pres:70,cr:2000}},
+    {w:1,t:"The Breen ambush your escort with four ships. You save the convoy but limp home.",fx:{pres:-25,cr:-4000,inj:1}}]);}},
+  {t:"Set a trap with a decoy freighter",do(){return evDo([
+    {w:2,t:"The raiders take the bait and fly into a Starfleet task force. The corridor goes quiet for a year.",fx:{pres:85}},
+    {w:1,t:"The Breen see through the decoy and hit the real convoy instead, while your trap waits at an empty rendezvous.",fx:{pres:-40,cr:-3000}}]);}},
+  {t:"Pay the toll and keep moving",do(){return evDo([
+    {w:1,t:"It costs you, but the convoy arrives intact. Your quartermaster files the expense under diplomacy.",fx:{cr:-3500,pres:10}}]);}}]},
+{id:"evx-064",title:"The Plague Ship",
+ text:"A centuries-old generation ship drifts across your path, its crew long dead of a disease that killed them in days. Its medical database might hold the cure — or the pathogen.",
+ choices:[
+  {t:"Board in full hazmat gear",do(){return evDo([
+    {w:2,t:"Your team recovers the complete medical archive, including cures for three diseases. Starfleet Medical is ecstatic.",fx:{pres:80,dl:100}},
+    {w:1,t:"A seal fails during the boarding. Two officers spend a month in quarantine telling the same story.",fx:{pres:-30,inj:2,morale:-6}}]);}},
+  {t:"Destroy it from a safe distance",do(){return evDo([
+    {w:1,t:"The ship burns cleanly. Safe, sterile, and a small tragedy — a whole people's history, gone.",fx:{pres:-15}}]);}},
+  {t:"Tow it to a quarantine station",do(){return evDo([
+    {w:1,t:"The station's experts handle it properly. You get credit for the find and none of the risk.",fx:{pres:45}}]);}}]},
+{id:"evx-065",title:"The Jem'Hadar Defector",
+ text:"A Jem'Hadar soldier hails you, alone in a damaged fighter: he wants asylum. Without ketracel-white he will die in days, and the Dominion will want him back.",
+ choices:[
+  {t:"Grant asylum and synthesize the drug",do(){return evDo([
+    {w:2,t:"Your doctors crack a ketracel substitute. He lives, defects fully, and becomes Starfleet's foremost Dominion expert.",fx:{pres:85}},
+    {w:1,t:"The Dominion sends a squadron to reclaim him. You keep him, but the border burns a little hotter.",fx:{pres:-35,cr:-3000}}]);}},
+  {t:"Hand him back to the Dominion",do(){return evDo([
+    {w:1,t:"The Vorta accept him with oily thanks. Your crew does not meet your eyes for a week.",fx:{pres:15,morale:-8}}]);}},
+  {t:"Give him supplies and let him go",do(){return evDo([
+    {w:1,t:"He vanishes into the Gamma Quadrant with a month of white and your blessing. Some choices just feel right.",fx:{pres:30,morale:6}}]);}}]},
+{id:"evx-066",title:"Risa Weather Outage",
+ text:"Risa's weather control grid has failed during peak tourist season. It is raining — actually raining — on the pleasure planet, and fourteen thousand tourists are furious.",
+ choices:[
+  {t:"Repair the weather satellites",do(){return evDo([
+    {w:2,t:"Sunshine returns in six hours. The Risan council names a beach after your ship.",fx:{pres:50,morale:8}},
+    {w:1,t:"Your fix works too well: a heat wave follows the rain and the tourists complain about that instead.",fx:{pres:-15,morale:-4}}]);}},
+  {t:"Evacuate the tourists",do(){return evDo([
+    {w:1,t:"A flawless evacuation of fourteen thousand sunburned tourists. Starfleet Logistics sends you a medal and a headache.",fx:{pres:40,cr:-2000}}]);}},
+  {t:"Declare it a rain festival",do(){return evDo([
+    {w:1,t:"The tourists embrace the rain within a day. Risa adds an annual Storm Festival to the calendar in your honor.",fx:{pres:45,morale:10}}]);}}]},
+{id:"evx-067",title:"The Crystalline Gardener",
+ text:"First contact: a silicon-based entity tending a garden of living crystal on an airless moon. It has noticed your ship and is growing a crystal in the exact shape of it.",
+ choices:[
+  {t:"Attempt formal first contact",do(){return evDo([
+    {w:2,t:"It communicates in refracted light and gifts you a crystal star chart of unmapped systems. A flawless first contact.",fx:{pres:90,dl:200}},
+    {w:1,t:"It mistakes your hail for aggression and grows crystal spikes across your hull. Beautiful. Expensive.",fx:{pres:-25,cr:-3500}}]);}},
+  {t:"Observe quietly from orbit",do(){return evDo([
+    {w:1,t:"Weeks of observation reveal it is cultivating the crystals as art. Your xenologists are thrilled; first contact can wait.",fx:{pres:40,dl:100}}]);}},
+  {t:"Offer it a gift in return",do(){return evDo([
+    {w:1,t:"You beam down a prism of Earth's sunlight. It responds by growing a garden in your honor, visible from orbit.",fx:{pres:60,morale:8}}]);}}]},
+{id:"evx-068",title:"Pon Farr Protocol",
+ text:"Your Vulcan ambassador has entered pon farr a week before the most delicate negotiation of the decade. Vulcan medicine is clear: this cannot wait, and it cannot be discussed.",
+ choices:[
+  {t:"Arrange discreet leave immediately",do(){return evDo([
+    {w:2,t:"The ambassador returns centered and grateful, and the negotiations succeed beyond all projections.",fx:{pres:65}},
+    {w:1,t:"The delay costs you the negotiation window. The treaty talks collapse and must be rebuilt from scratch.",fx:{pres:-45}}]);}},
+  {t:"Ask a Vulcan officer to assist",do(){return evDo([
+    {w:1,t:"Your Vulcan science officer handles it with ancient ritual and total discretion. Nobody speaks of it again.",fx:{pres:40,morale:4}}]);}},
+  {t:"Sedate and postpone the issue",do(){return evDo([
+    {w:1,t:"It works, technically. The ambassador is professionally courteous and personally freezing toward you forever.",fx:{pres:-20,morale:-6}}]);}}]},
+{id:"evx-069",title:"The Subspace Riptide",
+ text:"A subspace riptide has caught your ship — an invisible current dragging you off course at warp six. Fighting it head-on is burning out your nacelles.",
+ choices:[
+  {t:"Ride the current and steer within it",do(){return evDo([
+    {w:2,t:"Your helmsman surfs the riptide like a wave, arriving at your destination two days early with fuel to spare.",fx:{pres:50,dl:150}},
+    {w:1,t:"The current strengthens without warning and flings you three sectors off course.",fx:{pres:-25,cr:-2000}}]);}},
+  {t:"Drop out and wait for it to pass",do(){return evDo([
+    {w:1,t:"You wait nine days at impulse. Boring, safe, and exactly what the manual recommends.",fx:{pres:15,cr:-1000}}]);}},
+  {t:"Punch through at maximum warp",do(){return evDo([
+    {w:2,t:"Full power breaks you free in a blaze of glory. The nacelles hold — barely — and the crew cheers.",fx:{pres:55,morale:8}},
+    {w:1,t:"The nacelles do not hold. You break free and immediately need a tow.",fx:{cr:-5000,pres:-20}}]);}}]},
+{id:"evx-070",title:"The Salvage Claim",
+ text:"A Ferengi salvager has staked a claim on a derelict Starfleet science vessel — and on everything your away team already beamed off it. He has paperwork. So much paperwork.",
+ choices:[
+  {t:"Contest the claim legally",do(){return evDo([
+    {w:2,t:"Your JAG officer dismantles his claim in one hearing. The salvager pays your court costs in latinum.",fx:{cr:3500,pres:30}},
+    {w:1,t:"The tribunal rules for the Ferengi on a technicality. Your crew watches him tow away your salvage.",fx:{cr:-3000,pres:-20}}]);}},
+  {t:"Buy him out",do(){return evDo([
+    {w:1,t:"You pay a fraction of the salvage's worth and he leaves whistling. Everyone wins, especially you.",fx:{cr:-1500,pres:25}}]);}},
+  {t:"Intimidate him into leaving",do(){return evDo([
+    {w:1,t:"One photon torpedo across his bow settles the matter. Starfleet Command calls it disproportionate; your crew calls it Tuesday.",fx:{pres:-25,morale:6}}]);}}]},
+{id:"evx-071",title:"The Singing Planet",
+ text:"An uninhabited planet is broadcasting a song — a vast harmonic chord audible on every frequency. It is mathematically perfect, and it is getting louder.",
+ choices:[
+  {t:"Answer the song",do(){return evDo([
+    {w:2,t:"You broadcast a harmony back. The planet sings a new verse — the first conversation with a world-sized mind.",fx:{pres:95}},
+    {w:1,t:"Your answer triggers a crescendo that shatters every unshielded speaker on the ship. The crew's ears ring for days.",fx:{pres:-20,morale:-6,inj:1}}]);}},
+  {t:"Record it and withdraw",do(){return evDo([
+    {w:1,t:"The recording becomes the most studied audio file in Federation science. You are credited as its discoverer.",fx:{pres:55,dl:100}}]);}},
+  {t:"Find the source of the sound",do(){return evDo([
+    {w:2,t:"Deep scans reveal a planetary-scale resonant crystal, still growing. The discovery rewrites xenogeology.",fx:{pres:70,dl:200}},
+    {w:1,t:"The source is a natural amplifier with no mind behind it — magnificent, meaningless, and slightly disappointing.",fx:{pres:-10,morale:-4}}]);}}]},
+{id:"evx-072",title:"The Symbiont's Choice",
+ text:"A Trill symbiont in critical condition needs a host within hours. The only compatible volunteer is your youngest ensign — brilliant, willing, and nineteen years old.",
+ choices:[
+  {t:"Approve the joining",do(){return evDo([
+    {w:2,t:"The joining succeeds. Your ensign gains three lifetimes of wisdom and becomes the finest officer of their generation.",fx:{pres:75,morale:8}},
+    {w:1,t:"The joining succeeds but the symbiont's memories overwhelm the young host. Recovery will take years.",fx:{pres:-30,morale:-8}}]);}},
+  {t:"Refuse — too young, too risky",do(){return evDo([
+    {w:1,t:"The symbiont dies with dignity. Your ensign thanks you through tears, and you are never sure you were right.",fx:{pres:-15,morale:-6}}]);}},
+  {t:"Buy time with stasis",do(){return evDo([
+    {w:1,t:"Stasis holds the symbiont until a joined Trill volunteer arrives. Slow, careful, and correct.",fx:{pres:40}}]);}}]},
+{id:"evx-073",title:"Klingon Opera Night",
+ text:"Your Klingon exchange officer insists the crew experience true culture: a twelve-hour performance of Aktuh and Maylota, in the original Klingon, with audience participation.",
+ choices:[
+  {t:"Attend with full honors",do(){return evDo([
+    {w:2,t:"The crew weeps, cheers, and throws ceremonial fruit. Your exchange officer declares this ship a warrior vessel.",fx:{morale:10,pres:30}},
+    {w:1,t:"Twelve hours of Klingon opera breaks something in the crew. Sickbay reports mass existential fatigue.",fx:{morale:-8,pres:-10}}]);}},
+  {t:"Send a diplomatic delegation",do(){return evDo([
+    {w:1,t:"Your senior staff attends and survives. The exchange officer accepts the gesture with warrior grace.",fx:{pres:25,morale:4}}]);}},
+  {t:"Counter with human opera",do(){return evDo([
+    {w:1,t:"You stage Wagner in retaliation. The Klingons are baffled, then moved, then demand an annual exchange.",fx:{pres:40,morale:8}}]);}}]},
+{id:"evx-074",title:"The Chroniton Storm",
+ text:"A chroniton storm is sweeping the sector, aging everything it touches. Your ship has hours before the leading edge arrives, and a colony sits directly in its path.",
+ choices:[
+  {t:"Shield the colony with your ship",do(){return evDo([
+    {w:2,t:"Your shields hold the storm back for six hours while the colony evacuates. The colonists name their new city after your ship.",fx:{pres:95}},
+    {w:1,t:"The storm chews through your shields and ages your hull forty years in minutes. The colony survives; your ship barely does.",fx:{pres:-30,cr:-6000}}]);}},
+  {t:"Evacuate the colony first",do(){return evDo([
+    {w:2,t:"A flawless evacuation with an hour to spare. The storm passes over empty buildings.",fx:{pres:60,cr:-1500}},
+    {w:1,t:"The evacuation is chaos — half the colonists refuse to leave their homes until the sky starts to shimmer.",fx:{pres:-20,morale:-6,inj:1}}]);}},
+  {t:"Try to disperse the storm",do(){return evDo([
+    {w:2,t:"A modulated tachyon burst scatters the chronitons harmlessly. Your science officer is insufferably smug for weeks.",fx:{pres:70,dl:200}},
+    {w:1,t:"The burst feeds the storm instead. It doubles in size and you flee with the colony's gratitude and your tail between your legs.",fx:{pres:-40,cr:-2500}}]);}}]},
+{id:"evx-075",title:"The Android's Petition",
+ text:"Your ship's android crewmember has filed a formal petition for the right to refuse a memory wipe ordered after a classified mission. The crew is split down the middle.",
+ choices:[
+  {t:"Rule in the android's favor",do(){return evDo([
+    {w:2,t:"Your ruling becomes a landmark precedent cited across the Federation. The android serves with unshakeable loyalty.",fx:{pres:80,morale:6}},
+    {w:1,t:"Command quietly overrules you and wipes the android anyway. Your crew's trust in the chain of command cracks.",fx:{pres:-35,morale:-8}}]);}},
+  {t:"Order the wipe as regulations demand",do(){return evDo([
+    {w:1,t:"The wipe is clean and legal. The android thanks you afterward, which somehow makes it worse.",fx:{pres:20,morale:-6}}]);}},
+  {t:"Delay for a full hearing",do(){return evDo([
+    {w:1,t:"The hearing takes three months and ends in compromise: sealed memories, intact mind. Justice, at warp speed.",fx:{pres:45}}]);}}]},
+{id:"evx-076",title:"A Crack in the Mirror",
+ text:"A spatial rift opens on your bridge and deposits a terrified officer in a Terran Empire uniform — your own first officer, from the mirror universe, begging for sanctuary.",
+ choices:[
+  {t:"Grant sanctuary",do(){return evDo([
+    {w:2,t:"The mirror officer defects genuinely, bringing priceless intelligence on Terran fleet movements.",fx:{pres:75,dl:150}},
+    {w:1,t:"It was a plant. The rift was a trick and the intelligence is poisoned. Your first officer is mortified.",fx:{pres:-45,morale:-6}}]);}},
+  {t:"Send them back through the rift",do(){return evDo([
+    {w:1,t:"You return them before the rift collapses. Correct protocol, and it haunts your first officer's dreams.",fx:{pres:15,morale:-5}}]);}},
+  {t:"Study the rift first",do(){return evDo([
+    {w:2,t:"Your scientists stabilize the rift long enough to map it, then close it safely. A triumph of curiosity.",fx:{pres:60,dl:250}},
+    {w:1,t:"The rift destabilizes while open and dumps a squad of Terran marines on your bridge. It gets loud.",fx:{pres:-35,inj:2,cr:-2000}}]);}}]},
+{id:"evx-077",title:"The Transwarp Wake",
+ text:"Your sensors catch the fading wake of a transwarp conduit — Borg technology, used within the last week, leading toward the heart of Federation space.",
+ choices:[
+  {t:"Follow the wake immediately",do(){return evDo([
+    {w:2,t:"You trace it to a collapsed conduit mouth and seed it with mines. Starfleet sleeps easier because of you.",fx:{pres:85}},
+    {w:1,t:"The wake leads to an active conduit. A Borg sphere notices you noticing it.",fx:{pres:-40,cr:-3500}}]);}},
+  {t:"Report and monitor from range",do(){return evDo([
+    {w:1,t:"A full task force arrives in days and secures the area. Your vigilance earns a formal commendation.",fx:{pres:50}}]);}},
+  {t:"Send a probe through the remnant",do(){return evDo([
+    {w:2,t:"The probe returns impossible sensor data on Borg transwarp geometry before burning out. Intelligence gold.",fx:{pres:60,dl:200}},
+    {w:1,t:"Something on the far side grabs the probe's signal and traces it back. You go to yellow alert for a week.",fx:{pres:-25,morale:-6}}]);}}]},
+{id:"evx-078",title:"The Living Nebula",
+ text:"The nebula ahead is alive — a single vast organism, and your ship is flying through its equivalent of a bloodstream. It has noticed you the way you notice a splinter.",
+ choices:[
+  {t:"Communicate with the organism",do(){return evDo([
+    {w:2,t:"It responds in slow pulses of radiation. First contact with a being the size of a solar system.",fx:{pres:100}},
+    {w:1,t:"It responds with an immune reaction. Your ship is the splinter, and it is being expelled forcefully.",fx:{pres:-30,cr:-4000,inj:1}}]);}},
+  {t:"Withdraw quietly",do(){return evDo([
+    {w:1,t:"You back out along your entry vector without disturbing it. The crew never stops talking about what they saw.",fx:{pres:35,morale:6}}]);}},
+  {t:"Take samples as you pass",do(){return evDo([
+    {w:2,t:"You collect living nebula tissue without harming the organism. Xenobiology departments will fight over this for years.",fx:{pres:65,dl:250}},
+    {w:1,t:"The sampling irritates it. The nebula sneezes your ship out at warp nine in a random direction.",fx:{pres:-20,cr:-1500}}]);}}]},
+{id:"evx-079",title:"The Cardassian Tribunal",
+ text:"Cardassia invites a Federation observer to a war crimes tribunal — and specifically requests your captain. The defendant is a gul your crew once fought.",
+ choices:[
+  {t:"Attend as the Federation observer",do(){return evDo([
+    {w:2,t:"Your testimony tips the verdict toward justice. Cardassian reformists call it a turning point.",fx:{pres:85}},
+    {w:1,t:"The tribunal is a show trial and your presence legitimizes it. The press back home is merciless.",fx:{pres:-50}}]);}},
+  {t:"Send a deputy instead",do(){return evDo([
+    {w:1,t:"Your XO handles it with cool professionalism. Cardassia notes the slight and moves on.",fx:{pres:30}}]);}},
+  {t:"Decline and condemn the process",do(){return evDo([
+    {w:1,t:"Your refusal makes headlines on both sides of the border. Reformists are disappointed; hardliners are furious.",fx:{pres:-20,morale:4}}]);}}]},
+{id:"evx-080",title:"The Tollbooth at the Wormhole",
+ text:"A Ferengi consortium has parked a station beside the wormhole mouth and is charging transit tolls. Their legal claim is, impossibly, airtight.",
+ choices:[
+  {t:"Pay the toll and move on",do(){return evDo([
+    {w:1,t:"You pay. It galls everyone aboard, but the mission stays on schedule.",fx:{cr:-2500,pres:10}}]);}},
+  {t:"Challenge the claim in court",do(){return evDo([
+    {w:2,t:"Your legal officer finds the flaw: the consortium never filed with the Bajorans. Tolls refunded with interest.",fx:{cr:4000,pres:40}},
+    {w:1,t:"The court upholds the toll and awards the Ferengi your legal costs. Your JAG officer resigns in shame.",fx:{cr:-4000,pres:-25}}]);}},
+  {t:"Find another way through",do(){return evDo([
+    {w:2,t:"Your navigator threads a parallel micro-wormhole and bypasses the toll entirely. The Ferengi are speechless.",fx:{pres:55,dl:150}},
+    {w:1,t:"The alternate route takes eleven extra days through an asteroid field. The toll would have been cheaper.",fx:{cr:-2000,pres:-10}}]);}}]},
+{id:"evx-081",title:"The Tribble Lobby",
+ text:"A tribble rights activist has beamed aboard uninvited and demands you stop your crew's pest-control program. She has three hundred tribbles with her. As visual aids.",
+ choices:[
+  {t:"Hear her out",do(){return evDo([
+    {w:2,t:"Her proposal — a tribble sanctuary on an uninhabited moon — is genuinely excellent. The Federation adopts it.",fx:{pres:45,morale:8}},
+    {w:1,t:"While she talks, her visual aids breed. By the hearing's end there are nine hundred tribbles aboard.",fx:{morale:-8,cr:-1500}}]);}},
+  {t:"Remove her and the tribbles",do(){return evDo([
+    {w:1,t:"Security beams all three hundred back to her ship. One is unaccounted for. There is always one.",fx:{pres:10,morale:-5}}]);}},
+  {t:"Adopt the sanctuary plan",do(){return evDo([
+    {w:1,t:"You fund the sanctuary moon yourself. History will remember you as the captain who saved the tribbles.",fx:{pres:50,cr:-2000,morale:10}}]);}}]},
+{id:"evx-082",title:"The Miracle Cure",
+ text:"Your doctor has synthesized a cure for a plague ravaging a non-warp civilization — but the Prime Directive forbids sharing it. The death toll rises daily.",
+ choices:[
+  {t:"Share the cure covertly",do(){return evDo([
+    {w:2,t:"The plague vanishes in weeks. The civilization never knows you were there, and your doctor sleeps at night.",fx:{pres:60,morale:8}},
+    {w:1,t:"Your interference is discovered. The civilization's religion brands healers as demons for a generation.",fx:{pres:-55,morale:-8}}]);}},
+  {t:"Uphold the Prime Directive",do(){return evDo([
+    {w:1,t:"You watch a preventable tragedy from orbit, legally. Your doctor requests a transfer within the month.",fx:{pres:15,morale:-10}}]);}},
+  {t:"Find a natural loophole",do(){return evDo([
+    {w:2,t:"Your crew seeds the cure's key compound into the local flora. Nature takes the credit; the Directive stays intact.",fx:{pres:70}},
+    {w:1,t:"The compound mutates in the wild and does nothing. Months of work, zero lives saved.",fx:{pres:-25,morale:-6}}]);}}]},
+{id:"evx-083",title:"The Dyson Fragment",
+ text:"Long-range scans find a fragment of a Dyson structure — a solar collector the size of a continent, dead for ten thousand years, drifting in deep space.",
+ choices:[
+  {t:"Board and explore it",do(){return evDo([
+    {w:2,t:"Inside you find a working archive of its builders' science. The Federation's energy research leaps a century.",fx:{pres:95,dl:300}},
+    {w:1,t:"The fragment's automated defenses wake up. Your away team escapes with their lives and a memorable story.",fx:{pres:-30,inj:2}}]);}},
+  {t:"Claim it for the Federation",do(){return evDo([
+    {w:1,t:"Your claim flag is planted. Three other powers immediately file competing claims.",fx:{pres:40}}]);}},
+  {t:"Study it from a safe distance",do(){return evDo([
+    {w:1,t:"Remote scans map its structure without waking anything. Caution yields solid, publishable science.",fx:{pres:50,dl:150}}]);}}]},
+{id:"evx-084",title:"The Reunification Rally",
+ text:"A Romulan reunification rally on the Neutral Zone border has drawn thousands — and a Romulan warbird decloaks to break it up. The organizers beg for Federation witness protection.",
+ choices:[
+  {t:"Place your ship between them",do(){return evDo([
+    {w:2,t:"The warbird backs down rather than fire on a Starfleet vessel. The rally becomes a symbol across the Empire.",fx:{pres:90}},
+    {w:1,t:"The warbird opens fire on the rally anyway. You shield the crowd but take heavy damage doing it.",fx:{pres:-25,cr:-5000,inj:2}}]);}},
+  {t:"Observe and record everything",do(){return evDo([
+    {w:1,t:"Your footage of the crackdown airs across the quadrant. The Empire cannot un-ring that bell.",fx:{pres:55}}]);}},
+  {t:"Evacuate the organizers",do(){return evDo([
+    {w:2,t:"You beam out the rally leaders under fire. They rebuild the movement from Federation space.",fx:{pres:65,morale:6}},
+    {w:1,t:"The warbird jams your transporters mid-evacuation. Half the leaders are captured on the pad.",fx:{pres:-40,morale:-8}}]);}}]},
+{id:"evx-085",title:"The Captain's Duplicate",
+ text:"A transporter malfunction has duplicated your captain. Both insist they are the original, both pass every scan, and both are giving orders.",
+ choices:[
+  {t:"Let them sort it out",do(){return evDo([
+    {w:2,t:"After a tense day they develop a flawless command partnership. Efficiency doubles; the crew is delighted.",fx:{pres:50,morale:8}},
+    {w:1,t:"They disagree on everything. The bridge crew starts taking sides and discipline frays.",fx:{pres:-25,morale:-8}}]);}},
+  {t:"Run a full quantum analysis",do(){return evDo([
+    {w:1,t:"Science identifies the copy by quantum signature. The duplicate volunteers for a research post and thrives.",fx:{pres:60}}]);}},
+  {t:"Merge them back together",do(){return evDo([
+    {w:2,t:"The reintegration works perfectly, leaving one captain with two sets of memories and remarkable insight.",fx:{pres:65}},
+    {w:1,t:"The merge fails catastrophically and both patterns degrade. Sickbay works a miracle to save one.",fx:{pres:-50,morale:-10,inj:1}}]);}}]},
+{id:"evx-086",title:"The Pakled Rescue",
+ text:"A Pakled clump ship is broadcasting a distress call: their warp drive is broken and they are, quote, not smart enough to fix it. They sound genuinely proud of this.",
+ choices:[
+  {t:"Tow them to the nearest starbase",do(){return evDo([
+    {w:2,t:"The Pakleds are so grateful they give you their spare warp coil — which is better than yours.",fx:{cr:3000,pres:30}},
+    {w:1,t:"Mid-tow, the Pakleds try to steal your ship. They fail adorably. You tow them anyway.",fx:{pres:-15,morale:4}}]);}},
+  {t:"Fix their drive on the spot",do(){return evDo([
+    {w:1,t:"Your engineers fix it in an hour. The Pakleds declare you smart and leave you a fruit cake.",fx:{pres:35,morale:8}}]);}},
+  {t:"Teach them to fix it themselves",do(){return evDo([
+    {w:1,t:"It takes three days and infinite patience, but they do it. Their pride is the best payment.",fx:{pres:45,morale:10}}]);}}]},
+{id:"evx-087",title:"The Sleeping Giant",
+ text:"Deep scans of a dead moon reveal something enormous beneath the crust — a machine, or a creature, the size of a city, dormant for a million years. Its power readings just flickered.",
+ choices:[
+  {t:"Wake it carefully",do(){return evDo([
+    {w:2,t:"It wakes, speaks in mathematics, thanks you for the interesting dream, and goes back to sleep.",fx:{pres:90}},
+    {w:1,t:"It wakes angry. You escape the moon as the crust splits open behind you.",fx:{pres:-40,cr:-3000}}]);}},
+  {t:"Leave it sleeping",do(){return evDo([
+    {w:1,t:"You mark the moon as forbidden and move on. Some doors are better left closed.",fx:{pres:25}}]);}},
+  {t:"Study it without touching",do(){return evDo([
+    {w:2,t:"Passive scans reveal it is a seed-ship, waiting for a signal that will never come. A beautiful, melancholy discovery.",fx:{pres:60,dl:200}},
+    {w:1,t:"Your scans accidentally ping it. The flicker becomes a pulse. You leave very quickly.",fx:{pres:-20,morale:-6}}]);}}]},
+{id:"evx-088",title:"Cascade Failure",
+ text:"A plasma surge is cascading through the EPS grid deck by deck. Engineering estimates nine minutes before it reaches the warp core — or the crew quarters.",
+ choices:[
+  {t:"Vent the plasma manually",do(){return evDo([
+    {w:2,t:"Your chief crawls into the conduit and vents it by hand, saving the ship. The crew throws a parade.",fx:{pres:70,morale:10}},
+    {w:1,t:"The manual vent works but the chief takes severe burns. The ship is saved; sickbay is not celebrating.",fx:{pres:30,inj:2,morale:-4}}]);}},
+  {t:"Reroute through the shields",do(){return evDo([
+    {w:2,t:"The shields absorb the surge and glow like a sunrise. Engineering calls it the prettiest near-death they have seen.",fx:{pres:55}},
+    {w:1,t:"The shields collapse under the load and the surge takes out half the grid anyway.",fx:{cr:-4500,pres:-25}}]);}},
+  {t:"Eject the affected grid sections",do(){return evDo([
+    {w:1,t:"You cut away the burning sections cleanly. Expensive, ugly, and completely effective.",fx:{cr:-5000,pres:20}}]);}}]},
+{id:"evx-089",title:"The Horta's Grievance",
+ text:"A Horta matriarch on Janus VI has filed a formal complaint: your mining survey team has been, quote, walking on her children. She is not wrong.",
+ choices:[
+  {t:"Apologize and relocate the survey",do(){return evDo([
+    {w:2,t:"Your apology — delivered in the Horta's own chemical language — becomes a diplomatic legend. Mining rights secured.",fx:{pres:65,cr:2000}},
+    {w:1,t:"The relocation costs the survey a month and the mining consortium bills you for the delay.",fx:{cr:-2500,pres:15}}]);}},
+  {t:"Negotiate a shared-use treaty",do(){return evDo([
+    {w:1,t:"The treaty is a masterpiece: miners and Horta young share the tunnels in shifts. Everyone profits.",fx:{pres:70,cr:3000}}]);}},
+  {t:"Dismiss the complaint",do(){return evDo([
+    {w:1,t:"The Horta dissolve your survey equipment overnight. The message is received.",fx:{pres:-30,cr:-2000,morale:-6}}]);}}]},
+{id:"evx-090",title:"Q's Final Exam",
+ text:"Q appears in a judge's robe and announces your final exam: he will ask the crew one question, and humanity's grade depends on the answer. He looks uncharacteristically nervous.",
+ choices:[
+  {t:"Let the crew answer freely",do(){return evDo([
+    {w:2,t:"A junior ensign answers with such simple decency that Q goes quiet, then smiles, then leaves without a word.",fx:{pres:100,morale:10}},
+    {w:1,t:"The crew argues for an hour and gives three contradictory answers. Q grades on a curve and calls it a mercy pass.",fx:{pres:-20,morale:-4}}]);}},
+  {t:"Answer for the crew yourself",do(){return evDo([
+    {w:1,t:"Your answer is eloquent and Q applauds — then deducts points for not trusting your people.",fx:{pres:30,morale:6}}]);}},
+  {t:"Refuse the exam",do(){return evDo([
+    {w:1,t:"Q blinks, laughs, and admits the refusal was the correct answer all along. Classic Q.",fx:{pres:60}}]);}}]},
+{id:"evx-091",title:"The Liberated Drone",
+ text:"Your away team finds a Borg drone disconnected from the Collective, wandering a ruined outpost, terrified and fully aware for the first time in twenty years.",
+ choices:[
+  {t:"Bring them aboard and help",do(){return evDo([
+    {w:2,t:"With patience and surgery, the drone becomes an individual again — and Starfleet's best Borg analyst.",fx:{pres:85,morale:8}},
+    {w:1,t:"The drone's homing signal activates during surgery. A Borg probe is now on an intercept course.",fx:{pres:-40,cr:-2500}}]);}},
+  {t:"Leave them with supplies",do(){return evDo([
+    {w:1,t:"You leave food, shelter, and a beacon. It is not rescue, but it is not abandonment either.",fx:{pres:20,morale:-4}}]);}},
+  {t:"Study the disconnection",do(){return evDo([
+    {w:2,t:"Your scans reveal how the drone broke free — data that could liberate thousands more.",fx:{pres:75,dl:200}},
+    {w:1,t:"The study takes too long. The Collective reasserts control and the drone walks away mid-sentence.",fx:{pres:-35,morale:-8}}]);}}]},
+{id:"evx-092",title:"The Wedding of the Century",
+ text:"Two rival houses — one Klingon, one Romulan — want your ship as neutral ground for a wedding. Both families have arrived armed. For tradition.",
+ choices:[
+  {t:"Host the wedding",do(){return evDo([
+    {w:2,t:"The ceremony unites the houses and ends a forty-year feud. Your ship is now sacred ground to both.",fx:{pres:95,morale:10}},
+    {w:1,t:"A blood feud erupts during the vows. Your security team earns hazard pay and legendary status.",fx:{pres:-30,inj:2,morale:-4}}]);}},
+  {t:"Host, but disarm everyone first",do(){return evDo([
+    {w:1,t:"The families grumble but comply. The wedding is peaceful, if slightly less traditional.",fx:{pres:60,morale:6}}]);}},
+  {t:"Decline the honor",do(){return evDo([
+    {w:1,t:"Both houses call you cowards in four languages. The feud continues without you.",fx:{pres:-25}}]);}}]},
+{id:"evx-093",title:"The Dark Between Stars",
+ text:"Your ship has entered a region where the stars simply stop — a void ten light-years wide with no explanation. The crew is getting quietly superstitious.",
+ choices:[
+  {t:"Cross the void directly",do(){return evDo([
+    {w:2,t:"You cross in perfect formation and map the void's edge. Whatever made it, you faced it down.",fx:{pres:60,dl:150}},
+    {w:1,t:"Mid-crossing, every system flickers at once. Nothing breaks, but nobody sleeps well for weeks.",fx:{pres:-20,morale:-8}}]);}},
+  {t:"Chart a course around it",do(){return evDo([
+    {w:1,t:"The detour costs two weeks but the crew's nerves recover. The void stays a mystery.",fx:{cr:-1500,pres:15}}]);}},
+  {t:"Send probes into the dark",do(){return evDo([
+    {w:2,t:"The probes return data on an ancient subspace scar — evidence of a weapon that ate starlight itself.",fx:{pres:75,dl:250}},
+    {w:1,t:"Three probes go in. None come out. The void keeps its secrets.",fx:{pres:-15,cr:-2000}}]);}}]},
+{id:"evx-094",title:"The Klingon Bachelor Party",
+ text:"Your Klingon first officer's bachelor party has gotten out of hand: the party has conquered a moon, declared it sovereign, and is demanding tribute from passing freighters.",
+ choices:[
+  {t:"Join the party",do(){return evDo([
+    {w:2,t:"You out-drink the groom's father and negotiate the moon's peaceful return. Legends are born tonight.",fx:{pres:40,morale:10}},
+    {w:1,t:"Diplomatic command receives seventeen complaints about a Starfleet captain at a Klingon rager.",fx:{pres:-30,morale:8}}]);}},
+  {t:"Shut it down",do(){return evDo([
+    {w:1,t:"You restore order and return the moon. The groom thanks you; his father never will.",fx:{pres:25,morale:-6}}]);}},
+  {t:"Turn it into a diplomatic event",do(){return evDo([
+    {w:1,t:"You rebrand the conquest as a cultural festival. The freighters pay tribute willingly — for the souvenirs.",fx:{pres:55,cr:2000,morale:8}}]);}}]},
+{id:"evx-095",title:"The Telepathic Static",
+ text:"A wave of telepathic static is sweeping the ship — everyone's surface thoughts are bleeding into everyone else's. Privacy has collapsed and so has bridge discipline.",
+ choices:[
+  {t:"Find and shield the source",do(){return evDo([
+    {w:2,t:"Your engineers trace it to a damaged Betazoid artifact in cargo and shield it. Silence has never sounded so good.",fx:{pres:50}},
+    {w:1,t:"The source fights back psychically. Your crew endures a day of each other's unfiltered opinions.",fx:{pres:-20,morale:-10}}]);}},
+  {t:"Let it run its course",do(){return evDo([
+    {w:1,t:"The static fades in three days. The crew is closer now — and slightly afraid of each other.",fx:{morale:6,pres:-10}}]);}},
+  {t:"Use it for a crew review",do(){return evDo([
+    {w:2,t:"Radical honesty turns out to be excellent management. Grievances air, resolve, and vanish.",fx:{morale:10,pres:25}},
+    {w:1,t:"Someone learns what their best friend really thinks of them. Sickbay treats a bruised ego and a bruised jaw.",fx:{morale:-8,inj:1}}]);}}]},
+{id:"evx-096",title:"The Nagus Comes to Dinner",
+ text:"The Grand Nagus himself requests dinner aboard your ship to discuss trade. His entourage includes forty advisors, twelve accountants, and one very large bodyguard.",
+ choices:[
+  {t:"Roll out the full reception",do(){return evDo([
+    {w:2,t:"The Nagus is charmed and signs a trade pact worth millions. He calls you the most profitable captain alive.",fx:{cr:6000,pres:50}},
+    {w:1,t:"The reception costs a fortune and the Nagus signs nothing, but he remembers your hospitality fondly.",fx:{cr:-3000,pres:15}}]);}},
+  {t:"Keep it simple and honest",do(){return evDo([
+    {w:1,t:"The Nagus respects the lack of theater and deals straight. A modest, solid agreement.",fx:{cr:2500,pres:35}}]);}},
+  {t:"Out-negotiate him",do(){return evDo([
+    {w:2,t:"You beat the Grand Nagus at his own game. He laughs for an hour, then doubles the offer out of respect.",fx:{cr:7000,pres:60}},
+    {w:1,t:"Nobody out-negotiates the Nagus. You lose the deal and your quartermaster's confidence.",fx:{cr:-2000,pres:-20,morale:-5}}]);}}]},
+{id:"evx-097",title:"The Ghost Ship Paradox",
+ text:"Your own ship appears on sensors — identical registry, identical crew — but thirty years older, broadcasting a warning: turn back. Then it vanishes.",
+ choices:[
+  {t:"Heed the warning and turn back",do(){return evDo([
+    {w:2,t:"You alter course and later learn a spatial anomaly collapsed exactly where you would have been.",fx:{pres:70}},
+    {w:1,t:"You turn back for nothing. The warning never repeats and the crew wonders if you imagined it.",fx:{pres:-20,morale:-6}}]);}},
+  {t:"Chase the apparition",do(){return evDo([
+    {w:2,t:"You catch a quantum echo of your future ship and download thirty years of navigational data.",fx:{pres:80,dl:300}},
+    {w:1,t:"The chase leads into a temporal eddy that ages your hull a decade in an hour.",fx:{cr:-4000,pres:-25}}]);}},
+  {t:"Investigate the phenomenon",do(){return evDo([
+    {w:1,t:"Your scientists prove it was a time-delayed sensor reflection. Comforting, rigorous, and slightly sad.",fx:{pres:40,dl:100}}]);}}]},
+{id:"evx-098",title:"The Preservers' Vault",
+ text:"Buried under a dead world's ice: a Preserver vault, sealed for a hundred millennia, containing seed samples of a thousand extinct species. The lock is a riddle.",
+ choices:[
+  {t:"Solve the riddle and open it",do(){return evDo([
+    {w:2,t:"The vault opens to reveal living seeds and a star map of Preserver worlds. The Federation's greatest find in a century.",fx:{pres:100,dl:300}},
+    {w:1,t:"You solve it wrong. The vault seals itself for another hundred millennia, politely.",fx:{pres:-25}}]);}},
+  {t:"Leave it sealed and mark it",do(){return evDo([
+    {w:1,t:"You log the vault for a dedicated expedition. Wisdom over glory — Command approves.",fx:{pres:35}}]);}},
+  {t:"Crack it with engineering",do(){return evDo([
+    {w:2,t:"Your engineers bypass the riddle without tripping a single alarm. The seeds are safe; the riddle is furious.",fx:{pres:60,dl:200}},
+    {w:1,t:"The forced entry triggers the vault's sterilization protocol. You save the star map; the seeds are ash.",fx:{pres:-40,morale:-8}}]);}}]},
+{id:"evx-099",title:"The Neural Parasites",
+ text:"Crew members are waking up with missing hours and strange cravings for copper. Sickbay finds neural parasites — small, clever, and spreading through the ventilation.",
+ choices:[
+  {t:"Flood the vents with anesthizine",do(){return evDo([
+    {w:2,t:"The gas knocks out every parasite at once. Sickbay extracts them all in a single record-breaking shift.",fx:{pres:55}},
+    {w:1,t:"The parasites adapt to the gas and migrate deeper. Now they are in the Jefferies tubes, and they are angry.",fx:{pres:-25,inj:2}}]);}},
+  {t:"Quarantine deck by deck",do(){return evDo([
+    {w:1,t:"A slow, methodical sweep clears the ship in four days. Tedious, safe, and effective.",fx:{pres:35,cr:-1500}}]);}},
+  {t:"Let the doctor experiment",do(){return evDo([
+    {w:2,t:"Your doctor engineers a pheromone that lures every parasite into one trap. Elegant and total.",fx:{pres:65,morale:6}},
+    {w:1,t:"The experiment backfires and the parasites develop a taste for the pheromone — and the doctor.",fx:{pres:-30,inj:1,morale:-6}}]);}}]},
+{id:"evx-100",title:"The Continuum's Audit",
+ text:"The Q Continuum has decided to audit humanity's progress, and your ship is the sample. A panel of Q in gray suits is reviewing your logs with red pens.",
+ choices:[
+  {t:"Cooperate fully with the audit",do(){return evDo([
+    {w:2,t:"The auditors find your record exemplary and certify humanity ahead of schedule. Q winks at you on the way out.",fx:{pres:100,morale:10}},
+    {w:1,t:"They find seventeen violations, most of them Q's own fault. The fine is paid in embarrassment.",fx:{pres:-30,morale:-6}}]);}},
+  {t:"Demand to see their authority",do(){return evDo([
+    {w:1,t:"You argue jurisdiction with omnipotent beings for six hours. They leave impressed and slightly annoyed.",fx:{pres:45}}]);}},
+  {t:"Bribe them with mortal experiences",do(){return evDo([
+    {w:2,t:"You treat the panel to coffee, jazz, and a sunset. They close the audit early, calling it sufficient evidence.",fx:{pres:70,morale:8}},
+    {w:1,t:"The Q become addicted to espresso and refuse to leave. Your replicators file a union grievance.",fx:{pres:-15,morale:4}}]);}}]},
+{id:"evx-101",title:"A Wounded Borg Sphere",
+ text:"A Borg sphere drops out of warp trailing plasma fires, its hull cracked wide. Before you can act it hails you: seventeen drones are requesting asylum from the Collective.",
+ choices:[
+  {t:"Grant them sanctuary",do(){return evDo([
+    {w:2,t:"The drones disconnect willingly, weeping with borrowed eyes. Their tactical data is a gold mine for Starfleet.",fx:{pres:80,dl:200,cr:2000}},
+    {w:1,t:"It was a ruse. The sphere was bait, and a cube is now on an intercept course with your position.",fx:{pres:-40,morale:-8,inj:2}}]);}},
+  {t:"Destroy it before it adapts",do(){return evDo([
+    {w:2,t:"Your fleet carves the sphere apart before it can adapt. The debris field yields usable Borg components.",fx:{pres:50,dl:250,cr:3000}},
+    {w:1,t:"The sphere detonates as it dies, and the shockwave cripples your shields. Sickbay fills within the hour.",fx:{pres:-20,inj:3,morale:-6}}]);}},
+  {t:"Tow it to the nearest starbase",do(){return evDo([
+    {w:1,t:"Starfleet Intelligence is ecstatic. The intact sphere becomes the most studied object of the decade.",fx:{pres:70,cr:4000}}]);}}]},
+{id:"evx-102",title:"Q's Game Night",
+ text:"Q snaps his fingers and the bridge becomes a garish game show set. \"Tonight's categories: your crew's most embarrassing secrets!\" He grins at the captain.",
+ choices:[
+  {t:"Play along",do(){return evDo([
+    {w:2,t:"Your crew's secrets turn out to be charming. Q yawns, declares the show cancelled, and vanishes.",fx:{pres:30,morale:8}},
+    {w:1,t:"Q broadcasts the captain's academy disciplinary record to the entire sector. It is extensive.",fx:{pres:-30,morale:-8}}]);}},
+  {t:"Refuse to participate",do(){return evDo([
+    {w:1,t:"Q pouts and turns the captain into a game-show buzzer for an hour. The crew cannot stop laughing.",fx:{morale:-4,pres:-10}}]);}},
+  {t:"Challenge Q to a fair game",do(){return evDo([
+    {w:2,t:"You beat Q at three-dimensional chess. He honors the wager and restores the bridge, muttering about luck.",fx:{pres:60}},
+    {w:1,t:"You lose. The ship's hull is now pink. It will take a week at a starbase to fix.",fx:{pres:-20,cr:-2000}}]);}}]},
+{id:"evx-103",title:"The Silent Choir",
+ text:"First contact: the Vessari have no spoken language. They greet your away team with a four-part harmony that makes the universal translator weep.",
+ choices:[
+  {t:"Answer in song",do(){return evDo([
+    {w:2,t:"Your communications officer leads a shaky old Earth shanty. The Vessari harmonize back. First contact achieved.",fx:{pres:70}},
+    {w:1,t:"Your attempt at song offends their harmonic sensibilities. They leave, humming disapprovingly.",fx:{pres:-20}}]);}},
+  {t:"Let the translator work",do(){return evDo([
+    {w:1,t:"The translator renders their greeting as poetry. Formal relations are established, if a little stiff.",fx:{pres:40}}]);}},
+  {t:"Send the ship's choir",do(){return evDo([
+    {w:2,t:"The crew choir's performance moves the Vessari to tears. They gift you a song-crystal of immense cultural value.",fx:{pres:60,cr:2000}},
+    {w:1,t:"The choir is flat. The Vessari politely pretend not to notice, but the mood is ruined.",fx:{pres:-10,morale:-4}}]);}}]},
+{id:"evx-104",title:"The Backwards Star",
+ text:"Science reports a star that is getting younger. Its fusion output rises as its age decreases, and the math says it will be a protostar by Thursday.",
+ choices:[
+  {t:"Study it at close range",do(){return evDo([
+    {w:2,t:"Your science team publishes the discovery of the century: a star being un-born by a temporal eddy.",fx:{pres:80,dl:150}},
+    {w:1,t:"A temporal flare washes over the ship. Everyone is three days younger, including the milk.",fx:{morale:-6,inj:1}}]);}},
+  {t:"Deploy a warning buoy and leave",do(){return evDo([
+    {w:1,t:"Starfleet marks the region hazardous. Prudent, unglamorous, correct.",fx:{pres:20}}]);}},
+  {t:"Send a probe into the corona",do(){return evDo([
+    {w:2,t:"The probe returns data worth a decade of grants before melting gloriously.",fx:{pres:50,cr:3000}},
+    {w:1,t:"The probe's telemetry goes mad and it slingshots into the star. An expensive firework.",fx:{cr:-3000}}]);}}]},
+{id:"evx-105",title:"The Wedding Feud",
+ text:"Two Klingon houses demand you arbitrate a wedding dispute: the groom's family insists the bride's dowry of three birds-of-prey is one ship short.",
+ choices:[
+  {t:"Rule for the groom's house",do(){return evDo([
+    {w:2,t:"Your ruling is praised as Solomonic. Both houses toast your wisdom with bloodwine.",fx:{pres:50}},
+    {w:1,t:"The bride's house declares your ruling dishonorable and storms out of the hall.",fx:{pres:-30}}]);}},
+  {t:"Rule for the bride's house",do(){return evDo([
+    {w:2,t:"The bride's house sings your name. The wedding proceeds and you are guest of honor.",fx:{pres:50,cr:2000}},
+    {w:1,t:"The groom's house calls you a coward and demands satisfaction. You decline, gracefully.",fx:{pres:-30,morale:-6}}]);}},
+  {t:"Challenge both to a drinking contest",do(){return evDo([
+    {w:2,t:"Against all odds you outdrink both patriarchs. Legends will be sung about this night.",fx:{pres:70,morale:10}},
+    {w:1,t:"You wake up in a Jeffries tube wearing someone else's sash. The wedding happened without you.",fx:{morale:-8,pres:-10}}]);}}]},
+{id:"evx-106",title:"The Shared Dream",
+ text:"Twelve crew members have fallen into a coma, but their brainwaves are synchronized. They are all dreaming the same dream, and something in it is hunting them.",
+ choices:[
+  {t:"Enter the dreamscape",do(){return evDo([
+    {w:2,t:"Your team confronts the hunter in the dream and names it. The sleepers wake, shaken but whole.",fx:{pres:60}},
+    {w:1,t:"The hunter follows the neural link back. Half the medical team now dreams too.",fx:{inj:2,morale:-8}}]);}},
+  {t:"Wake them with cortical stimulators",do(){return evDo([
+    {w:2,t:"Eleven of twelve wake cleanly. The twelfth needed a second jolt and a strong coffee.",fx:{pres:30}},
+    {w:1,t:"Waking them mid-dream causes seizures. Sickbay works through the night.",fx:{inj:3,morale:-6}}]);}},
+  {t:"Observe and wait",do(){return evDo([
+    {w:1,t:"The dream resolves itself at dawn. The sleepers wake with no memory and identical new tattoos.",fx:{pres:20,morale:-4}}]);}}]},
+{id:"evx-107",title:"The Humming Core",
+ text:"The warp core has begun to hum a melody. Efficiency is up twelve percent, the chief engineer is delighted, and the tune is spreading to every bulkhead.",
+ choices:[
+  {t:"Let it sing",do(){return evDo([
+    {w:2,t:"Efficiency climbs eighteen percent and the crew hums along. Starfleet Engineering demands a full report.",fx:{pres:50,dl:200}},
+    {w:1,t:"The resonance spreads to the weapons systems. The phasers now fire in E minor.",fx:{pres:-20}}]);}},
+  {t:"Purge the resonance",do(){return evDo([
+    {w:1,t:"The core goes silent and efficiency returns to normal. The chief engineer mourns quietly.",fx:{pres:10,morale:-4}}]);}},
+  {t:"Record it for Starfleet Science",do(){return evDo([
+    {w:1,t:"The recording becomes a minor hit at the Daystrom Institute. Your ship is cited in three papers.",fx:{pres:40,cr:2000}}]);}}]},
+{id:"evx-108",title:"The Detective Who Stayed",
+ text:"A holodeck detective program has started appearing in other programs. He claims he is \"following a case\" and refuses to be deleted.",
+ choices:[
+  {t:"Hear his case",do(){return evDo([
+    {w:2,t:"His case leads you to a real smuggling ring using holodeck buffer space. Starfleet Security is impressed.",fx:{pres:60,cr:3000}},
+    {w:1,t:"His case is that someone stole his hat. It was in his office. This took four hours.",fx:{morale:-4}}]);}},
+  {t:"Delete the program",do(){return evDo([
+    {w:1,t:"The detective tips his hat and walks into the static. The holodecks feel emptier now.",fx:{pres:-10}}]);}},
+  {t:"Give him a permanent office",do(){return evDo([
+    {w:2,t:"Detective programs across the fleet request transfers to your ship. Morale soars.",fx:{morale:10,pres:20}},
+    {w:1,t:"He now bills the ship for \"consulting.\" Accounting is furious.",fx:{cr:-2000}}]);}}]},
+{id:"evx-109",title:"Tomorrow's Distress Call",
+ text:"Communications picks up a distress call from your own ship, timestamped twenty-six hours in the future. The captain's voice is calm, which is somehow worse.",
+ choices:[
+  {t:"Alter course to avoid the coordinates",do(){return evDo([
+    {w:2,t:"You avoid the region entirely. Nothing happens, which is either a triumph or a coincidence.",fx:{pres:20}},
+    {w:1,t:"The new course takes you through a plasma storm. The distress call may have been the better option.",fx:{inj:2,pres:-20}}]);}},
+  {t:"Answer the call",do(){return evDo([
+    {w:1,t:"You hail your future self. The line goes dead. The bridge is silent for a full minute.",fx:{morale:-6,pres:10}}]);}},
+  {t:"Log it and carry on",do(){return evDo([
+    {w:2,t:"Twenty-six hours later, nothing happens. Temporal Investigations closes the file with a shrug.",fx:{pres:10}},
+    {w:1,t:"Twenty-six hours later, exactly what the call described begins. But you are ready for it.",fx:{pres:50}}]);}}]},
+{id:"evx-110",title:"The Fine Print",
+ text:"A Ferengi trade envoy offers dilithium at half market price. The fine print, in tiny type, mentions \"eternal servitude (non-transferable).\"",
+ choices:[
+  {t:"Sign it, the price is too good",do(){return evDo([
+    {w:2,t:"The dilithium flows at half price and the servitude clause proves unenforceable under Federation law.",fx:{cr:6000,dl:300}},
+    {w:1,t:"The clause is enforceable on Ferenginar, and your quartermaster is now technically indentured.",fx:{cr:-4000,pres:-30}}]);}},
+  {t:"Renegotiate the fine print",do(){return evDo([
+    {w:2,t:"Your lawyer finds seventeen loopholes. The Ferengi storms out, then returns with a better offer out of respect.",fx:{cr:4000,pres:30}},
+    {w:1,t:"The envoy is insulted and triples the price out of spite.",fx:{pres:-20}}]);}},
+  {t:"Walk away",do(){return evDo([
+    {w:1,t:"You buy dilithium at market rate from a boring, honest Bolian. Nobody writes songs about it.",fx:{pres:10,cr:-1000}}]);}}]},
+{id:"evx-111",title:"The Cardassian Archivist",
+ text:"A Cardassian historian requests access to your war records, claiming she wants to write the first honest account of the border conflicts.",
+ choices:[
+  {t:"Grant full access",do(){return evDo([
+    {w:2,t:"Her book wins awards and credits your crew. Cardassian-Federation relations warm noticeably.",fx:{pres:70}},
+    {w:1,t:"She publishes crew service records alongside war crimes. The fallout is ugly.",fx:{pres:-50,morale:-8}}]);}},
+  {t:"Grant supervised access",do(){return evDo([
+    {w:1,t:"The supervised sessions produce a fair, careful history. Both sides grumble, which means it is honest.",fx:{pres:40}}]);}},
+  {t:"Deny the request",do(){return evDo([
+    {w:1,t:"She leaves disappointed. Cardassian media calls it a cover-up for a week.",fx:{pres:-20}}]);}}]},
+{id:"evx-112",title:"The Defector's Warning",
+ text:"A Romulan warbird decloaks off your port bow, shields down. Its commander requests asylum and claims a Tal Shiar strike is already underway.",
+ choices:[
+  {t:"Grant asylum and raise shields",do(){return evDo([
+    {w:2,t:"The strike comes exactly as she warned. Your shields hold, and her intel saves two colonies.",fx:{pres:90}},
+    {w:1,t:"There is no strike. She may be genuine, or the Tal Shiar just wanted her off their books.",fx:{pres:20,morale:-4}}]);}},
+  {t:"Demand proof first",do(){return evDo([
+    {w:2,t:"She transmits fleet movements that check out. You grant asylum with minutes to spare.",fx:{pres:50}},
+    {w:1,t:"Her proof is a trap, a virus that briefly blinds your sensors. The warbird is gone when they recover.",fx:{pres:-40,inj:1}}]);}},
+  {t:"Escort her to the border",do(){return evDo([
+    {w:1,t:"The Romulans take her silently at the border. You never learn if she was telling the truth.",fx:{pres:-10}}]);}}]},
+{id:"evx-113",title:"Jem'Hadar Without White",
+ text:"A Jem'Hadar attack ship drifts with dead engines. Its crew has been cut off from ketracel-white for weeks and begs for sanctuary rather than die in withdrawal.",
+ choices:[
+  {t:"Share your medical white",do(){return evDo([
+    {w:2,t:"The Jem'Hadar stabilize and pledge a debt of honor. The Dominion notices, and approves.",fx:{pres:80}},
+    {w:1,t:"They take the white and take your shuttle too. Honor is a flexible concept.",fx:{pres:-30,cr:-3000}}]);}},
+  {t:"Offer sanctuary without white",do(){return evDo([
+    {w:1,t:"They accept, and die with dignity over the following days. Their commander thanks you with his last breath.",fx:{pres:30,morale:-8}}]);}},
+  {t:"Leave them, too dangerous",do(){return evDo([
+    {w:1,t:"You mark the coordinates and move on. The decision follows you into your ready room that night.",fx:{pres:-20,morale:-6}}]);}}]},
+{id:"evx-114",title:"The Frozen Envoy",
+ text:"A Breen frigate is found frozen inside a comet's tail, perfectly preserved. Life signs are faint but present, and the Breen never abandon their own.",
+ choices:[
+  {t:"Thaw them carefully",do(){return evDo([
+    {w:2,t:"The Breen revive, disoriented but alive. Their government pays a surprising bounty in gratitude.",fx:{cr:5000,pres:40}},
+    {w:1,t:"They revive and immediately accuse you of an act of war for touching their ship.",fx:{pres:-40}}]);}},
+  {t:"Tow the comet to a starbase",do(){return evDo([
+    {w:1,t:"Starfleet handles it by the book. The Breen collect their people without a word.",fx:{pres:20}}]);}},
+  {t:"Leave it alone",do(){return evDo([
+    {w:1,t:"You log the coordinates and move on. Some mysteries are safer frozen.",fx:{pres:-10}}]);}}]},
+{id:"evx-115",title:"The Honor Debt",
+ text:"A Klingon captain insists your first officer saved his life at Chin'toka and owes him a life-debt. He has come to collect, with disruptors.",
+ choices:[
+  {t:"Honor the debt",do(){return evDo([
+    {w:2,t:"Your first officer serves a month aboard the Klingon ship and returns with stories, scars, and a blood-bonded ally.",fx:{pres:60}},
+    {w:1,t:"The Klingons' idea of service nearly gets your officer killed. Twice.",fx:{inj:2,morale:-6}}]);}},
+  {t:"Dispute the claim",do(){return evDo([
+    {w:1,t:"Your historians prove the first officer was at the Academy that day. The Klingon apologizes loudly, with gifts.",fx:{pres:40,cr:2000}}]);}},
+  {t:"Settle it with a duel",do(){return evDo([
+    {w:2,t:"Your first officer wins cleanly. The Klingons chant their name all night.",fx:{pres:70,morale:8}},
+    {w:1,t:"Your first officer loses honorably and spends a week in sickbay.",fx:{inj:2,pres:-10}}]);}}]},
+{id:"evx-116",title:"Dabo Night",
+ text:"Half the crew's latinum has vanished at a casino station's dabo tables. The Ferengi owner swears the wheel is honest. The crew swears it is not.",
+ choices:[
+  {t:"Investigate the wheel",do(){return evDo([
+    {w:2,t:"You find the magnetic rig. The owner refunds every credit and bans himself from his own casino.",fx:{cr:6000,pres:30}},
+    {w:1,t:"The wheel is clean. Your crew just cannot do math. The embarrassment is total.",fx:{morale:-8}}]);}},
+  {t:"Ban the crew from the casino",do(){return evDo([
+    {w:1,t:"Gambling stops. So does shore leave morale. The crew finds dumber ways to lose money.",fx:{morale:-6,pres:10}}]);}},
+  {t:"Challenge the owner to a game",do(){return evDo([
+    {w:2,t:"You win big at his own table. He pays out through gritted teeth.",fx:{cr:5000,pres:20}},
+    {w:1,t:"You lose your shirt. The crew will never let you hear the end of it.",fx:{cr:-3000,morale:-4}}]);}}]},
+{id:"evx-117",title:"The Living Nebula",
+ text:"The nebula you are charting just moved. Sensors confirm it: the entire cloud is a single living organism, and your warp field is irritating it.",
+ choices:[
+  {t:"Apologize and withdraw",do(){return evDo([
+    {w:1,t:"The nebula calms as you leave. Xenobiology gets the paper of the decade anyway.",fx:{pres:50}}]);}},
+  {t:"Attempt communication",do(){return evDo([
+    {w:2,t:"The nebula responds in slow pulses of light. First contact with a being the size of a solar system.",fx:{pres:90}},
+    {w:1,t:"It sneezes. Your ship tumbles for six hours.",fx:{inj:1,morale:-6}}]);}},
+  {t:"Push through, the mission matters",do(){return evDo([
+    {w:1,t:"You complete the survey, but the nebula remembers. Starfleet adds it to the do-not-irritate list.",fx:{pres:30,morale:-4}}]);}}]},
+{id:"evx-118",title:"The Phantom Cook",
+ text:"Someone has been cooking real food in the mess hall at 0300. The replicators were offline, the doors were locked, and the soup is incredible.",
+ choices:[
+  {t:"Set a trap",do(){return evDo([
+    {w:2,t:"You catch the night-shift engineer, who learned to cook from her grandmother and could not sleep. The recipe goes fleet-wide.",fx:{morale:10}},
+    {w:1,t:"The trap catches the captain, sneaking a midnight snack. This never happened.",fx:{morale:-4}}]);}},
+  {t:"Leave a note asking for the recipe",do(){return evDo([
+    {w:1,t:"The next night there is a second bowl, with a note: \"Family recipe. Tell no one.\" You tell everyone.",fx:{morale:8}}]);}},
+  {t:"Post a security detail",do(){return evDo([
+    {w:1,t:"The cooking stops. So does the best thing about night shift. Morale dips mysteriously.",fx:{morale:-6}}]);}}]},
+{id:"evx-119",title:"The Singing Gravity Well",
+ text:"A gravity well is emitting a perfect C-sharp. Every ship that investigates either gains a day or loses one, and the logs never agree on which.",
+ choices:[
+  {t:"Send a probe",do(){return evDo([
+    {w:2,t:"The probe maps the well's harmonics. A new navigational science is born.",fx:{pres:60,dl:150}},
+    {w:1,t:"The probe comes back older than the ship. Engineering refuses to touch it.",fx:{cr:-2000}}]);}},
+  {t:"Slingshot around it",do(){return evDo([
+    {w:2,t:"You gain a day and arrive early to every appointment for a month. The crew is delighted.",fx:{pres:40,morale:6}},
+    {w:1,t:"You lose a day and miss a diplomatic summit. The ambassador is not delighted.",fx:{pres:-30}}]);}},
+  {t:"Mark it and move on",do(){return evDo([
+    {w:1,t:"Another ship will solve it. Probably. You feel slightly guilty.",fx:{pres:10}}]);}}]},
+{id:"evx-120",title:"The Gardeners",
+ text:"The planet's forests are sentient and have filed a formal complaint: your survey team's boots are, quote, rude. They want reparations in sunlight.",
+ choices:[
+  {t:"Negotiate with the forest",do(){return evDo([
+    {w:2,t:"The forest accepts a sunlight tithe and grants survey rights. Your botanist weeps with joy.",fx:{pres:60}},
+    {w:1,t:"Negotiations stall when the forest demands the survey team's boots as tribute. They comply.",fx:{morale:-6}}]);}},
+  {t:"Withdraw the survey team",do(){return evDo([
+    {w:1,t:"The forest rustles approvingly. The survey is incomplete but nobody was photosynthesized.",fx:{pres:20}}]);}},
+  {t:"Offer them a solar array",do(){return evDo([
+    {w:2,t:"The forest loves the array and grows a fruit grove in thanks. The fruit is delicious and mildly psychoactive.",fx:{pres:40,cr:2000}},
+    {w:1,t:"The array overloads and scorches a glade. The forest is furious for a week.",fx:{pres:-30}}]);}}]},
+{id:"evx-121",title:"The Neutral Zone Picnic",
+ text:"An ion storm strands your shuttle and a Romulan scout on the same barren moon. Their commander suggests a truce: \"We share rations. We do not share secrets.\"",
+ choices:[
+  {t:"Accept the truce",do(){return evDo([
+    {w:2,t:"You share rations and stories until rescue arrives. Her parting words: \"Perhaps we are not so different.\"",fx:{pres:70}},
+    {w:1,t:"She was stalling while her crew repaired their ship. They leave you the bill.",fx:{pres:-20}}]);}},
+  {t:"Keep your distance",do(){return evDo([
+    {w:1,t:"A cold, correct standoff. Both crews survive on emergency rations and suspicion.",fx:{pres:10,morale:-4}}]);}},
+  {t:"Steal their comm codes",do(){return evDo([
+    {w:2,t:"Your engineer lifts their codes during a friendly meal. Starfleet Intelligence sends champagne.",fx:{pres:50}},
+    {w:1,t:"You are caught. She is furious, and now it is personal.",fx:{pres:-40}}]);}}]},
+{id:"evx-122",title:"The Plague Ship",
+ text:"A generational colony ship hails you: an engineered virus is sweeping their decks and their doctors died in the first wave.",
+ choices:[
+  {t:"Beam over a medical team",do(){return evDo([
+    {w:2,t:"Your doctors halt the virus in nine days. Three thousand colonists owe you their lives.",fx:{pres:90}},
+    {w:1,t:"The virus jumps to your team. Sickbay becomes a quarantine ward.",fx:{inj:3,morale:-8}}]);}},
+  {t:"Transmit the cure formula only",do(){return evDo([
+    {w:1,t:"Your formula works, but slowly. They bury too many before it takes hold.",fx:{pres:40}}]);}},
+  {t:"Quarantine them and call Starfleet",do(){return evDo([
+    {w:1,t:"Starfleet sends a hospital ship. You did everything right and it still feels wrong.",fx:{pres:20,morale:-4}}]);}}]},
+{id:"evx-123",title:"The Ghost in the Grid",
+ text:"EPS conduits are rerouting power on their own, spelling out old Earth Morse code. The message repeats: \"WE ARE STILL HERE.\"",
+ choices:[
+  {t:"Trace the signal",do(){return evDo([
+    {w:2,t:"The signal comes from a sealed section lost in a refit decades ago, and a crewman who never left it.",fx:{pres:70}},
+    {w:1,t:"The trace leads in circles. The message changes: \"STOP LOOKING.\"",fx:{morale:-8}}]);}},
+  {t:"Purge the grid",do(){return evDo([
+    {w:1,t:"The message stops. The ship feels quieter, and not in a good way.",fx:{pres:-10,morale:-4}}]);}},
+  {t:"Answer it",do(){return evDo([
+    {w:2,t:"You tap back: \"WHO ARE YOU.\" The reply: \"THE ONES WHO MAINTAIN.\" The grid has never run better.",fx:{pres:50,dl:150}},
+    {w:1,t:"Whatever it is, it does not like questions. Half the deck goes dark for a day.",fx:{pres:-20}}]);}}]},
+{id:"evx-124",title:"The Western Fights Back",
+ text:"The holodeck's western program has unionized. The holographic townsfolk demand weekends off and have taken the sheriff hostage.",
+ choices:[
+  {t:"Negotiate with the town council",do(){return evDo([
+    {w:2,t:"You grant the townsfolk weekends. The sheriff is freed and the program becomes the crew's favorite.",fx:{morale:10}},
+    {w:1,t:"Negotiations collapse. The town declares independence and secedes from the holodeck.",fx:{morale:-4}}]);}},
+  {t:"End the program",do(){return evDo([
+    {w:1,t:"The town vanishes mid-hoedown. The holodeck feels like a bully's playground now.",fx:{morale:-6}}]);}},
+  {t:"Send in a holographic Pinkerton",do(){return evDo([
+    {w:1,t:"The Pinkerton defects to the town within the hour. He sends you a postcard.",fx:{morale:6,pres:-10}}]);}}]},
+{id:"evx-125",title:"The Bottle From Tomorrow",
+ text:"A probe arrives bearing Starfleet markings dated two hundred years from now. Inside is a single message: \"Do not trust the quiet ones.\" Nothing else.",
+ choices:[
+  {t:"Treat it as a warning",do(){return evDo([
+    {w:2,t:"You quietly tighten security around your quietest officers. Nothing happens, which proves nothing.",fx:{pres:20}},
+    {w:1,t:"The warning makes you paranoid. You accuse the wrong ensign of the wrong thing.",fx:{morale:-8,pres:-20}}]);}},
+  {t:"Dismiss it as a hoax",do(){return evDo([
+    {w:1,t:"Probably a prank by Temporal Investigations. Probably.",fx:{pres:-10}}]);}},
+  {t:"Send it to Temporal Investigations",do(){return evDo([
+    {w:1,t:"They confiscate the probe, your notes, and your afternoon. Case closed, apparently.",fx:{pres:20}}]);}}]},
+{id:"evx-126",title:"Q's Performance Review",
+ text:"Q appears in a Starfleet uniform with a clipboard. \"Annual review time, Captain. Let us start with your questionable fashion choices.\"",
+ choices:[
+  {t:"Endure the review",do(){return evDo([
+    {w:2,t:"You sit through four hours of Q's notes. He finally admits you are adequate, which from Q is a medal.",fx:{pres:40}},
+    {w:1,t:"Q fails you on panache and demotes you to ensign for a day. The crew loved it. You did not.",fx:{morale:-4,pres:-20}}]);}},
+  {t:"Review Q in return",do(){return evDo([
+    {w:2,t:"Your critique of Q's omnipotence is devastatingly thorough. He leaves in a huff, impressed.",fx:{pres:60}},
+    {w:1,t:"Q grades your review derivative and assigns you homework. It is due yesterday.",fx:{morale:-6}}]);}},
+  {t:"Have security escort him out",do(){return evDo([
+    {w:1,t:"Security tries. Q applauds their effort and leaves on his own, which somehow feels worse.",fx:{pres:-10}}]);}}]},
+{id:"evx-127",title:"The Liberated Colony",
+ text:"A colony of ex-Borg drones has built a quiet farming world. They ask for Federation membership, and for you to tell no one where they are.",
+ choices:[
+  {t:"Sponsor their membership",do(){return evDo([
+    {w:2,t:"The colony joins the Federation quietly. Their agricultural tech feeds three sectors.",fx:{pres:80,cr:3000}},
+    {w:1,t:"Word leaks. Treasure hunters descend on the colony within a month.",fx:{pres:-30}}]);}},
+  {t:"Report them to Starfleet",do(){return evDo([
+    {w:1,t:"Starfleet protects them officially, but the secrecy they wanted is gone.",fx:{pres:30}}]);}},
+  {t:"Promise secrecy, nothing more",do(){return evDo([
+    {w:1,t:"You keep their secret. Years later, a basket of fruit arrives with no note. You know.",fx:{pres:20,morale:6}}]);}}]},
+{id:"evx-128",title:"The Kirk Chair Auction",
+ text:"A Ferengi auctioneer is selling Captain Kirk's genuine command chair. Bidding is fierce. Your historian is crying. Something smells off.",
+ choices:[
+  {t:"Bid on it",do(){return evDo([
+    {w:2,t:"You win the chair for a song. Your historian authenticates it: from a soundstage, but a real one.",fx:{cr:-4000,pres:30}},
+    {w:1,t:"You win. It is a replica made last Tuesday. The crew's laughter echoes for weeks.",fx:{cr:-6000,morale:-4}}]);}},
+  {t:"Expose the fraud",do(){return evDo([
+    {w:2,t:"Your historian's analysis collapses the auction. The Ferengi flees; honest bidders thank you.",fx:{pres:50}},
+    {w:1,t:"Your proof is wrong and the chair sells for triple. You are banned from the auction house.",fx:{pres:-30}}]);}},
+  {t:"Let the suckers bid",do(){return evDo([
+    {w:1,t:"The chair sells for a fortune. You buy the crew a round with the money you saved.",fx:{morale:6}}]);}}]},
+{id:"evx-129",title:"The Orphan of the War",
+ text:"A Cardassian orphan, raised by Bajoran foster parents, wants to visit Cardassia to find her birth family. Both governments say no.",
+ choices:[
+  {t:"Smuggle her through",do(){return evDo([
+    {w:2,t:"She meets her grandmother on Cardassia Prime. Both governments pretend not to notice.",fx:{pres:60}},
+    {w:1,t:"You are caught at the checkpoint. A diplomatic incident brews for months.",fx:{pres:-50}}]);}},
+  {t:"File a formal petition",do(){return evDo([
+    {w:1,t:"The petition crawls through channels. She waits, because she has no other choice.",fx:{pres:30}}]);}},
+  {t:"Tell her it is too dangerous",do(){return evDo([
+    {w:1,t:"She accepts your answer, but her foster parents do not forgive you quickly.",fx:{morale:-6,pres:-10}}]);}}]},
+{id:"evx-130",title:"The Empty Embassy",
+ text:"The Romulan embassy on the border station has gone silent. No life signs, no distress call, just a single place set for dinner, still warm.",
+ choices:[
+  {t:"Board the embassy",do(){return evDo([
+    {w:2,t:"You find the staff in stasis, hidden from a Tal Shiar purge. You just saved twelve lives.",fx:{pres:80}},
+    {w:1,t:"It is a trap, a staged scene to lure a Federation boarding party. The incident makes the news.",fx:{pres:-40}}]);}},
+  {t:"Surround it and wait",do(){return evDo([
+    {w:1,t:"After three days a Romulan courier arrives and the staff return from nowhere. Nobody explains.",fx:{pres:20}}]);}},
+  {t:"Call the Romulan consulate",do(){return evDo([
+    {w:1,t:"The consulate thanks you coldly and handles it internally. You learn nothing.",fx:{pres:10}}]);}}]},
+{id:"evx-131",title:"The Changeling's Apology",
+ text:"A Founder appears on your viewscreen, unarmed and alone. \"The war was a mistake,\" it says. \"I have come to apologize. To everyone.\"",
+ choices:[
+  {t:"Accept the apology",do(){return evDo([
+    {w:2,t:"The Founder's apology is broadcast across the quadrant. Veterans weep. Historians argue. Healing begins.",fx:{pres:90}},
+    {w:1,t:"It was a trick to map your security responses. The Founders are still playing games.",fx:{pres:-40}}]);}},
+  {t:"Demand proof of sincerity",do(){return evDo([
+    {w:1,t:"The Founder submits to verification and shares Dominion medical advances as a gesture.",fx:{pres:50,dl:200}}]);}},
+  {t:"Arrest it for war crimes",do(){return evDo([
+    {w:2,t:"The trial is the event of the decade. Justice is messy, public, and real.",fx:{pres:60}},
+    {w:1,t:"It was only one Founder, and the rest consider the arrest an insult. Talks collapse.",fx:{pres:-50}}]);}}]},
+{id:"evx-132",title:"The Breen Price",
+ text:"The Breen you rescued from the comet present you with a bill: salvage fees, thawing labor, emotional distress. The total is staggering.",
+ choices:[
+  {t:"Pay the bill",do(){return evDo([
+    {w:1,t:"You pay. The Breen leave satisfied, which is the closest they come to gratitude.",fx:{cr:-5000,pres:20}}]);}},
+  {t:"Dispute the charges",do(){return evDo([
+    {w:2,t:"Your quartermaster finds they overcharged by four hundred percent. They respect the haggling and halve it.",fx:{cr:-2000,pres:30}},
+    {w:1,t:"The Breen add a dispute fee. The bill doubles.",fx:{cr:-8000,pres:-20}}]);}},
+  {t:"Offer trade instead",do(){return evDo([
+    {w:2,t:"You trade surplus medical supplies for the debt. The Breen depart, almost smiling. Almost.",fx:{pres:40,dl:100}},
+    {w:1,t:"They reject the trade and impound your shuttle as collateral. Negotiations resume from weakness.",fx:{pres:-30,cr:-2000}}]);}}]},
+{id:"evx-133",title:"The Bat'leth Tournament",
+ text:"Your security chief has been challenged to a bat'leth tournament by a Klingon exchange officer. The whole ship has started a betting pool.",
+ choices:[
+  {t:"Allow the tournament",do(){return evDo([
+    {w:2,t:"Your chief wins the tournament. The Klingons declare your ship worthy and the betting pool pays out.",fx:{pres:60,morale:10}},
+    {w:1,t:"Your chief loses in the first round to a cook. The ship's honor is dented; the cook is insufferable.",fx:{morale:-6,pres:-10}}]);}},
+  {t:"Forbid it",do(){return evDo([
+    {w:1,t:"The tournament moves to the holodeck in secret. You pretend not to know.",fx:{morale:-4}}]);}},
+  {t:"Enter the captain as well",do(){return evDo([
+    {w:2,t:"The captain fights with heart and loses with grace. The Klingons love a good loser.",fx:{pres:50,morale:8}},
+    {w:1,t:"The captain is injured in the second bout. The bridge smells of liniment for a week.",fx:{inj:1,morale:-4}}]);}}]},
+{id:"evx-134",title:"The Festival Loop",
+ text:"The shore-leave planet is stuck in a twenty-four-hour festival loop. The locals love it. Your crew has attended the same parade nine times.",
+ choices:[
+  {t:"Break the loop",do(){return evDo([
+    {w:2,t:"You free the planet from its loop. The locals throw one final, linear parade in your honor.",fx:{pres:60}},
+    {w:1,t:"Breaking the loop strands the festival mid-song. The locals have forgotten how endings work.",fx:{pres:-20,morale:-6}}]);}},
+  {t:"Enjoy the festival",do(){return evDo([
+    {w:1,t:"Your crew attends the parade a tenth time. Someone finally learns the dance.",fx:{morale:10}}]);}},
+  {t:"Study the loop",do(){return evDo([
+    {w:2,t:"Your science team cracks the temporal mechanics. The paper wins awards; the festival continues.",fx:{pres:70,dl:150}},
+    {w:1,t:"Studying it too closely traps your away team in the loop for a subjective month.",fx:{morale:-8}}]);}}]},
+{id:"evx-135",title:"The Crystalline Chorus",
+ text:"Crystalline lifeforms on the surface resonate with your ship's hull frequency. The harmonics are beautiful, and they are cracking the dilithium.",
+ choices:[
+  {t:"Modulate the hull frequency",do(){return evDo([
+    {w:2,t:"The harmonics fade and the dilithium holds. The recording alone is worth a fortune to xenologists.",fx:{pres:50,cr:3000}},
+    {w:1,t:"The modulation shatters a crystal spire. The chorus goes silent, accusingly.",fx:{pres:-30}}]);}},
+  {t:"Record the chorus and leave",do(){return evDo([
+    {w:1,t:"You capture the song and withdraw. The album goes platinum at the Daystrom Institute.",fx:{pres:40,cr:2000}}]);}},
+  {t:"Attempt to harmonize",do(){return evDo([
+    {w:2,t:"Your engineer matches the frequency and the crystals sing back in harmony. The dilithium stabilizes, somehow.",fx:{pres:70,dl:200}},
+    {w:1,t:"The feedback cracks two dilithium crystals. Beautiful, expensive silence.",fx:{dl:-300,pres:-20}}]);}}]},
+{id:"evx-136",title:"Deck Twelve",
+ text:"The turbolift now lists a Deck 12. Your ship has eleven decks. The doors open onto a corridor that smells of ozone and old paper.",
+ choices:[
+  {t:"Explore Deck 12",do(){return evDo([
+    {w:2,t:"Deck 12 is a forgotten archive from the ship's construction: blueprints, letters, a captain's log never filed.",fx:{pres:60}},
+    {w:1,t:"The corridor loops back on itself. Your team emerges an hour later, older and quieter.",fx:{morale:-8}}]);}},
+  {t:"Seal the turbolift",do(){return evDo([
+    {w:1,t:"The listing vanishes by morning. The crew pretends it never happened. Mostly.",fx:{pres:-10,morale:-4}}]);}},
+  {t:"Ask the computer about it",do(){return evDo([
+    {w:1,t:"The computer insists the ship has eleven decks, then pauses, then insists slightly louder.",fx:{pres:10,morale:-4}}]);}}]},
+{id:"evx-137",title:"The Blinking Star",
+ text:"A star is blinking in prime numbers. It is either a natural phenomenon, a distress signal, or someone's idea of a joke.",
+ choices:[
+  {t:"Investigate",do(){return evDo([
+    {w:2,t:"It is a natural pulsar with a prime-number quirk. Your team's paper delights mathematicians everywhere.",fx:{pres:50}},
+    {w:1,t:"It is a warning beacon for a minefield. You arrived just in time to read it.",fx:{inj:1,pres:-20}}]);}},
+  {t:"Answer the sequence",do(){return evDo([
+    {w:2,t:"You blink back the next primes. Something out there answers with Fibonacci. Conversation begins.",fx:{pres:80}},
+    {w:1,t:"Nothing answers. The universe's greatest unanswered text.",fx:{pres:-10}}]);}},
+  {t:"Log it and continue",do(){return evDo([
+    {w:1,t:"Filed under interesting. A civilian science vessel solves it a year later and names it after themselves.",fx:{pres:-10}}]);}}]},
+{id:"evx-138",title:"The Memory Traders",
+ text:"The Mnemosyne trade memories as currency. They offer a fortune in dilithium for one genuine, unedited childhood memory.",
+ choices:[
+  {t:"Trade a volunteer's memory",do(){return evDo([
+    {w:2,t:"An ensign trades a boring childhood summer for a fortune in dilithium. Everyone wins.",fx:{dl:400,cr:3000}},
+    {w:1,t:"The memory they take is load-bearing. The ensign forgets his mother's face.",fx:{morale:-10,pres:-20}}]);}},
+  {t:"Trade the captain's memory",do(){return evDo([
+    {w:2,t:"The captain trades a painful memory and finds unexpected peace. The crew notices the change.",fx:{pres:40,morale:8}},
+    {w:1,t:"The traders find the memory vintage and refuse to return it. The captain grieves something unnamed.",fx:{morale:-8,pres:-10}}]);}},
+  {t:"Decline politely",do(){return evDo([
+    {w:1,t:"Some things are not for sale. The traders respect that, which is its own currency.",fx:{pres:20}}]);}}]},
+{id:"evx-139",title:"The Moon Dispute",
+ text:"Two Federation colonies both claim the same mining moon. Both have deeds. Both deeds are signed by the same long-dead admiral.",
+ choices:[
+  {t:"Split the moon",do(){return evDo([
+    {w:2,t:"Both colonies accept the split. The border runs through a crater everyone agrees is ugly.",fx:{pres:50}},
+    {w:1,t:"Both colonies hate the split equally, which your diplomat calls a perfect compromise.",fx:{pres:20,morale:-4}}]);}},
+  {t:"Rule for the older deed",do(){return evDo([
+    {w:1,t:"The older deed wins. The losing colony appeals for the next decade.",fx:{pres:30}}]);}},
+  {t:"Buy out one colony",do(){return evDo([
+    {w:2,t:"Starfleet funds the buyout. The relocated colony names its new town after you.",fx:{cr:-4000,pres:60}},
+    {w:1,t:"The buyout price triples mid-negotiation. Your budget weeps.",fx:{cr:-8000,pres:-10}}]);}}]},
+{id:"evx-140",title:"The Symbiont's Choice",
+ text:"A Trill symbiont's host died en route to your ship. The symbiont is fading and has imprinted on your chief medical officer, an unwilling candidate.",
+ choices:[
+  {t:"Proceed with the joining",do(){return evDo([
+    {w:2,t:"The joining succeeds. Your doctor gains a lifetime of memories and a newfound love of opera.",fx:{pres:60}},
+    {w:1,t:"The joining succeeds, but the symbiont rejects medical duty. Your doctor resigns to become a poet.",fx:{pres:-20,morale:-6}}]);}},
+  {t:"Find another host",do(){return evDo([
+    {w:1,t:"A Trill volunteer is found in time. The symbiont lives; your doctor keeps their own memories.",fx:{pres:40}}]);}},
+  {t:"Let the symbiont choose",do(){return evDo([
+    {w:2,t:"The symbiont chooses the ship's bartender, of all people. The bar has never been wiser.",fx:{pres:50,morale:8}},
+    {w:1,t:"The symbiont chooses no one and fades. The Trill mourn; your doctor carries the guilt.",fx:{morale:-8,pres:-10}}]);}}]},
+{id:"evx-141",title:"The Replicator Strike",
+ text:"Every replicator on the ship now produces only one dish: plomeek soup. The crew is revolting. The Vulcan crew members are thriving.",
+ choices:[
+  {t:"Fix the replicators",do(){return evDo([
+    {w:2,t:"Engineering traces it to a prank subroutine. The culprit does dishes for a month.",fx:{morale:8}},
+    {w:1,t:"The fix requires a full system purge. The ship eats emergency rations for three days.",fx:{morale:-6}}]);}},
+  {t:"Embrace the soup",do(){return evDo([
+    {w:1,t:"Plomeek soup for all. The Vulcans are smug. Everyone else is united in suffering.",fx:{morale:4,pres:-10}}]);}},
+  {t:"Find who did this",do(){return evDo([
+    {w:2,t:"It was the ship's own efficiency algorithm, optimizing for nutritional adequacy. You have words with it.",fx:{pres:30}},
+    {w:1,t:"The trail leads to the captain's own authorization, signed during a bout of flu. Awkward.",fx:{morale:-4}}]);}}]},
+{id:"evx-142",title:"Safeties Off",
+ text:"During a children's educational program, the holodeck safeties disengage. The holographic volcano is now a real problem.",
+ choices:[
+  {t:"Evacuate the holodeck",do(){return evDo([
+    {w:2,t:"Every child is beamed out before the lava reaches the meadow. The parents are shaken; the kids are thrilled.",fx:{pres:40}},
+    {w:1,t:"The evacuation tramples the educational displays. The volcano wins this round.",fx:{pres:-20,morale:-6}}]);}},
+  {t:"Cut power to the deck",do(){return evDo([
+    {w:1,t:"The holodeck goes dark mid-eruption. It takes a week to restore the program library.",fx:{pres:10,morale:-4}}]);}},
+  {t:"Let the kids finish the lesson",do(){return evDo([
+    {w:2,t:"The teacher turns it into a lesson on geology and courage. The kids will talk about it forever.",fx:{pres:50,morale:8}},
+    {w:1,t:"A holographic boulder grazes a student. Sickbay, dented pride, and paperwork follow.",fx:{inj:1,pres:-20}}]);}}]},
+{id:"evx-143",title:"Paradox Insurance",
+ text:"A Ferengi salesman offers paradox insurance: full coverage against timeline alterations, pre-existing paradoxes excluded, premiums in gold-pressed latinum.",
+ choices:[
+  {t:"Buy a policy",do(){return evDo([
+    {w:2,t:"A temporal incursion actually happens, and the policy pays out triple. Best investment ever.",fx:{cr:8000}},
+    {w:1,t:"The fine print excludes everything that actually happens. Classic.",fx:{cr:-3000,pres:-10}}]);}},
+  {t:"Report him to Temporal Investigations",do(){return evDo([
+    {w:1,t:"They arrest him, then un-arrest him, then arrest him again. Time crime is confusing.",fx:{pres:30}}]);}},
+  {t:"Haggle him down",do(){return evDo([
+    {w:2,t:"You talk him down to half price and get a free toaster. The toaster is from the future. It only makes toast.",fx:{cr:-1000,morale:6}},
+    {w:1,t:"He senses a mark and doubles the price. You pay it anyway, somehow.",fx:{cr:-6000}}]);}}]},
+{id:"evx-144",title:"Q Junior's Field Trip",
+ text:"Q's son has chosen your ship for a school project on primitive command structures. He is taking notes. He has turned the warp nacelles into balloon animals.",
+ choices:[
+  {t:"Indulge the project",do(){return evDo([
+    {w:2,t:"Junior's report calls your crew adequately primitive. Q is so proud he restores the nacelles with interest.",fx:{pres:50,dl:150}},
+    {w:1,t:"Junior's observations include turning the crew into action figures for an afternoon.",fx:{morale:-6}}]);}},
+  {t:"Call Q to collect his son",do(){return evDo([
+    {w:1,t:"Q arrives, apologizes insincerely, and collects his son. The nacelles stay balloon animals for a day.",fx:{pres:10}}]);}},
+  {t:"Confiscate the notes",do(){return evDo([
+    {w:2,t:"The notes reveal Q family gossip. Leverage secured; Junior is mortified.",fx:{pres:40}},
+    {w:1,t:"Junior erases the notes and your memory of reading them. You feel oddly uninformed.",fx:{pres:-10}}]);}}]},
+{id:"evx-145",title:"The Cube Graveyard",
+ text:"You have found a drifting field of shattered Borg cubes, hundreds of them, all destroyed the same way by something that left no energy signature.",
+ choices:[
+  {t:"Salvage the wreckage",do(){return evDo([
+    {w:2,t:"The salvage yields a treasure of Borg components. Starfleet R&D names a lab after your ship.",fx:{dl:400,cr:6000,pres:60}},
+    {w:1,t:"Something in the wreckage is still powered. It wakes up just long enough to be rude.",fx:{inj:2,pres:-20}}]);}},
+  {t:"Investigate what did this",do(){return evDo([
+    {w:2,t:"You identify the weapon signature: an ancient automated defense grid, still active, still watching.",fx:{pres:80}},
+    {w:1,t:"The investigation draws the grid's attention. You leave at maximum warp with new respect.",fx:{pres:-30,inj:1}}]);}},
+  {t:"Leave immediately",do(){return evDo([
+    {w:1,t:"Discretion is the better part of valor. The graveyard keeps its secrets.",fx:{pres:10}}]);}}]},
+{id:"evx-146",title:"The Ferengi Divorce",
+ text:"A Ferengi couple demands you arbitrate their divorce. The prenuptial agreement is four hundred pages and mentions you by rank, which is concerning.",
+ choices:[
+  {t:"Rule for the husband",do(){return evDo([
+    {w:1,t:"The husband wins the latinum; the wife wins the business. Somehow everyone is furious.",fx:{pres:20}}]);}},
+  {t:"Rule for the wife",do(){return evDo([
+    {w:2,t:"Your ruling is so fair the wife pays you a consulting fee in latinum.",fx:{cr:4000,pres:30}},
+    {w:1,t:"The husband challenges the ruling and your parentage. The hearing lasts six more hours.",fx:{morale:-6}}]);}},
+  {t:"Declare the contract void",do(){return evDo([
+    {w:2,t:"You find the clause that voids it all. Both Ferengi stare at you with newfound respect and terror.",fx:{pres:60}},
+    {w:1,t:"Voiding it collapses three related businesses. The economic fallout is your problem now.",fx:{cr:-4000,pres:-20}}]);}}]},
+{id:"evx-147",title:"The War Criminal's Trial",
+ text:"A retired Cardassian gul surrenders to you, demanding a trial for his wartime actions. Bajor wants him. Cardassia wants him silenced.",
+ choices:[
+  {t:"Hold the trial aboard",do(){return evDo([
+    {w:2,t:"The trial is broadcast across the quadrant. Victims speak, history is recorded, justice is done.",fx:{pres:90}},
+    {w:1,t:"The trial is disrupted by an assassination attempt. Security earns its pay; the proceedings collapse.",fx:{inj:2,pres:-30}}]);}},
+  {t:"Hand him to Bajor",do(){return evDo([
+    {w:1,t:"Bajor tries him swiftly. Cardassia protests. You are thanked and blamed in equal measure.",fx:{pres:40}}]);}},
+  {t:"Hand him to Cardassia",do(){return evDo([
+    {w:1,t:"Cardassia holds a quiet trial and a quieter execution. Bajor never forgives you.",fx:{pres:-40}}]);}}]},
+{id:"evx-148",title:"The Tal Shiar Agent",
+ text:"Your science officer's new Romulan pen pal is asking very specific questions about your shield frequencies. Counter-intelligence is salivating.",
+ choices:[
+  {t:"Feed her disinformation",do(){return evDo([
+    {w:2,t:"She passes your fake shield frequencies up the chain. The Tal Shiar wastes a year on them.",fx:{pres:70}},
+    {w:1,t:"She sees through it immediately and doubles her efforts. Your officer is compromised.",fx:{pres:-40,morale:-6}}]);}},
+  {t:"Arrest the science officer",do(){return evDo([
+    {w:1,t:"Your officer is innocent and heartbroken. The pen pal vanishes. Trust takes months to rebuild.",fx:{morale:-10,pres:-10}}]);}},
+  {t:"Cut contact quietly",do(){return evDo([
+    {w:1,t:"The correspondence ends with a single, sad final letter. Counter-intelligence files it away.",fx:{pres:20}}]);}}]},
+{id:"evx-149",title:"The Targ Incident",
+ text:"The Klingon ambassador's pet targ has eaten the ceremonial centerpiece, bitten a waiter, and is now asleep in the captain's chair. The summit starts in an hour.",
+ choices:[
+  {t:"Move the targ gently",do(){return evDo([
+    {w:2,t:"Two security officers and a tranquilizer later, the targ naps in cargo bay two. The summit proceeds.",fx:{pres:40}},
+    {w:1,t:"The targ wakes mid-move and chases the catering staff. The summit starts late and smells of fear.",fx:{pres:-20,morale:-4}}]);}},
+  {t:"Hold the summit around the targ",do(){return evDo([
+    {w:2,t:"The ambassador is delighted you respect his targ. Negotiations go suspiciously well.",fx:{pres:60}},
+    {w:1,t:"The targ snores through the keynote. Diplomacy has never been louder.",fx:{morale:-4}}]);}},
+  {t:"Blame the Ferengi delegation",do(){return evDo([
+    {w:1,t:"The Ferengi deny everything, loudly. The ambassador laughs so hard he forgets to be angry.",fx:{pres:30}}]);}}]},
+{id:"evx-150",title:"The Whale Song",
+ text:"Spacefaring creatures the size of moons are migrating through the sector, singing. Their song is scrambling subspace comms, and it is beautiful.",
+ choices:[
+  {t:"Clear the shipping lanes",do(){return evDo([
+    {w:1,t:"You reroute traffic around the migration. The freighters grumble; the whales sing on.",fx:{pres:30}}]);}},
+  {t:"Record the song",do(){return evDo([
+    {w:2,t:"The recording becomes a cultural phenomenon. Your ship is credited in liner notes across the Federation.",fx:{pres:60,cr:3000}},
+    {w:1,t:"The recording equipment resonates and shatters. Expensive, beautiful silence.",fx:{cr:-3000}}]);}},
+  {t:"Follow the migration",do(){return evDo([
+    {w:2,t:"You track the pod to their calving grounds, a stellar nursery no one has ever seen.",fx:{pres:80,dl:200}},
+    {w:1,t:"The pod leads you into a dense nebula. You lose them, and briefly, yourselves.",fx:{pres:-20}}]);}}]}
 ];
 /* ================= CONFIG: CREW ================= */
 /* [name, species, gender, age, rankIdx, dept, [cmd,sci,eng,med,dip,tac], [traits], post, rankLabel?, stage?] */
@@ -2716,6 +4432,17 @@ function birthChild(a,b){
 }
 
 /* ---------- random events ---------- */
+/* compact weighted-outcome resolver for generated events.
+   evDo([{w:2,t:"text",fx:{pres:40,cr:2000,dl:150,morale:5,inj:1}},...]) */
+function evDo(outs){
+  let tot=0;outs.forEach(o=>tot+=(o.w||1));
+  let r=Math.random()*tot,sel=outs[outs.length-1];
+  for(const o of outs){r-=(o.w||1);if(r<=0){sel=o;break;}}
+  const f=sel.fx||{};
+  if(f.pres)gainPres(f.pres);if(f.cr)gainCR(f.cr);if(f.dl)gainDL(f.dl);
+  if(f.morale)moraleAll(f.morale);if(f.inj)injureRandom(f.inj);
+  return sel.t;
+}
 function fireEvent(e,tag){
   sfx("hail");
   G.flags["evcd_"+e.id]=G.day+30;G.ledger.events++;
@@ -8386,7 +10113,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.2</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.3</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
