@@ -3611,6 +3611,7 @@ function tickDay(){
   G.day++; G.stardate+=1.0; // TNG scale: 1000 units per year
   if(G.tempCd>0)G.tempCd--;
   economyTick(); buildTick(); researchTick(); refitTick(); missionTick(); transitTick();
+  if(typeof admiraltyTick==="function")admiraltyTick(); // v2.13: admiral projects upkeep + payoffs
   healTick(); dockedTick(); ageTick(); romanceTick(); familyTick(); crewTick();
   randomEventTick(); scriptedTick(); rankCheckTick(); battleTick(); socialTick(); arcTick(); holoTick(); holidayTick();
   if(G.shipOps&&G.shipOps.length)G.shipOps=G.shipOps.filter(function(m){return ship(m.shipId);});
@@ -3646,8 +3647,9 @@ function economyTick(){
   });
 }
 function buildTick(){
+  const _sb=(typeof projectAdmirals==="function"&&projectAdmirals("shipbuilding").length)?1.2:1; // v2.13 shipbuilding initiative
   // ship construction
-  for(let i=G.builds.length-1;i>=0;i--){const b=G.builds[i];b.daysLeft--;
+  for(let i=G.builds.length-1;i>=0;i--){const b=G.builds[i];b.daysLeft-=_sb;
     if(b.daysLeft<=0){G.builds.splice(i,1);
       const _nid=uid("s");
       G.ships.push({id:_nid,name:b.name,registry:b.registry,cls:b.cls,status:"active",daysLeft:0,damage:0,missionId:null,yardId:null,post:"sol",comp:SHIP_CLASSES[b.cls].comp,commSd:G.stardate,tours:1});
@@ -3656,7 +3658,7 @@ function buildTick(){
       log("build","Christening ceremony: "+b.name+" ("+b.registry+", "+SHIP_CLASSES[b.cls].name+"-class) is commissioned. A bottle of champagne is broken across her hull. (+5 prestige)");
       capLogAuto("Ship commissioned",b.name+" ("+b.registry+", "+SHIP_CLASSES[b.cls].name+"-class) has joined the fleet.");}}
   // station construction (max 2 concurrent)
-  G.stations.forEach(st=>{if(st.status==="construction"){st.daysLeft--;
+  G.stations.forEach(st=>{if(st.status==="construction"){st.daysLeft-=_sb;
     if(st.daysLeft<=0){st.status="active";G.ledger.stationsBuilt++;gainPres(25);
       log("build",st.name+" ("+STATION_DEFS[st.type].name+") is now fully operational.");
       queueCompletion({kind:"station",id:st.id,name:st.name,sub:STATION_DEFS[st.type].name+" \u2014 now fully operational",art:(typeof STATION_PICS!=="undefined"&&STATION_PICS[stationArtKey(st)])?STATION_PICS[stationArtKey(st)]:""});}}});
@@ -3687,7 +3689,8 @@ function refitTick(){
   });
 }
 function missionTick(){
-  for(let i=G.missions.length-1;i>=0;i--){const m=G.missions[i];m.daysLeft--;
+  const _ops=(typeof opsAdmiral==="function")?opsAdmiral():null; // v2.13: Fleet Operations desk
+  for(let i=G.missions.length-1;i>=0;i--){const m=G.missions[i];m.daysLeft-=(_ops?1.15:1);
     if(m.daysLeft<=0){G.missions.splice(i,1);resolveMission(m);}}
 }
 
@@ -4320,7 +4323,8 @@ function resolveShuttleMission(m){
 
 /* ---------- healing / aging / death ---------- */
 function healTick(){
-  const rate=(hasStation("medical")?3:1)+G.ships.filter(s=>s.status==="active"&&s.cls==="mercy"&&!s.transit).length;
+  const rate=(hasStation("medical")?3:1)+G.ships.filter(s=>s.status==="active"&&s.cls==="mercy"&&!s.transit).length
+    +((typeof projectAdmirals==="function"&&projectAdmirals("medical").length)?1:0); // v2.13 medical program
   crewActive().forEach(o=>{if(o.health==="injured"){o.healDays-=rate;
     if(o.healDays<=0){o.health="healthy";o.healDays=0;log("personnel",fullName(o)+" has been cleared for duty.");}}});
 }
@@ -5475,6 +5479,8 @@ function battlePower(s){
   const c=SHIP_CLASSES[s.cls];if(!c)return 50;
   let p=Math.max(10,Math.round(c.hull+c.tac*1.25+30-(s.damage||0)*0.6));
   if(typeof shipUndercrewed==="function"&&shipUndercrewed(s))p=Math.round(p*0.85);
+  if(s.post&&typeof sectorCommander==="function"&&sectorCommander(s.post))p=Math.round(p*1.2); // v2.13 sector command
+  if(typeof flagAboardAdmiral==="function"&&flagAboardAdmiral(s.id))p=Math.round(p*1.15); // v2.13 flag aboard
   return p;
 }
 function threatLabel(e,s){const r=e.pow/battlePower(s);
@@ -8220,11 +8226,14 @@ function officerModal(id){
     const cur=o.post.t==="pool"?"pool":o.post.t==="hq"?"hq":o.post.t+":"+o.post.id;
     h+='<div class="hr"></div><label>Assignment / Transfer</label>'+sheetPick('Assignment / Transfer',postingOptions(cur),(function(_oid){return function(v){uiAssign(_oid,v);};})(o.id));
     h+='<div class="kv"><span class="k">Positions</span><span class="v">'+((o.roles&&o.roles.length)?esc(o.roles.map(billetLabel).join(", ")):'<span class="dim">Unassigned</span>')+'</span></div>';
+    if(typeof isAdmiral==="function"&&isAdmiral(o))h+='<div class="kv"><span class="k">Flag assignment</span><span class="v">'+esc(flagAssignmentLabel(o))+'</span></div>';
     let _cmd='<button class="btn small violet" onclick="uiRolePicker(\''+o.id+'\')">Assign positions</button>';
     if(!o.rankLabel&&o.rank<9)
       _cmd+='<button class="btn small teal" '+(G.prestige>=cost?"":"disabled")+' onclick="uiPromote(\''+o.id+'\')">Promote ('+cost+' pres.)</button>';
     if(!o.rankLabel&&o.rank>0)
       _cmd+='<button class="btn small ghost" onclick="uiDemote(\''+o.id+'\')">Demote</button>';
+    if(typeof isAdmiral==="function"&&isAdmiral(o))
+      _cmd+='<button class="btn small gold" onclick="uiFlagOrders(\''+o.id+'\')">Flag orders</button>';
     const mLast=(G.meetings||{})[o.id];const mCd=mLast!==undefined&&G.stardate-mLast<MEET_CD;
     _cmd+='<button class="btn small teal" '+(mCd?"disabled":"")+' onclick="uiRequestMeeting(\''+o.id+'\')">Request meeting'+(mCd?" ("+Math.ceil(MEET_CD-(G.stardate-mLast))+"d)":"")+'</button>';
     _cmd+='<button class="btn small violet" onclick="uiAwardPicker(\''+o.id+'\')">Award honor</button>';
@@ -8268,14 +8277,118 @@ function uiPromote(oid){
   sfx("promote");
   awardAccolade(o,"Promoted to "+RANKS[o.rank]);
   log("personnel","PROMOTED: "+fullName(o)+" — congratulations from the sector command.");
+  if(o.rank===9){ // v2.13: flag rank reports to Starfleet Command
+    const _ok=o.post.t,_oid=o.post.id,_hadCo=(o.roles||[]).includes("co");
+    doTransferCore(o,{t:"station",id:"sfcommand"});
+    o.flag=null;o.flagProg=0;
+    if(_hadCo&&(_ok==="ship"||_ok==="station"))successionCheck(_ok,_oid);
+    log("personnel","FLAG RANK: "+fullName(o)+" has been promoted to Admiral and ordered to report to Starfleet Command for flag assignment.");
+    toast("Admiral "+o.name+" — report to Starfleet Command for flag orders.");
+  }
   save();officerModal(oid);render();toast("Promoted to "+RANKS[o.rank]+".");
 }
 function uiDemote(oid){
   const o=officer(oid);if(!o||o.rankLabel||o.rank<=0)return;
   o.rank--;o.timeInGrade=0;o.morale=clamp(o.morale-10,0,100);
+  if(o.rank<9&&o.flag){o.flag=null;o.flagProg=0;log("personnel",fullName(o)+" no longer holds flag rank \u2014 flag assignment rescinded.");}
   awardAccolade(o,"Demoted to "+RANKS[o.rank]);
   log("personnel","DEMOTED: "+fullName(o)+". A difficult entry in the service record.");
   save();officerModal(oid);render();
+}
+/* ================= v2.13: THE ADMIRALTY =================
+   Flag officers (rank 9, Admiral) get standing flag orders: sector command,
+   Fleet Operations, HQ projects, or flying their flag aboard a ship.
+   Additive o.flag={type,target}; o.flagProg tracks project cycles. */
+const FLAG_PROJECTS={
+  shipbuilding:{name:"Shipbuilding Initiative",cost:200,blurb:"Ships and stations under construction finish 20% faster."},
+  exploration:{name:"Exploration Initiative",cost:150,blurb:"Survey teams report a find roughly every 8 days."},
+  diplomacy:{name:"Diplomatic Outreach",cost:150,blurb:"+2 prestige every 2 days. The Federation's best face forward."},
+  medical:{name:"Starfleet Medical Program",cost:150,blurb:"Injured officers fleet-wide heal +1 day faster."}
+};
+const FLAG_SECTORS=["sol","vulcan","andoria","betazed","trill","risa","wolf359","qonos","romulus","khitomer","bajor","ds9","cardassia","ferenginar"];
+const DIPLO_LINES=[
+  "a border dispute near the Briar Patch was talked down over tea",
+  "the Ferengi opened a new trade dialogue (profitably, for once, on our side)",
+  "a joint science summit with the Vulcans ended in actual smiles",
+  "Klingon delegates left the talks grumbling, which counts as success",
+  "a first-contact package was delivered to a pre-warp culture's observers"];
+const EXPLORE_SITES=["an uncharted nebula","a rogue planetoid","a dead alien relay station","a mineral-rich asteroid field","a subspace eddy","a derelict probe of unknown origin"];
+function isAdmiral(o){return o&&!o.dead&&!o.retired&&o.stage==="adult"&&o.status==="active"&&!o.rankLabel&&o.rank>=9;}
+function admirals(){return G.officers.filter(isAdmiral);}
+function sectorCommander(post){return admirals().find(o=>o.flag&&o.flag.type==="sector"&&o.flag.target===post);}
+function opsAdmiral(){return admirals().find(o=>o.flag&&o.flag.type==="ops");}
+function projectAdmirals(key){return admirals().filter(o=>o.flag&&o.flag.type==="project"&&o.flag.target===key);}
+function flagAboardAdmiral(sid){return crewOfShip(sid).find(o=>isAdmiral(o)&&o.flag&&o.flag.type==="flag"&&o.flag.target===sid);}
+function flagAssignmentLabel(o){
+  const f=o.flag;if(!f)return "Awaiting orders \u2014 Starfleet Command";
+  if(f.type==="sector")return "Sector Command \u2014 "+(POST_LABELS[f.target]||f.target);
+  if(f.type==="ops")return "Fleet Operations \u2014 Starfleet Command";
+  if(f.type==="project"){const p=FLAG_PROJECTS[f.target];return p?p.name+" (directing)":"Project";}
+  if(f.type==="flag"){const s=ship(f.target);return "Flag aboard "+(s?s.name:"a ship");}
+  return "Awaiting orders";
+}
+function explorationFind(o){
+  const site=pick(EXPLORE_SITES),r=Math.random();
+  if(r<0.35){const c=ri(800,2000);G.credits+=c;
+    log("command","EXPLORATION: "+fullName(o)+"'s survey teams mapped "+site+" — survey rights sold (+"+c+" CR).");}
+  else if(r<0.7){const d=ri(40,100);G.dilithium+=d;
+    log("command","EXPLORATION: "+fullName(o)+"'s survey teams found dilithium traces at "+site+" (+"+d+" DL).");}
+  else{const pr=ri(3,6);gainPres(pr);
+    log("command","EXPLORATION: "+fullName(o)+"'s survey of "+site+" made the Federation News Service (+"+pr+" prestige).");}
+}
+function admiraltyTick(){
+  admirals().forEach(function(o){
+    const f=o.flag;if(!f||f.type!=="project")return;
+    const p=FLAG_PROJECTS[f.target];if(!p)return;
+    G.credits-=p.cost;
+    o.flagProg=(o.flagProg||0)+1;
+    if(f.target==="exploration"&&o.flagProg>=8){o.flagProg=0;explorationFind(o);}
+    if(f.target==="diplomacy"&&o.flagProg>=2){o.flagProg=0;gainPres(2);
+      log("command","DIPLOMACY: "+fullName(o)+"'s outreach pays off \u2014 "+pick(DIPLO_LINES)+". (+2 prestige)");}
+  });
+}
+function uiFlagOrders(oid){
+  const o=officer(oid);if(!isAdmiral(o))return;
+  const cur=o.flag||null;
+  let h='<h2>Flag orders \u2014 '+esc(fullName(o))+'</h2><p class="dim">One standing assignment at a time. '+(cur?('Current: <b>'+esc(flagAssignmentLabel(o))+'</b>.'):'Currently awaiting orders at Starfleet Command.')+'</p>';
+  h+='<h4>Sector Command</h4><p class="dim">Take charge of a sector: ships posted there fight at +20% battle power.</p><div class="btnRow">';
+  FLAG_SECTORS.forEach(function(k){const c=sectorCommander(k);const mine=cur&&cur.type==="sector"&&cur.target===k;
+    h+='<button class="btn small '+(mine?"gold":"")+'"'+(c&&!mine?" disabled":"")+' onclick="uiSetFlag(\''+o.id+'\',\'sector\',\''+k+'\')">'+esc(POST_LABELS[k]||k)+(c&&!mine?" ("+esc(c.name)+")":"")+'</button>';});
+  h+='</div>';
+  const oa=opsAdmiral(),mineOps=cur&&cur.type==="ops";
+  h+='<h4>Fleet Operations</h4><p class="dim">A desk at Starfleet Command: every fleet mission completes 15% faster.</p><div class="btnRow">';
+  h+='<button class="btn small '+(mineOps?"gold":"teal")+'"'+((oa&&!mineOps)?" disabled":"")+' onclick="uiSetFlag(\''+o.id+'\',\'ops\',\'\')\">'+(oa&&!mineOps?("Held by "+esc(oa.name)):(mineOps?"Holding Fleet Operations":"Take Fleet Operations"))+'</button></div>';
+  h+='<h4>Starfleet Projects</h4><p class="dim">Direct a fleet-wide program from HQ. Daily upkeep is charged while active.</p>';
+  Object.keys(FLAG_PROJECTS).forEach(function(k){const p=FLAG_PROJECTS[k];const n=projectAdmirals(k).length;const mine=cur&&cur.type==="project"&&cur.target===k;
+    h+='<div class="row" style="padding:6px;"><div class="grow"><div class="nm">'+esc(p.name)+'</div><div class="sub2">'+esc(p.blurb)+' \u00b7 '+p.cost+' CR/day'+(n&&!mine?' \u00b7 '+n+' directing':"")+'</div></div>'+
+      '<button class="btn small '+(mine?"gold":"teal")+'" onclick="uiSetFlag(\''+o.id+'\',\'project\',\''+k+'\')\">'+(mine?"Directing":"Direct")+'</button></div>';});
+  h+='<h4>Fly the flag</h4><p class="dim">Embark on a ship as flag officer: +15% battle power and a morale lift for her crew.</p><div class="btnRow">';
+  G.ships.filter(s=>s.status==="active"&&!s.mothballed).forEach(function(s){const fa=flagAboardAdmiral(s.id);const mine=cur&&cur.type==="flag"&&cur.target===s.id;
+    h+='<button class="btn small '+(mine?"gold":"")+'"'+((fa&&!mine)?" disabled":"")+' onclick="uiSetFlag(\''+o.id+'\',\'flag\',\''+s.id+'\')\">'+esc(s.name)+'</button>';});
+  h+='</div><div class="btnRow"><button class="btn small ghost" onclick="uiSetFlag(\''+o.id+'\',\'none\',\'\')\">Recall to HQ (awaiting orders)</button><button class="btn small" onclick="officerModal(\''+o.id+'\')">Done</button></div>';
+  openModal(h);
+}
+function uiSetFlag(oid,type,target){
+  const o=officer(oid);if(!isAdmiral(o))return;
+  if(type==="sector"){const c=sectorCommander(target);if(c&&c.id!==o.id){toast("That sector already has a commander.");return;}}
+  if(type==="ops"){const c=opsAdmiral();if(c&&c.id!==o.id){toast("Fleet Operations is already held by "+c.name+".");return;}}
+  if(type==="flag"){const c=flagAboardAdmiral(target);if(c&&c.id!==o.id){toast(c.name+" is already embarked there.");return;}}
+  const s=type==="flag"?ship(target):null;
+  if(type==="flag"&&!s){toast("That ship is gone.");return;}
+  const _ok=o.post.t,_oid=o.post.id,_hadCo=(o.roles||[]).includes("co");
+  o.flag=(type==="none")?null:{type:type,target:target||null};
+  o.flagProg=0;
+  if(s)doTransferCore(o,{t:"ship",id:s.id});else doTransferCore(o,{t:"station",id:"sfcommand"});
+  if(_hadCo&&(_ok==="ship"||_ok==="station")&&(_ok!==o.post.t||_oid!==o.post.id))successionCheck(_ok,_oid);
+  o.morale=clamp(o.morale+5,0,100);
+  const nm=fullName(o);
+  if(type==="sector")log("command","SECTOR COMMAND: "+nm+" has taken command of the "+(POST_LABELS[target]||target)+" sector. Ships posted there fight at +20% battle power.");
+  else if(type==="ops")log("command","FLEET OPERATIONS: "+nm+" now directs fleet operations from Starfleet Command. All missions complete 15% faster.");
+  else if(type==="project")log("command","PROJECT: "+nm+" will direct the "+FLAG_PROJECTS[target].name+" ("+FLAG_PROJECTS[target].cost+" CR/day).");
+  else if(type==="flag")log("personnel","FLAG: "+nm+" has embarked on the "+s.name+" as flag officer. (+15% battle power)");
+  else log("personnel",nm+" recalled to Starfleet Command \u2014 awaiting orders.");
+  awardAccolade(o,"Flag orders: "+flagAssignmentLabel(o));
+  save();uiFlagOrders(oid);render();
 }
 function uiCommission(oid,kind){
   const o=officer(oid);if(!o||o.dead||o.retired||o.stage!=="adult")return;
@@ -9459,6 +9572,8 @@ function shipModal(id){
   const s=ship(id);if(!s)return;const c=shipClass(s),crew=crewOfShip(s.id);const isFl=flagshipId()===s.id;
   const _eff=effShipCO(s),co=_eff.o,xo=_eff.acting?null:shipXO(s.id,co);
   let h='<h2>'+(isFl?'<span class="flagGlyph">'+CMDR_GLYPH+'</span>':"")+esc(s.name)+(s.status!=="museum"?'<span class="flagStar'+(isFl?" on":"")+'" onclick="uiSetFlagship(\''+s.id+'\')" title="'+(isFl?"Stand down flagship":"Set as flagship")+'">'+(isFl?"\u2605":"\u2606")+'</span>':"")+(isFl?' <span class="badge" style="background:var(--gold);color:#0b0b12;font-weight:bold;">FLAGSHIP</span>':"")+'</h2><div class="flavor">'+esc(s.registry)+' · '+c.name+'-class · '+shipStatusLabel(s)+'</div>'+shipArtFor(s,true);
+  const _fa=(typeof flagAboardAdmiral==="function")?flagAboardAdmiral(s.id):null;
+  if(_fa)h+='<div class="kv"><span class="k">Flag officer</span><span class="v">'+esc(fullName(_fa))+' embarked \u00b7 +15% battle power</span></div>';
   if((s.status==="active"||s.status==="damaged")&&!s.mothballed)h+='<div class="shipHero"><button class="btn heroGold" onclick="deckEnter(\''+s.id+'\')">Enter ship</button></div>';
   if(s.transit){
     h+='<div class="kv"><span class="k">Transit</span><span class="v">'+viaName(s.transit.via)+' → '+esc(POST_LABELS[s.transit.dest]||"?")+' ('+s.transit.daysLeft+'d)</span></div>'+
@@ -9566,6 +9681,15 @@ function stationModal(id){
   if(st.type==="sfcommand"&&st.status==="active"){
     h+='<div class="kv"><span class="k">Requisition</span><span class="v">'+(st.reqCd>0?"Ready in "+st.reqCd+"d":"Available now")+'</span></div>';
     h+='<div class="btnRow"><button class="btn small teal" onclick="uiRequestRequisition(\'"+st.id+"\')"'+(st.reqCd>0?" disabled":"")+'>'+(st.reqCd>0?"Requisition pending":"Request requisition (+2,500 CR, +120 DL, +8 prestige)")+'</button></div>';
+    // v2.13 Admiralty board
+    const _adms=(typeof admirals==="function")?admirals():[];
+    h+='<h4>Admiralty ('+_adms.length+')</h4>';
+    if(!_adms.length)h+='<p class="dim">No flag officers yet. Promote an officer to Admiral and they will report here for flag orders.</p>';
+    _adms.forEach(function(a){
+      h+='<div class="row" style="padding:6px;cursor:pointer;" onclick="officerModal(\''+a.id+'\')">'+
+        '<div class="grow"><div class="nm">'+esc(fullName(a))+'</div><div class="sub2">'+esc(flagAssignmentLabel(a))+'</div></div>'+
+        '<button class="btn small gold" onclick="event.stopPropagation();uiFlagOrders(\''+a.id+'\')">Flag orders</button></div>';
+    });
   }
   if(st.type==="gate"&&st.status==="active"){
     const tr=G.ships.filter(s=>s.transit&&s.transit.via==="gate");
@@ -11826,7 +11950,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.12</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.13</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
