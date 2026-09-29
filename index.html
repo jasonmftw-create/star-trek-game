@@ -392,6 +392,19 @@ body{touch-action:pan-y;}
 .btn.big{width:100%;font-size:17px;padding:14px;}
 .btn:disabled{opacity:.35;cursor:not-allowed;}
 .btnRow{display:flex;flex-wrap:wrap;gap:2px;margin-top:6px;}
+.shipHero{margin:10px 0 4px;}
+.shipHero .btn{width:100%;padding:13px;font-size:16px;letter-spacing:2px;}
+.btn.heroGold{background:linear-gradient(180deg,#ffe9a8,#e8b93c);color:#0b0b12;font-weight:800;border:1px solid #a67c1a;}
+.flagStar{cursor:pointer;color:var(--gold);font-size:20px;margin-left:10px;}
+.flagStar:not(.on){opacity:.35;}
+.shipSecLbl{font-size:11px;letter-spacing:2px;opacity:.6;margin:14px 0 6px;text-transform:uppercase;}
+.opsGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.opsGrid .btn{width:100%;margin:0;}
+.statusDrawer{border:1px solid var(--line);border-radius:10px;margin-top:14px;}
+.statusDrawer summary{padding:11px 12px;cursor:pointer;font-size:11px;letter-spacing:2px;text-transform:uppercase;opacity:.65;list-style:none;}
+.statusDrawer summary::-webkit-details-marker{display:none;}
+.statusDrawer .drawerBody{padding:2px 12px 12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.statusDrawer .drawerBody .btn{width:100%;margin:0;}
 select,input[type=text],input[type=search],input[type=number],textarea{background:#000;color:var(--txt);
   border:2px solid var(--orange);border-radius:10px;padding:10px;font-size:17px;width:100%;
   margin:4px 0;font-family:inherit;}
@@ -7052,7 +7065,8 @@ function uiSetFlagship(id){G.flagship=(flagshipId()===id)?null:id;save();shipMod
 function shipModal(id){
   const s=ship(id);if(!s)return;const c=shipClass(s),crew=crewOfShip(s.id);const isFl=flagshipId()===s.id;
   const co=shipCO(s.id),xo=shipXO(s.id,co);
-  let h='<h2>'+(isFl?'<span class="flagGlyph">'+CMDR_GLYPH+'</span>':"")+esc(s.name)+(isFl?' <span class="badge" style="background:var(--gold);color:#0b0b12;font-weight:bold;">FLAGSHIP</span>':"")+'</h2><div class="flavor">'+esc(s.registry)+' · '+c.name+'-class · '+shipStatusLabel(s)+'</div>'+shipArtFor(s,true);
+  let h='<h2>'+(isFl?'<span class="flagGlyph">'+CMDR_GLYPH+'</span>':"")+esc(s.name)+(s.status!=="museum"?'<span class="flagStar'+(isFl?" on":"")+'" onclick="uiSetFlagship(\''+s.id+'\')" title="'+(isFl?"Stand down flagship":"Set as flagship")+'">'+(isFl?"\u2605":"\u2606")+'</span>':"")+(isFl?' <span class="badge" style="background:var(--gold);color:#0b0b12;font-weight:bold;">FLAGSHIP</span>':"")+'</h2><div class="flavor">'+esc(s.registry)+' · '+c.name+'-class · '+shipStatusLabel(s)+'</div>'+shipArtFor(s,true);
+  if((s.status==="active"||s.status==="damaged")&&!s.mothballed)h+='<div class="shipHero"><button class="btn heroGold" onclick="deckEnter(\''+s.id+'\')">Enter ship</button></div>';
   if(s.transit){
     h+='<div class="kv"><span class="k">Transit</span><span class="v">'+viaName(s.transit.via)+' → '+esc(POST_LABELS[s.transit.dest]||"?")+' ('+s.transit.daysLeft+'d)</span></div>'+
        '<div class="prog"><i style="width:'+Math.round((1-s.transit.daysLeft/s.transit.total)*100)+'%"></i></div>'+
@@ -7090,20 +7104,25 @@ function shipModal(id){
       '<div class="grow"><div class="nm">'+esc(sh.name)+'</div>'+
       '<div class="sub2">'+esc(_st.short)+' · '+shuttleStatusLabel(sh)+' · Crew '+_cr.length+'/'+_st.crew+(_pl?' · '+esc(_pl.name):"")+'</div></div></div>';
   });
-  h+='<div class="btnRow"><button class="btn small teal" onclick="uiCrewAssign(\'ship\',\''+s.id+'\')">Assign crew</button><button class="btn small" onclick="uiBuildShuttle(\'ship\',\''+s.id+'\')">Build shuttlecraft</button></div>';
-  h+='<div class="btnRow">'+
-    (((s.status==="active"||s.status==="damaged")&&!s.mothballed)?'<button class="btn small teal" onclick="deckEnter(\''+s.id+'\')">Enter ship</button>':"")+
-    '<button class="btn small peach" onclick="uiShoreLeave(\'ship\',\''+s.id+'\')">Shore leave (500 CR)</button>'+
-    (s.status==="active"&&!s.transit&&!s.mothballed?'<button class="btn small teal" onclick="_mShip=\''+s.id+'\';closeModal();setTab(\'missions\')">Launch mission</button>':"")+
-    (s.status==="active"&&!s.transit&&!s.mothballed&&hasStation("gate")?'<button class="btn small violet" onclick="uiGateTransit(\''+s.id+'\')">Slipstream transit</button>':"")+
-    (s.status==="active"&&!s.transit&&!s.mothballed&&wormDir(s)?'<button class="btn small violet" onclick="uiWormholeTransit(\''+s.id+'\')">Traverse wormhole</button>':"")+
-    ((s.status==="active"||s.status==="damaged")?'<button class="btn small ghost" onclick="uiDecommission(\'ship\',\''+s.id+'\')">Decommission</button>':"")+
-    ((s.status==="active"||s.status==="damaged")?'<button class="btn small ghost" onclick="uiMothballToggle(\'ship\',\''+s.id+'\')">'+(s.mothballed?"Recommission":"Mothball")+'</button>':"")+
-    ((s.status==="active"||s.status==="damaged")?'<button class="btn small violet" onclick="uiMothball(\''+s.id+'\')">Mothball to Museum</button>':"")+
-    (s.status!=="museum"?'<button class="btn small violet" onclick="uiSetFlagship(\''+s.id+'\')">'+(isFl?"Stand down flagship":"Set as flagship")+'</button>':"")+
-    (s.status==="museum"?'<button class="btn small teal" onclick="uiRecommission(\''+s.id+'\')">Return to duty</button>':"")+
-    ((s.mothballed||s.status==="museum")?'<button class="btn small teal" onclick="uiLegacyShip(\''+s.id+'\')">Build legacy ship</button>':"")+
-    '<button class="btn small ghost" onclick="closeModal()">Close</button></div>';
+  h+='<div class="btnRow"><button class="btn small" onclick="uiBuildShuttle(\'ship\',\''+s.id+'\')">Build shuttlecraft</button></div>';
+  const _canFly=s.status==="active"&&!s.transit&&!s.mothballed;
+  let _ops="";
+  if(_canFly)_ops+='<button class="btn small teal" onclick="_mShip=\''+s.id+'\';closeModal();setTab(\'missions\')">Launch mission</button>';
+  _ops+='<button class="btn small teal" onclick="uiCrewAssign(\'ship\',\''+s.id+'\')">Assign crew</button>';
+  _ops+='<button class="btn small peach" onclick="uiShoreLeave(\'ship\',\''+s.id+'\')">Shore leave (500 CR)</button>';
+  if(_canFly&&hasStation("gate"))_ops+='<button class="btn small violet" onclick="uiGateTransit(\''+s.id+'\')">Slipstream transit</button>';
+  if(_canFly&&wormDir(s))_ops+='<button class="btn small violet" onclick="uiWormholeTransit(\''+s.id+'\')">Traverse wormhole</button>';
+  if(_ops)h+='<div class="shipSecLbl">Operations</div><div class="opsGrid">'+_ops+'</div>';
+  let _st="";
+  if(s.status==="active"||s.status==="damaged"){
+    _st+='<button class="btn small ghost" onclick="uiMothballToggle(\'ship\',\''+s.id+'\')">'+(s.mothballed?"Recommission":"Mothball")+'</button>';
+    _st+='<button class="btn small violet" onclick="uiMothball(\''+s.id+'\')">Mothball to Museum</button>';
+    _st+='<button class="btn small danger" onclick="uiDecommission(\'ship\',\''+s.id+'\')">Decommission</button>';
+  }
+  if(s.status==="museum")_st+='<button class="btn small teal" onclick="uiRecommission(\''+s.id+'\')">Return to duty</button>';
+  if(s.mothballed||s.status==="museum")_st+='<button class="btn small teal" onclick="uiLegacyShip(\''+s.id+'\')">Build legacy ship</button>';
+  if(_st)h+='<details class="statusDrawer"><summary>Ship status</summary><div class="drawerBody">'+_st+'</div></details>';
+  h+='<div class="btnRow" style="margin-top:12px;"><button class="btn small ghost" onclick="closeModal()">Close</button></div>';
   openModal(h);
 }
 function stationModal(id){
@@ -8367,7 +8386,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.1</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.2</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
