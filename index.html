@@ -4624,10 +4624,25 @@ const WARN_HINTS={
  "Hull damage":"The ship has taken damage in combat or hazards. Damaged ships fight worse; send her to a shipyard to repair."};
 function renderShips(){
   let rows="",mus="";
-  G.ships.forEach(s=>{
+  const flId=flagshipId();
+  const statusPri=s=>s.status==="mission"?0:(s.status==="damaged"||s.damage>0)?1:s.transit?2:s.status==="active"?3:4;
+  const coRank=s=>{const h=billetHolderAt("ship",s.id,"co");return h?h.rank:-1;};
+  const list=G.ships.filter(s=>{
     const isMus=s.status==="museum";
-    if(shipQuad==="museum"){if(!isMus)return;}
-    else{if(isMus)return;if(shipQuad!=="all"&&postQuadOf(s)!==shipQuad)return;}
+    if(shipQuad==="museum")return isMus;
+    if(isMus)return false;
+    return shipQuad==="all"||postQuadOf(s)===shipQuad;
+  }).sort((a,b)=>{
+    const fa=a.id===flId?0:1,fb=b.id===flId?0:1;
+    if(fa!==fb)return fa-fb;
+    const ra=coRank(a),rb=coRank(b);
+    if(ra!==rb)return rb-ra;
+    const sa=statusPri(a),sb=statusPri(b);
+    if(sa!==sb)return sa-sb;
+    return a.name<b.name?-1:a.name>b.name?1:0;
+  });
+  list.forEach(s=>{
+    const isMus=s.status==="museum";
     if(isMus){mus+=museumCard(s);return;}
     const c=shipClass(s),crew=crewOfShip(s.id),warns=shipWarnings(s),om=s.status==="mission";const fl=flagshipId()===s.id;
     rows+='<div class="row'+(om?' omRow':'')+'" onclick="shipModal(\''+s.id+'\')" style="cursor:pointer;">'+shipPic(s.cls)+
@@ -6928,7 +6943,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.95</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.96</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
