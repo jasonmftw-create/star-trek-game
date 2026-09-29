@@ -322,6 +322,21 @@ body{touch-action:pan-y;}
 .bilCell .bn{font-size:13px;font-weight:700;color:var(--peach);}
 .bilCell .bh{font-size:11px;color:#8b93a7;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .bilCell.vac .bh{color:#5a6b7d;font-style:italic;}
+/* ===== Incoming Priority Message bar (Command tab) ===== */
+.prioBar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;
+  background:#1c1002;border:2px solid var(--orange);color:var(--peach);
+  font-weight:800;letter-spacing:1.5px;font-size:13px;cursor:pointer;margin-bottom:10px;}
+.prioBar.open{border-radius:12px 12px 0 0;margin-bottom:0;}
+.prioBar .prioDot{width:10px;height:10px;border-radius:50%;background:var(--orange);flex:none;}
+.prioBar.new{animation:prioFlash 1.6s ease-in-out infinite;}
+@keyframes prioFlash{0%,100%{box-shadow:0 0 0 rgba(255,170,0,0);}50%{box-shadow:0 0 16px rgba(255,170,0,.9);}}
+.prioBar .prioCount{letter-spacing:.5px;opacity:.85;font-size:12px;}
+.prioBar .prioChev{margin-left:auto;font-size:16px;}
+.prioPanel{display:none;border:2px solid var(--orange);border-top:none;border-radius:0 0 12px 12px;
+  background:var(--panel2);padding:2px 10px 10px;margin-bottom:10px;}
+.prioPanel.open{display:block;}
+.prioCat{font-size:11px;letter-spacing:2px;color:var(--dim);margin:12px 0 2px;text-transform:uppercase;}
+.prioCat:first-child{margin-top:8px;}
 .offGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 14px;}
 .offCell{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--line);border-radius:10px;cursor:pointer;background:#101828;min-width:0;}
 .offCell:active{border-color:var(--orange);}
@@ -4402,18 +4417,71 @@ function cmdrInstitutions(){
   h+=holoCard();
   return h;
 }
-function renderNeedsAttention(){
+let notifOpen=false;
+function notifList(){
+  const L=[];
+  const aud=G.officers.filter(o=>o.status==="active"&&!o.dead&&!o.retired&&o.stage==="adult"&&o.request&&G.day>=(o.request.deferUntil||0));
+  aud.forEach(o=>L.push({key:"aud:"+o.id,cat:"aud",o:o}));
   const idle=G.ships.filter(s=>s.status==="active"&&!s.missionId&&!s.transit&&!s.mothballed);
+  if(idle.length)L.push({key:"idle",cat:"idle",n:idle.length});
   const fin=G.builds.filter(b=>b.daysLeft<=5).length+G.stations.filter(st=>st.status==="construction"&&st.daysLeft<=5).length;
+  if(fin)L.push({key:"builds",cat:"builds",n:fin});
   const req=G.stations.some(st=>st.type==="sfcommand"&&st.status==="active"&&(st.reqCd||0)<=0);
+  if(req)L.push({key:"req",cat:"req"});
   const low=G.officers.filter(o=>o.status==="active"&&!o.dead&&!o.retired&&o.stage==="adult"&&(o.loyal==null?70:o.loyal)<30);
-  let rows="";
-  if(idle.length)rows+='<div class="row" style="cursor:pointer" onclick="setTab(\'ships\')"><div class="grow"><div class="nm">'+idle.length+' idle ship'+(idle.length>1?"s":"")+'</div><div class="sub2">Ready for orders — tap to view</div></div></div>';
-  if(fin)rows+='<div class="row" style="cursor:pointer" onclick="setTab(\'command\')"><div class="grow"><div class="nm">'+fin+' build'+(fin>1?"s":"")+' finishing within 5 days</div><div class="sub2">Tap to review construction</div></div></div>';
-  if(req)rows+='<div class="row" style="cursor:pointer" onclick="uiClaimRequisition()"><div class="grow"><div class="nm">Requisition ready</div><div class="sub2">Starfleet Command — tap to claim +2,500 CR, +120 DL, +8 prestige</div></div></div>';
-  if(low.length)rows+='<div class="row" style="cursor:pointer" onclick="setTab(\'personnel\')"><div class="grow"><div class="nm">'+low.length+' officer'+(low.length>1?"s":"")+' with low loyalty</div><div class="sub2">Tap to hold audiences and raise morale</div></div></div>';
-  if(!rows)return "";
-  return '<div class="card"><h3>Needs Attention</h3>'+rows+'</div>';
+  if(low.length)L.push({key:"loyal",cat:"loyal",n:low.length});
+  return {list:L,aud:aud,idle:idle,fin:fin,low:low};
+}
+function uiToggleNotif(){
+  notifOpen=!notifOpen;
+  if(notifOpen){
+    const keys={};notifList().list.forEach(n=>{keys[n.key]=1;});
+    G.notifSeen=keys;save();
+  }
+  render();
+}
+function renderNeedsAttention(){
+  const nl=notifList(),list=nl.list;
+  if(!list.length)return "";
+  G.notifSeen=G.notifSeen||{};
+  const fresh=list.some(n=>!G.notifSeen[n.key]);
+  let h='<div class="prioBar'+(fresh?" new":"")+(notifOpen?" open":"")+'" onclick="uiToggleNotif()">'+
+    '<span class="prioDot"></span>INCOMING PRIORITY MESSAGE'+
+    '<span class="prioCount"> · '+list.length+(fresh?" NEW":"")+'</span>'+
+    '<span class="prioChev">'+(notifOpen?"▴":"▾")+'</span></div>';
+  h+='<div class="prioPanel'+(notifOpen?" open":"")+'">';
+  if(nl.aud.length){
+    h+='<div class="prioCat">Audience requests</div>';
+    nl.aud.forEach(o=>{
+      h+='<div class="row">'+faceImg(o,"pfaceSm")+'<div class="grow"><div class="nm">'+nameHtml(o)+'</div>'+
+        '<div class="sub2">Requests '+esc(reqShort(o.request))+'</div></div>'+
+        '<button class="btn small teal" onclick="event.stopPropagation();uiRequestMeeting(\''+o.id+'\')">Meet</button></div>';
+    });
+  }
+  if(nl.idle.length){
+    h+='<div class="prioCat">Fleet</div><div class="row" style="cursor:pointer" onclick="setTab(\'ships\')">'+
+      '<div class="grow"><div class="nm">'+nl.idle.length+' idle ship'+(nl.idle.length>1?"s":"")+'</div>'+
+      '<div class="sub2">Ready for orders — tap to view</div></div></div>';
+  }
+  if(nl.fin){
+    h+='<div class="prioCat">Construction</div><div class="row" style="cursor:pointer" onclick="setTab(\'command\')">'+
+      '<div class="grow"><div class="nm">'+nl.fin+' build'+(nl.fin>1?"s":"")+' finishing within 5 days</div>'+
+      '<div class="sub2">Tap to review construction</div></div></div>';
+  }
+  const sc=G.stations.find(st=>st.type==="sfcommand"&&st.status==="active");
+  if(sc&&list.some(n=>n.cat==="req")){
+    h+='<div class="prioCat">Starfleet Command</div><div class="row">'+
+      '<div class="grow"><div class="nm">Requisition ready</div>'+
+      '<div class="sub2">+2,500 CR, +120 DL, +8 prestige</div></div>'+
+      '<button class="btn small teal" onclick="event.stopPropagation();uiClaimRequisition()">Claim</button></div>';
+  }
+  if(nl.low.length){
+    h+='<div class="prioCat">Morale</div><div class="row" style="cursor:pointer" onclick="setTab(\'personnel\')">'+
+      '<div class="grow"><div class="nm">'+nl.low.length+' officer'+(nl.low.length>1?"s":"")+' with low loyalty</div>'+
+      '<div class="sub2">Tap to hold audiences and raise morale</div></div></div>';
+  }
+  h+='</div>';
+  return h;
 }
 function renderCommand(){
   const d=dailyIncome();
@@ -6744,7 +6812,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.76</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.77</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
