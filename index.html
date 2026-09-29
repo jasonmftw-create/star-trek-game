@@ -4746,8 +4746,17 @@ function renderSettings(){
    never leaves the device except to Google's API). Per-officer history in
    o.aiChat (additive, capped at 20). No key or any failure -> graceful
    fallback line, never a crash. */
-const AI_MODEL_DEFAULT="gemini-2.5-flash-lite";
-function aiModel(){return (G.aiModel||AI_MODEL_DEFAULT).trim()||AI_MODEL_DEFAULT;}
+const AI_MODELS=["gemini-flash-lite-latest","gemini-flash-latest","gemini-3.5-flash-lite","gemini-3.5-flash"];
+function aiModelList(){const m=String(G.aiModel||"").trim();const l=m?[m]:[];AI_MODELS.forEach(function(x){if(l.indexOf(x)<0)l.push(x);});return l;}
+async function aiGenReq(model,key,body){
+  const url="https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent";
+  const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify(body)});
+  if(!res.ok)throw new Error("HTTP "+res.status);
+  const j=await res.json();
+  let t="";try{t=j.candidates[0].content.parts.map(function(p){return p.text||"";}).join("").trim();}catch(e){}
+  if(!t)throw new Error("empty reply");
+  return t;
+}
 function aiHasKey(){return !!(G.aiKey&&String(G.aiKey).trim());}
 function aiSetupHtml(){
   const has=aiHasKey();
@@ -4761,16 +4770,17 @@ function aiSetupHtml(){
 }
 function uiSaveAiKey(){const el=document.getElementById("aiKeyIn");const v=el?el.value.trim():"";G.aiKey=v;save();render();toast(v?"AI key saved — go talk to your crew.":"Key cleared.");}
 function uiClearAiKey(){G.aiKey="";save();render();}
-function aiErrMsg(e){const m=String((e&&e.message)||e||"");if(m==="no-key")return "no key saved";if(/401|403/.test(m))return "key rejected — double-check the paste";if(/429/.test(m))return "rate limit — wait a minute, then retry";if(/Failed to fetch|NetworkError|Load failed/.test(m))return "network error — are you online?";return m.slice(0,110);}
+function aiErrMsg(e){const m=String((e&&e.message)||e||"");if(m==="no-key")return "no key saved";if(/401|403/.test(m))return "key rejected — double-check the paste";if(/404/.test(m))return "model not available for this key";if(/429/.test(m))return "rate limit — wait a minute, then retry";if(/Failed to fetch|NetworkError|Load failed/.test(m))return "network error — are you online?";return m.slice(0,110);}
 async function aiRawProbe(){
   const key=String(G.aiKey||"").trim();if(!key)throw new Error("no-key");
-  const url="https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(aiModel())+":generateContent";
-  const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify({contents:[{role:"user",parts:[{text:"Reply with exactly this word: OK"}]}],generationConfig:{maxOutputTokens:8,temperature:0}})});
-  if(!res.ok)throw new Error("HTTP "+res.status);
-  const j=await res.json();
-  let t="";try{t=j.candidates[0].content.parts.map(function(p){return p.text||"";}).join("").trim();}catch(e){}
-  if(!t)throw new Error("empty reply");
-  return t;
+  const models=aiModelList();let last=null;
+  for(let i=0;i<models.length;i++){
+    try{const t=await aiGenReq(models[i],key,{contents:[{role:"user",parts:[{text:"Reply with exactly this word: OK"}]}],generationConfig:{maxOutputTokens:8,temperature:0}});
+      if(models[i]!==G.aiModel){G.aiModel=models[i];save();}
+      return t;
+    }catch(e){last=e;if(!/HTTP 404/.test(String((e&&e.message)||e)))throw e;}
+  }
+  throw last||new Error("HTTP 404");
 }
 async function uiTestAiKey(){
   const st=document.getElementById("aiKeyStatus");
@@ -4804,15 +4814,17 @@ function aiSystemFor(o){
 }
 async function aiChatCall(o,userText){
   const key=String(G.aiKey||"").trim();if(!key)throw new Error("no-key");
-  const url="https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(aiModel())+":generateContent";
   const hist=aiChatHist(o).slice(-8).map(function(m){return {role:m.r==="u"?"user":"model",parts:[{text:String(m.t).slice(0,600)}]};});
   hist.push({role:"user",parts:[{text:String(userText).slice(0,600)}]});
-  const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify({system_instruction:{parts:[{text:aiSystemFor(o)}]},contents:hist,generationConfig:{maxOutputTokens:220,temperature:0.9}})});
-  if(!res.ok)throw new Error("HTTP "+res.status);
-  const j=await res.json();
-  let t="";try{t=j.candidates[0].content.parts.map(function(p){return p.text||"";}).join("").trim();}catch(e){}
-  if(!t)throw new Error("empty reply");
-  return t;
+  const body={system_instruction:{parts:[{text:aiSystemFor(o)}]},contents:hist,generationConfig:{maxOutputTokens:220,temperature:0.9}};
+  const models=aiModelList();let last=null;
+  for(let i=0;i<models.length;i++){
+    try{const t=await aiGenReq(models[i],key,body);
+      if(models[i]!==G.aiModel){G.aiModel=models[i];save();}
+      return t;
+    }catch(e){last=e;if(!/HTTP 404/.test(String((e&&e.message)||e)))throw e;}
+  }
+  throw last||new Error("HTTP 404");
 }
 function aiFallbackLine(){
   const cn=(G.commander&&G.commander.name)||"Commander";
@@ -11270,7 +11282,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.7.1</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.7.2</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
