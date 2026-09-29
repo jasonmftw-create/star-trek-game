@@ -345,6 +345,8 @@ body{touch-action:pan-y;}
 .billetBadge svg{width:14px;height:14px;color:var(--dc,#9a9ab0);}
 .billetBadgeR{width:42px;height:42px;border-radius:50%;border:2px solid var(--dc,#9a9ab0);background:#0d0d16;display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
 .billetBadgeR svg{width:24px;height:24px;color:var(--dc,#9a9ab0);}
+.cmdrPips{display:flex;gap:5px;margin-top:7px;align-items:center;}
+.cmdrPips i{width:11px;height:11px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffe9a8,#ffd76a 60%,#c9962e);box-shadow:0 0 5px rgba(255,215,106,.55);}
 .seniorRow{border:1px solid rgba(255,255,255,.14)!important;border-left:4px solid var(--dc,#9a9ab0)!important;border-radius:10px;background:rgba(255,255,255,.035);}
 .offGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 14px;}
 .offCell{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--line);border-radius:10px;cursor:pointer;background:#101828;min-width:0;}
@@ -4536,9 +4538,11 @@ function renderCommand(){
     const job=G.builds.find(b=>b.yardId===y.id);
     const rep=G.ships.find(s=>s.status==="repair"&&s.yardId===y.id);
     return '<div class="kv"><span class="k">'+esc(y.name)+'</span><span class="v">'+(job?esc(job.name):rep?esc(rep.name+" (repair)"):"Idle")+'</span></div>';}).join("");
-  const cmdrCard='<div class="card"><div class="pfaceWrap" style="margin-bottom:0;cursor:pointer;" onclick="setTab(\'commander\')">'+cmdrImg("pface")+
-    '<div style="flex:1;min-width:0;"><div class="nm">'+(G.commander.name?esc(G.commander.name):"Unnamed Commander")+'</div>'+
-    '<div class="sub2">'+PLAYER_TITLES[G.playerRank][1]+' · '+esc(cmdrSpeciesLabel(G.commander.species))+' · <span style="color:var(--orange)">Customize</span></div></div></div></div>';
+  const cmdrCard='<div class="card"><div class="row" style="cursor:pointer;border-bottom:none;" onclick="setTab(\'commander\')">'+cmdrImg("pfaceBig")+
+    '<div class="grow"><div class="nm">'+(G.commander.name?esc(G.commander.name):"Unnamed Commander")+'</div>'+
+    '<div class="sub2">'+PLAYER_TITLES[G.playerRank][1]+' · '+esc(cmdrSpeciesLabel(G.commander.species))+' · <span style="color:var(--orange)">Customize</span></div>'+
+    '<div class="cmdrPips">'+Array.from({length:G.playerRank+1},()=>'<i></i>').join("")+'</div></div>'+
+    '<span class="billetBadgeR" style="--dc:'+divColor("Command")+'">'+CMDR_GLYPH+'</span></div></div>';
   const sectorCard='<div class="card"><h3>Sector Status</h3>'+
     '<div class="kv"><span class="k">Stardate</span><span class="v">'+sdStr(G.stardate)+' ('+earthDate(G.stardate)+')</span></div>'+
     '<div class="kv"><span class="k">Days in command</span><span class="v">'+G.day+'</span></div>'+
@@ -5741,6 +5745,7 @@ const BILLET_GLYPHS={
  chef:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3c-2.4 0-4.3 1.7-4.6 4C5.4 7.4 4 9 4 11c0 2.2 1.8 4 4 4h8c2.2 0 4-1.8 4-4 0-2-1.4-3.6-3.4-4C16.3 4.7 14.4 3 12 3z"/><rect x="7" y="16.5" width="10" height="4" rx="1.5"/></svg>',
  bart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-8 9z"/><path d="M12 14v6M8.5 21h7"/></svg>'
 };
+const CMDR_GLYPH='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l7.5 19-7.5-4.8L4.5 21z"/><circle cx="12" cy="10" r="2.4" fill="#0d0d16"/></svg>';
 function billetGlyph(bid){return BILLET_GLYPHS[bid]||ICONS.crew;}
 function primaryBillet(o){const r=o.roles||[];for(const b of BILLETS){if(r.indexOf(b[0])>=0)return b[0];}return null;}
 function isSeniorStaff(o){return (o.roles||[]).some(r=>SENIOR_BILLETS.indexOf(r)>=0);}
@@ -6889,7 +6894,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.85</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.86</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
