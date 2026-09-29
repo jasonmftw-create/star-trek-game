@@ -4101,7 +4101,7 @@ function meetIntel(o){
     [{t:"Interesting. Go on.",fn:"meetIntelAfter()"}]);
 }
 function meetIntelAfter(){
-  const o=officer(MEET.officer);
+  const o=MEET.o;
   renderMeeting((meetVoice(o,"opener")||pick(MEET_OPENERS)).replace(/\{n\}/g,o?esc(o.name.split(" ").pop()):"officer"),
     [{t:"How are you settling in?",fn:"meetChoose('personal')"},
      {t:"How are your duties going?",fn:"meetChoose('duty')"},
@@ -4431,6 +4431,7 @@ function cmdrInstitutions(){
 }
 let notifOpen=false,notifFilter="all";
 const NOTIF_CATS=[["aud","Audience"],["idle","Fleet"],["builds","Construction"],["req","Command"],["loyal","Morale"]];
+function recentlyMet(o){const m=(G.meetings||{})[o.id];return m!==undefined&&G.stardate-m<MEET_CD;}
 function notifList(){
   const L=[];
   const aud=G.officers.filter(o=>o.status==="active"&&!o.dead&&!o.retired&&o.stage==="adult"&&o.request&&G.day>=(o.request.deferUntil||0));
@@ -4441,7 +4442,7 @@ function notifList(){
   if(fin)L.push({key:"builds",cat:"builds",n:fin});
   const req=G.stations.some(st=>st.type==="sfcommand"&&st.status==="active"&&(st.reqCd||0)<=0);
   if(req)L.push({key:"req",cat:"req"});
-  const low=G.officers.filter(o=>o.status==="active"&&!o.dead&&!o.retired&&o.stage==="adult"&&(o.loyal==null?70:o.loyal)<30);
+  const low=G.officers.filter(o=>o.status==="active"&&!o.dead&&!o.retired&&o.stage==="adult"&&(o.loyal==null?70:o.loyal)<30&&!recentlyMet(o));
   if(low.length)L.push({key:"loyal",cat:"loyal",n:low.length});
   return {list:L,aud:aud,idle:idle,fin:fin,low:low};
 }
@@ -4456,7 +4457,7 @@ function uiToggleNotif(){
 }
 function uiNotifFilter(f){notifFilter=f;render();}
 function uiNotifLowLoyalty(){
-  const low=G.officers.filter(o=>o.status==="active"&&!o.dead&&!o.retired&&o.stage==="adult"&&(o.loyal==null?70:o.loyal)<30)
+  const low=G.officers.filter(o=>o.status==="active"&&!o.dead&&!o.retired&&o.stage==="adult"&&(o.loyal==null?70:o.loyal)<30&&!recentlyMet(o))
     .sort((a,b)=>(a.loyal||0)-(b.loyal||0));
   let h='<h2>Low loyalty</h2><div class="flavor">'+low.length+' officer'+(low.length>1?"s":"")+' losing faith — meet with them to turn it around</div>';
   low.forEach(o=>{
@@ -6888,7 +6889,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.84</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.85</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
