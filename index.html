@@ -1548,12 +1548,12 @@ function freeYards(){const yards=activeStations("shipyard");
   G.ships.forEach(s=>{if(s.status==="repair"&&s.yardId)used.add(s.yardId);});
   return yards.filter(y=>!used.has(y.id));}
 function uiStartRepair(sid){
-  const s=ship(sid);if(!s||s.status!=="damaged")return;
+  const s=ship(sid);if(!s||!(s.damage>0)||s.status==="repair")return;
   const y=freeYards();
   if(!y.length){
     const busy=activeStations("shipyard").map(w=>{const b=G.builds.find(x=>x.yardId===w.id);const r=G.ships.find(x=>x.status==="repair"&&x.yardId===w.id);
       return w.name+" ("+(b?"building "+b.name+", "+b.daysLeft+"d left":r?"repairing "+r.name+", "+r.daysLeft+"d left":"busy")+")";}).join("; ");
-    toast("No shipyard free"+(busy?" — "+busy:"")+". Repairs will start automatically when a yard frees up.");return;
+    toast("No shipyard free"+(busy?" — "+busy:"")+(s.status==="damaged"?". Repairs will start automatically when a yard frees up.":". Try again when a yard frees up."));return;
   }
   s.status="repair";s.yardId=y[0].id;s.daysLeft=Math.ceil(s.damage/12);
   log("build",s.name+" has entered "+y[0].name+" for repairs ("+s.daysLeft+" days).");
@@ -4433,6 +4433,7 @@ function shipStatusLabel(s){
   if(s.status==="damaged")return "Damaged ("+Math.round(s.damage)+"%)";
   if(s.status==="repair")return "Repairing — "+s.daysLeft+"d";
   if(s.status==="museum")return "Fleet Museum";
+  if((s.damage||0)>0&&s.status==="active")return "Active — "+Math.round(s.damage)+"% hull damage";
   return "Active";
 }
 function shipWarnings(s){
@@ -6079,6 +6080,7 @@ function shipModal(id){
   h+='<h4>Specifications</h4>'+bar("HULL",c.hull,140)+bar("TAC",c.tac,130)+bar("SCI",c.sci,110)+bar("WARP",c.speed*10,100);
   if(s.damage>0)h+='<div class="kv" data-hint="Hull damage from combat or hazards. At 40% or more the ship is flagged Damaged and cannot fly missions. Repairs happen at a shipyard: tap Begin repairs to start them now, or they begin automatically when a yard frees up."><span class="k">Hull damage</span><span class="v" style="color:var(--red)">'+Math.round(s.damage)+'%</span></div>';
   if(s.status==="damaged")h+='<div class="btnRow"><button class="btn small teal" onclick="uiStartRepair(\''+s.id+'\')">Begin repairs</button></div><p class="dim">Starts repairs at a free shipyard now — otherwise they begin automatically when a yard frees up.</p>';
+  else if((s.damage||0)>0&&(s.status==="active"))h+='<div class="btnRow"><button class="btn small teal" onclick="uiStartRepair(\''+s.id+'\')">Begin repairs</button></div><p class="dim">Patch up minor hull damage at a free shipyard now.</p>';
   if(s.status==="repair"){const _ry=station(s.yardId),_rtot=Math.max(1,Math.ceil(s.damage/12));
     h+='<div class="kv"><span class="k">In repair</span><span class="v">'+esc(_ry?_ry.name:"Shipyard")+' — '+s.daysLeft+'d left</span></div><div class="prog"><i style="width:'+Math.round((1-s.daysLeft/_rtot)*100)+'%"></i></div>';}
   if(c.special)h+='<p class="dim">'+esc(c.special)+'</p>';
@@ -6437,7 +6439,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.59</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.60</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
