@@ -7682,7 +7682,7 @@ function uiCancelBuildGo(kind,id){
   log("build","Construction cancelled: "+name+". Recovered half the materials.");
   closeModal();save();render();toast("Construction cancelled — half the materials recovered.");
 }
-function destroyShip(s,cause,allHands){
+function destroyShip(s,cause,allHands,soulsOv){
   sfx("explosion");
   const crew=crewOfShip(s.id);
   crew.forEach(o=>{o.shuttle=null;if(allHands||Math.random()<0.7)killOfficer(o,(allHands?"Went down with "+s.name+" — ":"Lost with "+s.name+" — ")+cause);else{o.post={t:"pool"};o.roles=[];o.health="injured";o.healDays=ri(10,30);}});
@@ -7690,9 +7690,9 @@ function destroyShip(s,cause,allHands){
   G.ships=G.ships.filter(x=>x.id!==s.id);
   G.memorial.unshift({kind:"ship",name:s.name,sub:SHIP_CLASSES[s.cls].name+"-class · "+s.registry,lost:"destroyed",cause:cause,sd:G.stardate});
   G.ledger.lost++;
-  const _souls=(typeof shipCrewN==="function")?shipCrewN(s):0;
-  log("combat","† "+s.name+" ("+s.registry+") destroyed — "+cause+". "+(_souls>0?_souls+" souls lost with her. ":"")+"Her name is added to the Memorial.");
-  capLogAuto("Ship lost","† "+s.name+" ("+s.registry+") destroyed — "+cause+(_souls>0?" ("+_souls+" souls lost)":"")+".");
+  const _souls=(typeof soulsOv==="number")?soulsOv:((typeof shipCrewN==="function")?shipCrewN(s):0);
+  log("combat","† "+s.name+" ("+s.registry+") destroyed — "+cause+". "+(_souls>0?_souls+(_souls===1?" soul":" souls")+" lost with her. ":"")+"Her name is added to the Memorial.");
+  capLogAuto("Ship lost","† "+s.name+" ("+s.registry+") destroyed — "+cause+(_souls>0?" ("+_souls+(_souls===1?" soul":" souls")+" lost)":"")+".");
 }
 function uiDecommission(kind,id){
   const tgt=kind==="ship"?ship(id):station(id);
@@ -9263,14 +9263,18 @@ function uiMothballToggleGo(kind,id){
 const CO_ORDER_LINES={
   abandonShip:["Aye, Commander. All hands, abandon ship — I say again, all hands, abandon ship.","Abandon ship... aye. We will get every soul off. She was a good ship.","Understood. Escape pods away on my mark. May history remember her kindly."],
   scuttleShip:["Destruct sequence confirmed. It has been an honor serving with you, Commander.","Aye... setting the charges myself. She deserved better than this.","Self-destruct initiated. All hands have been warned. Goodbye, Commander."],
+  scuttleShipDown:["I will see her off myself, Commander. Get the crew clear — that is an order.","The captain goes down with the ship. It has been an honor serving with you.","Aye. I will remain aboard to the end. Make sure the crew gets home."],
   abandonStation:["Aye, Commander. All personnel, evacuate the station. We will leave the lights on.","Evacuation order confirmed. Every soul off before the last docking clamp releases.","Understood. It hurts to leave her empty, but the order is given."],
-  scuttleStation:["Charges set throughout the station. Sixty seconds. It has been an honor, Commander.","Aye... arming the self-destruct. Tell Starfleet we held to the last.","Destruct sequence initiated. All personnel clear. Goodbye, Commander."]
+  scuttleStation:["Charges set throughout the station. Sixty seconds. It has been an honor, Commander.","Aye... arming the self-destruct. Tell Starfleet we held to the last.","Destruct sequence initiated. All personnel clear. Goodbye, Commander."],
+  scuttleStationDown:["I will see her off myself, Commander. Get the crew clear — that is an order.","The captain goes down with the station. It has been an honor.","Aye. I will remain aboard to the end. Make sure everyone gets home."]
 };
 const CO_ORDER_DESC={
   abandonShip:"abandon ship — evacuate all hands immediately",
   scuttleShip:"initiate the self-destruct sequence",
+  scuttleShipDown:"remain aboard the ship for the self-destruct sequence",
   abandonStation:"abandon the station — evacuate all personnel",
-  scuttleStation:"initiate the station self-destruct sequence"
+  scuttleStation:"initiate the station self-destruct sequence",
+  scuttleStationDown:"remain aboard the station for the self-destruct sequence"
 };
 async function coOrderRespond(co,vessel,order){
   const canned=pick(CO_ORDER_LINES[order]||CO_ORDER_LINES.abandonShip);
@@ -9294,6 +9298,29 @@ function coOrderShow(co,vessel,order){
     const el=document.getElementById("coRespLine");
     if(el)el.innerHTML="&ldquo;"+esc(line)+"&rdquo;";
   });
+}
+/* v2.12: self-destruct evacuates everyone first; only the CO may stay aboard. */
+function evacuateShipCrew(s,exceptId){
+  const dst=s.dock?station(s.dock):null;
+  const canBerth=dst&&dst.status==="active"&&!dst.mothballed;
+  const souls=shipCrewN(s);
+  crewOfShip(s.id).forEach(o=>{
+    if(exceptId&&o.id===exceptId)return;
+    o.roles=[];o.shuttle=null;o.morale=clamp(o.morale-5,0,100);
+    o.post=canBerth?{t:"station",id:dst.id}:{t:"pool"};
+  });
+  if(canBerth)dst.crew=Math.min(stCompMax(dst),stCrewN(dst)+souls);
+  s.crew=0;s.npcs=[];
+  return{souls:souls,berthed:canBerth?dst.name:null};
+}
+function evacuateStationCrew(st,exceptId){
+  const souls=stCrewN(st);
+  crewOfStation(st.id).forEach(o=>{
+    if(exceptId&&o.id===exceptId)return;
+    o.roles=[];o.shuttle=null;o.morale=clamp(o.morale-5,0,100);o.post={t:"pool"};
+  });
+  st.crew=0;st.npcs=[];
+  return souls;
 }
 function finalOrdersShipHTML(s,co){
   let h="";
@@ -9321,15 +9348,10 @@ function uiAbandonShip(id){
 async function uiAbandonShipGo(id){
   const s=ship(id);if(!s||s.abandoned)return;
   const nm=s.name,co=effShipCO(s).o;
-  const dst=s.dock?station(s.dock):null;
-  const canBerth=dst&&dst.status==="active"&&!dst.mothballed;
-  const souls=shipCrewN(s);
   closeModal();
-  crewOfShip(s.id).forEach(o=>{o.roles=[];o.shuttle=null;o.morale=clamp(o.morale-5,0,100);
-    o.post=canBerth?{t:"station",id:dst.id}:{t:"pool"};});
-  if(canBerth)dst.crew=Math.min(stCompMax(dst),stCrewN(dst)+souls);
-  s.crew=0;s.npcs=[];s.mothballed=true;s.abandoned=true;s.actingCO=null;
-  log("command",nm+" has been abandoned on your orders. "+(canBerth?"Her crew was evacuated to "+dst.name+".":"Her crew took to escape pods and were recovered by Starfleet.")+" She drifts, dark and empty.");
+  const ev=evacuateShipCrew(s);
+  s.mothballed=true;s.abandoned=true;s.actingCO=null;
+  log("command",nm+" has been abandoned on your orders. "+(ev.berthed?"Her crew was evacuated to "+ev.berthed+".":"Her crew took to escape pods and were recovered by Starfleet.")+" She drifts, dark and empty.");
   save();render();
   coOrderShow(co,nm,"abandonShip");
 }
@@ -9342,20 +9364,26 @@ function uiReclaimShip(id){
 function uiScuttleShip(id){
   const s=ship(id);if(!s||s.abandoned)return;
   const souls=shipCrewN(s),nOff=crewOfShip(s.id).length,co=effShipCO(s).o;
-  openModal('<h2 style="color:var(--red)">Self-destruct '+esc(s.name)+'?</h2><p class="dim">This is irreversible. The ship will be destroyed'+
-    (nOff?" with "+nOff+" officer"+(nOff>1?"s":"")+" aboard":"")+(souls?" — "+fmt(souls)+" souls will be lost":"")+"."+
+  const dst=s.dock?station(s.dock):null;
+  const canBerth=dst&&dst.status==="active"&&!dst.mothballed;
+  openModal('<h2 style="color:var(--red)">Self-destruct '+esc(s.name)+'?</h2>'+
+    '<p class="dim">Standard protocol: all hands will evacuate first'+(canBerth?" to "+esc(dst.name):" to escape pods")+
+    (souls?" — "+fmt(souls)+" souls will be brought off":"")+'. Then the ship is destroyed. This is irreversible.'+
     (co?" "+esc(fullName(co))+" will carry out the order.":"")+'</p>'+
-    '<div class="btnRow"><button class="btn" onclick="closeModal()">Cancel</button>'+
-    '<button class="btn danger" onclick="uiScuttleShipGo(\''+id+'\')">Initiate self-destruct</button></div>');
+    '<div class="btnRow"><button class="btn" onclick="closeModal()">Cancel</button></div>'+
+    '<div class="btnRow"><button class="btn danger" onclick="uiScuttleShipGo(\''+id+'\',false)">Evacuate all, then destroy</button></div>'+
+    (co?'<div class="btnRow"><button class="btn danger" onclick="uiScuttleShipGo(\''+id+'\',true)">'+esc(co.name)+' goes down with the ship</button></div>':""));
 }
-async function uiScuttleShipGo(id){
+async function uiScuttleShipGo(id,coStays){
   const s=ship(id);if(!s||s.abandoned)return;
   const nm=s.name,co=effShipCO(s).o;
   closeModal();
-  destroyShip(s,"self-destruct ordered by command",true);
+  evacuateShipCrew(s,(coStays&&co)?co.id:null);
+  if(coStays&&co)killOfficer(co,"Went down with "+nm+" — remained aboard for the self-destruct");
+  destroyShip(s,"self-destruct ordered by command",false,(coStays&&co)?1:0);
   if(typeof DECK!=="undefined"&&DECK&&DECK.shipId===id&&typeof deckExit==="function")deckExit();
   save();render();
-  coOrderShow(co,nm,"scuttleShip");
+  coOrderShow(co,nm,coStays?"scuttleShipDown":"scuttleShip");
 }
 function finalOrdersStationHTML(st,co){
   if(st.type==="academy"||st.type==="sfcommand")return"";
@@ -9392,24 +9420,28 @@ async function uiAbandonStationGo(id){
 function uiScuttleStation(id){
   const st=station(id);if(!st||st.abandoned)return;
   const souls=stCrewN(st),nOff=crewOfStation(st.id).length,co=effStationCO(st).o;
-  openModal('<h2 style="color:var(--red)">Self-destruct '+esc(st.name)+'?</h2><p class="dim">This is irreversible. The station will be destroyed'+
-    (nOff?" with "+nOff+" officer"+(nOff>1?"s":"")+" aboard":"")+(souls?" — "+fmt(souls)+" souls will be lost":"")+"."+
+  openModal('<h2 style="color:var(--red)">Self-destruct '+esc(st.name)+'?</h2>'+
+    '<p class="dim">Standard protocol: all personnel will evacuate first'+(souls?" — "+fmt(souls)+" souls will be brought off":"")+
+    '. Then the station is destroyed. This is irreversible.'+
     (co?" "+esc(fullName(co))+" will carry out the order.":"")+'</p>'+
-    '<div class="btnRow"><button class="btn" onclick="closeModal()">Cancel</button>'+
-    '<button class="btn danger" onclick="uiScuttleStationGo(\''+id+'\')">Initiate self-destruct</button></div>');
+    '<div class="btnRow"><button class="btn" onclick="closeModal()">Cancel</button></div>'+
+    '<div class="btnRow"><button class="btn danger" onclick="uiScuttleStationGo(\''+id+'\',false)">Evacuate all, then destroy</button></div>'+
+    (co?'<div class="btnRow"><button class="btn danger" onclick="uiScuttleStationGo(\''+id+'\',true)">'+esc(co.name)+' goes down with the station</button></div>':""));
 }
-async function uiScuttleStationGo(id){
+async function uiScuttleStationGo(id,coStays){
   const st=station(id);if(!st||st.abandoned)return;
   const nm=st.name,co=effStationCO(st).o;
   closeModal();
-  destroyStation(st,"self-destruct ordered by command");
+  evacuateStationCrew(st,(coStays&&co)?co.id:null);
+  if(coStays&&co)killOfficer(co,"Went down with "+nm+" — remained aboard for the self-destruct");
+  destroyStation(st,"self-destruct ordered by command",(coStays&&co)?1:0);
   if(typeof SDECK!=="undefined"&&SDECK&&SDECK.stId===id&&typeof sdeckExit==="function")sdeckExit();
   save();render();
-  coOrderShow(co,nm,"scuttleStation");
+  coOrderShow(co,nm,coStays?"scuttleStationDown":"scuttleStation");
 }
-function destroyStation(st,cause){
+function destroyStation(st,cause,soulsOv){
   sfx("explosion");
-  const souls=(typeof stCrewN==="function")?stCrewN(st):0;
+  const souls=(typeof soulsOv==="number")?soulsOv:((typeof stCrewN==="function")?stCrewN(st):0);
   crewOfStation(st.id).forEach(o=>{o.shuttle=null;killOfficer(o,"Lost with "+st.name+" — "+cause);});
   G.ships.forEach(s=>{if(s.dock===st.id){s.dock=null;log("command",s.name+" cast off as "+st.name+" was destroyed.");}});
   G.shuttles=G.shuttles.filter(x=>!(x.host==="station"&&x.hid===st.id));
@@ -9418,7 +9450,7 @@ function destroyStation(st,cause){
   G.stations=G.stations.filter(x=>x.id!==st.id);
   G.memorial.unshift({kind:"station",name:st.name,sub:STATION_DEFS[st.type].name,lost:"destroyed",cause:cause,sd:G.stardate});
   G.ledger.lost++;
-  log("combat","† "+st.name+" destroyed — "+cause+". "+(souls>0?souls+" souls lost with her. ":"")+"Her name is added to the Memorial.");
+  log("combat","† "+st.name+" destroyed — "+cause+". "+(souls>0?souls+(souls===1?" soul":" souls")+" lost with her. ":"")+"Her name is added to the Memorial.");
 }
 /* Flagship: one designated ship, marked with a gold delta glyph. */
 function flagshipId(){const s=G.flagship&&ship(G.flagship);if(s&&s.status!=="museum")return s.id;G.flagship=null;return null;}
@@ -11794,7 +11826,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.11</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.12</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
