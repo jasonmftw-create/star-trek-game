@@ -347,6 +347,10 @@ body{touch-action:pan-y;}
 .billetBadgeR svg{width:24px;height:24px;color:var(--dc,#9a9ab0);}
 .cmdrPips{display:flex;gap:5px;margin-top:7px;align-items:center;}
 .cmdrPips i{width:11px;height:11px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffe9a8,#ffd76a 60%,#c9962e);box-shadow:0 0 5px rgba(255,215,106,.55);}
+.fleetList{padding:2px 10px;}
+.fleetList .row{padding:10px 2px;}
+.warnRow{margin-top:5px;display:flex;flex-wrap:wrap;gap:4px;}
+.fleetList .row.omRow{background:rgba(153,153,255,.07);box-shadow:inset 3px 0 0 var(--violet);}
 .seniorRow{border:1px solid rgba(255,255,255,.14)!important;border-left:4px solid var(--dc,#9a9ab0)!important;border-radius:10px;background:rgba(255,255,255,.035);}
 .offGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 14px;}
 .offCell{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--line);border-radius:10px;cursor:pointer;background:#101828;min-width:0;}
@@ -4606,20 +4610,23 @@ const WARN_HINTS={
  "No captain":"No commanding officer is posted — no one holding the Captain or XO position, and no officer of Commander rank or higher. Missions launch without a captain's skill bonus.",
  "Hull damage":"The ship has taken damage in combat or hazards. Damaged ships fight worse; send her to a shipyard to repair."};
 function renderShips(){
-  let h="";
+  let rows="",mus="";
   G.ships.forEach(s=>{
     const isMus=s.status==="museum";
     if(shipQuad==="museum"){if(!isMus)return;}
     else{if(isMus)return;if(shipQuad!=="all"&&postQuadOf(s)!==shipQuad)return;}
-    if(isMus){h+=museumCard(s);return;}
+    if(isMus){mus+=museumCard(s);return;}
     const c=shipClass(s),crew=crewOfShip(s.id),warns=shipWarnings(s),om=s.status==="mission";
-    h+='<div class="card'+(om?' onmission':'')+'"><div class="row" onclick="shipModal(\''+s.id+'\')" style="cursor:pointer;">'+shipPic(s.cls)+
+    rows+='<div class="row'+(om?' omRow':'')+'" onclick="shipModal(\''+s.id+'\')" style="cursor:pointer;">'+shipPic(s.cls)+
       '<div class="grow"><div class="nm">'+esc(s.name)+' <span class="dim">'+esc(s.registry)+'</span>'+(om?' <span class="badge" style="background:var(--violet);color:#0b0b12;font-weight:bold;">ON MISSION</span>':(s.transit?' <span class="badge" style="background:var(--teal);color:#0b0b12;font-weight:bold;">IN TRANSIT</span>':''))+'</div>'+
-      '<div class="sub2">'+c.name+'-class · '+shipStatusLabel(s)+' · '+shipPostName(s)+' · Crew '+crew.length+'/'+c.slots+' · Shuttles '+shuttlesOfShip(s.id).length+'</div>'+
-      (warns.length?'<div style="margin-top:4px;">'+warns.map(w=>'<span class="badge warn"'+(WARN_HINTS[w.split(" (")[0]]?' data-hint="'+esc(WARN_HINTS[w.split(" (")[0]])+'"':"")+'>'+esc(w)+'</span>').join("")+'</div>':"")+
+      '<div class="sub2">'+c.name+'-class · '+shipStatusLabel(s)+' · '+shipPostName(s)+' · Crew '+crew.length+'/'+c.slots+'</div>'+
+      (warns.length?'<div class="warnRow">'+warns.map(w=>'<span class="badge warn"'+(WARN_HINTS[w.split(" (")[0]]?' data-hint="'+esc(WARN_HINTS[w.split(" (")[0]])+'"':"")+'>'+esc(w)+'</span>').join("")+'</div>':"")+
       (s.damage>0?'<div class="prog"><i style="width:'+(100-s.damage)+'%;background:var(--red);"></i></div>':"")+
-      '</div><span class="badge">'+c.name+'</span></div></div>';
+      '</div></div>';
   });
+  let h="";
+  if(rows)h+='<div class="card fleetList">'+rows+'</div>';
+  h+=mus;
   return h||'<div class="card"><p class="dim">'+(shipQuad==="all"?"No ships.":shipQuad==="museum"?"The museum halls are empty — mothball a ship to begin the collection.":"No ships in this quadrant.")+'</p></div>';
 }
 /* Fleet Museum profile card */
@@ -4647,18 +4654,18 @@ function museumCard(s){
 
 /* ---------- STATIONS tab ---------- */
 function renderStations(){
-  let h="";
+  let rows="";
   G.stations.forEach(st=>{
     if(st.type==="academy"||st.type==="sfcommand")return;
     if(stationQuad!=="all"&&postQuadOf(st)!==stationQuad)return;
     const d=STATION_DEFS[st.type],crew=crewOfStation(st.id);
-    h+='<div class="card"><div class="row" onclick="stationModal(\''+st.id+'\')" style="cursor:pointer;">'+stationPic(stationArtKey(st))+
+    rows+='<div class="row" onclick="stationModal(\''+st.id+'\')" style="cursor:pointer;">'+stationPic(stationArtKey(st))+
       '<div class="grow"><div class="nm">'+esc(st.name)+'</div>'+
-      '<div class="sub2">'+d.name+' · '+(st.status==="active"?"Operational":"Under construction — "+st.daysLeft+"d")+' · Crew '+crew.length+' · Complement '+fmt(st.comp==null?d.comp:st.comp)+'</div>'+
+      '<div class="sub2">'+d.name+' · '+(st.status==="active"?"Operational":"Under construction — "+st.daysLeft+"d")+' · Crew '+crew.length+'</div>'+
       (st.status==="construction"?'<div class="prog"><i style="width:'+Math.round((1-st.daysLeft/d.days)*100)+'%"></i></div>':"")+
-      '</div><span class="badge">'+d.name+'</span></div></div>';
+      '</div></div>';
   });
-  return h||'<div class="card"><p class="dim">'+(stationQuad==="all"?"No stations.":"No stations in this quadrant.")+'</p></div>';
+  return rows?'<div class="card fleetList">'+rows+'</div>':'<div class="card"><p class="dim">'+(stationQuad==="all"?"No stations.":"No stations in this quadrant.")+'</p></div>';
 }
 /* ---------- PERSONNEL tab ---------- */
 let persFilter="all";
@@ -6894,7 +6901,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.86</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.87</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
