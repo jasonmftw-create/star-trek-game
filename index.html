@@ -4350,7 +4350,9 @@ function ageTick(){
     else if(o.stage==="cadet"&&o.age>=22){o.stage="adult";o.rank=0;o.dept=pick(DEPTS);o.timeInGrade=0;
       log("family","Cadet "+o.name+" graduates Starfleet Academy and is commissioned as Ensign.");}
     else if(o.stage==="adult"&&o.age>=retireAge(o)&&!o.retired){
+      const _rk=o.post.t,_ri=o.post.id,_rc=(o.roles||[]).includes("co"); // v2.11 succession
       o.retired=true;breakBond(o);o.post={t:"pool"};
+      if(_rc&&(_rk==="ship"||_rk==="station"))successionCheck(_rk,_ri);
       log("personnel",fullName(o)+" has retired with full honors after a distinguished career. Fair winds, "+o.name+".");}
     else if(o.stage==="adult"&&o.age>retireAge(o)+5&&Math.random()<(o.age-retireAge(o)-5)*0.0005){
       killOfficer(o,"passed away peacefully at age "+Math.floor(o.age));}
@@ -4362,7 +4364,9 @@ function breakBond(o){
   o.morale=clamp(o.morale-15,0,100);
 }
 function killOfficer(o,cause){
-  if(o.dead)return;o.dead=true;breakBond(o);o.post={t:"gone"};o.health="healthy";o.shuttle=null;
+  if(o.dead)return;
+  const _pk=o.post.t,_pid=o.post.id,_wasCo=(o.roles||[]).includes("co"); // v2.11 succession
+  o.dead=true;breakBond(o);o.post={t:"gone"};o.health="healthy";o.shuttle=null;
   const _me={kind:"officer",name:o.name,rank:rankName(o),species:o.species,cause,sd:G.stardate,
     def:[o.name,o.species,o.gender,o.age,o.rank,o.dept,[o.stats.cmd,o.stats.sci,o.stats.eng,o.stats.med,o.stats.dip,o.stats.tac],(o.traits||[]).slice(),"pool",o.rankLabel||null,o.stage||"adult"]};
   G.memorial.unshift(_me);
@@ -4370,6 +4374,7 @@ function killOfficer(o,cause){
   G.ledger.lost++;
   G.officers.forEach(x=>{if(x.friends)x.friends=x.friends.filter(id=>id!==o.id);if(x.rivals)x.rivals=x.rivals.filter(id=>id!==o.id);});
   log("combat","† "+fullName(o)+" — "+cause+". Their name is added to the Memorial Wall.");
+  if(_wasCo&&(_pk==="ship"||_pk==="station"))successionCheck(_pk,_pid); // v2.11: XO steps up
 }
 /* ---------- romance & family ---------- */
 function postings(){
@@ -7041,6 +7046,7 @@ function renderCommand(){
 
 /* ---------- SHIPS tab ---------- */
 function shipStatusLabel(s){
+  if(s.abandoned)return "Derelict — abandoned";
   if(s.mothballed)return "Mothballed";
   if(s.transit)return (s.transit.via==="gate"?"Slipstream transit":"Wormhole transit")+" \u2014 "+s.transit.daysLeft+"d to "+(POST_LABELS[s.transit.dest]||"?");
   if(s.status==="refit")return "Refit — "+s.daysLeft+"d";
@@ -7676,10 +7682,10 @@ function uiCancelBuildGo(kind,id){
   log("build","Construction cancelled: "+name+". Recovered half the materials.");
   closeModal();save();render();toast("Construction cancelled — half the materials recovered.");
 }
-function destroyShip(s,cause){
+function destroyShip(s,cause,allHands){
   sfx("explosion");
   const crew=crewOfShip(s.id);
-  crew.forEach(o=>{o.shuttle=null;if(Math.random()<0.7)killOfficer(o,"Lost with "+s.name+" — "+cause);else{o.post={t:"pool"};o.roles=[];o.health="injured";o.healDays=ri(10,30);}});
+  crew.forEach(o=>{o.shuttle=null;if(allHands||Math.random()<0.7)killOfficer(o,(allHands?"Went down with "+s.name+" — ":"Lost with "+s.name+" — ")+cause);else{o.post={t:"pool"};o.roles=[];o.health="injured";o.healDays=ri(10,30);}});
   G.shuttles=G.shuttles.filter(x=>!(x.host==="ship"&&x.hid===s.id));
   G.ships=G.ships.filter(x=>x.id!==s.id);
   G.memorial.unshift({kind:"ship",name:s.name,sub:SHIP_CLASSES[s.cls].name+"-class · "+s.registry,lost:"destroyed",cause:cause,sd:G.stardate});
@@ -8328,21 +8334,21 @@ const CMDR_GLYPH='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l7.
 function billetGlyph(bid){return BILLET_GLYPHS[bid]||ICONS.crew;}
 function primaryBillet(o){const r=o.roles||[];for(const b of BILLETS){if(r.indexOf(b[0])>=0)return b[0];}return null;}
 function isSeniorStaff(o){return (o.roles||[]).some(r=>SENIOR_BILLETS.indexOf(r)>=0);}
-function crewRowHTML(o,senior){
+function crewRowHTML(o,senior,acting){
   const b=primaryBillet(o),dc=divColor(o.dept);
-  const lbl=b?billetLabel(b):"Crew";
+  const lbl=acting?"Acting Commanding Officer":(b?billetLabel(b):"Crew");
   const face=senior?faceImg(o,"pfaceSm"):'<span class="faceWrap">'+faceImg(o,"pfaceSm")+'<span class="billetBadge">'+billetGlyph(b)+'</span></span>';
   const right=senior?'<span class="billetBadgeR">'+billetGlyph(b)+'</span>':"";
   return '<div class="row'+(senior?" seniorRow":"")+'" style="--dc:'+dc+';cursor:pointer;padding:6px;" onclick="officerModal(\''+o.id+'\')">'+
     face+'<div class="grow"><div class="nm">'+nameHtml(o)+'</div><div class="sub2">'+esc(lbl)+' · '+esc(o.dept||"")+'</div></div>'+right+'</div>';
 }
-function crewSectionsHTML(crew,co,xo,cap,emptyHint){
+function crewSectionsHTML(crew,co,xo,cap,emptyHint,actingId){
   const ord=(a,b)=>((a===co?0:a===xo?1:2)-(b===co?0:b===xo?1:2))||b.rank-a.rank;
   const sr=crew.filter(isSeniorStaff).sort(ord),rest=crew.filter(o=>!isSeniorStaff(o)).sort(ord);
   let h="";
-  if(sr.length){h+='<h4>Briefing Room</h4>';sr.forEach(o=>{h+=crewRowHTML(o,true);});}
+  if(sr.length){h+='<h4>Briefing Room</h4>';sr.forEach(o=>{h+=crewRowHTML(o,true,actingId&&o.id===actingId);});}
   h+='<h4>Essential Personnel ('+crew.length+cap+')</h4>';
-  rest.forEach(o=>{h+=crewRowHTML(o,false);});
+  rest.forEach(o=>{h+=crewRowHTML(o,false,actingId&&o.id===actingId);});
   if(!crew.length)h+='<p class="dim">'+emptyHint+'</p>';
   else if(!sr.length)h+='<p class="dim">Assign bridge and department-head positions (Assign crew) to build the briefing room.</p>';
   return h;
@@ -8355,6 +8361,39 @@ function stationCO(sid){const crew=crewOfStation(sid);
   return crew.find(o=>(o.roles||[]).includes("co"))||crew.slice().sort((a,b)=>b.rank-a.rank).find(o=>o.rank>=5)||null;}
 function stationXO(sid,co){const crew=crewOfStation(sid);
   return crew.find(o=>(o.roles||[]).includes("xo")&&o!==co)||crew.slice().sort((a,b)=>b.rank-a.rank).find(o=>o.rank===4&&o!==co)||null;}
+/* ---------- acting command succession (v2.11) ----------
+   When the CO billet is vacant (death, retirement, transfer), the second
+   officer steps up as ACTING commanding officer until a new CO is assigned. */
+function resolveSuccessor(crew){
+  return crew.find(o=>(o.roles||[]).includes("xo"))||crew.slice().sort((a,b)=>b.rank-a.rank)[0]||null;
+}
+function successionCheck(kind,id){
+  const tgt=kind==="ship"?ship(id):station(id);if(!tgt)return;
+  const crew=kind==="ship"?crewOfShip(id):crewOfStation(id);
+  if(crew.some(o=>(o.roles||[]).includes("co"))){tgt.actingCO=null;return;}
+  const nx=resolveSuccessor(crew);
+  if(nx&&tgt.actingCO!==nx.id){tgt.actingCO=nx.id;
+    log("command","With the commanding officer gone, "+fullName(nx)+" has assumed acting command of "+tgt.name+".");}
+  if(!nx)tgt.actingCO=null;
+}
+function effShipCO(s){
+  const crew=crewOfShip(s.id);
+  const co=crew.find(o=>(o.roles||[]).includes("co"));
+  if(co)return{o:co,acting:false};
+  if(s.actingCO){const a=crew.find(o=>o.id===s.actingCO);if(a)return{o:a,acting:true};}
+  const nx=resolveSuccessor(crew);
+  if(nx){s.actingCO=nx.id;return{o:nx,acting:true};}
+  return{o:null,acting:false};
+}
+function effStationCO(st){
+  const crew=crewOfStation(st.id);
+  const co=crew.find(o=>(o.roles||[]).includes("co"));
+  if(co)return{o:co,acting:false};
+  if(st.actingCO){const a=crew.find(o=>o.id===st.actingCO);if(a)return{o:a,acting:true};}
+  const nx=resolveSuccessor(crew);
+  if(nx){st.actingCO=nx.id;return{o:nx,acting:true};}
+  return{o:null,acting:false};
+}
 function roleHolder(o,bid){
   return G.officers.find(x=>x.id!==o.id&&(x.roles||[]).includes(bid)&&x.post.t===o.post.t&&x.post.id===o.post.id&&x.status==="active"&&!x.dead&&!x.retired)||null;
 }
@@ -8405,9 +8444,11 @@ function setBilletCore(kind,id,bid,oid){
   const holder=billetHolderAt(kind,id,bid);
   if(!oid){
     if(holder){holder.roles=(holder.roles||[]).filter(r=>r!==bid);log("personnel",fullName(holder)+" relieved of "+billetLabel(bid)+" duties ("+tgt.name+").");save();}
+    if(bid==="co")successionCheck(kind,id); // v2.11: XO steps up
     return true;
   }
   const o=officer(oid);if(!o)return false;
+  const _hadCo=(o.roles||[]).includes("co"),_oldKind=o.post.t,_oldId=o.post.id; // v2.11 succession
   if(kind==="ship"&&(o.post.t!=="ship"||o.post.id!==id)){
     const s=ship(id);
     if(s&&(s.status==="mission"||s.status==="refit")){toast("Cannot transfer aboard — ship is "+shipStatusLabel(s)+".");return false;}
@@ -8428,6 +8469,9 @@ function setBilletCore(kind,id,bid,oid){
   if(holder&&holder.id!==o.id){holder.roles=(holder.roles||[]).filter(r=>r!==bid);log("personnel",fullName(holder)+" relieved of "+billetLabel(bid)+" duties ("+tgt.name+").");}
   if(!Array.isArray(o.roles))o.roles=[];
   if(o.roles.indexOf(bid)<0){o.roles.push(bid);log("personnel",fullName(o)+" assigned as "+billetLabel(bid)+" ("+tgt.name+").");}
+  // v2.11 succession: a real CO ends acting command; losing your CO triggers it
+  if(bid==="co"){if(oid)tgt.actingCO=null;else successionCheck(kind,id);}
+  if(_hadCo&&(_oldKind==="ship"||_oldKind==="station")&&(_oldKind!==kind||_oldId!==id))successionCheck(_oldKind,_oldId);
   save();return true;
 }
 function uiSetBillet(kind,id,bid,oid){
@@ -9208,18 +9252,180 @@ function uiMothballToggle(kind,id){
 function uiMothballToggleGo(kind,id){
   const tgt=kind==="ship"?ship(id):station(id);if(!tgt)return;
   tgt.mothballed=!tgt.mothballed;
+  if(!tgt.mothballed)tgt.abandoned=false; // v2.11: recommissioning clears abandonment
   if(tgt.mothballed)log("build",tgt.name+" has been mothballed — standing down with a skeleton caretaker watch. Upkeep suspended.");
   else log("build",tgt.name+" has been recommissioned and returns to active service.");
   closeModal();save();render();
   if(kind==="ship")shipModal(id);else stationModal(id);
   toast(tgt.mothballed?"Mothballed.":"Recommissioned.");
 }
+/* ---------- final orders: abandon ship / self-destruct (v2.11) ---------- */
+const CO_ORDER_LINES={
+  abandonShip:["Aye, Commander. All hands, abandon ship — I say again, all hands, abandon ship.","Abandon ship... aye. We will get every soul off. She was a good ship.","Understood. Escape pods away on my mark. May history remember her kindly."],
+  scuttleShip:["Destruct sequence confirmed. It has been an honor serving with you, Commander.","Aye... setting the charges myself. She deserved better than this.","Self-destruct initiated. All hands have been warned. Goodbye, Commander."],
+  abandonStation:["Aye, Commander. All personnel, evacuate the station. We will leave the lights on.","Evacuation order confirmed. Every soul off before the last docking clamp releases.","Understood. It hurts to leave her empty, but the order is given."],
+  scuttleStation:["Charges set throughout the station. Sixty seconds. It has been an honor, Commander.","Aye... arming the self-destruct. Tell Starfleet we held to the last.","Destruct sequence initiated. All personnel clear. Goodbye, Commander."]
+};
+const CO_ORDER_DESC={
+  abandonShip:"abandon ship — evacuate all hands immediately",
+  scuttleShip:"initiate the self-destruct sequence",
+  abandonStation:"abandon the station — evacuate all personnel",
+  scuttleStation:"initiate the station self-destruct sequence"
+};
+async function coOrderRespond(co,vessel,order){
+  const canned=pick(CO_ORDER_LINES[order]||CO_ORDER_LINES.abandonShip);
+  if(typeof aiHasKey==="function"&&aiHasKey()&&typeof aiGenText==="function"){
+    try{
+      const p="You are "+fullName(co)+", a "+(co.species||"Starfleet officer")+" "+rankName(co)+" in command of "+vessel+
+        ". Your superior officer has just ordered you to "+CO_ORDER_DESC[order]+
+        ". Reply in character with one or two sentences of spoken dramatic acknowledgment. No stage directions, no narration.";
+      const t=await aiGenText(p,80);
+      if(t&&t.trim())return t.trim();
+    }catch(e){}
+  }
+  return canned;
+}
+function coOrderShow(co,vessel,order){
+  const nm=co?fullName(co):null;
+  openModal('<h2>'+esc(vessel)+'</h2>'+
+    (nm?'<p class="dim">'+esc(nm)+' responds:</p><p id="coRespLine"><i>Awaiting response…</i></p>':'<p class="dim">The order is carried out.</p>')+
+    '<div class="btnRow"><button class="btn" onclick="closeModal()">Close</button></div>');
+  if(nm)coOrderRespond(co,vessel,order).then(line=>{
+    const el=document.getElementById("coRespLine");
+    if(el)el.innerHTML="&ldquo;"+esc(line)+"&rdquo;";
+  });
+}
+function finalOrdersShipHTML(s,co){
+  let h="";
+  if(s.abandoned)h+='<button class="btn small teal" onclick="uiReclaimShip(\''+s.id+'\')">Reclaim ship</button>';
+  else if((s.status==="active"||s.status==="damaged")&&!s.mothballed&&!s.transit){
+    h+='<button class="btn small danger" onclick="uiAbandonShip(\''+s.id+'\')">Abandon ship</button>';
+    h+='<button class="btn small danger" onclick="uiScuttleShip(\''+s.id+'\')">Self-destruct</button>';
+  }
+  if(!h)return"";
+  return '<details class="statusDrawer"><summary style="color:var(--red)">Final orders</summary><div class="drawerBody">'+
+    '<p class="dim">Direct orders for '+(s.abandoned?"a prize crew":("the commanding officer"+(co?" — "+esc(fullName(co)):"")))+'. These cannot be undone lightly.</p>'+
+    '<div class="btnRow">'+h+'</div></div></details>';
+}
+function uiAbandonShip(id){
+  const s=ship(id);if(!s||s.abandoned)return;
+  const co=effShipCO(s).o,dst=s.dock?station(s.dock):null;
+  const canBerth=dst&&dst.status==="active"&&!dst.mothballed;
+  openModal('<h2>Abandon '+esc(s.name)+'?</h2><p class="dim">A final order. '+
+    (co?esc(fullName(co))+" will order the evacuation. ":"")+
+    "Every officer aboard will "+(canBerth?"evacuate to "+esc(dst.name)+".":"take to escape pods and be recovered by Starfleet.")+
+    " The ship will be left derelict — dark, empty, and reclaimable later.</p>"+
+    '<div class="btnRow"><button class="btn" onclick="closeModal()">Cancel</button>'+
+    '<button class="btn danger" onclick="uiAbandonShipGo(\''+id+'\')">Give the order</button></div>');
+}
+async function uiAbandonShipGo(id){
+  const s=ship(id);if(!s||s.abandoned)return;
+  const nm=s.name,co=effShipCO(s).o;
+  const dst=s.dock?station(s.dock):null;
+  const canBerth=dst&&dst.status==="active"&&!dst.mothballed;
+  const souls=shipCrewN(s);
+  closeModal();
+  crewOfShip(s.id).forEach(o=>{o.roles=[];o.shuttle=null;o.morale=clamp(o.morale-5,0,100);
+    o.post=canBerth?{t:"station",id:dst.id}:{t:"pool"};});
+  if(canBerth)dst.crew=Math.min(stCompMax(dst),stCrewN(dst)+souls);
+  s.crew=0;s.npcs=[];s.mothballed=true;s.abandoned=true;s.actingCO=null;
+  log("command",nm+" has been abandoned on your orders. "+(canBerth?"Her crew was evacuated to "+dst.name+".":"Her crew took to escape pods and were recovered by Starfleet.")+" She drifts, dark and empty.");
+  save();render();
+  coOrderShow(co,nm,"abandonShip");
+}
+function uiReclaimShip(id){
+  const s=ship(id);if(!s||!s.abandoned)return;
+  s.mothballed=false;s.abandoned=false;
+  log("command","A prize crew has reboarded "+s.name+". She is under way again — undercrewed and in need of replacements.");
+  save();shipModal(id);render();toast("Ship reclaimed.");
+}
+function uiScuttleShip(id){
+  const s=ship(id);if(!s||s.abandoned)return;
+  const souls=shipCrewN(s),nOff=crewOfShip(s.id).length,co=effShipCO(s).o;
+  openModal('<h2 style="color:var(--red)">Self-destruct '+esc(s.name)+'?</h2><p class="dim">This is irreversible. The ship will be destroyed'+
+    (nOff?" with "+nOff+" officer"+(nOff>1?"s":"")+" aboard":"")+(souls?" — "+fmt(souls)+" souls will be lost":"")+"."+
+    (co?" "+esc(fullName(co))+" will carry out the order.":"")+'</p>'+
+    '<div class="btnRow"><button class="btn" onclick="closeModal()">Cancel</button>'+
+    '<button class="btn danger" onclick="uiScuttleShipGo(\''+id+'\')">Initiate self-destruct</button></div>');
+}
+async function uiScuttleShipGo(id){
+  const s=ship(id);if(!s||s.abandoned)return;
+  const nm=s.name,co=effShipCO(s).o;
+  closeModal();
+  destroyShip(s,"self-destruct ordered by command",true);
+  if(typeof DECK!=="undefined"&&DECK&&DECK.shipId===id&&typeof deckExit==="function")deckExit();
+  save();render();
+  coOrderShow(co,nm,"scuttleShip");
+}
+function finalOrdersStationHTML(st,co){
+  if(st.type==="academy"||st.type==="sfcommand")return"";
+  let h="";
+  if(st.abandoned)h+='<p class="dim">Abandoned — recommission her from Ship status to bring her back.</p>';
+  else if(st.status==="active"&&!st.mothballed){
+    h+='<button class="btn small danger" onclick="uiAbandonStation(\''+st.id+'\')">Abandon station</button>';
+    h+='<button class="btn small danger" onclick="uiScuttleStation(\''+st.id+'\')">Self-destruct</button>';
+  }
+  if(!h)return"";
+  return '<details class="statusDrawer"><summary style="color:var(--red)">Final orders</summary><div class="drawerBody">'+
+    '<p class="dim">Direct orders for '+(st.abandoned?"a caretaker crew":("the commanding officer"+(co?" — "+esc(fullName(co)):"")))+'. These cannot be undone lightly.</p>'+
+    '<div class="btnRow">'+h+'</div></div></details>';
+}
+function uiAbandonStation(id){
+  const st=station(id);if(!st||st.abandoned)return;
+  const co=effStationCO(st).o;
+  openModal('<h2>Abandon '+esc(st.name)+'?</h2><p class="dim">A final order. '+
+    (co?esc(fullName(co))+" will order the evacuation. ":"")+
+    "Every officer aboard will evacuate to the personnel pool. The station will go dark in caretaker mode — recommissionable later.</p>"+
+    '<div class="btnRow"><button class="btn" onclick="closeModal()">Cancel</button>'+
+    '<button class="btn danger" onclick="uiAbandonStationGo(\''+id+'\')">Give the order</button></div>');
+}
+async function uiAbandonStationGo(id){
+  const st=station(id);if(!st||st.abandoned)return;
+  const nm=st.name,co=effStationCO(st).o;
+  closeModal();
+  crewOfStation(st.id).forEach(o=>{o.roles=[];o.shuttle=null;o.morale=clamp(o.morale-5,0,100);o.post={t:"pool"};});
+  st.mothballed=true;st.abandoned=true;st.actingCO=null;
+  log("command",nm+" has been abandoned on your orders. All personnel evacuated; she sits dark in caretaker mode.");
+  save();render();
+  coOrderShow(co,nm,"abandonStation");
+}
+function uiScuttleStation(id){
+  const st=station(id);if(!st||st.abandoned)return;
+  const souls=stCrewN(st),nOff=crewOfStation(st.id).length,co=effStationCO(st).o;
+  openModal('<h2 style="color:var(--red)">Self-destruct '+esc(st.name)+'?</h2><p class="dim">This is irreversible. The station will be destroyed'+
+    (nOff?" with "+nOff+" officer"+(nOff>1?"s":"")+" aboard":"")+(souls?" — "+fmt(souls)+" souls will be lost":"")+"."+
+    (co?" "+esc(fullName(co))+" will carry out the order.":"")+'</p>'+
+    '<div class="btnRow"><button class="btn" onclick="closeModal()">Cancel</button>'+
+    '<button class="btn danger" onclick="uiScuttleStationGo(\''+id+'\')">Initiate self-destruct</button></div>');
+}
+async function uiScuttleStationGo(id){
+  const st=station(id);if(!st||st.abandoned)return;
+  const nm=st.name,co=effStationCO(st).o;
+  closeModal();
+  destroyStation(st,"self-destruct ordered by command");
+  if(typeof SDECK!=="undefined"&&SDECK&&SDECK.stId===id&&typeof sdeckExit==="function")sdeckExit();
+  save();render();
+  coOrderShow(co,nm,"scuttleStation");
+}
+function destroyStation(st,cause){
+  sfx("explosion");
+  const souls=(typeof stCrewN==="function")?stCrewN(st):0;
+  crewOfStation(st.id).forEach(o=>{o.shuttle=null;killOfficer(o,"Lost with "+st.name+" — "+cause);});
+  G.ships.forEach(s=>{if(s.dock===st.id){s.dock=null;log("command",s.name+" cast off as "+st.name+" was destroyed.");}});
+  G.shuttles=G.shuttles.filter(x=>!(x.host==="station"&&x.hid===st.id));
+  G.builds=G.builds.filter(b=>b.yardId!==st.id);
+  if(st.npcs)st.npcs=[];
+  G.stations=G.stations.filter(x=>x.id!==st.id);
+  G.memorial.unshift({kind:"station",name:st.name,sub:STATION_DEFS[st.type].name,lost:"destroyed",cause:cause,sd:G.stardate});
+  G.ledger.lost++;
+  log("combat","† "+st.name+" destroyed — "+cause+". "+(souls>0?souls+" souls lost with her. ":"")+"Her name is added to the Memorial.");
+}
 /* Flagship: one designated ship, marked with a gold delta glyph. */
 function flagshipId(){const s=G.flagship&&ship(G.flagship);if(s&&s.status!=="museum")return s.id;G.flagship=null;return null;}
 function uiSetFlagship(id){G.flagship=(flagshipId()===id)?null:id;save();shipModal(id);}
 function shipModal(id){
   const s=ship(id);if(!s)return;const c=shipClass(s),crew=crewOfShip(s.id);const isFl=flagshipId()===s.id;
-  const co=shipCO(s.id),xo=shipXO(s.id,co);
+  const _eff=effShipCO(s),co=_eff.o,xo=_eff.acting?null:shipXO(s.id,co);
   let h='<h2>'+(isFl?'<span class="flagGlyph">'+CMDR_GLYPH+'</span>':"")+esc(s.name)+(s.status!=="museum"?'<span class="flagStar'+(isFl?" on":"")+'" onclick="uiSetFlagship(\''+s.id+'\')" title="'+(isFl?"Stand down flagship":"Set as flagship")+'">'+(isFl?"\u2605":"\u2606")+'</span>':"")+(isFl?' <span class="badge" style="background:var(--gold);color:#0b0b12;font-weight:bold;">FLAGSHIP</span>':"")+'</h2><div class="flavor">'+esc(s.registry)+' · '+c.name+'-class · '+shipStatusLabel(s)+'</div>'+shipArtFor(s,true);
   if((s.status==="active"||s.status==="damaged")&&!s.mothballed)h+='<div class="shipHero"><button class="btn heroGold" onclick="deckEnter(\''+s.id+'\')">Enter ship</button></div>';
   if(s.transit){
@@ -9265,7 +9471,7 @@ function shipModal(id){
     }
     if(_uc)h+='<p class="dim" style="color:var(--red)">Undercrewed: battle performance reduced until the complement is restored.</p>';
   }
-  h+=crewSectionsHTML(crew,co,xo,"/"+c.slots,"No essential personnel assigned. Visit Personnel to assign officers.");
+  h+=crewSectionsHTML(crew,co,xo,"/"+c.slots,"No essential personnel assigned. Visit Personnel to assign officers.",_eff.acting&&co?co.id:null);
   const shs=shuttlesOfShip(s.id);
   h+='<h4>Shuttle Bay ('+shs.length+')</h4>';
   shs.forEach(sh=>{
@@ -9292,12 +9498,13 @@ function shipModal(id){
   if(s.status==="museum")_st+='<button class="btn small teal" onclick="uiRecommission(\''+s.id+'\')">Return to duty</button>';
   if(s.mothballed||s.status==="museum")_st+='<button class="btn small teal" onclick="uiLegacyShip(\''+s.id+'\')">Build legacy ship</button>';
   if(_st)h+='<details class="statusDrawer"><summary>Ship status</summary><div class="drawerBody">'+_st+'</div></details>';
+  h+=finalOrdersShipHTML(s,co);
   h+='<div class="btnRow" style="margin-top:12px;"><button class="btn small ghost" onclick="closeModal()">Close</button></div>';
   openModal(h);
 }
 function stationModal(id){
   const st=station(id);if(!st)return;const d=STATION_DEFS[st.type],crew=crewOfStation(st.id);
-  const co=stationCO(st.id),xo=stationXO(st.id,co);
+  const _seff=effStationCO(st),co=_seff.o,xo=_seff.acting?null:stationXO(st.id,co);
   let h='<h2>'+esc(st.name)+'</h2><div class="flavor">'+d.name+' · '+(st.mothballed?"Mothballed":st.status==="active"?"Operational":"Under construction — "+st.daysLeft+"d")+'</div>'+stationPic(stationArtKey(st),true);
   if(sdeckCanEnter(st))h+='<div class="shipHero"><button class="btn heroGold" onclick="sdeckEnter(\''+st.id+'\')">Enter station</button></div>';
   h+='<div class="kv"><span class="k">Posting</span><span class="v">'+sheetPick('Posting',postOptions(st.post||"sol"),(function(_stid){return function(v){setStationPost(_stid,v);};})(st.id))+'</span></div>';
@@ -9307,7 +9514,7 @@ function stationModal(id){
     const _scc=stCompMax(st),_scn=stCrewN(st);
     h+='<div class="kv"><span class="k">Crew</span><span class="v">'+_scn+' / '+_scc+'</span></div>';
   }
-  h+=crewSectionsHTML(crew,co,xo,"","No essential personnel assigned.");
+  h+=crewSectionsHTML(crew,co,xo,"","No essential personnel assigned.",_seff.acting&&co?co.id:null);
   const shs=shuttlesOfStation(st.id);
   h+='<h4>Docking Bay — Shuttlecraft ('+shs.length+')</h4>';
   shs.forEach(sh=>{
@@ -9356,6 +9563,7 @@ h+='<div class="btnRow"><button class="btn small teal" onclick="uiCrewAssign(\'s
     (st.status==="active"?'<button class="btn small ghost" onclick="uiDecommission(\'station\',\''+st.id+'\')">Decommission</button>':"")+
     (st.status==="active"?'<button class="btn small ghost" onclick="uiMothballToggle(\'station\',\''+st.id+'\')">'+(st.mothballed?"Recommission":"Mothball")+'</button>':"")+
     '<button class="btn small ghost" onclick="closeModal()">Close</button></div>';
+  h+=finalOrdersStationHTML(st,co);
   openModal(h);
 }
 function shuttleModal(id){
@@ -11586,7 +11794,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.10</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.11</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
