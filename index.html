@@ -4488,6 +4488,23 @@ function uiNotifLowLoyalty(){
   h+='<div class="btnRow"><button class="btn ghost" onclick="closeModal()">Close</button></div>';
   openModal(h);
 }
+function uiIdleShipGo(id){
+  const _prevHtml=$("modalBox").innerHTML,_prevBack=modalBack;
+  shipModal(id);
+  modalBack=function(){$("modalBox").innerHTML=_prevHtml;modalBack=_prevBack;};
+}
+function uiNotifIdleShips(){
+  const idle=G.ships.filter(s=>s.status==="active"&&!s.missionId&&!s.transit&&!s.mothballed);
+  let h='<h2>Idle ships</h2><div class="flavor">'+idle.length+' ship'+(idle.length>1?"s":"")+' awaiting orders</div>';
+  idle.forEach(s=>{
+    const c=shipClass(s),crew=crewOfShip(s.id),fl=flagshipId()===s.id;
+    h+='<div class="row" style="cursor:pointer" onclick="uiIdleShipGo(\''+s.id+'\')">'+shipPic(s.cls)+
+      '<div class="grow"><div class="nm">'+(fl?'<span class="flagGlyph">'+CMDR_GLYPH+'</span>':"")+esc(s.name)+(fl?' <span class="badge" style="background:var(--gold);color:#0b0b12;font-weight:bold;">FLAGSHIP</span>':"")+' <span class="dim">'+esc(s.registry)+'</span></div>'+
+      '<div class="sub2">'+c.name+'-class · '+shipStatusLabel(s)+' · '+shipPostName(s)+' · Crew '+crew.length+'/'+c.slots+'</div></div></div>';
+  });
+  h+='<div class="btnRow"><button class="btn ghost" onclick="closeModal()">Close</button></div>';
+  openModal(h);
+}
 function renderNeedsAttention(){
   const nl=notifList(),list=nl.list;
   if(!list.length)return "";
@@ -4509,9 +4526,9 @@ function renderNeedsAttention(){
     secs.push({cat:"aud",title:"Audience requests",html:b});
   }
   if(nl.idle.length){
-    secs.push({cat:"idle",title:"Fleet",html:'<div class="row" style="cursor:pointer" onclick="setTab(\'ships\')">'+
+    secs.push({cat:"idle",title:"Fleet",html:'<div class="row" style="cursor:pointer" onclick="uiNotifIdleShips()">'+
       '<div class="grow"><div class="nm">'+nl.idle.length+' idle ship'+(nl.idle.length>1?"s":"")+'</div>'+
-      '<div class="sub2">Ready for orders — tap to view</div></div></div>'});
+      '<div class="sub2">Tap to see exactly which ships are idle</div></div></div>'});
   }
   if(nl.fin){
     secs.push({cat:"builds",title:"Construction",html:'<div class="row" style="cursor:pointer" onclick="setTab(\'command\')">'+
@@ -6943,7 +6960,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.96</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.97</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
