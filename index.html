@@ -187,7 +187,7 @@ body{padding-bottom:90px;}
 .menuItem .bIco svg{width:24px;height:24px;display:block;flex:none;}
 /* ===== Galaxy map ===== */
 .mapTitle{color:var(--peach);font-size:20px;font-weight:800;letter-spacing:2px;margin:2px 0 4px;text-transform:uppercase;}
-.mapSub{color:#8b93a7;font-size:12px;margin:0 0 10px;}
+.mapSub{color:#8b93a7;font-size:12px;margin:0 0 6px;}
 .mapWrap{background:#04060d;border:2px solid #000;border-radius:12px;overflow:hidden;position:relative;}
 .shipStrip{display:flex;gap:8px;overflow-x:auto;padding:10px 4px;margin:2px 0 6px;-webkit-overflow-scrolling:touch;}
 .shipChip{flex:0 0 auto;border:1px solid #2f5aa0;background:#0d1526;color:#cfe6ff;border-radius:16px;padding:9px 15px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;}
@@ -394,6 +394,13 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
 @media (prefers-reduced-motion:reduce){.hurtRing,.alertRing,.blipPulse{animation:none;}}
 #mapZoom.zFar .mapShipLbl{display:none;}
 .mapToggles{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:2px 0 8px;}
+.mapModeRow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0;}
+.mapModeRow .mapModes{margin:0;}
+.mapOptsBtn{flex:0 0 auto;border:1px solid #4a3f7a;background:#141126;color:#b9aef2;border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.mapOptsBtn.on{background:linear-gradient(180deg,#6d5bd0,#4a3fa0);color:#fff;border-color:#8b7cf6;}
+.mapOptsPanel{background:#0a1120;border:1px solid #22355a;border-radius:12px;padding:10px 12px 12px;margin:2px 0 8px;}
+.mapOptsPanel .mapToggles{margin:8px 0 0;}
+.mapOptsPanel .mapModeDesc{min-height:0;}
 .mapTog{border:1px solid #2a3550;background:#0d1526;color:#8b93a7;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;}
 .mapTog.on{background:#12314a;color:#7fd4ff;border-color:#1f5f8b;}
 .mapTerr{font-size:8px;font-weight:700;fill:#93a3bd;letter-spacing:1.5px;}
@@ -5753,6 +5760,8 @@ let mapMode="explore";
 try{const _mm=localStorage.getItem("stfc_mapmode");if(_mm==="deploy"||_mm==="intel")mapMode=_mm;}catch(e){}
 let deployShip=null;
 let deployFlash=null;
+let mapOptsOpen=false;
+try{if(localStorage.getItem("stfc_mapopts")==="1")mapOptsOpen=true;}catch(e){}
 const MODE_LAYERS={
   explore:{planets:true,territories:true,sectors:true,fleet:true,stations:true,labels:true},
   deploy:{planets:true,territories:true,sectors:false,fleet:true,stations:true,labels:true},
@@ -5767,8 +5776,14 @@ const HOSTILE_TERR={t_borg:1,t_dominion:1,t_romulan:1,t_cardassian:1,neutralzone
 function setMapMode(m){mapMode=m;deployShip=null;Object.assign(mapLayers,MODE_LAYERS[m]);try{localStorage.setItem("stfc_mapmode",m);localStorage.setItem("stfc_maplayers",JSON.stringify(mapLayers));}catch(e){}render();}
 function mapModeBar(){
   const ms=[["explore","Explore"],["deploy","Deploy"],["intel","Intel"]];
-  return '<div class="mapModes">'+ms.map(function(m){return '<button class="mapMode'+(mapMode===m[0]?" on":"")+'" onclick="setMapMode(\u0027'+m[0]+'\u0027)">'+m[1]+'</button>';}).join("")+'</div>'
-    +'<p class="mapModeDesc">'+MODE_DESC[mapMode]+'</p>';
+  return '<div class="mapModeRow"><div class="mapModes">'+ms.map(function(m){return '<button class="mapMode'+(mapMode===m[0]?" on":"")+'" onclick="setMapMode(\u0027'+m[0]+'\u0027)">'+m[1]+'</button>';}).join("")+'</div>'
+    +'<button class="mapOptsBtn'+(mapOptsOpen?" on":"")+'" onclick="toggleMapOpts()">Options '+(mapOptsOpen?'\u25b2':'\u25bc')+'</button></div>';
+}
+function toggleMapOpts(){mapOptsOpen=!mapOptsOpen;try{localStorage.setItem("stfc_mapopts",mapOptsOpen?"1":"0");}catch(e){}render();}
+function mapOptsPanel(){
+  if(!mapOptsOpen)return "";
+  return '<div class="mapOptsPanel"><p class="mapModeDesc">'+MODE_DESC[mapMode]+'</p>'
+    +'<div class="mapToggles">'+LAYER_DEFS.map(function(l){return '<button class="mapTog'+(mapLayers[l[0]]?" on":"")+'" onclick="toggleMapLayer(\u0027'+l[0]+'\u0027)">'+l[1]+'</button>';}).join("")+'</div></div>';
 }
 function mapShipStrip(){
   if(mapMode!=="deploy")return "";
@@ -5843,9 +5858,9 @@ function mapIntelBlips(){
 }
 function intelRumor(i){const b=INTEL_BLIPS[i];if(!b)return;sfx("tricorder");openModal("<h2>"+esc(b.t)+"</h2><div class=\"story\">"+esc(b.b)+"</div><button class=\"btn\" onclick=\"closeModal()\">Close</button>");}
 function mapHintText(){
-  if(mapMode==="deploy")return deployShip?"Tap a glowing system to post your ship there \u2014 or Cancel above.":"Tap one of your ships to begin reposting it.";
+  if(mapMode==="deploy")return deployShip?"Tap a glowing system to post your ship there \u2014 or tap Cancel on the map.":"Tap one of your ships to begin reposting it.";
   if(mapMode==="intel")return "Red zones are hostile. Pulsing rings mark ships in danger; red diamonds are fresh intel.";
-  return "Pinch to zoom \u00b7 drag to pan \u00b7 double-tap to reset \u00b7 tap a marker for details.";
+  return "Pinch to zoom \u00b7 double-tap to reset \u00b7 tap a marker for details.";
 }
 function mapViewPills(){
   const vs=[["galaxy","Galaxy"],["alpha","Alpha"],["beta","Beta"],["gamma","Gamma"],["delta","Delta"]];
@@ -5872,12 +5887,6 @@ function initMapZoom(){
         mapX+=200*(mapZ-nz);mapY+=200*(mapZ-nz);mapZ=nz;applyMapT();
       }
       lastD=d;e.preventDefault();
-    }else if(k.length===1){
-      const p=pts[k[0]];
-      if(Math.hypot(p.x-p.sx,p.y-p.sy)>10){
-        if(p.px!==undefined){mapX+=(p.x-p.px)*u;mapY+=(p.y-p.py)*u;clampMapPan();applyMapT();}
-        p.px=p.x;p.py=p.y;e.preventDefault();
-      }
     }
   },{passive:false});
   const end=function(e){
@@ -6067,8 +6076,8 @@ function renderQuadrant(q){
   });
   let h="<div class=\"mapTitle\">"+QNAME[q]+"</div><div class=\"mapSub\">Stardate "+G.stardate.toFixed(1)+" \u00b7 "+nShips+" ship"+(nShips===1?"":"s")+" \u00b7 "+nStn+" station"+(nStn===1?"":"s")+" in this quadrant</div>";
   h+=mapViewPills();
-  h+=mapModeBar()+mapShipStrip();
-  h+="<div class=\"mapToggles\">"+LAYER_DEFS.map(function(l){return "<button class=\"mapTog"+(mapLayers[l[0]]?" on":"")+"\" onclick=\"toggleMapLayer(\u0027"+l[0]+"\u0027)\">"+l[1]+"</button>";}).join("")+"</div>";
+  h+=mapModeBar()+mapOptsPanel()+mapShipStrip();
+  
   h+="<div class=\"mapWrap\"><div id=\"mapZoom\" class=\""+(mapLayers.labels?"":"noLabels")+"\" style=\"--mz:"+mapZ+"\"><svg viewBox=\"0 0 400 400\">"
     +stars
     +"<g id=\"mapZoomG\" transform=\"translate("+mapX+" "+mapY+") scale("+mapZ+")\">"
@@ -6138,12 +6147,12 @@ const TERR=[
   });
   let h="<div class=\"mapTitle\">Galactic Map</div><div class=\"mapSub\">Stardate "+G.stardate.toFixed(1)+" \u00b7 Milky Way \u00b7 viewed from galactic north</div>";
   h+=mapViewPills();
-  h+=mapModeBar()+mapShipStrip();
+  h+=mapModeBar()+mapOptsPanel()+mapShipStrip();
   let terr="";
   if(mapLayers.territories)TERR.forEach(t=>{
     terr+=mapTerrSVG(t);
   });
-  h+="<div class=\"mapToggles\">"+LAYER_DEFS.map(function(l){return "<button class=\"mapTog"+(mapLayers[l[0]]?" on":"")+"\" onclick=\"toggleMapLayer(\u0027"+l[0]+"\u0027)\">"+l[1]+"</button>";}).join("")+"</div>";
+  
   h+="<div class=\"mapWrap\"><div id=\"mapZoom\" class=\""+(mapLayers.labels?"":"noLabels")+"\" style=\"--mz:"+mapZ+"\"><svg viewBox=\"0 0 400 400\">"
     +"<defs><radialGradient id=\"gcore\" cx=\"50%\" cy=\"50%\" r=\"50%\"><stop offset=\"0%\" stop-color=\"#fff3d6\" stop-opacity=\".9\"/><stop offset=\"40%\" stop-color=\"#ffd166\" stop-opacity=\".35\"/><stop offset=\"100%\" stop-color=\"#ffd166\" stop-opacity=\"0\"/></radialGradient></defs>"
     +stars
@@ -6559,7 +6568,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.63</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.64</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
