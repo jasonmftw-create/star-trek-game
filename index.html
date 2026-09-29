@@ -1288,7 +1288,7 @@ const KID_MALE=["Tovin","Joran","Darian","Kov","Talan","Renn","Dekker","Sobel","
 const KID_FEMALE=["Liora","Sarella","Nessa","T'Lyn","Kestra","Mira","Yelena","Dara","Sennah","Iliana","Vera","Noor","Tessa","Alina","Rhea","Sora","Linnea","Odette","Priya","Wren","Zia","Hana","Iris","Tova"];
 const KID_LAST=["Voss","Kwan","Okoro","Bel","Teller","Mbeki","Vance","Rao","Venn","Jalis","Park","Kade","Stahl","Illyan","Vex","Osei","Harrow","Kessler","Brandt","Lowell","Marsh","Quill","Sorrel","Vane","Wexler","Yost","Zane","Drexler"];
 /* ================= STATE ================= */
-let G=null; let currentTab="command"; let navStack=[]; let interruptQueue=[]; let modalQueue=[];
+let G=null; let currentTab="command"; let navStack=[]; let tabScrollY={}; let interruptQueue=[]; let modalQueue=[];
 const SAVE_KEY="stfc_save_v1";
 
 function MK(arr){
@@ -3318,19 +3318,23 @@ function hudStat(k,v,c,sub){
 }
 function setTab(t){
   if(t!==currentTab){sfx("door");navStack.push(currentTab);if(navStack.length>24)navStack.shift();}
+  tabScrollY[currentTab]=window.scrollY||document.documentElement.scrollTop||0;
   currentTab=t;
   document.querySelectorAll(".tabBtn").forEach(b=>b.classList.toggle("active",b.dataset.tab===t));
   const v=$("view");
-  render();}
+  render();
+  window.scrollTo(0,0);}
 function navGo(t){closeModal();closeTabMenu();setTab(t);}
 function goBack(){
   if($("menuDrawer").classList.contains("open")){closeTabMenu();return;}
   if($("modalRoot").classList.contains("open")){closeModal();return;}
-  if(currentTab==="command"){try{splashShow();}catch(e){}return;}
+  if(currentTab==="command")return;
   const prev=navStack.pop();
-  if(prev!==undefined){currentTab=prev;
+  if(prev!==undefined){tabScrollY[currentTab]=window.scrollY||document.documentElement.scrollTop||0;
+    currentTab=prev;
     document.querySelectorAll(".tabBtn").forEach(b=>b.classList.toggle("active",b.dataset.tab===prev));
-    render();}
+    render();
+    window.scrollTo(0,tabScrollY[prev]||0);}
 }
 const ICONS={
   back:'<svg viewBox="0 0 24 24"><path d="M14.5 5 7.5 12l7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
@@ -4125,6 +4129,7 @@ document.addEventListener("keydown",function(e){
   if($("modalRoot").classList.contains("open"))closeModal(true);
 });
 function render(){renderHUD();
+  const _sy=window.scrollY||document.documentElement.scrollTop||0;
   const v=$("view");
   if(currentTab==="command")v.innerHTML=renderCommand();
   else if(currentTab==="commander")v.innerHTML=renderCommander();
@@ -4143,7 +4148,7 @@ function render(){renderHUD();
   renderShipQuadBar();
   renderStationQuadBar();
   applyQTheme();
-  window.scrollTo(0,0);
+  window.scrollTo(0,_sy);
 }
 function renderCmdSubBar(){
   const bar=$("cmdSubBar");if(!bar)return;
@@ -6426,7 +6431,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.56</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.57</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
