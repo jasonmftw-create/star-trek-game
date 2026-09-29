@@ -5570,7 +5570,7 @@ function officerModal(id){
   const adult=o.stage==="adult";
   const partner=o.rel?officer(o.rel.partner):null;
   const cost=25*(o.rank+1);
-  let h='<div class="pfaceWrap">'+faceImg(o,"pfaceBig")+'<div style="flex:1;min-width:0;"><h2>'+nameHtml(o)+'</h2><div class="flavor">'+esc(o.species)+' · '+(o.gender==="M"?"Male":o.gender==="F"?"Female":"Non-binary")+
+  let h='<!--OFFICER_MODAL:'+id+'--><div class="pfaceWrap">'+faceImg(o,"pfaceBig")+'<div style="flex:1;min-width:0;"><h2>'+nameHtml(o)+'</h2><div class="flavor">'+esc(o.species)+' · '+(o.gender==="M"?"Male":o.gender==="F"?"Female":"Non-binary")+
     ' · Age '+Math.floor(o.age)+' · '+esc(o.dept)+'</div></div></div>';
   if(typeof PORTRAITS_ALT!=="undefined"&&PORTRAITS_ALT[o.name])h+=portraitToggleHtml(o.name);
   if(o.dead)h+='<p class="badge bad">Deceased — see Memorial Wall</p>';
@@ -5636,7 +5636,11 @@ function officerModal(id){
   const _wasOpen=$("modalRoot").classList.contains("open");
   const _prevHtml=$("modalBox").innerHTML,_prevBack=modalBack;
   openModal(h);
-  if(_wasOpen)modalBack=function(){$("modalBox").innerHTML=_prevHtml;modalBack=_prevBack;};
+  if(_wasOpen){
+    const _om=/^<!--OFFICER_MODAL:([^>]+)-->/.exec(_prevHtml);
+    if(_om&&_om[1]===id)modalBack=_prevBack; // same-officer refresh (promote etc.): keep original back chain, no stale copy
+    else modalBack=function(){$("modalBox").innerHTML=_prevHtml;modalBack=_prevBack;};
+  }
 }
 /* ---------- accolades & service record ---------- */
 function awardAccolade(o,title){
@@ -6871,7 +6875,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.82</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.83</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
