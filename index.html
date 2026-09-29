@@ -199,9 +199,9 @@ body{padding-bottom:90px;}
 @keyframes flashring{0%{opacity:.95;transform:scale(.4);}100%{opacity:0;transform:scale(2.8);}}
 @media (prefers-reduced-motion:reduce){.flashRing{animation:none;opacity:0;}}
 .mapWrap svg{display:block;width:100%;height:auto;}
-.mapDiv{stroke:#ffb703;stroke-width:1.5;opacity:.35;stroke-dasharray:7 6;}
+.mapDiv{stroke:#d43a2f;stroke-width:2;opacity:.75;}.mapGreek{fill:#d43a2f;font-size:17px;font-weight:700;opacity:.85;paint-order:stroke;stroke:rgba(2,5,12,.92);stroke-width:3px;stroke-linejoin:round;}
 .mapQ{fill:#fff;opacity:.6;font-size:13px;font-weight:800;letter-spacing:3px;}
-.mapLbl{fill:var(--peach);font-size:11px;font-weight:700;}
+.mapLbl{fill:var(--peach);font-size:12px;font-weight:700;paint-order:stroke;stroke:rgba(2,5,12,.92);stroke-width:3.5px;stroke-linejoin:round;}
 .mapShipLbl{font-size:8.5px;font-weight:600;fill:#d7e6ff;stroke:#04060d;stroke-width:2.5px;paint-order:stroke;pointer-events:none;}
 
 .mapLegend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:#fff;}
@@ -403,7 +403,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
 .mapOptsPanel .mapModeDesc{min-height:0;}
 .mapTog{border:1px solid #2a3550;background:#0d1526;color:#8b93a7;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;}
 .mapTog.on{background:#12314a;color:#7fd4ff;border-color:#1f5f8b;}
-.mapTerr{font-size:8px;font-weight:700;fill:#93a3bd;letter-spacing:1.5px;}
+.mapTerr{font-size:8px;font-weight:700;fill:#93a3bd;letter-spacing:1.5px;paint-order:stroke;stroke:rgba(2,5,12,.92);stroke-width:3px;stroke-linejoin:round;}
 .mapSect{font-size:9px;font-weight:700;fill:#c9bff2;letter-spacing:2px;font-style:italic;}
 .mapPills{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:0 0 8px;}
 #mapZoom.noLabels .mapLblG{display:none;}
@@ -5827,12 +5827,56 @@ function mapDeployPost(post){
   render();
 }
 function mapDeployCancel(){deployShip=null;render();}
+let _galaxyBG=null;
+function galaxyBG(){
+  if(_galaxyBG!==null)return _galaxyBG;
+  _galaxyBG="";
+  try{
+    const S=800,cv=document.createElement("canvas");cv.width=S;cv.height=S;
+    const g=cv.getContext("2d");
+    let sd=20260928;const R=function(){sd=(sd*1664525+1013904223)>>>0;return sd/4294967296;};
+    const cx=S/2,cy=S/2;
+    const core=g.createRadialGradient(cx,cy,0,cx,cy,170);
+    core.addColorStop(0,"rgba(255,244,220,0.9)");core.addColorStop(0.35,"rgba(255,220,170,0.30)");core.addColorStop(1,"rgba(255,220,170,0)");
+    g.fillStyle=core;g.fillRect(0,0,S,S);
+    for(let i=0;i<4200;i++){
+      const arm=(i%2)*Math.PI,t=Math.pow(R(),0.72);
+      const ang=arm+t*4.6+(R()-0.5)*0.6*(1.2-t*0.5);
+      const rad=26+t*340*(0.75+R()*0.5);
+      const x=cx+Math.cos(ang)*rad*0.92,y=cy+Math.sin(ang)*rad*0.92;
+      const bright=Math.max(0,1-t*0.85),warm=R()<0.22;
+      g.fillStyle=warm?("rgba(255,233,201,"+(0.25+bright*0.55).toFixed(2)+")"):("rgba(207,224,255,"+(0.20+bright*0.60).toFixed(2)+")");
+      g.beginPath();g.arc(x,y,0.6+R()*1.7*bright+0.3,0,6.283);g.fill();
+    }
+    for(let i=0;i<700;i++){
+      g.fillStyle="rgba(220,232,255,"+(0.15+R()*0.5).toFixed(2)+")";
+      g.beginPath();g.arc(R()*S,R()*S,0.4+R()*1.1,0,6.283);g.fill();
+    }
+    _galaxyBG=cv.toDataURL("image/png");
+  }catch(e){_galaxyBG="";}
+  return _galaxyBG;
+}
+function galaxyImg(){
+  const bg=galaxyBG();
+  return bg?'<image href="'+bg+'" x="0" y="0" width="400" height="400" opacity="0.85" preserveAspectRatio="xMidYMid slice"/>':"";
+}
+function terrBlob(cx,cy,rx,ry,seed){
+  let sd=seed>>>0;const R=function(){sd=(sd*1664525+1013904223)>>>0;return sd/4294967296;};
+  const n=11,pts=[],off=R()*6.283;
+  for(let i=0;i<n;i++){
+    const a=off+i/n*6.283,w=1+(R()-0.5)*0.55;
+    pts.push((cx+Math.cos(a)*rx*w).toFixed(1)+","+(cy+Math.sin(a)*ry*w).toFixed(1));
+  }
+  return pts.join(" ");
+}
 function mapTerrSVG(t){
   const hostile=!!HOSTILE_TERR[t[0]];
   if(mapMode==="intel"&&!hostile)return "";
   const alert=hostile&&mapMode!=="explore";
   const col=alert?"#ff5d5d":t[6];
-  return '<g class="poi" onclick="mapInfo(\u0027'+t[0]+'\u0027)"><ellipse cx="'+t[2]+'" cy="'+t[3]+'" rx="'+t[4]+'" ry="'+t[5]+'" fill="'+col+'" fill-opacity="'+(alert?"0.15":"0.07")+'" stroke="'+col+'" stroke-opacity="'+(alert?"0.85":"0.45")+'" stroke-width="1.5" stroke-dasharray="7 5"/>'
+  let hd=7;for(let i=0;i<t[0].length;i++)hd=(hd*31+t[0].charCodeAt(i))>>>0;
+  const pts=terrBlob(t[2],t[3],t[4],t[5],hd);
+  return '<g class="poi" onclick="mapInfo(\u0027'+t[0]+'\u0027)"><polygon points="'+pts+'" fill="'+col+'" fill-opacity="'+(alert?"0.22":"0.13")+'" stroke="'+col+'" stroke-opacity="'+(alert?"0.9":"0.5")+'" stroke-width="1.5" stroke-linejoin="round"/>'
     +'<g class="mapLblG" data-mx="'+t[7]+'" data-my="'+t[8]+'" data-dx="0" data-dy="0"><text x="0" y="0" text-anchor="middle" class="mapTerr">'+t[1]+'</text></g></g>';
 }
 function mapShipRing(s,x,y,post){
@@ -6085,7 +6129,7 @@ function renderQuadrant(q){
   h+=mapViewPills();
   h+=mapModeBar()+mapOptsPanel()+mapShipStrip();
   
-  h+="<div class=\"mapWrap\"><div id=\"mapZoom\" class=\""+(mapLayers.labels?"":"noLabels")+"\" style=\"--mz:"+mapZ+"\"><svg viewBox=\"0 0 400 400\">"
+  h+="<div class=\"mapWrap\"><div id=\"mapZoom\" class=\""+(mapLayers.labels?"":"noLabels")+"\" style=\"--mz:"+mapZ+"\"><svg viewBox=\"0 0 400 400\">"+galaxyImg()
     +stars
     +"<g id=\"mapZoomG\" transform=\"translate("+mapX+" "+mapY+") scale("+mapZ+")\">"
     +sect+terr+(mapLayers.planets?pm:"")+(mapLayers.fleet?fleet:"")+(mapLayers.stations?stnLayer:"")
@@ -6160,13 +6204,17 @@ const TERR=[
     terr+=mapTerrSVG(t);
   });
   
-  h+="<div class=\"mapWrap\"><div id=\"mapZoom\" class=\""+(mapLayers.labels?"":"noLabels")+"\" style=\"--mz:"+mapZ+"\"><svg viewBox=\"0 0 400 400\">"
+  h+="<div class=\"mapWrap\"><div id=\"mapZoom\" class=\""+(mapLayers.labels?"":"noLabels")+"\" style=\"--mz:"+mapZ+"\"><svg viewBox=\"0 0 400 400\">"+galaxyImg()
     +"<defs><radialGradient id=\"gcore\" cx=\"50%\" cy=\"50%\" r=\"50%\"><stop offset=\"0%\" stop-color=\"#fff3d6\" stop-opacity=\".9\"/><stop offset=\"40%\" stop-color=\"#ffd166\" stop-opacity=\".35\"/><stop offset=\"100%\" stop-color=\"#ffd166\" stop-opacity=\"0\"/></radialGradient></defs>"
     +stars
     +"<g id=\"mapZoomG\" transform=\"translate("+mapX+" "+mapY+") scale("+mapZ+")\">"
     +"<circle cx=\"200\" cy=\"200\" r=\"70\" fill=\"url(#gcore)\"/>"
     +"<line x1=\"200\" y1=\"8\" x2=\"200\" y2=\"392\" class=\"mapDiv\"/>"
     +"<line x1=\"8\" y1=\"200\" x2=\"392\" y2=\"200\" class=\"mapDiv\"/>"
+    +"<text x=\"186\" y=\"190\" text-anchor=\"middle\" class=\"mapGreek\">\u03b3</text>"
+    +"<text x=\"214\" y=\"190\" text-anchor=\"middle\" class=\"mapGreek\">\u03b4</text>"
+    +"<text x=\"186\" y=\"218\" text-anchor=\"middle\" class=\"mapGreek\">\u03b1</text>"
+    +"<text x=\"214\" y=\"218\" text-anchor=\"middle\" class=\"mapGreek\">\u03b2</text>"
     +ql+terr+(mapLayers.planets?pm:"")+wh+mapIntelBlips()+(mapLayers.fleet?fleet:"")+(mapLayers.stations?stnLayer:"")+mapDeployFlash()
     +"</g></svg></div>"+mapDeployFloat()+"</div>";
   h+="<div class=\"mapLegend\"><span><i class=\"lgDot\" style=\"background:#ffb703\"></i>Your ships</span><span><i class=\"lgDot\" style=\"background:#7ee0ff\"></i>Wormhole</span><span><i class=\"lgSq\"></i>Your stations</span><span><i class=\"lgDot\" style=\"background:#4cc9f0\"></i>Notable systems</span></div>";
@@ -6575,7 +6623,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.65</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.66</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
