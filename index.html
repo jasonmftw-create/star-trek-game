@@ -547,6 +547,8 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
 .deckFoot{font-size:11px;opacity:.55;text-align:center;margin-top:18px;}
 .deckRoomImg{width:100%;display:block;border-radius:12px;margin:8px 0 4px;max-height:230px;object-fit:cover;border:1px solid var(--line);background:#000;}
 .deckCap{font-size:11px;opacity:.55;text-align:center;margin-bottom:8px;letter-spacing:.5px;}
+.aliveTick{font-size:12px;opacity:.8;font-style:italic;margin:6px 0;padding:7px 10px;border-left:2px solid var(--teal);background:rgba(255,255,255,.03);border-radius:0 8px 8px 0;}
+.aliveGreet{font-size:13px;margin:8px 0;padding:9px 12px;border:1px solid var(--gold);border-radius:10px;background:rgba(255,215,0,.06);}
 
 </style>
 </head>
@@ -9349,6 +9351,220 @@ function showIntro(){
 }
 
 
+/* ================= INTERIOR ALIVE (v2.6) =================
+   Makes ship AND station interiors feel lived-in. One shared concept,
+   different flavor per side — ships are not stations:
+   - shift cycle: alpha/beta/gamma derived from G.day (transient, no save change)
+   - visit memory: additive fields on the ship/station object (save-safe)
+   - reactive mood: ticker lines respond to damage, alert, mission, morale
+   - ambient ticker: PA announcements, corridor vignettes, pets, viewports
+   - micro-stories: 3-stage arcs that unfold across visits (persisted on entity)
+   - mementos: quarters & boards reflect real ship/station history
+   Ships get warp viewports, alert states, mess-hall arcs (poker, birthday,
+   the deck-7 ghost). Stations get docking PAs, promenade crowds, darts,
+   the new shop, and the dock cat. */
+function aliveShift(){return ((G.day%3)+3)%3;} /* 0 alpha, 1 beta, 2 gamma */
+function aliveShiftName(){return ["Alpha shift","Beta shift","Gamma shift"][aliveShift()];}
+
+/* ---- visit memory (additive fields; never restructures the save) ---- */
+function aliveNoteVisit(ent){
+  if((ent.deckLastVisit||-1)<G.day){ent.deckVisits=(ent.deckVisits||0)+1;ent.deckLastVisit=G.day;}
+}
+function aliveGreetFor(ent,isSt){
+  const v=ent.deckVisits||0,last=ent.deckLastVisit||0;
+  if(!v)return isSt?
+    "First walkabout: the promenade stirs as the captain arrives. Shopkeepers straighten their displays.":
+    "First inspection: the crew snaps a little straighter as the captain comes aboard. Everything gleams a touch brighter.";
+  const gap=G.day-last;
+  if(gap>=30)return "It's been "+gap+" days since your last walkabout. A few familiar faces grin — the captain's rounds are back.";
+  if(gap>=7)return "A week since your last visit. The duty officer nods: good to have you back.";
+  return null;
+}
+
+/* ---- reactive mood (derived — nothing stored) ---- */
+function aliveShipMood(s){
+  if(typeof DECK!=="undefined"&&DECK&&DECK.battle)return "battle";
+  if((s.damage||0)>=40)return "damaged";
+  if(s.status==="mission")return "mission";
+  if(s.status==="docked")return "docked";
+  if(HOSTILE_ZONES[s.post||"sol"]||(s.damage||0)>0)return "yellow";
+  return "calm";
+}
+function aliveStationMood(st){
+  const crew=crewOfStation(st.id);
+  if(crew.some(o=>o.health&&o.health!=="healthy"))return "sick";
+  if(crew.length){const avg=crew.reduce((a,o)=>a+(o.morale||70),0)/crew.length;if(avg<45)return "low";}
+  return "calm";
+}
+function aliveViewport(s){
+  const m=aliveShipMood(s);
+  if(m==="battle")return "Through the viewport: silent flashes of weapons fire, far away.";
+  if(m==="mission")return "Through the viewport the stars are drawn into long white lines — warp flight.";
+  if(m==="docked")return "Through the viewport: the curve of a starbase hull, docked and quiet.";
+  return "Through the viewport: the slow turn of the stars.";
+}
+
+/* ---- ambient ticker pools (ships vs stations, shift-aware) ---- */
+const ALIVE_TICK_SHIP=[
+ "PA: \"Senior staff to the observation lounge, please.\"",
+ "Two ensigns hurry past, PADDs in hand, mid-debate about warp field dynamics.",
+ "Someone's quarters door stands open: a saxophone practicing scales. Badly, but with heart.",
+ "The night-shift coffee club has claimed the corner table in the mess hall.",
+ "A child races down the corridor, chased by a very patient Andorian parent.",
+ "PA: \"Drill teams, report to muster stations. This is a drill.\"",
+ "An ensign is giving the new transfer the grand tour — with embellishments.",
+ "The ship's cat supervises from atop a warm conduit. Morale officer, unofficial.",
+ "Two crewmen compare shore-leave stories. Both are lying.",
+ "PA: \"Reminder: the holodeck booking sheet is not a suggestion.\""
+];
+const ALIVE_TICK_SHIP_GAMMA=[
+ "The corridors are hushed. Somewhere, a ventilation fan ticks.",
+ "A lone ensign pads past in socks, carrying tea back to the bridge.",
+ "PA, quietly: \"Gamma shift duty roster is posted.\"",
+ "The warp core's hum is the loudest sound on the ship right now.",
+ "Through a viewport: the slow turn of the stars. The ship dreams."
+];
+const ALIVE_TICK_SHIP_ALERT=[
+ "Damage-control teams move through the corridors with practiced urgency.",
+ "Repair crews have the Jeffries tubes open on three decks.",
+ "The alert lighting bathes everything in red. Nobody is sleeping right now.",
+ "A medic jogs past with a trauma kit. Nobody asks where she's going."
+];
+const ALIVE_TICK_ST=[
+ "PA: \"Attention: the freighter Ikaria has docked at berth 12.\"",
+ "A Bolian toddler is losing a negotiation with a deputy over a dropped toy.",
+ "The promenade lunch rush is a beautiful, noisy chaos.",
+ "Dock workers guide a cargo pallet the size of a shuttle through the ring.",
+ "Someone is busking near the replimat — badly, but with heart.",
+ "PA: \"Shuttle departures are running six minutes behind. We apologize for the inconvenience.\"",
+ "A Dabo wheel spins somewhere on the promenade, and somebody cheers.",
+ "Two officers reenact a docking maneuver with bread rolls. Again."
+];
+const ALIVE_TICK_ST_GAMMA=[
+ "The promenade is quiet. A cleaning crew works the night shift.",
+ "PA, quietly: \"Docking ring secure. All berths nominal.\"",
+ "One café stays open all night. The night-shift regulars have their table.",
+ "Through the viewports: running lights, welding sparks, the slow turn of the stars."
+];
+const ALIVE_TICK_ST_LOW=[
+ "The promenade feels subdued today. People walk a little faster, talk a little softer.",
+ "The bar is doing a brisk trade in quiet conversations.",
+ "Someone has left flowers by the airlock memorial. Nobody says who they're for."
+];
+function aliveTickShip(s){
+  const m=aliveShipMood(s),sh=aliveShift();
+  if(m==="battle"||m==="damaged"||m==="yellow"){
+    const p=ALIVE_TICK_SHIP_ALERT;return p[hashStr("atick:"+s.id+":"+G.day)%p.length];
+  }
+  const p=sh===2?ALIVE_TICK_SHIP_GAMMA:ALIVE_TICK_SHIP;
+  return p[hashStr("stick:"+s.id+":"+G.day+":"+sh)%p.length];
+}
+function aliveTickStation(st){
+  const m=aliveStationMood(st),sh=aliveShift();
+  if(m!=="calm"){const p=ALIVE_TICK_ST_LOW;return p[hashStr("stick:"+st.id+":"+G.day)%p.length];}
+  const p=sh===2?ALIVE_TICK_ST_GAMMA:ALIVE_TICK_ST;
+  return p[hashStr("stick:"+st.id+":"+G.day+":"+sh)%p.length];
+}
+
+/* ---- micro-stories: 3-stage arcs that unfold across visits ---- */
+const ALIVE_SHIP_ARCS=[
+ {id:"poker",room:"mess",name:"The Poker Game",fx:true,
+  stages:["A poker game is forming in the corner of the mess hall — dessert rations for stakes. They're one player short, and looking hopeful.",
+   "The poker game is back, and the stakes have escalated to replicator privileges. Someone is bluffing with a pair of threes. Everyone knows.",
+   "Championship night. Half the off-duty crew is crammed into the mess hall for the final hand. The winner takes the replicator codes — and eternal glory."],
+  done:"The poker tournament ends on a legendary bluff. The mess hall will talk about it for months."},
+ {id:"birthday",room:"mess",name:"The Birthday Plot",fx:true,
+  stages:["A crooked banner hangs in the mess hall: HAPPY BIRTHDAY ENSIGN. The guest of honor hasn't seen it yet.",
+   "The birthday plot thickens — half the deck is in on the surprise party. The ensign suspects nothing. Probably.",
+   "Surprise! The mess hall erupts as the birthday ensign walks in. There's cake. Real cake. Nobody knows where it came from and nobody is asking."],
+  done:"The surprise birthday party was a triumph. Morale is up across the ship."},
+ {id:"ghost",room:"quarters",name:"The Deck 7 Ghost",fx:false,
+  stages:["Rumor on the night shift: something knocks on the Jeffries tube access on deck 7. Three knocks. Always three.",
+   "The deck-7 knocks have a fan club now. And a betting pool. Engineering swears it's thermal contraction. Engineering is lying.",
+   "Mystery solved: a loose plasma relay, knocking as it cools. The night shift is disappointed and delighted in equal measure."],
+  done:"The deck-7 ghost is laid to rest. The night shift will have to find a new mystery."}
+];
+const ALIVE_ST_ARCS=[
+ {id:"darts",room:"promenade",name:"The Darts Tournament",fx:true,
+  stages:["A darts bracket is going up on the promenade board. The bar is sponsoring. The security chief has entered under a false name.",
+   "Darts semifinal tonight and the promenade is packed. The security chief's false identity is holding up remarkably well.",
+   "The final! The whole promenade holds its breath as the last dart flies — and the quiet botanist from the science labs takes the trophy."],
+  done:"The darts final was the social event of the season. The botanist is buying drinks for a year."},
+ {id:"shop",room:"promenade",name:"The New Shop",fx:false,
+  stages:["A vacant storefront on the promenade has a new sign: UNDER NEW MANAGEMENT. Nobody knows what's opening.",
+   "The new shop opens tomorrow. The rumor mill says Bajoran tea house. The betting pool says otherwise.",
+   "The new shop is open — a tea house, as rumored, and already the promenade's worst-kept secret. The line stretches past the airlocks."],
+  done:"The new tea house is the promenade's worst-kept secret. Business is booming."},
+ {id:"dockcat",room:"docking",name:"The Dock Cat",fx:true,
+  stages:["The dock crews have adopted a stray cat. It supervises cargo loading with total authority and zero qualifications.",
+   "The dock cat has been issued a tiny safety vest. It has also claimed the warmest crate in the bay as its throne.",
+   "The dock cat oversaw its hundredth on-time departure today. The crew threw it a party. It slept through the whole thing."],
+  done:"The dock cat is officially crew. Morale on the docking ring has never been higher."}
+];
+function aliveArcTick(ent,isSt){
+  const now=G.day;
+  let a=ent.aliveArc;
+  if(a){
+    if(now>a.day){
+      a.stage++;a.day=now;
+      if(a.stage>2){
+        const tpl=(isSt?ALIVE_ST_ARCS:ALIVE_SHIP_ARCS).find(t=>t.id===a.tpl);
+        if(tpl){
+          log("command",(ent.name||"The crew")+" — "+tpl.done);
+          if(tpl.fx)(isSt?crewOfStation(ent.id):crewOfShip(ent.id)).forEach(o=>{o.morale=Math.min(100,(o.morale||70)+2);});
+        }
+        ent.aliveArc=null;ent.aliveArcCd=now+60;
+      }
+    }
+  }else if(now>=(ent.aliveArcCd||0)&&Math.random()<0.45){
+    const pool=isSt?ALIVE_ST_ARCS:ALIVE_SHIP_ARCS;
+    const t=pool[Math.floor(Math.random()*pool.length)];
+    ent.aliveArc={tpl:t.id,stage:0,day:now};
+  }
+}
+function aliveArcVignette(ent,rid,isSt){
+  const a=ent.aliveArc;if(!a)return "";
+  const tpl=(isSt?ALIVE_ST_ARCS:ALIVE_SHIP_ARCS).find(t=>t.id===a.tpl);
+  if(!tpl||tpl.room!==rid)return "";
+  return '<div class="sceneCard" style="border:1px solid var(--teal);margin-top:8px;">'+
+    '<div class="deckSec" style="color:var(--teal)">'+esc(tpl.name)+' · part '+(Math.min(a.stage,2)+1)+' of 3</div>'+
+    '<div class="flavor">'+esc(tpl.stages[Math.min(a.stage,2)])+'</div></div>';
+}
+
+/* ---- mementos: quarters & boards reflect real history ---- */
+function aliveMementos(s){
+  const m=[];
+  if((s.msnWon||0)>0)m.push("a mission plaque engraved with "+s.msnWon+" successful operations");
+  if((s.batWon||0)>0)m.push("a dented bulkhead panel kept as a trophy — "+s.batWon+" battle"+(s.batWon>1?"s":"")+" won");
+  if(typeof flagshipId==="function"&&flagshipId()===s.id)m.push("the fleet flagship pennant, folded with full ceremony");
+  if((s.tours||0)>1)m.push("a scale model of the ship as she looked on launch day");
+  if(s.commSd)m.push("her commissioning orders, stardate "+s.commSd+", framed by the first crew");
+  if((s.damage||0)>0)m.push("fresh weld marks — the scars of recent damage");
+  return m.slice(0,3);
+}
+function aliveStQuarters(st){
+  const crew=crewOfStation(st.id).length,m=[];
+  if(crew>20)m.push(crew+" crew share these corridors");
+  m.push("a mural of the station painted by the gamma shift");
+  if(st.type==="medical")m.push("get-well cards from three grateful colonies");
+  if(st.id==="ds9")m.push("a vintage earring, left behind by persons unknown");
+  return m.slice(0,3);
+}
+function aliveBoard(st){
+  const crew=crewOfStation(st.id).length;
+  const pool=[
+    crew+" souls call this station home",
+    "lost: one plush tribble — if found, do NOT feed it",
+    "darts semifinal, promenade level, Friday — the security chief is favored",
+    (1+hashStr(st.id+":"+G.day)%6)+" new transfers welcomed this week",
+    "the replimat's hasperat special is back by popular demand",
+    "reminder: mag-boots required beyond airlock 4"
+  ];
+  const a=pool[hashStr("bd:"+st.id+":"+G.day)%pool.length];
+  let bi=hashStr("bd2:"+st.id+":"+G.day)%pool.length;
+  if(pool[bi]===a)bi=(bi+1)%pool.length;
+  return a+". "+pool[bi]+".";
+}
 /* ================= SHIP INTERIOR — "ENTER THE SHIP" (v2.0) =================
    A walkable ship: deck plan -> room scenes -> corridor encounters ->
    shipboard "bottle episode" missions -> bridge command during RED ALERT.
@@ -9421,7 +9637,12 @@ function deckRoomMap(s){
   // couples share quarters; everyone else drifts between mess and quarters (changes daily)
   const pairs=[];
   rest.forEach(o=>{if(o.rel){const p=officer(o.rel.partner||o.rel);if(p&&!placed[p.id]&&p.post.t==="ship"&&p.post.id===s.id){map.quarters.push(o);map.quarters.push(p);placed[o.id]=placed[p.id]=1;pairs.push(o.id,p.id);}}});
-  rest.forEach(o=>{if(placed[o.id])return;const h=hashStr(o.id+":"+G.day)%2;map[h?"mess":"quarters"].push(o);placed[o.id]=1;});
+  const dsh=aliveShift();
+  rest.forEach(o=>{if(placed[o.id])return;
+    if(dsh===2){map.quarters.push(o);} /* gamma: off-duty crew sleep */
+    else if(dsh===1){const h=hashStr(o.id+":"+G.day)%3;map[h===0?"quarters":h===1?"mess":"lounge"].push(o);}
+    else{const h=hashStr(o.id+":"+G.day)%2;map[h?"mess":"quarters"].push(o);}
+    placed[o.id]=1;});
   Object.keys(map).forEach(k=>map[k].sort((a,b)=>b.rank-a.rank));
   return map;
 }
@@ -9439,6 +9660,7 @@ function deckEnter(sid){
   const s=ship(sid);if(!s||!deckCanEnter(s))return;
   closeModal();closeSheet();
   DECK={shipId:sid,screen:"plan",room:null,enc:null,battle:null,roomMap:null};
+  DECK.greet=aliveGreetFor(s,false);aliveNoteVisit(s);aliveArcTick(s,false);
   sfx("door");
   $("deckRoot").classList.add("open");
   renderDeck();
@@ -9485,6 +9707,8 @@ function deckPlanHtml(s){
   if(!DECK.roomMap)DECK.roomMap=deckRoomMap(s);
   const map=DECK.roomMap;
   let h='<div class="deckSec">Ship status</div>'+deckStatusStrip(s);
+  h+='<div class="aliveTick">'+esc(aliveShiftName())+' · '+esc(aliveTickShip(s))+'</div>';
+  h+='<div class="aliveTick">'+esc(aliveViewport(s))+'</div>';
   const active=(G.shipOps||[]).find(m=>m.shipId===s.id);
   h+='<div class="deckBtnRow"><button class="btn small violet" onclick="DECK.screen=\'ops\';renderDeck()">Ship operations'+(active?' <b style="color:var(--gold)">●</b>':"")+'</button></div>';
   h+='<div class="deckSec">Deck plan — tap a room to enter</div>';
@@ -9510,10 +9734,14 @@ function deckRoomHtml(s,rid){
   const line=def.lines[hashStr(rid+":"+G.day)%def.lines.length];
   let h="";
   if(DECK.enc)h+=deckEncHtml(s,DECK.enc);
+  if(DECK.greet&&!DECK.greeted){h+='<div class="aliveGreet">'+esc(DECK.greet)+'</div>';DECK.greeted=true;}
   h+='<div class="deckSec">'+esc(def.name)+' · Deck '+deckOfRoom(s,def)+'</div>';
   h+=deckRoomImg(s,rid);
   h+='<div class="sceneCard"><div class="flavor">'+esc(def.blurb)+'</div>';
   h+='<div class="sceneProse"><i>'+esc(line)+'</i></div>';
+  h+='<div class="aliveTick">'+esc(aliveTickShip(s))+'</div>';
+  h+=aliveArcVignette(s,rid,false);
+  if(rid==="quarters"){const mm=aliveMementos(s);if(mm.length)h+='<div class="aliveTick">Mementos: '+esc(mm.join("; "))+'.</div>';}
   if(occ.length){
     h+='<div class="deckSec" style="margin-top:6px;">Present ('+occ.length+')</div><div class="occGrid">'+
       occ.slice(0,8).map(o=>'<div class="occChip" onclick="officerModal(\''+o.id+'\')">'+faceImg(o,"pface")+
@@ -10184,7 +10412,12 @@ function sdeckRoomMap(st){
   crew.forEach(o=>{const rid=sdeckRoomFor(o);if(rid){map[rid].push(o);placed[o.id]=1;}});
   const rest=crew.filter(o=>!placed[o.id]);
   rest.forEach(o=>{if(o.rel){const p=officer(o.rel.partner||o.rel);if(p&&!placed[p.id]&&p.post.t==="station"&&p.post.id===st.id){map.quarters.push(o);map.quarters.push(p);placed[o.id]=placed[p.id]=1;}}});
-  rest.forEach(o=>{if(placed[o.id])return;const h=hashStr(o.id+":"+G.day)%2;map[h?"promenade":"quarters"].push(o);placed[o.id]=1;});
+  const ssh=aliveShift();
+  rest.forEach(o=>{if(placed[o.id])return;
+    if(ssh===2){map.quarters.push(o);} /* gamma: the station sleeps */
+    else if(ssh===1){const h=hashStr(o.id+":"+G.day)%3;map[h===2?"quarters":"promenade"].push(o);}
+    else{const h=hashStr(o.id+":"+G.day)%2;map[h?"promenade":"quarters"].push(o);}
+    placed[o.id]=1;});
   Object.keys(map).forEach(k=>map[k].sort((a,b)=>b.rank-a.rank));
   return map;
 }
@@ -10207,6 +10440,7 @@ function sdeckEnter(stid){
   const st=station(stid);if(!st||!sdeckCanEnter(st))return;
   closeModal();closeSheet();DECK=null;
   SDECK={stId:stid,screen:"plan",room:null,enc:null,roomMap:null};
+  SDECK.greet=aliveGreetFor(st,true);aliveNoteVisit(st);aliveArcTick(st,true);
   sfx("door");
   $("deckRoot").classList.add("open");
   sdeckRender();
@@ -10251,6 +10485,7 @@ function sdeckPlanHtml(st){
   if(!SDECK.roomMap)SDECK.roomMap=sdeckRoomMap(st);
   const map=SDECK.roomMap;
   let h='<div class="deckSec">Station status</div>'+sdeckStatusStrip(st);
+  h+='<div class="aliveTick">'+esc(aliveShiftName())+' · '+esc(aliveTickStation(st))+'</div>';
   const active=sdeckActiveOp(st);
   h+='<div class="deckBtnRow"><button class="btn small violet" onclick="SDECK.screen=\'ops\';sdeckRender()">Station operations'+(active?' <b style="color:var(--gold)">●</b>':"")+'</button></div>';
   h+='<div class="deckSec">Section plan — tap a room to enter</div>';
@@ -10276,10 +10511,15 @@ function sdeckRoomHtml(st,rid){
   const line=def.lines[hashStr(rid+":"+G.day)%def.lines.length];
   let h="";
   if(SDECK.enc)h+=sdeckEncHtml(st,SDECK.enc);
+  if(SDECK.greet&&!SDECK.greeted){h+='<div class="aliveGreet">'+esc(SDECK.greet)+'</div>';SDECK.greeted=true;}
   h+='<div class="deckSec">'+esc(def.name)+' · Section '+sdeckSectionOf(st,def)+'</div>';
   h+=sdeckRoomImg(st,rid);
   h+='<div class="sceneCard"><div class="flavor">'+esc(def.blurb)+'</div>';
   h+='<div class="sceneProse"><i>'+esc(line)+'</i></div>';
+  h+='<div class="aliveTick">'+esc(aliveTickStation(st))+'</div>';
+  h+=aliveArcVignette(st,rid,true);
+  if(rid==="promenade")h+='<div class="aliveTick">Community board: '+esc(aliveBoard(st))+'</div>';
+  if(rid==="quarters"){const mm=aliveStQuarters(st);if(mm.length)h+='<div class="aliveTick">In these corridors: '+esc(mm.join("; "))+'.</div>';}
   if(occ.length){
     h+='<div class="deckSec" style="margin-top:6px;">Present ('+occ.length+')</div><div class="occGrid">'+
       occ.slice(0,8).map(o=>'<div class="occChip" onclick="officerModal(\''+o.id+'\')">'+faceImg(o,"pface")+
@@ -10899,7 +11139,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.5</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.6</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
