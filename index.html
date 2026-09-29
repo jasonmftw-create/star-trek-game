@@ -5860,7 +5860,7 @@ function intelRumor(i){const b=INTEL_BLIPS[i];if(!b)return;sfx("tricorder");open
 function mapHintText(){
   if(mapMode==="deploy")return deployShip?"Tap a glowing system to post your ship there \u2014 or tap Cancel on the map.":"Tap one of your ships to begin reposting it.";
   if(mapMode==="intel")return "Red zones are hostile. Pulsing rings mark ships in danger; red diamonds are fresh intel.";
-  return "Pinch to zoom \u00b7 double-tap to reset \u00b7 tap a marker for details.";
+  return "Pinch to zoom \u00b7 drag to look around when zoomed \u00b7 double-tap to reset \u00b7 tap a marker for details.";
 }
 function mapViewPills(){
   const vs=[["galaxy","Galaxy"],["alpha","Alpha"],["beta","Beta"],["gamma","Gamma"],["delta","Delta"]];
@@ -5887,6 +5887,13 @@ function initMapZoom(){
         mapX+=200*(mapZ-nz);mapY+=200*(mapZ-nz);mapZ=nz;applyMapT();
       }
       lastD=d;e.preventDefault();
+      if(nz===1){mapX=0;mapY=0;applyMapT();}
+    }else if(k.length===1&&mapZ>1){
+      const p=pts[k[0]];
+      if(Math.hypot(p.x-p.sx,p.y-p.sy)>10){
+        if(p.px!==undefined){mapX+=(p.x-p.px)*u;mapY+=(p.y-p.py)*u;clampMapPan();applyMapT();}
+        p.px=p.x;p.py=p.y;e.preventDefault();
+      }
     }
   },{passive:false});
   const end=function(e){
@@ -6568,7 +6575,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.64</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.65</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
