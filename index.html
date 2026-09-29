@@ -5200,7 +5200,13 @@ function uiCapLogSave(){
   if(G.captainsLog.length>300)G.captainsLog.splice(0,G.captainsLog.length-300);
   save();render();toast("Logged.");
 }
-function uiCapLogDel(i){G.captainsLog.splice(i,1);save();render();}
+function uiCapLogDel(i){
+  const e=G.captainsLog[i];
+  openModal('<h2>Delete log entry?</h2><p class="dim">'+(e?'“'+esc(e.t)+'” · stardate '+sdStr(e.sd)+'. ':"")+'This cannot be undone.</p>'+
+    '<div class="btnRow"><button class="btn" onclick="closeModal()">Keep it</button>'+
+    '<button class="btn danger" onclick="uiCapLogDelGo('+i+')">Delete</button></div>');
+}
+function uiCapLogDelGo(i){G.captainsLog.splice(i,1);closeModal();save();render();toast("Log entry deleted.");}
 function renderLog(){
   const cats=["all","mission","combat","event","personnel","romance","family","build","system"];
   let h='<div class="card"><label>Category</label><select onchange="logFilter=this.value;render()">'+
@@ -5987,10 +5993,21 @@ function mapInfo(id){
 function uiMothballToggle(kind,id){
   const tgt=kind==="ship"?ship(id):station(id);if(!tgt)return;
   if(kind==="ship"&&(tgt.status==="mission"||tgt.transit)){toast("Cannot mothball while on mission or in transit.");return;}
+  if(!tgt.mothballed){
+    const isShip=kind==="ship";
+    openModal('<h2>Mothball '+esc(tgt.name)+ '?</h2><p class="dim">'+(isShip?"She will stand down with a skeleton caretaker watch.":"It will go into caretaker mode.")+' Upkeep is suspended, and '+(isShip?"she":"it")+' will sit out battles and missions until recommissioned.</p>'+
+      '<div class="btnRow"><button class="btn" onclick="closeModal()">Keep active</button>'+
+      '<button class="btn danger" onclick="uiMothballToggleGo(\''+kind+'\',\''+id+'\')">Mothball</button></div>');
+    return;
+  }
+  uiMothballToggleGo(kind,id);
+}
+function uiMothballToggleGo(kind,id){
+  const tgt=kind==="ship"?ship(id):station(id);if(!tgt)return;
   tgt.mothballed=!tgt.mothballed;
   if(tgt.mothballed)log("build",tgt.name+" has been mothballed — standing down with a skeleton caretaker watch. Upkeep suspended.");
   else log("build",tgt.name+" has been recommissioned and returns to active service.");
-  save();render();
+  closeModal();save();render();
   if(kind==="ship")shipModal(id);else stationModal(id);
   toast(tgt.mothballed?"Mothballed.":"Recommissioned.");
 }
@@ -6356,7 +6373,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <h2>Menu</h2>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.51</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.52</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
