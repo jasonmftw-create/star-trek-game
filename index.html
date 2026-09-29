@@ -4242,10 +4242,11 @@ function render(){renderHUD();
 }
 function renderCmdSubBar(){
   const bar=$("cmdSubBar");if(!bar)return;
-  if(currentTab!=="command"){bar.innerHTML="";bar.style.display="none";return;}
-  bar.style.display="block";
+  bar.innerHTML="";bar.style.display="none";
+}
+function cmdSubPills(){
   const tabs=[["status","Status"],["research","Research"],["inst","Institutions"],["rec","Records"]];
-  bar.innerHTML='<div class="cmdsubseg">'+tabs.map(t=>'<button class="btn small'+(cmdSub===t[0]?" on":"")+'" onclick="cmdSub=\''+t[0]+'\';render()">'+t[1]+'</button>').join("")+'</div>';
+  return '<div class="card"><div class="cmdsubseg">'+tabs.map(t=>'<button class="btn small'+(cmdSub===t[0]?" on":"")+'" onclick="cmdSub=\''+t[0]+'\';render()">'+t[1]+'</button>').join("")+'</div></div>';
 }
 function renderShipQuadBar(){
   const bar=$("shipQuadBar");if(!bar)return;
@@ -4585,10 +4586,10 @@ function renderCommand(){
     '<b>6.</b> Earn prestige from missions and events to unlock the Prometheus-class and rise to Fleet Admiral.<br>'+
     '<b>7.</b> Damaged ships repair automatically at free shipyards. Injured crew heal — faster with a Medical Station.</p></div>';
   let h=(G.qmode?renderQCard():"");
-  if(cmdSub==="research")h+=renderResearchCard();
-  else if(cmdSub==="inst")h+=cmdrInstitutions();
-  else if(cmdSub==="rec")h+=recCard;
-  else h+=renderNeedsAttention()+cmdrCard+sectorCard+opsCard;
+  if(cmdSub==="research")h+=cmdSubPills()+renderResearchCard();
+  else if(cmdSub==="inst")h+=cmdSubPills()+cmdrInstitutions();
+  else if(cmdSub==="rec")h+=cmdSubPills()+recCard;
+  else h+=renderNeedsAttention()+cmdrCard+cmdSubPills()+sectorCard+opsCard;
   return h;
 }
 
@@ -6917,7 +6918,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.88</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.89</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
