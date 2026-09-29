@@ -488,6 +488,51 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
 .mapSect{font-size:9px;font-weight:700;fill:#c9bff2;letter-spacing:2px;font-style:italic;}
 .mapPills{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:0 0 8px;}
 #mapZoom.noLabels .mapLblG{display:none;}
+/* ===== SHIP INTERIOR ("ENTER THE SHIP") — v2.0 styles ===== */
+#deckRoot{position:fixed;inset:0;z-index:90;display:none;background:var(--bg);color:var(--ice);}
+#deckRoot.open{display:flex;flex-direction:column;}
+.deckTop{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:8px;padding:10px 12px;background:#000;border-bottom:3px solid var(--teal);}
+.deckTop .dName{font-weight:800;font-size:16px;letter-spacing:.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.deckTop .dReg{font-size:11px;opacity:.7;font-weight:400;}
+.deckCond{font-size:11px;font-weight:800;padding:4px 10px;border-radius:12px;letter-spacing:1px;}
+.deckCond.green{background:#1d4d1d;color:#b9f5b9;}
+.deckCond.yellow{background:#5a4a12;color:#ffe08a;}
+.deckCond.red{background:#5f1414;color:#ffb3b3;animation:deckPulse 1.1s infinite;}
+@keyframes deckPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,60,60,.0);}50%{box-shadow:0 0 14px 2px rgba(255,60,60,.65);}}
+.deckBody{flex:1;overflow-y:auto;padding:12px 12px 110px;-webkit-overflow-scrolling:touch;}
+.deckStrip{display:flex;gap:8px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:10px;font-size:12px;}
+.deckSec{font-size:12px;font-weight:800;letter-spacing:2px;color:var(--teal);margin:14px 2px 8px;text-transform:uppercase;}
+.deckBand{background:var(--panel);border:1px solid var(--line);border-left:6px solid var(--teal);border-radius:8px;margin-bottom:8px;padding:8px 10px;}
+.deckBand.cur{border-left-color:var(--gold);background:var(--panel2);}
+.deckBand .dNum{font-size:11px;font-weight:800;letter-spacing:2px;color:var(--teal);margin-bottom:6px;}
+.deckRooms{display:flex;flex-wrap:wrap;gap:6px;}
+.roomPill{background:#000;border:1px solid var(--teal);color:var(--ice);border-radius:16px;padding:7px 12px;font-size:13px;cursor:pointer;}
+.roomPill:active{transform:scale(.96);}
+.roomPill.here{border-color:var(--gold);color:var(--gold);font-weight:700;}
+.roomPill .cnt{opacity:.65;font-size:11px;margin-left:4px;}
+.sceneCard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px;}
+.sceneCard h3{margin:0 0 2px;font-size:19px;letter-spacing:.5px;}
+.sceneCard .flavor{margin-bottom:10px;}
+.sceneProse{font-size:14.5px;line-height:1.55;margin:10px 0;}
+.sceneProse i{color:var(--teal);}
+.occGrid{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;}
+.occChip{display:flex;align-items:center;gap:8px;background:#000;border:1px solid var(--line);border-radius:10px;padding:6px 10px 6px 6px;cursor:pointer;max-width:100%;}
+.occChip img{width:40px;height:40px;border-radius:8px;object-fit:cover;}
+.occChip .nm{font-size:13px;font-weight:700;}
+.occChip .rl{font-size:11px;opacity:.65;}
+.deckActions{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+.deckActions .btn{text-align:left;}
+.encOverlay{position:sticky;top:0;z-index:6;background:var(--panel2);border:2px solid var(--gold);border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 6px 24px rgba(0,0,0,.5);}
+.encOverlay h4{margin:0 0 6px;color:var(--gold);letter-spacing:1px;font-size:13px;text-transform:uppercase;}
+.redAlertFrame{border:3px solid var(--red);border-radius:12px;padding:14px;background:#1a0505;animation:deckPulse 1.1s infinite;margin-bottom:10px;}
+.redAlertFrame h3{color:#ff8080;margin:0 0 6px;letter-spacing:2px;}
+.opRow{display:flex;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;}
+.opRow .grow{flex:1;}
+.opRow .nm{font-weight:700;font-size:14px;}
+.opRow .sub2{font-size:12px;opacity:.7;}
+.deckBtnRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.deckFoot{font-size:11px;opacity:.55;text-align:center;margin-top:18px;}
+
 </style>
 </head>
 <body>
@@ -1797,6 +1842,7 @@ function tickDay(){
   economyTick(); buildTick(); researchTick(); refitTick(); missionTick(); transitTick();
   healTick(); ageTick(); romanceTick(); familyTick();
   randomEventTick(); scriptedTick(); rankCheckTick(); battleTick(); socialTick(); arcTick(); holoTick(); holidayTick();
+  if(G.shipOps&&G.shipOps.length)G.shipOps=G.shipOps.filter(function(m){return ship(m.shipId);});
 }
 function economyTick(){
   let income=1500+300*activeStations("starbase").length
@@ -3303,7 +3349,8 @@ function battleTick(){
       const e=pick(ENEMY_POOLS[z.pool]);
       G.ledger.events++;
       log("combat","RED ALERT: "+s.name+" ("+SHIP_CLASSES[s.cls].name+"-class) has encountered "+anArt(e.n)+" "+e.n+" — "+z.terr+".");
-      interruptQueue.push({title:"RED ALERT — "+s.name,sub:z.terr+" · Stardate "+sdStr(G.stardate),
+      if(typeof DECK!=="undefined"&&DECK&&DECK.shipId===s.id&&!DECK.battle)deckBattleCheck(s,e,z);
+      else interruptQueue.push({title:"RED ALERT — "+s.name,sub:z.terr+" · Stardate "+sdStr(G.stardate),
         html:battleHtml(s,e,z),buttons:battleButtons(s,e,z)});
       if(!klaxoned){klaxoned=true;sfx("klaxon");}
     }
@@ -3638,6 +3685,7 @@ function setTab(t){
   window.scrollTo(0,0);}
 function navGo(t){closeSheet();closeModal();closeTabMenu();setTab(t);}
 function goBack(){
+  if(typeof deckOpen==="function"&&deckOpen()){deckGoBack();return;}
   if($("sheetRoot").classList.contains("open")){closeSheet();return;}
   if($("menuDrawer").classList.contains("open")){closeTabMenu();return;}
   if($("modalRoot").classList.contains("open")){
@@ -7042,6 +7090,7 @@ function shipModal(id){
   });
   h+='<div class="btnRow"><button class="btn small teal" onclick="uiCrewAssign(\'ship\',\''+s.id+'\')">Assign crew</button><button class="btn small" onclick="uiBuildShuttle(\'ship\',\''+s.id+'\')">Build shuttlecraft</button></div>';
   h+='<div class="btnRow">'+
+    (((s.status==="active"||s.status==="damaged")&&!s.mothballed)?'<button class="btn small teal" onclick="deckEnter(\''+s.id+'\')">Enter ship</button>':"")+
     '<button class="btn small peach" onclick="uiShoreLeave(\'ship\',\''+s.id+'\')">Shore leave (500 CR)</button>'+
     (s.status==="active"&&!s.transit&&!s.mothballed?'<button class="btn small teal" onclick="_mShip=\''+s.id+'\';closeModal();setTab(\'missions\')">Launch mission</button>':"")+
     (s.status==="active"&&!s.transit&&!s.mothballed&&hasStation("gate")?'<button class="btn small violet" onclick="uiGateTransit(\''+s.id+'\')">Slipstream transit</button>':"")+
@@ -7521,6 +7570,750 @@ function showIntro(){
     '<div class="btnRow"><button class="btn big" onclick="closeModal()">Take command</button></div>');
 }
 
+
+/* ================= SHIP INTERIOR — "ENTER THE SHIP" (v2.0) =================
+   A walkable ship: deck plan -> room scenes -> corridor encounters ->
+   shipboard "bottle episode" missions -> bridge command during RED ALERT.
+   DECK is transient UI state (never saved). G.shipOps persists missions. */
+let DECK=null;
+
+const DECK_ROOMS=[
+ {id:"bridge",name:"Bridge",frac:0.02,blurb:"The nerve center of the ship. Every station hums with quiet readiness.",
+  lines:["The viewscreen shows the slow drift of stars. Somewhere out there, the mission continues.","A junior officer runs a level-three diagnostic, trying very hard to look like this is routine.","The conn officer keeps one eye on the helm and one on the captain\'s chair — just in case."]},
+ {id:"ready",name:"Ready Room",frac:0.07,blurb:"The captain\'s ready room. A desk, a viewport full of stars, and the weight of command.",
+  lines:["A half-finished cup of coffee has gone cold beside a stack of duty rosters.","The viewport frames a perfect wedge of starfield. It never gets old.","Somewhere in the desk drawer is a bottle saved for a very particular occasion."]},
+ {id:"lounge",name:"Observation Lounge",frac:0.12,blurb:"The observation lounge. A long table, starfield windows, and the ghosts of a hundred briefings.",
+  lines:["The long table still bears the ring-marks of a thousand coffee cups.","Through the windows, the warp nacelles glow faintly blue.","This is where the hard decisions get made — and the goodbyes said."]},
+ {id:"transporter",name:"Transporter Room",frac:0.20,blurb:"The transporter room. The pad shimmers faintly, cycling through standby diagnostics.",
+  lines:["The transporter chief runs a pattern-buffer diagnostic for the third time this shift.","Six pads, softly glowing. Six promises of somewhere else.","A faint ozone smell hangs in the air — the perfume of the transporter."]},
+ {id:"sickbay",name:"Sickbay",frac:0.32,blurb:"Sickbay. Biobeds in neat rows, the air sharp with antiseptic and quiet competence.",
+  lines:["A medical tricorder chirps softly from the far biobed.","The EMH emitter in the ceiling blinks its ready-green.","Everything is labeled, sterilized, and exactly where it should be."]},
+ {id:"science",name:"Science Labs",frac:0.40,blurb:"The science labs. Half of this ship\'s curiosity lives behind these doors.",
+  lines:["A sample container holds something that definitely was not in the briefing.","Someone has left a half-eaten sandwich next to a class-4 biohazard seal. Priorities.","The astrometrics display slowly rotates a sector map nobody fully understands yet."]},
+ {id:"mess",name:"Mess Hall",frac:0.52,blurb:"The mess hall. Replicated coffee, a dozen conversations, and the closest thing to home.",
+  lines:["Two ensigns are arguing passionately about which captain was the best. It is not close to resolved.","The replicator hums out another black coffee. Someone cheers.","A group in the corner is dealing cards. The stakes appear to be dessert rations."]},
+ {id:"holodeck",name:"Holodeck",frac:0.60,blurb:"The holodeck. An empty grid waiting to become anywhere at all.",
+  lines:["Yellow grid lines fade into black. The air smells faintly of potential.","The arch glows softly: INSERT PROGRAM.","Somewhere in the buffer, a thousand unfinished adventures wait their turn."]},
+ {id:"quarters",name:"Crew Quarters",frac:0.70,blurb:"Crew quarters. Behind every door, a life being lived between the stars.",
+  lines:["Muffled music leaks from behind one door. Someone is off-shift and making the most of it.","A corridor of closed doors, each one a small private universe.","Through one open doorway: photos taped to a bulkhead, a whole life in twelve pictures."]},
+ {id:"engineering",name:"Main Engineering",frac:0.82,blurb:"Main engineering. The warp core pulses like a heartbeat you can feel in your teeth.",
+  lines:["The warp core hums its endless blue note. Engineers move around it like acolytes.","An EPS manifold ticks as it cools. Everything smells faintly of hot metal.","The master systems display shows green across the board — the most beautiful color there is."]},
+ {id:"shuttle",name:"Shuttlebay",frac:0.90,blurb:"The shuttlebay. Small craft racked and ready, the deck crew moving with practiced ease.",
+  lines:["A workbee putters past with a cargo pallet, its pilot waving.","The bay doors are sealed, but you can feel the vacuum waiting on the other side.","A shuttle is up on blocks, its nacelle cowling off, getting the full treatment."]},
+ {id:"brig",name:"Brig",frac:0.96,blurb:"The brig. Quiet, forcefield-humming, and — on a good day — completely empty.",
+  lines:["The forcefield hums its low, patient note.","A security officer stands post, alert despite the stillness.","The cells are empty. Long may it continue."]}
+];
+function deckRoomDef(id){return DECK_ROOMS.find(r=>r.id===id)||DECK_ROOMS[0];}
+function deckCount(s){const c=shipClass(s);return clamp(4+Math.round((c.slots||10)/3),4,10);}
+function deckOfRoom(s,room){const n=deckCount(s);return 1+Math.round(room.frac*(n-1));}
+
+/* ---- where is everyone? ---- */
+function deckRoomFor(o){
+  const R=o.roles||[],D=o.dept,has=x=>R.indexOf(x)>=0;
+  if(has("co"))return "ready";
+  if(has("xo")||has("conn")||has("ops")||has("tac"))return "bridge";
+  if(D==="Engineering"||has("eng"))return "engineering";
+  if(D==="Medical"||has("med")||has("doc")||has("nurse")||has("coun"))return "sickbay";
+  if(D==="Science"||has("sci"))return "science";
+  if(D==="Security"||has("sec"))return "brig";
+  if(has("chef")||has("bart"))return "mess";
+  return null;
+}
+function deckRoomMap(s){
+  const crew=crewOfShip(s.id),map={};DECK_ROOMS.forEach(r=>map[r.id]=[]);
+  const placed={};
+  crew.forEach(o=>{const rid=deckRoomFor(o);if(rid){map[rid].push(o);placed[o.id]=1;}});
+  const rest=crew.filter(o=>!placed[o.id]);
+  // couples share quarters; everyone else drifts between mess and quarters (changes daily)
+  const pairs=[];
+  rest.forEach(o=>{if(o.rel){const p=officer(o.rel.partner||o.rel);if(p&&!placed[p.id]&&p.post.t==="ship"&&p.post.id===s.id){map.quarters.push(o);map.quarters.push(p);placed[o.id]=placed[p.id]=1;pairs.push(o.id,p.id);}}});
+  rest.forEach(o=>{if(placed[o.id])return;const h=hashStr(o.id+":"+G.day)%2;map[h?"mess":"quarters"].push(o);placed[o.id]=1;});
+  Object.keys(map).forEach(k=>map[k].sort((a,b)=>b.rank-a.rank));
+  return map;
+}
+function deckAlert(s){
+  if(DECK&&DECK.battle)return "red";
+  if((s.damage||0)>=40)return "red";
+  if(HOSTILE_ZONES[s.post||"sol"]||(s.damage||0)>0)return "yellow";
+  return "green";
+}
+function deckAlertLabel(s){const a=deckAlert(s);return a==="red"?'<span class="deckCond red">RED ALERT</span>':a==="yellow"?'<span class="deckCond yellow">YELLOW ALERT</span>':'<span class="deckCond green">ALL SYSTEMS NOMINAL</span>';}
+
+/* ---- enter / exit / back ---- */
+function deckCanEnter(s){return s&&(s.status==="active"||s.status==="damaged")&&!s.mothballed&&s.status!=="museum";}
+function deckEnter(sid){
+  const s=ship(sid);if(!s||!deckCanEnter(s))return;
+  closeModal();closeSheet();
+  DECK={shipId:sid,screen:"plan",room:null,enc:null,battle:null,roomMap:null};
+  sfx("door");
+  $("deckRoot").classList.add("open");
+  renderDeck();
+  window.scrollTo(0,0);
+}
+function deckExit(){DECK=null;$("deckRoot").classList.remove("open");render();}
+function deckOpen(){return !!DECK&&$("deckRoot").classList.contains("open");}
+function deckGoBack(){
+  if(!DECK)return;
+  if(DECK.enc){DECK.enc=null;renderDeck();return;}
+  if(DECK.battle)return; // red alert must be answered
+  if(DECK.screen==="op"){DECK.screen="ops";renderDeck();return;}
+  if(DECK.screen==="room"||DECK.screen==="ops"){DECK.screen="plan";DECK.room=null;renderDeck();return;}
+  deckExit();
+}
+function deckShip(){return DECK?ship(DECK.shipId):null;}
+
+/* ---- rendering ---- */
+function renderDeck(){
+  if(!DECK)return;const s=deckShip();if(!s){deckExit();return;}
+  const c=shipClass(s);
+  let h='<div class="deckTop"><button class="btn small ghost" onclick="deckGoBack()" aria-label="Back" style="padding:6px 10px;">&#8592;</button>'+
+    '<div class="dName">'+esc(s.name)+' <span class="dReg">'+esc(s.registry)+' · '+esc(c.name)+'-class</span></div>'+
+    deckAlertLabel(s)+
+    '<button class="btn small ghost" '+(DECK.battle?'disabled style="opacity:.35;"':'onclick="deckExit()"')+'>Leave</button></div>';
+  h+='<div class="deckBody">';
+  if(DECK.battle)h+=deckBattleHtml(s);
+  else if(DECK.screen==="ops")h+=deckOpsHtml(s);
+  else if(DECK.screen==="room")h+=deckRoomHtml(s,DECK.room);
+  else h+=deckPlanHtml(s);
+  h+='<div class="deckFoot">USS '+esc(s.name)+' · Stardate '+sdStr(G.stardate)+'</div></div>';
+  $("deckRoot").innerHTML=h;
+  const b=$("deckRoot").querySelector(".deckBody");if(b)b.scrollTop=0;
+}
+function deckStatusStrip(s){
+  const c=shipClass(s);
+  return '<div class="deckStrip"><div style="flex:1;">'+bar("HULL",Math.max(0,100-Math.round(s.damage||0)),100)+'</div>'+
+    '<div style="font-size:11px;opacity:.75;">'+esc(POST_LABELS[s.post||"sol"]||"Deep Space")+'</div></div>'+
+    ((s.damage||0)>0?'<div class="kv"><span class="k">Hull damage</span><span class="v" style="color:var(--red)">'+Math.round(s.damage)+'%</span></div>':"")+
+    (HOSTILE_ZONES[s.post||"sol"]?'<p class="dim" style="color:var(--red)">Hostile territory ('+esc(HOSTILE_ZONES[s.post||"sol"].terr)+') — RED ALERT can sound at any time.</p>':"");
+}
+function deckPlanHtml(s){
+  const n=deckCount(s);
+  if(!DECK.roomMap)DECK.roomMap=deckRoomMap(s);
+  const map=DECK.roomMap;
+  let h='<div class="deckSec">Ship status</div>'+deckStatusStrip(s);
+  const active=(G.shipOps||[]).find(m=>m.shipId===s.id);
+  h+='<div class="deckBtnRow"><button class="btn small violet" onclick="DECK.screen=\'ops\';renderDeck()">Ship operations'+(active?' <b style="color:var(--gold)">●</b>':"")+'</button></div>';
+  h+='<div class="deckSec">Deck plan — tap a room to enter</div>';
+  for(let d=1;d<=n;d++){
+    const rooms=DECK_ROOMS.filter(r=>deckOfRoom(s,r)===d);
+    if(!rooms.length)continue;
+    h+='<div class="deckBand"><div class="dNum">DECK '+d+'</div><div class="deckRooms">'+
+      rooms.map(r=>'<button class="roomPill" onclick="deckGotoRoom(\''+r.id+'\')">'+esc(r.name)+'<span class="cnt">'+map[r.id].length+'</span></button>').join("")+
+      '</div></div>';
+  }
+  return h;
+}
+function deckGotoRoom(rid){
+  if(!DECK||DECK.battle)return;
+  DECK.room=rid;DECK.screen="room";DECK.roomMap=deckRoomMap(ship(DECK.shipId));
+  sfx("door");
+  if(Math.random()<0.35){const enc=deckMakeEncounter();if(enc){DECK.enc=enc;}}
+  renderDeck();
+}
+function deckRoomHtml(s,rid){
+  const def=deckRoomDef(rid),map=DECK.roomMap||deckRoomMap(s);
+  const occ=map[rid]||[];
+  const line=def.lines[hashStr(rid+":"+G.day)%def.lines.length];
+  let h="";
+  if(DECK.enc)h+=deckEncHtml(s,DECK.enc);
+  h+='<div class="deckSec">'+esc(def.name)+' · Deck '+deckOfRoom(s,def)+'</div>';
+  h+='<div class="sceneCard"><div class="flavor">'+esc(def.blurb)+'</div>';
+  h+='<div class="sceneProse"><i>'+esc(line)+'</i></div>';
+  if(occ.length){
+    h+='<div class="deckSec" style="margin-top:6px;">Present ('+occ.length+')</div><div class="occGrid">'+
+      occ.slice(0,8).map(o=>'<div class="occChip" onclick="officerModal(\''+o.id+'\')">'+faceImg(o,"pface")+
+        '<div><div class="nm">'+esc(o.name)+'</div><div class="rl">'+esc(rankName(o))+(primaryBillet(o)?' · '+esc(billetLabel(primaryBillet(o))):"")+'</div></div></div>').join("")+
+      (occ.length>8?'<div class="dim" style="font-size:12px;">+'+(occ.length-8)+' more aboard</div>':"")+'</div>';
+  }else{
+    h+='<p class="dim">Nobody is here right now. The room waits.</p>';
+  }
+  h+=deckRoomActions(s,rid,occ);
+  h+='</div><div class="deckBtnRow"><button class="btn small ghost" onclick="deckGoBack()">&#8592; Deck plan</button></div>';
+  return h;
+}
+
+/* ---- room actions: real controls, not menus ---- */
+function deckRoomActions(s,rid,occ){
+  let h='<div class="deckSec">Shipboard controls</div><div class="deckActions">';
+  const btn=(t,fn,cls)=>'<button class="btn '+(cls||"small")+'" onclick="'+fn+'">'+t+'</button>';
+  const dailyOk=(key)=>((s["deckD_"+key]||0)!==G.day);
+  const markDaily=(key)=>{s["deckD_"+key]=G.day;};
+  if(rid==="bridge"){
+    const z=HOSTILE_ZONES[s.post||"sol"];
+    h+=btn("Take the chair — tactical summary","deckChair()");
+    if(z)h+='<p class="dim">Tactical: '+esc(z.terr)+' — hostile space. The crew is at yellow alert.</p>';
+    else h+='<p class="dim">Tactical: no known threats in this sector. The bridge crew stands easy.</p>';
+    if(dailyOk("drill"))h+=btn("Run a battle drill","deckDrill()","small teal");
+    else h+='<p class="dim">Battle drill complete for today. The crew is sharp.</p>';
+  }else if(rid==="engineering"){
+    const ce=occ.find(o=>(o.roles||[]).indexOf("eng")>=0)||occ.find(o=>o.dept==="Engineering")||occ[0];
+    if((s.damage||0)>0){
+      if(dailyOk("patch"))h+=btn("Emergency hull patch — 500 CR ("+(ce?esc(ce.name.split(" ")[0]):"damage control")+" leads the team)","deckPatch()","small teal");
+      else h+='<p class="dim">The damage-control teams have done all they can today.</p>';
+    }else h+='<p class="dim">All systems green. '+(ce?esc(ce.name.split(" ")[0])+" has the warp core singing.":"Engineering hums along.")+'</p>';
+    h+=btn("Full damage report","deckDmgReport()","small ghost");
+  }else if(rid==="sickbay"){
+    const hurt=crewOfShip(s.id).filter(o=>o.health!=="healthy");
+    if(hurt.length){
+      h+='<p class="dim">'+hurt.length+' crew under care: '+esc(hurt.slice(0,3).map(o=>o.name).join(", "))+(hurt.length>3?"…":"")+'</p>';
+      if(dailyOk("tend"))h+=btn("Tend the wounded personally","deckTend()","small teal");
+    }else h+='<p class="dim">Sickbay is quiet. The biobeds are empty and the staff intends to keep it that way.</p>';
+  }else if(rid==="mess"){
+    if(dailyOk("round"))h+=btn("Buy a round for the crew — 300 CR","deckRound()","small teal");
+    else h+='<p class="dim">The crew is still talking about the round you bought.</p>';
+    h+=btn("Listen in on the gossip","deckGossip()","small ghost");
+  }else if(rid==="holodeck"){
+    h+=btn("Run a holodeck program","deckHolo()","small violet");
+  }else if(rid==="science"){
+    if(dailyOk("scan"))h+=btn("Run a deep sensor scan","deckScan()","small teal");
+    else h+='<p class="dim">The long-range scans are still compiling.</p>';
+  }else if(rid==="quarters"){
+    const pair=deckCoupleAboard(s);
+    if(pair)h+=btn("Check in on "+esc(pair[0].name.split(" ")[0])+" and "+esc(pair[1].name.split(" ")[0]),"deckCouple()","small violet");
+    else h+='<p class="dim">Quiet corridors, closed doors, soft music. The ship sleeps in shifts.</p>';
+  }else if(rid==="shuttle"){
+    const shs=shuttlesOfShip(s.id);
+    if(shs.length)h+=shs.slice(0,4).map(sh=>btn(esc(sh.name)+" — "+esc(shuttleStatusLabel(sh)),"shuttleModal('"+sh.id+"')","small ghost")).join("");
+    else h+='<p class="dim">The shuttlebay is empty — no auxiliary craft assigned.</p>';
+  }else if(rid==="ready"){
+    h+=btn("Review the ship\'s reports","deckReports()","small ghost");
+  }else if(rid==="lounge"){
+    if(dailyOk("toast"))h+=btn("Raise a toast to the crew","deckToast()","small teal");
+    else h+='<p class="dim">The toast has been raised. Morale is warm.</p>';
+  }else if(rid==="transporter"){
+    h+='<p class="dim">Transporter room 1 reports ready. Pattern buffers at 100%.</p>';
+    h+=btn("Beam down a survey detail (flavor)","deckBeam()","small ghost");
+  }else if(rid==="brig"){
+    h+='<p class="dim">The brig is empty. Security keeps it that way.</p>';
+    h+=btn("Inspect the security rotation","deckBrig()","small ghost");
+  }
+  h+='</div>';
+  return h;
+}
+/* ---- action implementations ---- */
+function deckChair(){
+  const s=deckShip();if(!s)return;const z=HOSTILE_ZONES[s.post||"sol"];
+  const crew=crewOfShip(s.id);
+  openModal('<h2>'+esc(s.name)+' — The Chair</h2><div class="flavor">You take the center seat. The bridge falls into that particular quiet.</div>'+
+    '<div class="kv"><span class="k">Hull</span><span class="v">'+Math.max(0,100-Math.round(s.damage||0))+'%</span></div>'+
+    '<div class="kv"><span class="k">Sector</span><span class="v">'+esc(POST_LABELS[s.post||"sol"]||"Deep Space")+'</span></div>'+
+    '<div class="kv"><span class="k">Threat</span><span class="v" style="color:'+(z?"var(--red)":"var(--green)")+'">'+(z?esc(z.terr)+" — hostile":"None detected")+'</span></div>'+
+    '<div class="kv"><span class="k">Crew aboard</span><span class="v">'+crew.length+' officers</span></div>'+
+    '<p class="dim"><i>"All stations report ready, sir."</i> There is no finer sentence in the fleet.</p>'+
+    '<div class="btnRow"><button class="btn" onclick="closeModal()">Return to the bridge</button></div>');
+}
+function deckDrill(){
+  const s=deckShip();if(!s)return;s.deckD_drill=G.day;
+  const crew=(DECK.roomMap&&DECK.roomMap.bridge||[]).slice(0,6);
+  crew.forEach(o=>{o.morale=clamp(o.morale+3,0,100);});
+  sfx("klaxon");
+  log("mission",s.name+" ran a full battle drill — the bridge crew is sharp. (+3 morale)");
+  save();
+  openModal('<h2>Battle Drill</h2><p>The klaxon sounds. <i>"This is a drill. Repeat, this is a drill."</i></p><p>Phaser crews run their targeting solutions, damage-control teams hit their marks, and the bridge crew moves like a single organism. '+(crew.length?esc(crew[0].name.split(" ")[0])+" calls out times that would make the Academy proud.":"")+'</p><p class="dim">Bridge crew +3 morale.</p><div class="btnRow"><button class="btn" onclick="closeModal();renderDeck()">Stand down</button></div>');
+}
+function deckDmgReport(){
+  const s=deckShip();if(!s)return;
+  openModal('<h2>Damage Report</h2>'+
+    '<div class="kv"><span class="k">Hull integrity</span><span class="v">'+Math.max(0,100-Math.round(s.damage||0))+'%</span></div>'+
+    ((s.damage||0)>=40?'<p style="color:var(--red)">Damage is critical — she needs a shipyard. Tap <b>Begin repairs</b> in her ship record.</p>':(s.damage||0)>0?'<p class="dim">Minor damage. She can keep flying, but a yard visit would do her good.</p>':'<p class="dim">Not a scratch on her. The yard crews would weep with joy.</p>')+
+    '<div class="btnRow"><button class="btn" onclick="closeModal()">Close</button></div>');
+}
+function deckPatch(){
+  const s=deckShip();if(!s)return;
+  if(G.credits<500){toast("Not enough credits (500 CR).");return;}
+  s.deckD_patch=G.day;gainCR(-500);
+  s.damage=Math.max(0,(s.damage||0)-8);
+  if(s.damage<40&&s.status==="damaged")s.status="active";
+  const ce=(DECK.roomMap&&DECK.roomMap.engineering||[])[0];
+  sfx("success");
+  log("mission","Emergency hull patch aboard "+s.name+" — damage down to "+Math.round(s.damage)+"%. (-500 CR)");
+  save();
+  openModal('<h2>Emergency Patch</h2><p>'+(ce?esc(ce.name)+" leads the damage-control teams through the Jeffries tubes, sealing ruptures with emergency forcefields and more optimism than regulation allows.":"Damage-control teams swarm the hull breaches, sealing ruptures with emergency forcefields.")+'</p><p class="dim">Hull damage reduced to '+Math.round(s.damage)+'%. (-500 CR)</p><div class="btnRow"><button class="btn" onclick="closeModal();renderDeck()">Back to engineering</button></div>');
+}
+function deckTend(){
+  const s=deckShip();if(!s)return;s.deckD_tend=G.day;
+  const hurt=crewOfShip(s.id).filter(o=>o.health!=="healthy");
+  hurt.forEach(o=>{o.morale=clamp(o.morale+5,0,100);});
+  log("personnel","You walked the biobeds aboard "+s.name+", checking on the wounded. ("+hurt.length+" crew, +5 morale)");
+  save();
+  openModal('<h2>Sickbay Rounds</h2><p>You stop at every biobed. You learn names, hold a hand or two, and promise the ones who are scared that sickbay is the safest place on the ship. '+(hurt.length?esc(hurt[0].name.split(" ")[0])+" manages a smile.":"")+'</p><p class="dim">Wounded crew +5 morale.</p><div class="btnRow"><button class="btn" onclick="closeModal();renderDeck()">Back to sickbay</button></div>');
+}
+function deckRound(){
+  const s=deckShip();if(!s)return;
+  if(G.credits<300){toast("Not enough credits (300 CR).");return;}
+  s.deckD_round=G.day;gainCR(-300);
+  crewOfShip(s.id).forEach(o=>{o.morale=clamp(o.morale+5,0,100);});
+  sfx("success");
+  log("personnel","You bought a round for the whole crew of "+s.name+". (-300 CR, +5 morale)");
+  save();
+  openModal('<h2>A Round for the Crew</h2><p><i>"The next round is on the Commander!"</i> The mess hall erupts. Someone starts a song. Someone else definitely should not join in, but does.</p><p class="dim">All crew aboard +5 morale. (-300 CR)</p><div class="btnRow"><button class="btn" onclick="closeModal();renderDeck()">Back to the mess</button></div>');
+}
+const DECK_GOSSIP=[
+ "Rumor has it the warp core has a name. Nobody will say it out loud.",
+ "Two ensigns have a bet running on how long the captain\'s coffee stays hot. The pot is up to forty credits.",
+ "Someone keeps reprogramming the replicators to make everything taste faintly of cinnamon. Security has no leads.",
+ "The night-shift conn officer swears they saw something moving out past the nacelle. Probably a sensor ghost. Probably.",
+ "There is a jeffries tube on deck six that everyone avoids. Nobody remembers why. Nobody wants to find out.",
+ "The chef has declared war on the bartender over who makes the better synthale. The crew is taking sides.",
+ "Word is Starfleet Command sent a commendation and it got lost in the subspace relay. Twice.",
+ "An ensign is writing a novel about the crew. Everyone is pretending not to read the drafts.",
+ "The holodeck has a standing reservation every Thursday at 1900. Nobody knows by whom. Nobody asks.",
+ "Someone\'s pet tribble got loose on deck nine. It has been... contained. Mostly."
+];
+function deckGossip(){
+  openModal('<h2>Mess Hall Gossip</h2><p><i>"Did you hear…"</i></p><p>'+esc(pick(DECK_GOSSIP))+'</p><div class="btnRow"><button class="btn" onclick="closeModal()">Back to your coffee</button></div>');
+}
+function deckHolo(){
+  const s=deckShip();if(!s)return;
+  const progs=[["Dixon Hill","A rain-slicked 1940s San Francisco night."],["Klingon Calisthenics","Mok\'bara at dawn on a holographic Qo\'noS."],["Paradise Resort","White sand, warm water, zero responsibilities."]];
+  openModal('<h2>Holodeck Programs</h2><p class="dim">The arch awaits. Choose a program:</p>'+
+    progs.map((p,i)=>'<div style="margin:6px 0;"><button class="btn violet" style="width:100%;text-align:left;" onclick="deckHoloRun('+i+')"><b>'+esc(p[0])+'</b><br><span class="dim">'+esc(p[1])+'</span></button></div>').join("")+
+    '<div class="btnRow"><button class="btn ghost" onclick="closeModal()">Not now</button></div>');
+}
+function deckHoloRun(i){
+  const s=deckShip();if(!s)return;closeModal();
+  const names=["Dixon Hill","Klingon Calisthenics","Paradise Resort"];
+  // 15%: the classic malfunction — straight into a bottle episode
+  if(Math.random()<0.15&&deckOpAvailable(s,"holofail")){
+    deckStartOp(s,"holofail");
+    return;
+  }
+  const crew=crewOfShip(s.id);
+  const who=pick(crew.filter(o=>o.health==="healthy")||[]);
+  crew.forEach(o=>{if(o.health==="healthy")o.morale=clamp(o.morale+4,0,100);});
+  sfx("success");
+  log("personnel","Holodeck program ("+names[i]+") aboard "+s.name+" — the crew unwinds. (+4 morale)");
+  save();
+  const txt=i===0?"You spend an hour trading quips with a holographic gangster who is, frankly, a better shot than half the security team.":"You spend an hour "+(i===1?"sweating through Mok\'bara forms until your muscles file a formal complaint.":"doing absolutely nothing on a holographic beach, aggressively.");
+  openModal('<h2>'+esc(names[i])+'</h2><p>'+txt+'</p>'+(who?'<p class="dim">'+esc(who.name.split(" ")[0])+" is still in there. You decide not to ask what program they\'re running.":'<p class="dim">')+'</p><p class="dim">Crew +4 morale.</p><div class="btnRow"><button class="btn" onclick="closeModal();renderDeck()">End program</button></div>');
+}
+function deckScan(){
+  const s=deckShip();if(!s)return;s.deckD_scan=G.day;
+  if(Math.random()<0.12&&deckOpAvailable(s,"entity")){deckStartOp(s,"entity");return;}
+  const finds=["a pocket of tetryon particles, dissipating harmlessly.","an uncharted comet with an unusually perfect orbit. Science is delighted.","nothing but clean vacuum and background radiation. The best possible result.","a decades-old Starfleet probe, still pinging. It gets a hero\'s download.","a beautiful stellar nursery, previously uncatalogued. Astrometrics names it after the ship\'s chef."];
+  log("mission",s.name+" completed a deep sensor scan: "+finds[0].split(",")[0]+".");
+  save();
+  openModal('<h2>Deep Sensor Scan</h2><p>The science team sweeps the sector. They find '+esc(pick(finds))+'</p><div class="btnRow"><button class="btn" onclick="closeModal();renderDeck()">Back to the labs</button></div>');
+}
+function deckCoupleAboard(s){
+  const crew=crewOfShip(s.id);
+  for(const o of crew){if(o.rel){const p=officer(o.rel.partner||o.rel);if(p&&crew.indexOf(p)>=0)return [o,p];}}
+  return null;
+}
+function deckCouple(){
+  const s=deckShip();if(!s)return;const pair=deckCoupleAboard(s);if(!pair)return;
+  const a=pair[0],b=pair[1];
+  const beats=[
+   "share a quiet dinner in their quarters, the stars wheeling past the viewport.",
+   "are teaching each other card games. The stakes are chores. It is vicious.",
+   "dance slowly to music only they can hear, in the corridor where nobody walks at 0200.",
+   "are writing letters home together, arguing fondly about what to tell the family.",
+   "fall asleep on the couch mid-movie. Neither will admit who fell asleep first."
+  ];
+  a.morale=clamp(a.morale+4,0,100);b.morale=clamp(b.morale+4,0,100);
+  log("personnel",a.name+" and "+b.name+" stole a quiet moment together aboard "+s.name+". (+4 morale each)");
+  save();
+  openModal('<h2>Quarters</h2><p>'+esc(a.name.split(" ")[0])+" and "+esc(b.name.split(" ")[0])+" "+pick(beats)+'</p><p class="dim"><i>"Some things are worth more than starships."</i></p><div class="btnRow"><button class="btn" onclick="closeModal();renderDeck()">Leave them to it</button></div>');
+}
+function deckReports(){
+  const s=deckShip();if(!s)return;
+  const rel=(G.log||[]).filter(e=>(e.text||"").indexOf(s.name)>=0).slice(-3).reverse();
+  openModal('<h2>Ship\'s Reports</h2>'+(rel.length?rel.map(e=>'<p class="dim">'+esc(e.text||"")+'</p>').join(""):'<p class="dim">No recent entries mention '+esc(s.name)+'. A quiet ship is a happy ship.</p>')+'<div class="btnRow"><button class="btn" onclick="closeModal()">Close</button></div>');
+}
+function deckToast(){
+  const s=deckShip();if(!s)return;s.deckD_toast=G.day;
+  crewOfShip(s.id).forEach(o=>{o.morale=clamp(o.morale+3,0,100);});
+  log("personnel","A toast was raised in the observation lounge of "+s.name+". (+3 morale)");
+  save();
+  openModal('<h2>The Observation Lounge</h2><p>Glasses raised. <i>"To the ship — and to the people who make her fly."</i> The toast echoes off the windows and the stars.</p><p class="dim">All crew aboard +3 morale.</p><div class="btnRow"><button class="btn" onclick="closeModal();renderDeck()">Back to the lounge</button></div>');
+}
+function deckBeam(){
+  const s=deckShip();if(!s)return;
+  const spots=["a geological survey of the nearest moon","a cultural exchange with the local colony","a routine systems check on the orbital relay"];
+  sfx("transporter");
+  openModal('<h2>Transporter Room 1</h2><p><i>"Energizing."</i> A survey detail shimmers away on '+esc(pick(spots))+'. They will be back by dinner, full of stories.</p><div class="btnRow"><button class="btn" onclick="closeModal()">Close</button></div>');
+}
+function deckBrig(){
+  openModal('<h2>Brig Inspection</h2><p>You walk the security rotation with the officer on post. Forcefields at full strength, cells empty, logs clean.</p><p class="dim"><i>"Quietest posting on the ship, sir. Let\'s keep it that way."</i></p><div class="btnRow"><button class="btn" onclick="closeModal()">Close</button></div>');
+}
+
+/* ---- corridor encounters: life happens between rooms ---- */
+function deckMakeEncounter(){
+  const s=deckShip();if(!s)return null;
+  const crew=crewOfShip(s.id).filter(o=>o.health==="healthy");
+  if(crew.length<2)return null;
+  const r=Math.random();
+  if(r<0.22){ // two crew talking — friendship / rivalry beat
+    const a=pick(crew);let b=pick(crew.filter(o=>o.id!==a.id));if(!b)return null;
+    const areFriends=(a.friends||[]).indexOf(b.id)>=0,areRivals=(a.rivals||[]).indexOf(b.id)>=0;
+    return {kind:"chat",a:a.id,b:b.id,
+      title:"Overheard in the corridor",
+      text:"You round a corner to find "+a.name+" and "+b.name+" deep in conversation. They "+(areFriends?"are laughing about something that is clearly an inside joke.":areRivals?"are pointedly not looking at each other. The air could be cut with a bat\'leth.":"are mid-debate about shield harmonics, of all things."),
+      opts:[
+        {t:"Join the conversation",fn:"deckEncChatJoin"},
+        {t:"Walk on by",fn:"deckEncDismiss"}
+      ]};
+  }
+  if(r<0.45){ // a crew member approaches you
+    const a=pick(crew);
+    const asks=[
+      {q:"asks if you think they\'ll ever make a good officer.",good:"Tell them you already think so",bad:"Tell them the jury is still out"},
+      {q:"wants advice about a disagreement with a crewmate.",good:"Counsel patience and a direct conversation",bad:"Tell them to let it go"},
+      {q:"wonders aloud whether Starfleet will ever feel like home.",good:"Remind them it already is",bad:"Change the subject"},
+      {q:"admits they\'re nervous about the next mission.",good:"Share a story of your own nerves",bad:"Tell them nerves are unprofessional"}
+    ];
+    const ask=pick(asks);
+    return {kind:"approach",a:a.id,
+      title:"A word, Commander?",
+      text:a.name+" falls into step beside you. They "+ask.q,
+      opts:[
+        {t:ask.good,fn:"deckEncApproachGood"},
+        {t:ask.bad,fn:"deckEncApproachBad"}
+      ]};
+  }
+  if(r<0.58){ // couple beat
+    const pair=deckCoupleAboard(s);
+    if(pair)return {kind:"couple",a:pair[0].id,b:pair[1].id,
+      title:"Shipboard romance",
+      text:"In an alcove off the corridor, "+pair[0].name.split(" ")[0]+" and "+pair[1].name.split(" ")[0]+" are stealing a moment — foreheads together, laughing softly. They haven\'t noticed you.",
+      opts:[{t:"Smile and move along",fn:"deckEncCouple"}]};
+  }
+  if(r<0.72){ // something odd — possible mission seed
+    const seeds=[["intruder","A junior officer swears they saw someone in a corridor who isn\'t on the crew manifest."],["entity","The lights flicker in a pattern — almost like a signal. The hairs on your neck stand up."],["stowaway","A cargo bay inventory is off by exactly one meal\'s worth of rations. Someone is eating who shouldn\'t be here."]];
+    const sd=pick(seeds);
+    if(deckOpAvailable(s,sd[0]))return {kind:"seed",tpl:sd[0],
+      title:"Something isn\'t right",
+      text:sd[1],
+      opts:[
+        {t:"Investigate immediately",fn:"deckEncSeedGo"},
+        {t:"Log it and move on",fn:"deckEncDismiss"}
+      ]};
+  }
+  // gossip / flavor
+  return {kind:"flavor",
+    title:"Shipboard life",
+    text:pick([
+      "A damage-control team jogs past at double time, laughing about something. The ship feels alive today.",
+      "Through a viewport: the slow, stately turn of a distant planet. Someone has stopped just to watch it.",
+      "Two crew members race a PADD down the corridor on a makeshift track. The betting pool is fierce.",
+      "The ship\'s cat — every ship has one, unofficially — darts between your ankles and vanishes into a Jeffries tube.",
+      "A choir of off-duty crew is rehearsing in an empty cargo bay. They\'re... getting better.",
+      "Someone has decorated their door with mission patches from five ships. A whole career in stickers."
+    ]),
+    opts:[{t:"Continue",fn:"deckEncDismiss"}]};
+}
+function deckEncHtml(s,enc){
+  const o=id=>officer(id);
+  let faces="";
+  [enc.a,enc.b].forEach(id=>{const x=id&&o(id);if(x)faces+='<span style="display:inline-block;margin-right:6px;">'+faceImg(x,"pface")+'</span>';});
+  return '<div class="encOverlay"><h4>'+esc(enc.title)+'</h4>'+(faces?'<div style="margin:6px 0;">'+faces+'</div>':"")+
+    '<div class="sceneProse">'+enc.text+'</div><div class="deckBtnRow">'+
+    enc.opts.map(op=>'<button class="btn small" onclick="'+op.fn+'()">'+esc(op.t)+'</button>').join("")+'</div></div>';
+}
+function deckEncDismiss(){if(DECK)DECK.enc=null;renderDeck();}
+function deckEncChatJoin(){
+  const enc=DECK&&DECK.enc;DECK.enc=null;
+  const a=officer(enc.a),b=officer(enc.b);
+  let txt;
+  if((a.friends||[]).indexOf(b.id)>=0){txt="You join in, and the story gets better in the retelling. "+a.name.split(" ")[0]+" insists it happened exactly that way. "+b.name.split(" ")[0]+" insists it did not.";}
+  else if((a.rivals||[]).indexOf(b.id)>=0){txt="Your presence forces a truce. They manage exactly one civil sentence each. It is, by the standards of this feud, a diplomatic triumph.";}
+  else{
+    if((a.friends||[]).length<3&&(b.friends||[]).length<3){a.friends.push(b.id);b.friends.push(a.id);txt="You referee the shield-harmonics debate. By the end, "+a.name.split(" ")[0]+" and "+b.name.split(" ")[0]+" are finishing each other\'s sentences. A friendship is born in the unlikeliest of places.";}
+    else txt="You referee the shield-harmonics debate. Nobody wins, but everyone has fun, which is the same thing.";
+  }
+  a.morale=clamp(a.morale+3,0,100);b.morale=clamp(b.morale+3,0,100);
+  log("personnel","Corridor conversation aboard "+deckShip().name+": "+a.name+" and "+b.name+".");
+  save();openModal('<h2>Overheard</h2><p>'+txt+'</p><div class="btnRow"><button class="btn" onclick="closeModal();renderDeck()">Continue</button></div>');
+}
+function deckEncApproachGood(){
+  const enc=DECK&&DECK.enc;DECK.enc=null;const a=officer(enc.a);
+  a.morale=clamp(a.morale+6,0,100);a.loyal=clamp((a.loyal||70)+4,0,100);
+  log("personnel",a.name+" asked your advice in the corridor aboard "+deckShip().name+" — and took it to heart. (+6 morale, +4 loyalty)");
+  save();openModal('<h2>A Word, Commander?</h2><p>You give them the honest answer, not the easy one. '+esc(a.name.split(" ")[0])+" stands a little straighter afterward. These are the moments that make a crew.</p><p class=\"dim\">"+esc(a.name.split(" ")[0])+' +6 morale, +4 loyalty.</p><div class="btnRow"><button class="btn" onclick="closeModal();renderDeck()">Continue</button></div>');
+}
+function deckEncApproachBad(){
+  const enc=DECK&&DECK.enc;DECK.enc=null;const a=officer(enc.a);
+  a.morale=clamp(a.morale-4,0,100);
+  log("personnel",a.name+" asked your advice in the corridor aboard "+deckShip().name+" — you brushed them off. (-4 morale)");
+  save();openModal('<h2>A Word, Commander?</h2><p>You deflect, and '+esc(a.name.split(" ")[0])+" nods a little too quickly and walks on. You\'ll want to circle back to that one.</p><p class=\"dim\">"+esc(a.name.split(" ")[0])+' -4 morale.</p><div class="btnRow"><button class="btn" onclick="closeModal();renderDeck()">Continue</button></div>');
+}
+function deckEncCouple(){
+  const enc=DECK&&DECK.enc;DECK.enc=null;
+  const a=officer(enc.a),b=officer(enc.b);
+  a.morale=clamp(a.morale+3,0,100);b.morale=clamp(b.morale+3,0,100);
+  save();openModal('<h2>Shipboard Romance</h2><p>You pretend to study a wall panel with great interest until they compose themselves. '+esc(a.name.split(" ")[0])+' mouths <i>"thank you"</i> as you go.</p><div class="btnRow"><button class="btn" onclick="closeModal();renderDeck()">Continue</button></div>');
+}
+function deckEncSeedGo(){
+  const enc=DECK&&DECK.enc;const s=deckShip();DECK.enc=null;
+  deckStartOp(s,enc.tpl);
+}
+
+/* ================= SHIPBOARD OPERATIONS — bottle episodes ================= */
+function shipOps(){if(!G.shipOps)G.shipOps=[];return G.shipOps;}
+function deckOpAvailable(s,tpl){
+  if((G.shipOps||[]).some(m=>m.shipId===s.id&&!m.done))return false; // one crisis at a time
+  const last=(s.opCd||{})[tpl]||-9999;
+  return (G.day-last)>=(SHIP_OP_DEFS[tpl].cd||60);
+}
+function deckStartOp(s,tplId){
+  const def=SHIP_OP_DEFS[tplId];if(!def||!deckOpAvailable(s,tplId))return;
+  sfx("klaxon");
+  shipOps().push({key:uid("op_"),shipId:s.id,tpl:tplId,stage:0,wins:0,done:false});
+  save();renderDeck();
+  setTimeout(function(){deckOpStage();},350);
+}
+function deckActiveOp(s){return (G.shipOps||[]).find(m=>m.shipId===s.id&&!m.done)||null;}
+function deckOpCdLeft(s,tplId){
+  const def=SHIP_OP_DEFS[tplId],last=((s.opCd||{})[tplId]||-9999);
+  return Math.max(0,(def.cd||60)-(G.day-last));
+}
+function deckOpsHtml(s){
+  const op=deckActiveOp(s);
+  let h='<div class="deckSec">Ship operations</div>';
+  h+='<div class="sceneCard"><div class="flavor">Crises that begin and end inside these walls — the bottle episodes. One operation at a time per ship.</div>';
+  if(op){
+    const def=SHIP_OP_DEFS[op.tpl];
+    h+='<div class="opRow"><div class="grow"><div class="nm" style="color:var(--red)">ACTIVE: '+esc(def.name)+'</div><div class="sub2">Stage '+(op.stage+1)+' of '+def.stages.length+' · '+op.wins+' objective'+(op.wins===1?"":"s")+' secured</div></div>'+
+      '<button class="btn small violet" onclick="deckOpStage()">Continue</button></div>';
+  }else{
+    h+='<div class="deckSec" style="margin-top:4px;">Available operations</div>';
+    Object.keys(SHIP_OP_DEFS).forEach(tid=>{
+      const def=SHIP_OP_DEFS[tid],left=deckOpCdLeft(s,tid);
+      h+='<div class="opRow"><div class="grow"><div class="nm">'+esc(def.name)+'</div><div class="sub2">'+esc(def.blurb)+'</div></div>'+
+        (left>0?'<span class="dim" style="font-size:12px;">'+left+'d</span>':'<button class="btn small violet" onclick="deckStartOp(ship(\''+s.id+'\'),\''+tid+'\')">Begin</button>')+'</div>';
+    });
+  }
+  h+='</div><div class="deckBtnRow"><button class="btn small ghost" onclick="deckGoBack()">&#8592; Deck plan</button></div>';
+  return h;
+}
+function deckOpBest(s,stat){
+  const crew=crewOfShip(s.id).filter(o=>o.health==="healthy");
+  if(!crew.length)return {o:null,v:20};
+  let best=crew[0],bv=-1;
+  crew.forEach(o=>{const v=(o.stats||{})[stat]||0;if(v>bv){bv=v;best=o;}});
+  return {o:best,v:bv};
+}
+function deckOpStage(){
+  const s=deckShip();if(!s)return;
+  const op=deckActiveOp(s);if(!op){renderDeck();return;}
+  const def=SHIP_OP_DEFS[op.tpl],st=def.stages[op.stage];
+  if(!st){deckOpResolve(s,op,def);return;}
+  DECK.screen="op";
+  const txt=typeof st.t==="function"?st.t(s,op):st.t;
+  let h='<div class="deckTop"><button class="btn small ghost" onclick="deckGoBack()" style="padding:6px 10px;">&#8592;</button>'+
+    '<div class="dName">'+esc(def.name)+' <span class="dReg">Stage '+(op.stage+1)+' of '+def.stages.length+'</span></div>'+deckAlertLabel(s)+
+    '<button class="btn small ghost" onclick="deckExit()">Leave</button></div>';
+  h+='<div class="deckBody"><div class="sceneCard"><div class="sceneProse">'+txt+'</div><div class="deckActions">'+
+    st.opts.map((o,i)=>'<button class="btn" onclick="deckOpChoose('+i+')">'+esc(typeof o.t==="function"?o.t(s,op):o.t)+'</button>').join("")+
+    '</div></div><div class="deckFoot">USS '+esc(s.name)+' · Stardate '+sdStr(G.stardate)+'</div></div>';
+  $("deckRoot").innerHTML=h;
+}
+function deckOpChoose(i){
+  const s=deckShip();if(!s)return;
+  const op=deckActiveOp(s);if(!op)return;
+  const def=SHIP_OP_DEFS[op.tpl],st=def.stages[op.stage],opt=st.opts[i];
+  const best=deckOpBest(s,opt.stat||"cmd");
+  const roll=best.v+ri(1,100),win=roll>=(opt.dc||120);
+  if(win)op.wins++;
+  const txt=(win?opt.win:opt.lose)||"";
+  const oname=best.o?esc(best.o.name.split(" ")[0]):"The crew";
+  let h='<div class="deckTop"><div class="dName">'+(win?"Objective secured":"Setback")+'</div>'+deckAlertLabel(s)+
+    '<button class="btn small ghost" onclick="deckExit()">Leave</button></div>';
+  h+='<div class="deckBody"><div class="sceneCard"><div class="sceneProse">'+txt.replace(/\{o\}/g,oname)+'</div>';
+  if(opt.stat)h+='<p class="dim">'+esc(opt.stat.toUpperCase())+' check: '+oname+' ('+best.v+' + d100 vs '+opt.dc+')</p>';
+  const more=op.stage+1<def.stages.length;
+  h+='<div class="deckActions"><button class="btn violet" onclick="deckOpNext()">'+(more?"Continue":"Debrief")+'</button></div></div></div>';
+  op.stage++;
+  if(opt.fx)deckOpFx(s,op,opt.fx,win);
+  save();
+  DECK.screen="op";
+  $("deckRoot").innerHTML=h;
+  const b=$("deckRoot").querySelector(".deckBody");if(b)b.scrollTop=0;
+}
+function deckOpFx(s,op,fx,win){
+  if(!win&&!fx.onLose)return;
+  const F=win?fx:(fx.onLose||{});
+  if(F.pres)gainPres(F.pres);
+  if(F.morale)crewOfShip(s.id).forEach(o=>{o.morale=clamp(o.morale+F.morale,0,100);});
+  if(F.dmg){s.damage=Math.min(120,(s.damage||0)+F.dmg);if(s.damage>=40&&s.status==="active")s.status="damaged";}
+  if(F.inj){const c=crewOfShip(s.id).filter(o=>o.health==="healthy");for(let k=0;k<F.inj&&c.length;k++){const o=c.splice(Math.floor(Math.random()*c.length),1)[0];o.health="injured";o.healDays=ri(10,25);}}
+  if(F.accolade&&win){const b=deckOpBest(s,"cmd");if(b.o)awardAccolade(b.o,F.accolade);}
+}
+function deckOpNext(){
+  const s=deckShip();if(!s){return;}
+  const op=deckActiveOp(s);if(!op){renderDeck();return;}
+  const def=SHIP_OP_DEFS[op.tpl];
+  if(op.stage>=def.stages.length)deckOpResolve(s,op,def);else deckOpStage();
+}
+function deckOpResolve(s,op,def){
+  const ix=shipOps().indexOf(op);if(ix>=0)shipOps().splice(ix,1); // one-shot: clear on resolve
+  if(!s.opCd)s.opCd={};s.opCd[op.tpl]=G.day;
+  const w=op.wins,n=def.stages.length;
+  let outcome,pres,mor,detail;
+  if(w>=n){outcome="Textbook Resolution";pres=110;mor=6;detail="Every objective secured. This is the one they\'ll teach at the Academy — the crisis that never left the ship, solved by the people who live in her.";}
+  else if(w>=n-1){outcome="Resolved";pres=70;mor=4;detail="The crisis is over. The ship hums on, and the crew walks a little taller.";}
+  else if(w>=1){outcome="Contained";pres=35;mor=1;detail="It\'s handled — mostly. The debrief will be spirited, and the repair crews are already at work.";}
+  else{outcome="Costly";pres=10;mor=-5;detail="The crisis passed, but it took its toll. Sickbay is busy and the mood is somber.";s.damage=Math.min(120,(s.damage||0)+ri(5,15));if(s.damage>=40&&s.status==="active")s.status="damaged";}
+  gainPres(pres);
+  crewOfShip(s.id).forEach(o=>{o.morale=clamp(o.morale+mor,0,100);o.missions.t++;if(w>=n-1)o.missions.s++;});
+  const b=deckOpBest(s,"cmd");
+  if(b.o&&w>=n-1)awardAccolade(b.o,"Shipboard operation: "+def.name+" — "+outcome);
+  log("mission","Shipboard operation aboard "+s.name+": "+def.name+" — "+outcome+". (+"+pres+" prestige)");
+  capLogAuto("Shipboard operation",def.name+" aboard "+s.name+". "+outcome+".");
+  if(w>=n-1)sfx("success");else if(w===0)sfx("fail");
+  save();
+  let h='<div class="deckTop"><div class="dName">'+esc(def.name)+' — '+esc(outcome)+'</div>'+deckAlertLabel(s)+
+    '<button class="btn small ghost" onclick="deckExit()">Leave</button></div>';
+  h+='<div class="deckBody"><div class="sceneCard"><div class="sceneProse">'+detail+'</div>'+
+    '<div class="kv"><span class="k">Prestige</span><span class="v">+'+pres+'</span></div>'+
+    '<div class="deckActions"><button class="btn violet" onclick="DECK.screen=\'plan\';renderDeck()">Return to the deck plan</button></div></div></div>';
+  DECK.screen="op";
+  $("deckRoot").innerHTML=h;
+}
+
+/* ---- the bottle episodes: six shipboard crisis templates ---- */
+const SHIP_OP_DEFS={
+intruder:{name:"Intruder Alert",cd:60,blurb:"Unauthorized life signs are moving through the lower decks.",
+ stages:[
+  {t:"Red lights wash the corridors. <i>\"Intruder alert. All security teams to stations.\"</i> Internal sensors show movement on the lower decks — someone who is not on the crew manifest, and who clearly knows this ship\'s layout.",
+   opts:[
+    {t:"Sweep the decks, section by section",stat:"tac",dc:130,win:"{o} coordinates the sweep like a hunt master. Deck by deck, the net tightens — motion sensors herd the intruder toward the shuttlebay.",lose:"The sweep is methodical but slow. The intruder slips the cordon twice, and security is left guarding empty corridors.",fx:{morale:2}},
+    {t:"Seal the turbolifts and wait them out",stat:"cmd",dc:115,win:"The ship goes still. Sealed turbolifts, locked doors — and patience. An hour later, sensors catch movement near a cargo bay: hunger beats training.",lose:"The lockdown frays nerves more than it catches intruders. Someone\'s dinner gets cold. Morale dips.",fx:{morale:-2,onLose:{morale:-3}}}
+   ]},
+  {t:"Motion sensors pin the intruder near the shuttlebay — a lone figure in a patched environmental suit, cornered between two cargo containers.",
+   opts:[
+    {t:"Stun and capture",stat:"tac",dc:140,win:"{o} takes the shot personally. One clean stun burst, and the intruder drops mid-stride. Textbook.",lose:"The intruder is faster than expected — they vault a container and vanish into a maintenance shaft. The hunt continues.",fx:{onLose:{morale:-2}}},
+    {t:"Talk them into surrendering",stat:"dip",dc:130,win:"{o} steps forward, hands open. <i>\"Nobody else needs to get hurt — including you.\"</i> A long pause… then the intruder lowers their hands.",lose:"The intruder laughs — a harsh, frightened sound — and bolts. So much for diplomacy.",fx:{onLose:{morale:-2}}}
+   ]},
+  {t:"The intruder is a scout from a splinter colony, separated from their ship during an ion storm. They\'ve been hiding in the Jeffries tubes for two days, stealing ration packs.",
+   opts:[
+    {t:"Offer aid and release them to their people",stat:"dip",dc:120,win:"You feed them, treat their dehydration, and hail their colony ship. Their captain\'s gratitude is effusive — and Starfleet hears about it.",lose:"They accept the food but not the trust, and slip away at the next starbase. A missed connection.",fx:{pres:25,morale:3,accolade:"Intruder Alert — mercy shown"}},
+    {t:"Hand them to Starfleet Intelligence",stat:"cmd",dc:110,win:"By the book. Intelligence debriefs them for a week and quietly thanks you for the splinter colony\'s star charts.",lose:"Intelligence loses interest when the charts turn out to be recipes. The paperwork, however, is eternal.",fx:{pres:15}}
+   ]}
+ ]},
+plasmaleak:{name:"Fire in the Conduits",cd:60,blurb:"A plasma fire is spreading through the EPS conduits.",
+ stages:[
+  {t:"The alert comes at 0340: plasma fire in the EPS conduits on deck seven, spreading fast. The deck crew is already in breathing masks.",
+   opts:[
+    {t:"Vent the affected sections to space",stat:"eng",dc:130,win:"{o} doesn\'t hesitate — explosive decompression starves the fire in seconds. The deck is a mess, but the ship is safe.",lose:"The venting is partial; the fire finds new fuel in a ruptured manifold. Damage control falls back.",fx:{dmg:6,onLose:{dmg:10,morale:-2}}},
+    {t:"Fight it with damage-control teams",stat:"cmd",dc:120,win:"You commit the teams in waves, rotating them before the heat gets dangerous. Slow, brave, effective.",lose:"The teams are driven back twice. It\'s going to be a long night.",fx:{onLose:{dmg:8,inj:1}}}
+   ]},
+  {t:"The fire is crawling toward the deuterium manifolds. If it reaches them, the whole deck goes — and takes half the ship\'s power grid with it.",
+   opts:[
+    {t:"Emergency shutdown of the manifolds",stat:"eng",dc:140,win:"{o} reroutes the deuterium flow in under ninety seconds, hands flying across the console. The fire reaches dead conduits and dies, confused.",lose:"The shutdown sequence stalls on a fused relay. The fire keeps coming.",fx:{onLose:{dmg:10}}},
+    {t:"Eject the manifold section",stat:"tac",dc:120,win:"Explosive bolts fire. The burning section tumbles away into the dark, and the ship shudders — wounded, but alive.",lose:"The ejection charges misfire on one side. The section hangs half-attached, still burning.",fx:{dmg:8,onLose:{dmg:14}}}
+   ]},
+  {t:"The fire is out. The deck is scorched, the air recyclers are working overtime, and sickbay is treating burns and smoke inhalation.",
+   opts:[
+    {t:"Prioritize the wounded, then the ship",stat:"med",dc:120,win:"Triage is swift and calm. Everyone who can be saved, is saved — and the crew sees their commander in the smoke beside them.",lose:"It\'s organized chaos. Everyone survives, but sickbay will be busy for days.",fx:{morale:3,onLose:{morale:-2,inj:1}}},
+    {t:"Walk the deck with the damage-control chief",stat:"cmd",dc:110,win:"You inspect every scorched panel personally. The crew stands straighter knowing you saw what they faced.",lose:"The deck is worse than the reports said. The repair estimate makes the quartermaster pale.",fx:{morale:2,onLose:{morale:-3}}}
+   ]}
+ ]},
+entity:{name:"Something in the Walls",cd:75,blurb:"Crew report whispers in the Jeffries tubes — and the lights are flickering in patterns.",
+ stages:[
+  {t:"It starts as jokes: whispers in the Jeffries tubes, lights flickering in patterns too regular for a malfunction. Then three crew members report the same dream — of something vast, pressing against the hull.",
+   opts:[
+    {t:"Run a full-spectrum internal scan",stat:"sci",dc:130,win:"{o} tunes the internal sensors past every safety limit and finds it: a non-corporeal entity, nesting in the plasma conduits, feeding on the ship\'s energy like a bird on a wire.",lose:"The scans show nothing but noise. Whatever it is, it knows how to hide.",fx:{onLose:{morale:-2}}},
+    {t:"Set a trap with a plasma shunt",stat:"eng",dc:120,win:"A controlled plasma surge through the conduits — and something <i>screams</i> through the bulkheads. It\'s real, it\'s angry, and now you know where it sleeps.",lose:"The shunt blows half the lighting on deck eight. The entity, if it exists, is unimpressed.",fx:{onLose:{dmg:4}}}
+   ]},
+  {t:"The entity is real — a non-corporeal lifeform, feeding on the ship\'s plasma flow. It\'s not malevolent. It\'s just hungry, and the ship is dinner.",
+   opts:[
+    {t:"Modulate the warp field to expel it",stat:"sci",dc:140,win:"{o} shapes the warp field like a hand, gently — firmly — pushing the entity out into the vacuum. It drifts away, already fading, like breath on a cold morning.",lose:"The modulation destabilizes. The entity digs in deeper, and half the ship\'s lights go out.",fx:{onLose:{dmg:8,morale:-3}}},
+    {t:"Try to communicate with it",stat:"dip",dc:130,win:"Through modulated plasma pulses, {o} manages something like language. The entity is <i>lonely</i>. You feed it from the auxiliary reactors until it detaches on its own — and it leaves something like gratitude in the sensor logs.",lose:"It doesn\'t understand. Or doesn\'t care. The lights flicker faster now.",fx:{pres:20,morale:2,onLose:{morale:-3}}}
+   ]},
+  {t:"The entity is gone — expelled, befriended, or simply moved on. The ship feels quieter, in a way nobody can quite name.",
+   opts:[
+    {t:"Log it as a first contact",stat:"sci",dc:110,win:"Starfleet Science devours the sensor logs. Your ship\'s name goes into the xenobiology textbooks — footnote and all.",lose:"The logs are inconclusive. Science files it under 'unexplained,' which is where the interesting things live.",fx:{pres:30,accolade:"Something in the Walls — first contact"}},
+    {t:"Hold a ship-wide briefing on what happened",stat:"cmd",dc:110,win:"You tell the crew the truth: something lived in the walls, and it\'s gone. No ghost stories — just the facts. The rumor mill starves.",lose:"The briefing spawns seventeen new ghost stories. The Jeffries tubes will never be the same.",fx:{morale:3,onLose:{morale:-2}}}
+   ]}
+ ]},
+holofail:{name:"Safeties Off",cd:60,blurb:"The holodeck safeties have disengaged with crew inside.",
+ stages:[
+  {t:"The holodeck doors seal with a sound like a coffin lid. Inside: two crew members, mid-program — a Dixon Hill mystery. Outside: every warning light the ship owns. The safety protocols have disengaged, and the characters know it.",
+   opts:[
+    {t:"Go in after them yourself",stat:"cmd",dc:120,win:"You step through the arch into black-and-white San Francisco, rain on your shoulders. Your crew\'s faces when they see you — that\'s the moment they stop being afraid.",lose:"The arch flickers as you enter. You\'re in — but the program has already rewritten itself around you.",fx:{morale:3,onLose:{morale:-2}}},
+    {t:"Cut power from outside",stat:"eng",dc:130,win:"{o} bypasses three interlocks and kills the holodeck grid cleanly. The doors sigh open on two very relieved, very damp officers.",lose:"The power cut fails — the holodeck is drawing from the auxiliary grid now. It\'s learning.",fx:{onLose:{morale:-2}}}
+   ]},
+  {t:"Inside the program, the rules have changed. The gangsters are too smart, the rain is too cold, and the detective — your detective — keeps looking directly at you. <i>\"You\'re not from around here,\"</i> he says.",
+   opts:[
+    {t:"Play along to reach the arch",stat:"dip",dc:130,win:"You feed him lines, play the informant, walk him right up to the exit. He tips his hat as the world dissolves. <i>\"You were good, kid.\"</i>",lose:"He sees through you. The program resets — deeper this time, and the doors are further away.",fx:{onLose:{morale:-2}}},
+    {t:"Shoot your way to the exit",stat:"tac",dc:130,win:"Two-fisted, black-and-white, utterly ridiculous — and it works. The program can\'t improvise faster than you can improvise.",lose:"The tommy guns are props. The gangsters' aren\'t. You retreat with dignity and a ruined hat.",fx:{onLose:{inj:1}}}
+   ]},
+  {t:"The crew is out, the program is purged, and the holodeck sits dark and innocent. Engineering wants to know what you want done with it.",
+   opts:[
+    {t:"Full diagnostic and a stern talking-to",stat:"eng",dc:110,win:"The fault was a cascading heuristic error — fascinating, unrepeatable, and now thoroughly documented. The holodeck is safe. Probably.",lose:"The diagnostic finds nothing. Which is, somehow, worse.",fx:{morale:2,onLose:{morale:-2}}},
+    {t:"Buy the crew a drink and laugh about it",stat:"dip",dc:110,win:"By midnight the whole thing is a story — the night the captain went into the movies. Morale has never been higher.",lose:"Nobody\'s laughing yet. Give it a week.",fx:{morale:4,onLose:{morale:1}}}
+   ]}
+ ]},
+stowaway:{name:"The Stowaway",cd:60,blurb:"Someone is aboard who shouldn\'t be — and they\'re just a kid.",
+ stages:[
+  {t:"Cargo bay inventory is off by exactly one meal\'s worth of rations, three days running. Security finds a nest of blankets behind the shield generators — and a teenager, all elbows and defiance.",
+   opts:[
+    {t:"Hear their story before anything else",stat:"dip",dc:110,win:"{o} sits on the deck plates and just… listens. The kid\'s colony failed. They hid aboard at the last starbase, chasing a rumor of a relative on a core world.",lose:"The kid won\'t talk. Just stares at the deck, arms crossed, daring the universe.",fx:{onLose:{morale:-1}}},
+    {t:"Brig first, questions later",stat:"tac",dc:110,win:"By the book. The brig is humane, the kid is safe, and security logs everything.",lose:"The kid cries in the cell. The security officer on post requests a transfer to anywhere else.",fx:{morale:-3,onLose:{morale:-4}}}
+   ]},
+  {t:"The story checks out: a failed colony, a dead transport schedule, a relative three sectors away who doesn\'t know they\'re coming. The kid asks — barely above a whisper — if Starfleet takes strays.",
+   opts:[
+    {t:"Grant them passage and protection",stat:"dip",dc:130,win:"You give them a berth, a duty roster in the mess hall, and a promise. By week\'s end half the crew has adopted them.",lose:"Regulations tie your hands. You do what you can, but the kid sees the hesitation.",fx:{pres:20,morale:5,accolade:"The Stowaway — sanctuary given",onLose:{morale:-2}}},
+    {t:"Turn them in at the next starbase",stat:"cmd",dc:110,win:"The starbase takes custody with proper paperwork and proper care. It\'s correct. It doesn\'t feel like enough.",lose:"The starbase bureaucracy loses the file for a month. The kid waits. You hear about it.",fx:{pres:10,onLose:{morale:-4,pres:5}}}
+   ]},
+  {t:"Word of the stowaway has spread through the ship. The crew is watching to see what kind of commander you are.",
+   opts:[
+    {t:"Address it openly at mess",stat:"dip",dc:120,win:"You tell the crew the truth and ask for their help watching over the kid. Volunteers line up before you finish the sentence.",lose:"The mess goes quiet. Compassion is harder to order than obedience.",fx:{morale:4,onLose:{morale:-2}}},
+    {t:"Keep it quiet and handle it privately",stat:"cmd",dc:110,win:"Discretion works. The kid gets what they need, the ship keeps its rhythm, and nobody\'s the wiser.",lose:"Secrets leak. The rumor version is worse than anything that actually happened.",fx:{morale:2,onLose:{morale:-3}}}
+   ]}
+ ]},
+whispers:{name:"Whispers in the Dark",cd:75,blurb:"Grumbling in the lower decks is turning into something uglier.",
+ stages:[
+  {t:"The XO\'s report is careful, which means it\'s bad: organized grumbling in the lower decks. Missed shifts, slow compliance, talk of refusing the next set of orders. Something is rotting.",
+   opts:[
+    {t:"Address the crew directly, ship-wide",stat:"cmd",dc:140,win:"You open a channel to every deck and tell the truth — about the mission, the risks, and why it matters. The grumbling doesn\'t vanish, but it loses its leader.",lose:"The speech lands flat. Somewhere on deck nine, someone mutes it halfway through.",fx:{morale:3,onLose:{morale:-4}}},
+    {t:"Find the ringleader quietly",stat:"dip",dc:120,win:"{o} works the mess hall and the Jeffries tubes, listening more than talking. By week\'s end you know exactly whose voice is behind it.",lose:"Nobody talks. The lower decks close ranks like a fist.",fx:{onLose:{morale:-2}}}
+   ]},
+  {t:"The ringleader is a junior officer with a good record and a genuine grievance — months of double shifts, a denied transfer, a commander who never learned their name. They\'re not a villain. They\'re exhausted.",
+   opts:[
+    {t:"Hear them out, truly",stat:"dip",dc:130,win:"You listen until they\'re done — all of it. Then you fix what you can and own what you can\'t. They cry. Then they salute. Then they go back to work.",lose:"They don\'t believe you. The words are right, but the trust isn\'t there yet.",fx:{morale:4,accolade:"Whispers in the Dark — mutiny defused",onLose:{morale:-3}}},
+    {t:"Relieve them of duty on the spot",stat:"cmd",dc:130,win:"It\'s clean, it\'s fast, and it\'s correct. The lower decks get the message: the line holds.",lose:"The relief feels like a purge. The grumbling goes underground — and gets worse.",fx:{morale:-5,onLose:{morale:-8}}}
+   ]},
+  {t:"The crisis passes — defused, or driven deep. Either way, the ship needs its commander visible.",
+   opts:[
+    {t:"Walk every deck for a week",stat:"cmd",dc:110,win:"You learn a hundred names. You hear a hundred small complaints and fix sixty of them. The ship exhales.",lose:"It\'s exhausting, and some decks stay cold. But nobody can say you hid.",fx:{morale:4,onLose:{morale:1}}},
+    {t:"Grant a ship-wide stand-down day",stat:"dip",dc:110,win:"One full day: no drills, no duty rosters, just rest. The crew comes back different — lighter, looser, loyal.",lose:"One day isn\'t enough to fix months. But it\'s a start, and they know it.",fx:{morale:5,onLose:{morale:2}}}
+   ]}
+ ]}
+};
+
+/* ---- bridge command: RED ALERT while you\'re aboard ---- */
+function deckBattleCheck(s,e,z){
+  // called from battleTick instead of queueing a generic interrupt (klaxon already sounded)
+  DECK.battle={e:e,z:z};
+  renderDeck();
+  const b=$("deckRoot").querySelector(".deckBody");if(b)b.scrollTop=0;
+}
+function deckBattleHtml(s){
+  const b=DECK.battle,c=shipClass(s);
+  return '<div class="redAlertFrame"><h3>RED ALERT</h3>'+
+    '<p class="dim">'+esc(b.z.blurb)+'</p>'+
+    '<div class="kv"><span class="k">Contact</span><span class="v" style="color:var(--red)">'+esc(b.e.n)+'</span></div>'+
+    '<div class="kv"><span class="k">Threat</span><span class="v">'+threatLabel(b.e,s)+'</span></div>'+
+    '<div class="kv"><span class="k">Victory odds</span><span class="v">~'+estEngageOdds(s,b.e)+'% if you engage</span></div>'+
+    '<div class="kv"><span class="k">Escape odds</span><span class="v">~'+estEscapeOdds(s)+'% clean getaway</span></div>'+
+    '<p><i>&ldquo;'+esc(b.e.line)+'&rdquo;</i></p>'+
+    '<p class="dim">You are on the bridge. The crew looks to the chair — to you. Your orders?</p>'+
+    '<div class="deckActions">'+
+    '<button class="btn" onclick="deckBattleOrder(\'engage\')">Engage the enemy</button>'+
+    '<button class="btn" onclick="deckBattleOrder(\'retreat\')">Evasive maneuvers</button>'+
+    (G.qmode?'<button class="btn violet" onclick="deckBattleOrder(\'qsnap\')">Q: Snap them away</button>':"")+
+    '</div></div>';
+}
+function deckBattleOrder(choice){
+  const s=deckShip(),b=DECK&&DECK.battle;if(!s||!b)return;
+  const res=resolveBattle(s.id,b.e,b.z,choice);
+  DECK.battle=null;
+  deckExit();
+  if(res)showInterrupt(res);
+}
+
 /* ================= BOOT ================= */
 window.onload=function(){
   try{splashInit();}catch(e){}
@@ -7529,7 +8322,7 @@ window.onload=function(){
   if(s){G=s;
     // forward-compat defaults
     if(!G.flags)G.flags={};if(!G.ledger)G.ledger={missions:0,crits:0,shipsBuilt:0,stationsBuilt:0,marriages:0,births:0,lost:0,events:0};
-    if(!G.memorial)G.memorial=[];if(typeof G.dlIncome!=="number")G.dlIncome=0;if(typeof G.day!=="number")G.day=0;
+    if(!G.memorial)G.memorial=[];if(!G.shipOps)G.shipOps=[];if(typeof G.dlIncome!=="number")G.dlIncome=0;if(typeof G.day!=="number")G.day=0;
     if(!G.commander)G.commander={name:"",gender:"m",species:"human",portrait:0};if(G.commander.portrait==null)G.commander.portrait=0;
     G.ships.forEach(s=>{if(!s.post)s.post="sol";});
     G.officers.forEach(o=>{if(!Array.isArray(o.roles))o.roles=o.role?[o.role]:[];delete o.role;});
@@ -7551,10 +8344,11 @@ window.onload=function(){
 </nav>
 <div id="menuShade" onclick="closeTabMenu()"></div>
 <div id="meetRoot" style="display:none;"></div>
+<div id="deckRoot"></div>
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v1.9</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.0</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
