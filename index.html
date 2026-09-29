@@ -6594,7 +6594,7 @@ function shipModal(id){
     ((s.status==="active"||s.status==="damaged")?'<button class="btn small ghost" onclick="uiDecommission(\'ship\',\''+s.id+'\')">Decommission</button>':"")+
     ((s.status==="active"||s.status==="damaged")?'<button class="btn small ghost" onclick="uiMothballToggle(\'ship\',\''+s.id+'\')">'+(s.mothballed?"Recommission":"Mothball")+'</button>':"")+
     ((s.status==="active"||s.status==="damaged")?'<button class="btn small violet" onclick="uiMothball(\''+s.id+'\')">Mothball to Museum</button>':"")+
-    ((s.status==="active"||s.status==="damaged")?'<button class="btn small violet" onclick="uiSetFlagship(\''+s.id+'\')">'+(isFl?"Stand down flagship":"Set as flagship")+'</button>':"")+
+    (s.status!=="museum"?'<button class="btn small violet" onclick="uiSetFlagship(\''+s.id+'\')">'+(isFl?"Stand down flagship":"Set as flagship")+'</button>':"")+
     (s.status==="museum"?'<button class="btn small teal" onclick="uiRecommission(\''+s.id+'\')">Return to duty</button>':"")+
     '<button class="btn small ghost" onclick="closeModal()">Close</button></div>';
   openModal(h);
@@ -6923,7 +6923,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.93</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.94</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
