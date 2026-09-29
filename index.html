@@ -585,6 +585,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
 
 <div id="completeRoot"></div>
 <script>
+
 "use strict";
 /* ============================================================
    STAR TREK: FLEET COMMAND — a Starfleet sector management sim
@@ -5455,6 +5456,7 @@ function setTab(t){
 function navGo(t){closeSheet();closeModal();closeTabMenu();setTab(t);}
 function goBack(){
   if(typeof deckOpen==="function"&&deckOpen()){deckGoBack();return;}
+  if(typeof sdeckOpen==="function"&&sdeckOpen()){sdeckGoBack();return;}
   if($("sheetRoot").classList.contains("open")){closeSheet();return;}
   if($("menuDrawer").classList.contains("open")){closeTabMenu();return;}
   if($("modalRoot").classList.contains("open")){
@@ -8883,6 +8885,7 @@ function stationModal(id){
   const st=station(id);if(!st)return;const d=STATION_DEFS[st.type],crew=crewOfStation(st.id);
   const co=stationCO(st.id),xo=stationXO(st.id,co);
   let h='<h2>'+esc(st.name)+'</h2><div class="flavor">'+d.name+' · '+(st.mothballed?"Mothballed":st.status==="active"?"Operational":"Under construction — "+st.daysLeft+"d")+'</div>'+stationPic(stationArtKey(st),true);
+  if(sdeckCanEnter(st))h+='<div class="shipHero"><button class="btn heroGold" onclick="sdeckEnter(\''+st.id+'\')">Enter station</button></div>';
   h+='<div class="kv"><span class="k">Posting</span><span class="v">'+sheetPick('Posting',postOptions(st.post||"sol"),(function(_stid){return function(v){setStationPost(_stid,v);};})(st.id))+'</span></div>';
   h+='<p class="dim">'+esc(d.desc)+'</p>';
   if(st.blurb)h+='<p class="dim"><i>'+esc(st.blurb)+'</i></p>';
@@ -10075,6 +10078,762 @@ whispers:{name:"Whispers in the Dark",cd:75,blurb:"Grumbling in the lower decks 
  ]}
 };
 
+
+/* ================= STATION INTERIOR — "ENTER THE STATION" (v2.5) =================
+   Walkable stations: section plan -> room scenes -> station encounters ->
+   station "bottle episode" crises. Mirrors the ship interior system (DECK)
+   but is fully separate, so ship behavior is untouched.
+   SDECK is transient UI state (never saved). G.stationOps persists crises. */
+let SDECK=null;
+
+const STATION_ROOMS=[
+ {id:"ops",name:"Operations Center",frac:0.03,
+  blurb:"The nerve center of the station. The big board tracks every docked ship, every cargo manifest, every blip within a light-year.",
+  lines:["The ops table glows with docking telemetry. Somewhere, a freighter captain is arguing about berth fees.",
+   "The duty officer tracks three conversations at once and misses nothing.",
+   "On the big board a tiny icon blinks: a shuttle running late, as shuttles do."]},
+ {id:"promenade",name:"Promenade",frac:0.18,
+  blurb:"The beating heart of station life. Shops, cafes, and a hundred conversations in a dozen languages.",
+  lines:["A Bolian merchant haggles cheerfully over the price of replicated silk.",
+   "Children chase each other between the planters while their parents pretend not to watch.",
+   "The replimat's lunch rush is a beautiful, noisy chaos."]},
+ {id:"docking",name:"Docking Ring",frac:0.30,
+  blurb:"Clamps, umbilicals, and the patient ballet of ships coming and going. The air smells of ozone and hydraulic fluid.",
+  lines:["A freighter eases into its berth with centimeters to spare. Nobody applauds; everybody noticed.",
+   "Dock workers in mag-boots guide a cargo pallet the size of a shuttle.",
+   "Through the viewports: running lights, welding sparks, and the slow turn of the stars."]},
+ {id:"security",name:"Security Office",frac:0.42,
+  blurb:"Monitors, incident boards, and the quiet confidence of people who have seen every trick twice.",
+  lines:["The duty board lists seventeen open incidents. Sixteen are noise. One is interesting.",
+   "A deputy reviews docking-ring footage at four times speed, missing nothing.",
+   "The incident map of the promenade blooms with tiny flags, most of them harmless."]},
+ {id:"sickbay",name:"Infirmary",frac:0.50,
+  blurb:"Biobeds, hyposprays, and the particular calm of medical staff who have seen it all before breakfast.",
+  lines:["A nurse recalibrates a biobed with the tenderness of a musician tuning an instrument.",
+   "The triage board is blessedly short today.",
+   "Someone is getting a lecture about proper mag-boot safety. Again."]},
+ {id:"science",name:"Science Labs",frac:0.58,
+  blurb:"Long-range sensor palettes, sample vaults, and researchers who forget to eat when the data gets interesting.",
+  lines:["A researcher stares at a spectral readout like it owes them money.",
+   "The sample vault hums at three degrees above absolute zero.",
+   "Two ensigns are arguing about stellar cartography. It has been going on for days."]},
+ {id:"cargo",name:"Cargo Bay",frac:0.66,
+  blurb:"Container stacks three stories high, cargo transporters cycling, and a quartermaster who knows where everything is.",
+  lines:["A container marked 'medical supplies' rattles suspiciously. The quartermaster makes a note.",
+   "The cargo transporter cycles with its familiar shimmer-whine.",
+   "Inventory drones drift between the stacks like patient metal bees."]},
+ {id:"reactor",name:"Fusion Reactors",frac:0.74,
+  blurb:"The station's heart: fusion reactors feeding the grid, humming a note you feel in your teeth.",
+  lines:["The reactor columns pulse with contained starfire.",
+   "An engineer walks the catwalk with a scanner, listening to the grid the way a doctor listens to a heartbeat.",
+   "Warning lights blink in their slow, patient rhythm. All nominal."]},
+ {id:"mess",name:"Replimat",frac:0.80,
+  blurb:"The crew's second home. Replicated food, real gossip, and tables that have heard every story twice.",
+  lines:["The lunch crowd is a wall of happy noise.",
+   "A cook — an actual cook, not a replicator — is holding court over a pot of something that smells incredible.",
+   "Two officers are reenacting a docking maneuver with bread rolls."]},
+ {id:"holodeck",name:"Holosuites",frac:0.86,
+  blurb:"Private holosuites, rented by the hour. What happens in the holosuite is logged, billed, and none of your business.",
+  lines:["The suite schedule board is fully booked through next week.",
+   "A technician polishes the arch emitters with loving care.",
+   "Muffled applause leaks from suite three. Someone's program is going well."]},
+ {id:"transporter",name:"Transporter Room",frac:0.90,
+  blurb:"The pad hums at standby. Six pads, a chief who has beamed ten thousand souls, and zero margin for error.",
+  lines:["The transporter chief runs the daily diagnostic with ritual precision.",
+   "A diplomatic party materializes in a shimmer of light, already arguing.",
+   "The pattern buffer status board glows a reassuring green."]},
+ {id:"quarters",name:"Habitat Ring",frac:0.95,
+  blurb:"Home for thousands. Corridors of closed doors, each one a small private universe.",
+  lines:["Muffled music leaks from behind one door. Someone is off-shift and making the most of it.",
+   "A corridor of closed doors, each one a small private universe.",
+   "Through one open doorway: photos taped to a bulkhead, a whole life in twelve pictures."]},
+ {id:"brig",name:"Brig",frac:0.98,
+  blurb:"Quiet, forcefield-humming, and — on a good day — completely empty.",
+  lines:["The forcefield hums its low, patient note.",
+   "A deputy stands post, alert despite the stillness.",
+   "The cells are empty. Long may it continue."]}
+];
+function sdeckRoomDef(id){return STATION_ROOMS.find(r=>r.id===id)||STATION_ROOMS[0];}
+function sdeckCount(st){const d=STATION_DEFS[(st&&st.type)||""]||{};return clamp(4+Math.round((d.comp||400)/700),4,9);}
+function sdeckSectionOf(st,room){const n=sdeckCount(st);return 1+Math.round(room.frac*(n-1));}
+
+/* station -> on-screen era for interior set photos (stations are Starfleet facilities) */
+function sdeckEra(st){return (st&&st.id==="ds9")?"ds9":"tng";}
+function sdeckEraName(st){return DECK_ERA_NAMES[sdeckEra(st)]||"Starfleet";}
+function sdeckRoomImg(st,rid){
+  const era=sdeckEra(st);
+  return '<img class="deckRoomImg" src="interiors/'+era+'/'+rid+'.jpg" alt="'+sdeckEraName(st)+' '+rid+' as seen on screen" loading="lazy" onerror="this.style.display=\'none\'">'+
+    '<div class="deckCap">'+sdeckEraName(st)+' · as seen on screen</div>';
+}
+
+/* ---- where is everyone? ---- */
+function sdeckRoomFor(o){
+  const R=o.roles||[],D=o.dept,has=x=>R.indexOf(x)>=0;
+  if(has("co")||has("xo"))return "ops";
+  if(has("ops")||has("tac")||has("conn"))return "ops";
+  if(D==="Engineering"||has("eng"))return "reactor";
+  if(D==="Medical"||has("med")||has("doc")||has("nurse")||has("coun"))return "sickbay";
+  if(D==="Science"||has("sci"))return "science";
+  if(D==="Security"||has("sec"))return "security";
+  if(has("chef")||has("bart"))return "mess";
+  return null;
+}
+function sdeckRoomMap(st){
+  const crew=crewOfStation(st.id),map={};STATION_ROOMS.forEach(r=>map[r.id]=[]);
+  const placed={};
+  crew.forEach(o=>{const rid=sdeckRoomFor(o);if(rid){map[rid].push(o);placed[o.id]=1;}});
+  const rest=crew.filter(o=>!placed[o.id]);
+  rest.forEach(o=>{if(o.rel){const p=officer(o.rel.partner||o.rel);if(p&&!placed[p.id]&&p.post.t==="station"&&p.post.id===st.id){map.quarters.push(o);map.quarters.push(p);placed[o.id]=placed[p.id]=1;}}});
+  rest.forEach(o=>{if(placed[o.id])return;const h=hashStr(o.id+":"+G.day)%2;map[h?"promenade":"quarters"].push(o);placed[o.id]=1;});
+  Object.keys(map).forEach(k=>map[k].sort((a,b)=>b.rank-a.rank));
+  return map;
+}
+function sdeckCoupleAboard(st){
+  const crew=crewOfStation(st.id);
+  for(const o of crew){if(o.rel){const p=officer(o.rel.partner||o.rel);if(p&&crew.indexOf(p)>=0)return [o,p];}}
+  return null;
+}
+function sdeckAlert(st){
+  const crew=crewOfStation(st.id);
+  if(crew.some(o=>o.health!=="healthy"))return "yellow";
+  if(crew.length){const avg=crew.reduce((a,o)=>a+(o.morale||70),0)/crew.length;if(avg<45)return "yellow";}
+  return "green";
+}
+function sdeckAlertLabel(st){const a=sdeckAlert(st);return a==="yellow"?'<span class="deckCond yellow">CREW NEEDS ATTENTION</span>':'<span class="deckCond green">ALL SYSTEMS NOMINAL</span>';}
+
+/* ---- enter / exit / back ---- */
+function sdeckCanEnter(st){return st&&st.status==="active"&&!st.mothballed;}
+function sdeckEnter(stid){
+  const st=station(stid);if(!st||!sdeckCanEnter(st))return;
+  closeModal();closeSheet();DECK=null;
+  SDECK={stId:stid,screen:"plan",room:null,enc:null,roomMap:null};
+  sfx("door");
+  $("deckRoot").classList.add("open");
+  sdeckRender();
+  window.scrollTo(0,0);
+}
+function sdeckExit(){SDECK=null;$("deckRoot").classList.remove("open");render();}
+function sdeckOpen(){return !!SDECK&&$("deckRoot").classList.contains("open");}
+function sdeckGoBack(){
+  if(!SDECK)return;
+  if(SDECK.enc){SDECK.enc=null;sdeckRender();return;}
+  if(SDECK.screen==="op"){SDECK.screen="ops";sdeckRender();return;}
+  if(SDECK.screen==="room"||SDECK.screen==="ops"){SDECK.screen="plan";SDECK.room=null;sdeckRender();return;}
+  sdeckExit();
+}
+function sdeckStation(){return SDECK?station(SDECK.stId):null;}
+
+/* ---- rendering ---- */
+function sdeckRender(){
+  if(!SDECK)return;const st=sdeckStation();if(!st){sdeckExit();return;}
+  const d=STATION_DEFS[st.type]||{};
+  let h='<div class="deckTop"><button class="btn small ghost" onclick="sdeckGoBack()" aria-label="Back" style="padding:6px 10px;">&#8592;</button>'+
+    '<div class="dName">'+esc(st.name)+' <span class="dReg">'+esc(d.name||"Station")+'</span></div>'+
+    sdeckAlertLabel(st)+
+    '<button class="btn small ghost" onclick="sdeckExit()">Leave</button></div>';
+  h+='<div class="deckBody">';
+  if(SDECK.screen==="ops")h+=sdeckOpsHtml(st);
+  else if(SDECK.screen==="room")h+=sdeckRoomHtml(st,SDECK.room);
+  else h+=sdeckPlanHtml(st);
+  h+='<div class="deckFoot">'+esc(st.name)+' · Stardate '+sdStr(G.stardate)+'</div></div>';
+  $("deckRoot").innerHTML=h;
+  const b=$("deckRoot").querySelector(".deckBody");if(b)b.scrollTop=0;
+}
+function sdeckStatusStrip(st){
+  const crew=crewOfStation(st.id),shs=shuttlesOfStation(st.id);
+  return '<div class="deckStrip"><div style="flex:1;">'+bar("CREW",crew.length,Math.max(crew.length,20))+'</div>'+
+    '<div style="font-size:11px;opacity:.75;">'+esc(POST_LABELS[st.post||"sol"]||"Deep Space")+'</div></div>'+
+    '<div class="kv"><span class="k">Complement</span><span class="v">'+crew.length+' assigned</span></div>'+
+    '<div class="kv"><span class="k">Docked shuttlecraft</span><span class="v">'+shs.length+'</span></div>';
+}
+function sdeckPlanHtml(st){
+  const n=sdeckCount(st);
+  if(!SDECK.roomMap)SDECK.roomMap=sdeckRoomMap(st);
+  const map=SDECK.roomMap;
+  let h='<div class="deckSec">Station status</div>'+sdeckStatusStrip(st);
+  const active=sdeckActiveOp(st);
+  h+='<div class="deckBtnRow"><button class="btn small violet" onclick="SDECK.screen=\'ops\';sdeckRender()">Station operations'+(active?' <b style="color:var(--gold)">●</b>':"")+'</button></div>';
+  h+='<div class="deckSec">Section plan — tap a room to enter</div>';
+  for(let d=1;d<=n;d++){
+    const rooms=STATION_ROOMS.filter(r=>sdeckSectionOf(st,r)===d);
+    if(!rooms.length)continue;
+    h+='<div class="deckBand"><div class="dNum">SEC '+d+'</div><div class="deckRooms">'+
+      rooms.map(r=>'<button class="roomPill" onclick="sdeckGotoRoom(\''+r.id+'\')">'+esc(r.name)+'<span class="cnt">'+map[r.id].length+'</span></button>').join("")+
+      '</div></div>';
+  }
+  return h;
+}
+function sdeckGotoRoom(rid){
+  if(!SDECK)return;
+  SDECK.room=rid;SDECK.screen="room";SDECK.roomMap=sdeckRoomMap(sdeckStation());
+  sfx("door");
+  if(Math.random()<0.35){const enc=sdeckMakeEncounter();if(enc){SDECK.enc=enc;}}
+  sdeckRender();
+}
+function sdeckRoomHtml(st,rid){
+  const def=sdeckRoomDef(rid),map=SDECK.roomMap||sdeckRoomMap(st);
+  const occ=map[rid]||[];
+  const line=def.lines[hashStr(rid+":"+G.day)%def.lines.length];
+  let h="";
+  if(SDECK.enc)h+=sdeckEncHtml(st,SDECK.enc);
+  h+='<div class="deckSec">'+esc(def.name)+' · Section '+sdeckSectionOf(st,def)+'</div>';
+  h+=sdeckRoomImg(st,rid);
+  h+='<div class="sceneCard"><div class="flavor">'+esc(def.blurb)+'</div>';
+  h+='<div class="sceneProse"><i>'+esc(line)+'</i></div>';
+  if(occ.length){
+    h+='<div class="deckSec" style="margin-top:6px;">Present ('+occ.length+')</div><div class="occGrid">'+
+      occ.slice(0,8).map(o=>'<div class="occChip" onclick="officerModal(\''+o.id+'\')">'+faceImg(o,"pface")+
+        '<div><div class="nm">'+esc(o.name)+'</div><div class="rl">'+esc(rankName(o))+(primaryBillet(o)?' · '+esc(billetLabel(primaryBillet(o))):"")+'</div></div></div>').join("")+
+      (occ.length>8?'<div class="dim" style="font-size:12px;">+'+(occ.length-8)+' more aboard</div>':"")+'</div>';
+  }else{
+    h+='<p class="dim">Nobody is here right now. The room waits.</p>';
+  }
+  h+=sdeckRoomActions(st,rid,occ);
+  h+='</div><div class="deckBtnRow"><button class="btn small ghost" onclick="sdeckGoBack()">&#8592; Section plan</button></div>';
+  return h;
+}
+
+/* ---- room actions: real controls, not menus ---- */
+function sdeckRoomActions(st,rid,occ){
+  let h='<div class="deckSec">Station controls</div><div class="deckActions">';
+  const btn=(t,fn,cls)=>'<button class="btn '+(cls||"small")+'" onclick="'+fn+'">'+t+'</button>';
+  const dailyOk=key=>((st["sdeckD_"+key]||0)!==G.day);
+  const markDaily=key=>{st["sdeckD_"+key]=G.day;};
+  const crew=crewOfStation(st.id);
+  if(rid==="ops"){
+    h+=btn("Station status briefing","sdeckBrief()");
+    if(dailyOk("drill"))h+=btn("Run an emergency drill","sdeckDrill()","small teal");
+    else h+='<p class="dim">Emergency drill complete for today. The crew is sharp.</p>';
+  }else if(rid==="promenade"){
+    if(dailyOk("round")){
+      h+=btn("Buy a round at the replimat — 300 CR","sdeckRound()","small teal");
+    }else h+='<p class="dim">The promenade is still talking about the round you bought.</p>';
+    h+=btn("Listen in on the gossip","sdeckGossip()","small ghost");
+  }else if(rid==="docking"){
+    h+=btn("Review the docking schedule","sdeckDockSched()");
+    if(dailyOk("expedite"))h+=btn("Expedite the docking queue","sdeckExpedite()","small teal");
+    else h+='<p class="dim">The docking queue is running ahead of schedule thanks to you.</p>';
+  }else if(rid==="security"){
+    h+=btn("Review the security logs","sdeckSecLogs()","small ghost");
+    if(dailyOk("secdrill"))h+=btn("Run a security drill","sdeckSecDrill()","small teal");
+    else h+='<p class="dim">Security drill complete for today. The deputies are sharp.</p>';
+  }else if(rid==="sickbay"){
+    const hurt=crew.filter(o=>o.health!=="healthy");
+    if(hurt.length){
+      h+='<p class="dim">'+hurt.length+' under care: '+esc(hurt.slice(0,3).map(o=>o.name).join(", "))+(hurt.length>3?"…":"")+'</p>';
+      if(dailyOk("tend"))h+=btn("Tend the wounded personally","sdeckTend()","small teal");
+    }else h+='<p class="dim">The infirmary is quiet. The biobeds are empty and the staff intends to keep it that way.</p>';
+  }else if(rid==="science"){
+    h+=btn("Run a long-range sensor sweep","sdeckScan()","small teal");
+  }else if(rid==="cargo"){
+    h+=btn("Take inventory","sdeckInventory()","small ghost");
+    if(dailyOk("reorg"))h+=btn("Reorganize the cargo bays","sdeckReorg()","small teal");
+    else h+='<p class="dim">The cargo bays are a model of organization. The quartermaster is insufferably proud.</p>';
+  }else if(rid==="reactor"){
+    h+=btn("Full power diagnostic","sdeckDiag()","small ghost");
+    if(dailyOk("tune"))h+=btn("Fine-tune the power grid","sdeckTune()","small teal");
+    else h+='<p class="dim">The grid is humming in perfect tune.</p>';
+  }else if(rid==="mess"){
+    if(dailyOk("meal"))h+=btn("Share a meal with the crew","sdeckMeal()","small teal");
+    else h+='<p class="dim">You ate with the crew today. The replimat regulars have adopted you.</p>';
+  }else if(rid==="holodeck"){
+    h+=btn("Book a holosuite program","sdeckHolo()");
+  }else if(rid==="transporter"){
+    h+='<p class="dim">Six pads, one chief, zero margin for error. The room hums with quiet competence.</p>';
+  }else if(rid==="quarters"){
+    h+='<p class="dim">Quiet corridors, closed doors, soft music. The station sleeps in shifts.</p>';
+  }else if(rid==="brig"){
+    h+='<p class="dim">Empty cells and a patient forcefield hum. The best kind of boring.</p>';
+  }
+  h+='</div>';
+  return h;
+}
+function sdeckCrewAvgMor(st){const c=crewOfStation(st.id);return c.length?c.reduce((a,o)=>a+(o.morale||70),0)/c.length:70;}
+function sdeckBrief(){
+  const st=sdeckStation();if(!st)return;const crew=crewOfStation(st.id),shs=shuttlesOfStation(st.id);
+  const hurt=crew.filter(o=>o.health!=="healthy").length,op=sdeckActiveOp(st);
+  openModal('<h2>Station Status Briefing</h2>'+
+    '<div class="kv"><span class="k">Personnel</span><span class="v">'+crew.length+' assigned</span></div>'+
+    '<div class="kv"><span class="k">Average morale</span><span class="v">'+Math.round(sdeckCrewAvgMor(st))+'%</span></div>'+
+    '<div class="kv"><span class="k">Under medical care</span><span class="v">'+hurt+'</span></div>'+
+    '<div class="kv"><span class="k">Docked shuttlecraft</span><span class="v">'+shs.length+'</span></div>'+
+    '<div class="kv"><span class="k">Active crisis</span><span class="v">'+(op?esc(STATION_OP_DEFS[op.tpl].name):"None")+'</span></div>'+
+    '<p class="dim">The duty officer delivers it all without looking up from the ops table. Impressive.</p>'+
+    '<div class="btnRow"><button class="btn" onclick="closeModal();sdeckRender()">Continue</button></div>');
+}
+function sdeckDrill(){
+  const st=sdeckStation();if(!st||!sdeckOpen())return;
+  st["sdeckD_drill"]=G.day;
+  crewOfStation(st.id).forEach(o=>{o.morale=clamp((o.morale||70)+2,0,100);});
+  log("station","Emergency drill aboard "+st.name+". (+2 morale station-wide)");
+  save();openModal('<h2>Emergency Drill</h2><p>Decompression drill, section by section. The crew moves like water finding its level — fast, calm, practiced. The after-action review is mercifully short.</p><p class="dim">+2 morale station-wide.</p><div class="btnRow"><button class="btn" onclick="closeModal();sdeckRender()">Continue</button></div>');
+}
+function sdeckRound(){
+  const st=sdeckStation();if(!st||!sdeckOpen())return;
+  if((G.credits||0)<300){toast("Not enough credits for a round.");return;}
+  G.credits-=300;st["sdeckD_round"]=G.day;
+  crewOfStation(st.id).forEach(o=>{o.morale=clamp((o.morale||70)+4,0,100);});
+  log("station","Bought a round on the promenade of "+st.name+". (-300 CR, +4 morale)");
+  save();openModal('<h2>A Round on the Commander</h2><p>Word travels fast on a station. By the second round the replimat is packed, someone is telling the story of your first docking maneuver, and it keeps getting better.</p><p class="dim">-300 CR · +4 morale station-wide.</p><div class="btnRow"><button class="btn" onclick="closeModal();sdeckRender()">Continue</button></div>');
+}
+function sdeckGossip(){
+  if(!sdeckOpen())return;
+  const g=pick([
+   "Two dock workers are convinced the new freighter captain is secretly a retired admiral. The evidence is thin but passionately argued.",
+   "The replimat's soup of the day has a fan club. There are membership pins.",
+   "Someone on the habitat ring is teaching a targ to fetch. The neighbors have opinions.",
+   "A junior deputy lost a bet and now owes the entire security shift breakfast. The menu planning is ruthless.",
+   "The science team is feuding over who gets the new long-range palette. It has come to strongly worded memos.",
+   "Rumor says a famous retired captain is visiting next month. The promenade merchants are already polishing their displays."]);
+  openModal('<h2>Promenade Gossip</h2><p>'+g+'</p><div class="btnRow"><button class="btn" onclick="closeModal();sdeckRender()">Continue</button></div>');
+}
+function sdeckDockSched(){
+  const st=sdeckStation();if(!st||!sdeckOpen())return;const shs=shuttlesOfStation(st.id);
+  openModal('<h2>Docking Schedule</h2>'+(shs.length?shs.map(sh=>'<div class="kv"><span class="k">'+esc(sh.name)+'</span><span class="v">'+esc(shuttleStatusLabel(sh))+'</span></div>').join(""):'<p class="dim">No shuttlecraft docked. The ring feels cavernous.</p>')+'<div class="btnRow"><button class="btn" onclick="closeModal();sdeckRender()">Continue</button></div>');
+}
+function sdeckExpedite(){
+  const st=sdeckStation();if(!st||!sdeckOpen())return;
+  st["sdeckD_expedite"]=G.day;gainPres(8);
+  log("station","Expedited the docking queue at "+st.name+". (+8 prestige)");
+  save();openModal('<h2>Docking Queue Expedited</h2><p>You personally untangle a berth conflict between two freighter captains, a diplomatic courier, and a very impatient medical transport. The ring runs ahead of schedule for the first time in months.</p><p class="dim">+8 prestige.</p><div class="btnRow"><button class="btn" onclick="closeModal();sdeckRender()">Continue</button></div>');
+}
+function sdeckSecLogs(){
+  if(!sdeckOpen())return;
+  const g=pick([
+   "0230: Unauthorized access attempt on cargo bay 4. It was a sleepwalking ensign. Again.",
+   "A promenade merchant reported a stolen shipment of self-sealing stem bolts. The bolts were later found. They had sealed themselves inside a crate.",
+   "Docking ring cameras caught a farewell kiss that violated three separate fraternization memos and zero actual regulations.",
+   "Someone keeps reprogramming the habitat ring's ambient music to Klingon opera. Security has decided to allow it.",
+   "A lost Andorian child was returned to their parents after an epic 40-minute search. The child rated the adventure 'okay'."]);
+  openModal('<h2>Security Logs</h2><p><i>'+g+'</i></p><div class="btnRow"><button class="btn" onclick="closeModal();sdeckRender()">Continue</button></div>');
+}
+function sdeckSecDrill(){
+  const st=sdeckStation();if(!st||!sdeckOpen())return;
+  st["sdeckD_secdrill"]=G.day;
+  crewOfStation(st.id).forEach(o=>{o.morale=clamp((o.morale||70)+2,0,100);o.loyal=clamp((o.loyal||70)+1,0,100);});
+  log("station","Security drill aboard "+st.name+". (+2 morale, +1 loyalty)");
+  save();openModal('<h2>Security Drill</h2><p>Lockdown drill, promenade to docking ring. The deputies sweep their sectors in textbook time, and the civilians mostly remember not to panic. Mostly.</p><p class="dim">+2 morale, +1 loyalty station-wide.</p><div class="btnRow"><button class="btn" onclick="closeModal();sdeckRender()">Continue</button></div>');
+}
+function sdeckTend(){
+  const st=sdeckStation();if(!st||!sdeckOpen())return;
+  st["sdeckD_tend"]=G.day;
+  const hurt=crewOfStation(st.id).filter(o=>o.health!=="healthy");
+  hurt.slice(0,2).forEach(o=>{o.health="healthy";o.healDays=0;o.morale=clamp((o.morale||70)+5,0,100);});
+  crewOfStation(st.id).forEach(o=>{o.morale=clamp((o.morale||70)+1,0,100);});
+  log("station","Tended the wounded in the infirmary of "+st.name+".");
+  save();openModal('<h2>Infirmary Rounds</h2><p>You sit with the wounded, hear the stories behind the injuries, and sign exactly one cast. The medical staff works a little faster with the commander watching — in a good way.</p><div class="btnRow"><button class="btn" onclick="closeModal();sdeckRender()">Continue</button></div>');
+}
+function sdeckScan(){
+  const st=sdeckStation();if(!st||!sdeckOpen())return;
+  const r=Math.random();let extra="";
+  if(r<0.15){gainPres(15);extra='<p class="dim">+15 prestige — the anomaly charts are already on their way to Starfleet Science.</p>';log("station","Long-range sweep from "+st.name+" charted a new anomaly. (+15 prestige)");}
+  const g=pick([
+   "A previously uncharted comet, rich in deuterium. The science team is already arguing about naming rights.",
+   " subspace eddies consistent with a cloaked vessel — which resolves, on closer look, into a very embarrassed Ferengi smuggler.",
+   "A derelict probe of unknown origin, tumbling silently. Recovery is somebody else's exciting problem.",
+   "Nothing but clean, empty, beautiful vacuum. The researchers look almost disappointed."]);
+  save();openModal('<h2>Long-Range Sweep</h2><p>'+g+'</p>'+extra+'<div class="btnRow"><button class="btn" onclick="closeModal();sdeckRender()">Continue</button></div>');
+}
+function sdeckInventory(){
+  if(!sdeckOpen())return;const st=sdeckStation();
+  let extra="";
+  if(Math.random()<0.2){gainPres(10);extra='<p class="dim">+10 prestige — mislabeled cargo recovered and properly logged.</p>';log("station","Cargo inventory at "+st.name+" recovered mislabeled goods. (+10 prestige)");save();}
+  const g=pick([
+   "Every container accounted for. The quartermaster looks faintly disappointed at the lack of mysteries.",
+   "One container of 'agricultural equipment' is full of extremely legal, extremely boring agricultural equipment.",
+   "A crate addressed to no one, from nowhere, containing perfectly folded uniforms in sizes nobody aboard wears. It is logged as a mystery.",
+   "The inventory drones finish early. The quartermaster takes full credit, as is tradition."]);
+  openModal('<h2>Cargo Inventory</h2><p>'+g+'</p>'+extra+'<div class="btnRow"><button class="btn" onclick="closeModal();sdeckRender()">Continue</button></div>');
+}
+function sdeckReorg(){
+  const st=sdeckStation();if(!st||!sdeckOpen())return;
+  st["sdeckD_reorg"]=G.day;
+  crewOfStation(st.id).forEach(o=>{o.morale=clamp((o.morale||70)+1,0,100);});
+  log("station","Reorganized the cargo bays of "+st.name+". (+1 morale)");
+  save();openModal('<h2>Cargo Bay Reorganization</h2><p>You spend the afternoon with the quartermaster, restacking, relabeling, and finding three things everyone had given up for lost. The bays have never looked better.</p><p class="dim">+1 morale station-wide.</p><div class="btnRow"><button class="btn" onclick="closeModal();sdeckRender()">Continue</button></div>');
+}
+function sdeckDiag(){
+  if(!sdeckOpen())return;
+  const g=pick([
+   "All four reactors running at 98.6% efficiency. The chief engineer frames the readout.",
+   "A minor phase variance in reactor two's injectors — corrected before it could become interesting.",
+   "The grid is balanced so perfectly that the diagnostic AI requests permission to feel proud. Permission denied, fondly.",
+   "Power reserves at 112% of rated. The station could lose a reactor and not notice for a week."]);
+  openModal('<h2>Power Diagnostic</h2><p>'+g+'</p><div class="btnRow"><button class="btn" onclick="closeModal();sdeckRender()">Continue</button></div>');
+}
+function sdeckTune(){
+  const st=sdeckStation();if(!st||!sdeckOpen())return;
+  st["sdeckD_tune"]=G.day;
+  crewOfStation(st.id).forEach(o=>{o.morale=clamp((o.morale||70)+2,0,100);});
+  log("station","Fine-tuned the power grid of "+st.name+". (+2 morale)");
+  save();openModal('<h2>Power Grid Fine-Tuning</h2><p>You walk the reactor level with the engineering team, trimming phase variances by hand. The grid hums a half-tone sweeter when you are done, and the engineers stand a little taller.</p><p class="dim">+2 morale station-wide.</p><div class="btnRow"><button class="btn" onclick="closeModal();sdeckRender()">Continue</button></div>');
+}
+function sdeckMeal(){
+  const st=sdeckStation();if(!st||!sdeckOpen())return;
+  st["sdeckD_meal"]=G.day;
+  crewOfStation(st.id).forEach(o=>{o.morale=clamp((o.morale||70)+2,0,100);});
+  log("station","Shared a meal with the crew of "+st.name+". (+2 morale)");
+  save();openModal('<h2>Meal with the Crew</h2><p>You take a tray and sit with whoever has room at their table. The conversation ranges from docking gossip to warp theory, and nobody lets you pay for dessert.</p><p class="dim">+2 morale station-wide.</p><div class="btnRow"><button class="btn" onclick="closeModal();sdeckRender()">Continue</button></div>');
+}
+function sdeckHolo(){
+  if(!sdeckOpen())return;
+  const g=pick([
+   "A Dixon Hill mystery, black-and-white San Francisco. The rain program is turned up too high and nobody minds.",
+   "A beach resort on Risa that has never once had its safeties fail. Probably.",
+   "A concert hall program featuring a full Vulcan lute orchestra. The acoustics are unreal.",
+   "A mountain cabin in a snowstorm, fireplace crackling. The most popular program on the station, every winter."]);
+  openModal('<h2>Holosuite Program</h2><p>'+g+'</p><p class="dim">One hour, billed to your personal account. Worth it.</p><div class="btnRow"><button class="btn" onclick="closeModal();sdeckRender()">Continue</button></div>');
+}
+
+/* ---- station encounters: life between the rooms ---- */
+function sdeckMakeEncounter(){
+  const st=sdeckStation();if(!st)return null;
+  const crew=crewOfStation(st.id).filter(o=>o.health==="healthy");
+  if(crew.length<2)return null;
+  const r=Math.random();
+  if(r<0.22){
+    const a=pick(crew);let b=pick(crew.filter(o=>o.id!==a.id));if(!b)return null;
+    const areFriends=(a.friends||[]).indexOf(b.id)>=0,areRivals=(a.rivals||[]).indexOf(b.id)>=0;
+    return {kind:"chat",a:a.id,b:b.id,
+      title:"Overheard on the promenade",
+      text:"You round a corner to find "+a.name+" and "+b.name+" deep in conversation. They "+(areFriends?"are laughing about something that is clearly an inside joke.":areRivals?"are pointedly not looking at each other. The air could be cut with a bat'leth.":"are mid-debate about docking-clamp tolerances, of all things."),
+      opts:[
+        {t:"Join the conversation",fn:"sdeckEncChatJoin"},
+        {t:"Walk on by",fn:"sdeckEncDismiss"}
+      ]};
+  }
+  if(r<0.45){
+    const a=pick(crew);
+    const asks=[
+      {q:"asks if you think they'll ever make a good officer.",good:"Tell them you already think so",bad:"Tell them the jury is still out"},
+      {q:"wants advice about a disagreement with a crewmate.",good:"Counsel patience and a direct conversation",bad:"Tell them to let it go"},
+      {q:"wonders aloud whether Starfleet will ever feel like home.",good:"Remind them it already is",bad:"Change the subject"},
+      {q:"admits they're nervous about the next inspection.",good:"Share a story of your own nerves",bad:"Tell them nerves are unprofessional"}
+    ];
+    const ask=pick(asks);
+    return {kind:"approach",a:a.id,
+      title:"A word, Commander?",
+      text:a.name+" falls into step beside you. They "+ask.q,
+      opts:[
+        {t:ask.good,fn:"sdeckEncApproachGood"},
+        {t:ask.bad,fn:"sdeckEncApproachBad"}
+      ]};
+  }
+  if(r<0.58){
+    const pair=sdeckCoupleAboard(st);
+    if(pair)return {kind:"couple",a:pair[0].id,b:pair[1].id,
+      title:"Station romance",
+      text:"In a quiet corner of the promenade, "+pair[0].name.split(" ")[0]+" and "+pair[1].name.split(" ")[0]+" are stealing a moment — foreheads together, laughing softly. They haven't noticed you.",
+      opts:[{t:"Smile and move along",fn:"sdeckEncCouple"}]};
+  }
+  if(r<0.72){
+    const seeds=[["s_intruder","A deputy swears they saw someone near the docking ring who isn't on the station manifest."],["s_entity","The promenade lights flicker in a pattern — almost like a signal. The hairs on your neck stand up."],["s_stowaway","A cargo bay inventory is off by exactly one meal's worth of rations. Someone is eating who shouldn't be here."]];
+    const sd=pick(seeds);
+    if(sdeckOpAvailable(st,sd[0]))return {kind:"seed",tpl:sd[0],
+      title:"Something isn't right",
+      text:sd[1],
+      opts:[
+        {t:"Investigate immediately",fn:"sdeckEncSeedGo"},
+        {t:"Log it and move on",fn:"sdeckEncDismiss"}
+      ]};
+  }
+  return {kind:"flavor",
+    title:"Station life",
+    text:pick([
+      "A docking crew jogs past at double time, laughing about something. The station feels alive today.",
+      "Through a viewport: a starship easing away from its berth, running lights blinking. Someone has stopped just to watch it go.",
+      "Two deputies race a PADD down the promenade on a makeshift track. The betting pool is fierce.",
+      "The station's cat — every station has one, unofficially — darts between your ankles and vanishes into a maintenance shaft.",
+      "A choir of off-duty crew is rehearsing in an empty cargo bay. They're... getting better.",
+      "Someone has decorated their habitat door with mission patches from five postings. A whole career in stickers.",
+      "A freighter captain argues cheerfully with the docking authority about berth fees. It is clearly a beloved ritual."
+    ]),
+    opts:[{t:"Continue",fn:"sdeckEncDismiss"}]};
+}
+function sdeckEncHtml(st,enc){
+  const o=id=>officer(id);
+  let faces="";
+  [enc.a,enc.b].forEach(id=>{const x=id&&o(id);if(x)faces+='<span style="display:inline-block;margin-right:6px;">'+faceImg(x,"pface")+'</span>';});
+  return '<div class="encOverlay"><h4>'+esc(enc.title)+'</h4>'+(faces?'<div style="margin:6px 0;">'+faces+'</div>':"")+
+    '<div class="sceneProse">'+enc.text+'</div><div class="deckBtnRow">'+
+    enc.opts.map(op=>'<button class="btn small" onclick="'+op.fn+'()">'+esc(op.t)+'</button>').join("")+'</div></div>';
+}
+function sdeckEncDismiss(){if(SDECK)SDECK.enc=null;sdeckRender();}
+function sdeckEncChatJoin(){
+  const enc=SDECK&&SDECK.enc;SDECK.enc=null;
+  const a=officer(enc.a),b=officer(enc.b);
+  let txt;
+  if((a.friends||[]).indexOf(b.id)>=0){txt="You join in, and the story gets better in the retelling. "+a.name.split(" ")[0]+" insists it happened exactly that way. "+b.name.split(" ")[0]+" insists it did not.";}
+  else if((a.rivals||[]).indexOf(b.id)>=0){txt="Your presence forces a truce. They manage exactly one civil sentence each. It is, by the standards of this feud, a diplomatic triumph.";}
+  else{
+    if((a.friends||[]).length<3&&(b.friends||[]).length<3){a.friends.push(b.id);b.friends.push(a.id);txt="You referee the docking-clamp debate. By the end, "+a.name.split(" ")[0]+" and "+b.name.split(" ")[0]+" are finishing each other's sentences. A friendship is born in the unlikeliest of places.";}
+    else txt="You referee the docking-clamp debate. Nobody wins, but everyone has fun, which is the same thing.";
+  }
+  a.morale=clamp(a.morale+3,0,100);b.morale=clamp(b.morale+3,0,100);
+  log("personnel","Promenade conversation aboard "+sdeckStation().name+": "+a.name+" and "+b.name+".");
+  save();openModal('<h2>Overheard</h2><p>'+txt+'</p><div class="btnRow"><button class="btn" onclick="closeModal();sdeckRender()">Continue</button></div>');
+}
+function sdeckEncApproachGood(){
+  const enc=SDECK&&SDECK.enc;SDECK.enc=null;const a=officer(enc.a);
+  a.morale=clamp(a.morale+6,0,100);a.loyal=clamp((a.loyal||70)+4,0,100);
+  log("personnel",a.name+" asked your advice on the promenade of "+sdeckStation().name+" — and took it to heart. (+6 morale, +4 loyalty)");
+  save();openModal('<h2>A Word, Commander?</h2><p>You give them the honest answer, not the easy one. '+esc(a.name.split(" ")[0])+" stands a little straighter afterward. These are the moments that make a crew.</p><p class=\"dim\">"+esc(a.name.split(" ")[0])+' +6 morale, +4 loyalty.</p><div class="btnRow"><button class="btn" onclick="closeModal();sdeckRender()">Continue</button></div>');
+}
+function sdeckEncApproachBad(){
+  const enc=SDECK&&SDECK.enc;SDECK.enc=null;const a=officer(enc.a);
+  a.morale=clamp(a.morale-4,0,100);
+  log("personnel",a.name+" asked your advice on the promenade of "+sdeckStation().name+" — you brushed them off. (-4 morale)");
+  save();openModal('<h2>A Word, Commander?</h2><p>You deflect, and '+esc(a.name.split(" ")[0])+" nods a little too quickly and walks on. You'll want to circle back to that one.</p><p class=\"dim\">"+esc(a.name.split(" ")[0])+' -4 morale.</p><div class="btnRow"><button class="btn" onclick="closeModal();sdeckRender()">Continue</button></div>');
+}
+function sdeckEncCouple(){
+  const enc=SDECK&&SDECK.enc;SDECK.enc=null;
+  const a=officer(enc.a),b=officer(enc.b);
+  a.morale=clamp(a.morale+3,0,100);b.morale=clamp(b.morale+3,0,100);
+  save();openModal('<h2>Station Romance</h2><p>You pretend to study a wall panel with great interest until they compose themselves. '+esc(a.name.split(" ")[0])+' mouths <i>"thank you"</i> as you go.</p><div class="btnRow"><button class="btn" onclick="closeModal();sdeckRender()">Continue</button></div>');
+}
+function sdeckEncSeedGo(){
+  const enc=SDECK&&SDECK.enc;const st=sdeckStation();SDECK.enc=null;
+  sdeckStartOp(st,enc.tpl);
+}
+
+/* ================= STATION OPERATIONS — bottle episodes ================= */
+function stationOps(){if(!G.stationOps)G.stationOps=[];return G.stationOps;}
+function sdeckOpAvailable(st,tpl){
+  if((G.stationOps||[]).some(m=>m.stId===st.id&&!m.done))return false;
+  const last=(st.opCd||{})[tpl]||-9999;
+  return (G.day-last)>=(STATION_OP_DEFS[tpl].cd||60);
+}
+function sdeckStartOp(st,tplId){
+  const def=STATION_OP_DEFS[tplId];if(!def||!sdeckOpAvailable(st,tplId))return;
+  sfx("klaxon");
+  stationOps().push({key:uid("sop_"),stId:st.id,tpl:tplId,stage:0,wins:0,done:false});
+  save();sdeckRender();
+  setTimeout(function(){sdeckOpStage();},350);
+}
+function sdeckActiveOp(st){return (G.stationOps||[]).find(m=>m.stId===st.id&&!m.done)||null;}
+function sdeckOpCdLeft(st,tplId){
+  const def=STATION_OP_DEFS[tplId],last=((st.opCd||{})[tplId]||-9999);
+  return Math.max(0,(def.cd||60)-(G.day-last));
+}
+function sdeckOpsHtml(st){
+  const op=sdeckActiveOp(st);
+  let h='<div class="deckSec">Station operations</div>';
+  h+='<div class="sceneCard"><div class="flavor">Crises that begin and end inside these walls — the bottle episodes. One operation at a time per station.</div>';
+  if(op){
+    const def=STATION_OP_DEFS[op.tpl];
+    h+='<div class="opRow"><div class="grow"><div class="nm" style="color:var(--red)">ACTIVE: '+esc(def.name)+'</div><div class="sub2">Stage '+(op.stage+1)+' of '+def.stages.length+' · '+op.wins+' objective'+(op.wins===1?"":"s")+' secured</div></div>'+
+      '<button class="btn small violet" onclick="sdeckOpStage()">Continue</button></div>';
+  }else{
+    h+='<div class="deckSec" style="margin-top:4px;">Available operations</div>';
+    Object.keys(STATION_OP_DEFS).forEach(tid=>{
+      const def=STATION_OP_DEFS[tid],left=sdeckOpCdLeft(st,tid);
+      h+='<div class="opRow"><div class="grow"><div class="nm">'+esc(def.name)+'</div><div class="sub2">'+esc(def.blurb)+'</div></div>'+
+        (left>0?'<span class="dim" style="font-size:12px;">'+left+'d</span>':'<button class="btn small violet" onclick="sdeckStartOp(station(\''+st.id+'\'),\''+tid+'\')">Begin</button>')+'</div>';
+    });
+  }
+  h+='</div><div class="deckBtnRow"><button class="btn small ghost" onclick="sdeckGoBack()">&#8592; Section plan</button></div>';
+  return h;
+}
+function sdeckOpBest(st,stat){
+  const crew=crewOfStation(st.id).filter(o=>o.health==="healthy");
+  if(!crew.length)return {o:null,v:20};
+  let best=crew[0],bv=-1;
+  crew.forEach(o=>{const v=(o.stats||{})[stat]||0;if(v>bv){bv=v;best=o;}});
+  return {o:best,v:bv};
+}
+function sdeckOpStage(){
+  const st=sdeckStation();if(!st)return;
+  const op=sdeckActiveOp(st);if(!op){sdeckRender();return;}
+  const def=STATION_OP_DEFS[op.tpl],s=def.stages[op.stage];
+  if(!s){sdeckOpResolve(st,op,def);return;}
+  SDECK.screen="op";
+  const txt=typeof s.t==="function"?s.t(st,op):s.t;
+  let h='<div class="deckTop"><button class="btn small ghost" onclick="sdeckGoBack()" style="padding:6px 10px;">&#8592;</button>'+
+    '<div class="dName">'+esc(def.name)+' <span class="dReg">Stage '+(op.stage+1)+' of '+def.stages.length+'</span></div>'+sdeckAlertLabel(st)+
+    '<button class="btn small ghost" onclick="sdeckExit()">Leave</button></div>';
+  h+='<div class="deckBody"><div class="sceneCard"><div class="sceneProse">'+txt+'</div><div class="deckActions">'+
+    s.opts.map((o,i)=>'<button class="btn" onclick="sdeckOpChoose('+i+')">'+esc(typeof o.t==="function"?o.t(st,op):o.t)+'</button>').join("")+
+    '</div></div><div class="deckFoot">'+esc(st.name)+' · Stardate '+sdStr(G.stardate)+'</div></div>';
+  $("deckRoot").innerHTML=h;
+}
+function sdeckOpChoose(i){
+  const st=sdeckStation();if(!st)return;
+  const op=sdeckActiveOp(st);if(!op)return;
+  const def=STATION_OP_DEFS[op.tpl],s=def.stages[op.stage],opt=s.opts[i];
+  const best=sdeckOpBest(st,opt.stat||"cmd");
+  const roll=best.v+ri(1,100),win=roll>=(opt.dc||120);
+  if(win)op.wins++;
+  const txt=(win?opt.win:opt.lose)||"";
+  const oname=best.o?esc(best.o.name.split(" ")[0]):"The crew";
+  let h='<div class="deckTop"><div class="dName">'+(win?"Objective secured":"Setback")+'</div>'+sdeckAlertLabel(st)+
+    '<button class="btn small ghost" onclick="sdeckExit()">Leave</button></div>';
+  h+='<div class="deckBody"><div class="sceneCard"><div class="sceneProse">'+txt.replace(/\{o\}/g,oname)+'</div>';
+  if(opt.stat)h+='<p class="dim">'+esc(opt.stat.toUpperCase())+' check: '+oname+' ('+best.v+' + d100 vs '+opt.dc+')</p>';
+  const more=op.stage+1<def.stages.length;
+  h+='<div class="deckActions"><button class="btn violet" onclick="sdeckOpNext()">'+(more?"Continue":"Debrief")+'</button></div></div></div>';
+  op.stage++;
+  if(opt.fx)sdeckOpFx(st,op,opt.fx,win);
+  save();
+  SDECK.screen="op";
+  $("deckRoot").innerHTML=h;
+  const b=$("deckRoot").querySelector(".deckBody");if(b)b.scrollTop=0;
+}
+function sdeckOpFx(st,op,fx,win){
+  if(!win&&!fx.onLose)return;
+  const F=win?fx:(fx.onLose||{});
+  if(F.pres)gainPres(F.pres);
+  if(F.cr)gainCR(F.cr);
+  if(F.morale)crewOfStation(st.id).forEach(o=>{o.morale=clamp(o.morale+F.morale,0,100);});
+  if(F.inj){const c=crewOfStation(st.id).filter(o=>o.health==="healthy");for(let k=0;k<F.inj&&c.length;k++){const o=c.splice(Math.floor(Math.random()*c.length),1)[0];o.health="injured";o.healDays=ri(10,25);}}
+  if(F.accolade&&win){const b=sdeckOpBest(st,"cmd");if(b.o)awardAccolade(b.o,F.accolade);}
+}
+function sdeckOpNext(){
+  const st=sdeckStation();if(!st)return;
+  const op=sdeckActiveOp(st);if(!op){sdeckRender();return;}
+  const def=STATION_OP_DEFS[op.tpl];
+  if(op.stage>=def.stages.length)sdeckOpResolve(st,op,def);else sdeckOpStage();
+}
+function sdeckOpResolve(st,op,def){
+  const ix=stationOps().indexOf(op);if(ix>=0)stationOps().splice(ix,1);
+  if(!st.opCd)st.opCd={};st.opCd[op.tpl]=G.day;
+  const w=op.wins,n=def.stages.length;
+  let outcome,pres,mor,detail,repCost=0;
+  if(w>=n){outcome="Textbook Resolution";pres=110;mor=6;detail="Every objective secured. This is the one they'll teach at the Academy — the crisis that never left the station, solved by the people who call her home.";}
+  else if(w>=n-1){outcome="Resolved";pres=70;mor=4;detail="The crisis is over. The promenade bustles on, and the crew walks a little taller.";}
+  else if(w>=1){outcome="Contained";pres=35;mor=1;detail="It's handled — mostly. The debrief will be spirited, and the maintenance crews are already at work.";}
+  else{outcome="Costly";pres=10;mor=-5;repCost=ri(2000,6000);detail="The crisis passed, but it took its toll. Emergency repairs are eating the budget and the mood is somber.";}
+  gainPres(pres);
+  if(repCost)gainCR(-repCost);
+  crewOfStation(st.id).forEach(o=>{o.morale=clamp(o.morale+mor,0,100);o.missions.t++;if(w>=n-1)o.missions.s++;});
+  const b=sdeckOpBest(st,"cmd");
+  if(b.o&&w>=n-1)awardAccolade(b.o,"Station operation: "+def.name+" — "+outcome);
+  log("mission","Station operation aboard "+st.name+": "+def.name+" — "+outcome+". (+"+pres+" prestige"+(repCost?", -"+repCost+" CR repairs":"")+")");
+  capLogAuto("Station operation",def.name+" aboard "+st.name+". "+outcome+".");
+  if(w>=n-1)sfx("success");else if(w===0)sfx("fail");
+  save();
+  let h='<div class="deckTop"><div class="dName">'+esc(def.name)+' — '+esc(outcome)+'</div>'+sdeckAlertLabel(st)+
+    '<button class="btn small ghost" onclick="sdeckExit()">Leave</button></div>';
+  h+='<div class="deckBody"><div class="sceneCard"><div class="sceneProse">'+detail+'</div>'+
+    '<div class="kv"><span class="k">Prestige</span><span class="v">+'+pres+'</span></div>'+
+    (repCost?'<div class="kv"><span class="k">Emergency repairs</span><span class="v" style="color:var(--red)">-'+repCost+' CR</span></div>':"")+
+    '<div class="deckActions"><button class="btn violet" onclick="SDECK.screen=\'plan\';sdeckRender()">Return to the section plan</button></div></div></div>';
+  SDECK.screen="op";
+  $("deckRoot").innerHTML=h;
+}
+
+/* ---- the bottle episodes: six station crisis templates ---- */
+const STATION_OP_DEFS={
+s_intruder:{name:"Intruder on the Promenade",cd:60,blurb:"Unauthorized life signs are moving through the docking ring.",
+ stages:[
+  {t:"Red lights wash the promenade. <i>\"Intruder alert. All security teams to stations.\"</i> Internal sensors show movement in the docking ring — someone who is not on the station manifest, and who clearly knows the maintenance shafts.",
+   opts:[
+    {t:"Sweep the ring, section by section",stat:"tac",dc:130,win:"{o} coordinates the sweep like a hunt master. Section by section, the net tightens — motion sensors herd the intruder toward the cargo bays.",lose:"The sweep is methodical but slow. The intruder slips the cordon twice, and security is left guarding empty corridors.",fx:{morale:2}},
+    {t:"Seal the docking clamps and wait them out",stat:"cmd",dc:115,win:"The station goes still. Sealed airlocks, locked shafts — and patience. An hour later, sensors catch movement near a cargo bay: hunger beats training.",lose:"The lockdown frays nerves more than it catches intruders. Someone's dinner gets cold. Morale dips.",fx:{morale:-2,onLose:{morale:-3}}}
+   ]},
+  {t:"Motion sensors pin the intruder near the cargo bays — a lone figure in a patched environmental suit, cornered between two container stacks.",
+   opts:[
+    {t:"Stun and capture",stat:"tac",dc:140,win:"{o} takes the shot personally. One clean stun burst, and the intruder drops mid-stride. Textbook.",lose:"The intruder is faster than expected — they vault a container and vanish into a maintenance shaft. The hunt continues.",fx:{onLose:{morale:-2}}},
+    {t:"Talk them into surrendering",stat:"dip",dc:130,win:"{o} steps forward, hands open. <i>\"Nobody else needs to get hurt — including you.\"</i> A long pause… then the intruder lowers their hands.",lose:"The intruder laughs — a harsh, frightened sound — and bolts. So much for diplomacy.",fx:{onLose:{morale:-2}}}
+   ]},
+  {t:"The intruder is a scout from a splinter colony, separated from their transport during an ion storm. They've been hiding in the maintenance shafts for two days, stealing ration packs.",
+   opts:[
+    {t:"Offer aid and release them to their people",stat:"dip",dc:120,win:"You feed them, treat their dehydration, and hail their colony transport. Their captain's gratitude is effusive — and Starfleet hears about it.",lose:"They accept the food but not the trust, and slip away on the next freighter. A missed connection.",fx:{pres:25,morale:3,accolade:"Intruder on the Promenade — mercy shown"}},
+    {t:"Hand them to Starfleet Intelligence",stat:"cmd",dc:110,win:"By the book. Intelligence debriefs them for a week and quietly thanks you for the splinter colony's star charts.",lose:"Intelligence loses interest when the charts turn out to be recipes. The paperwork, however, is eternal.",fx:{pres:15}}
+   ]}
+ ]},
+s_reactor:{name:"Fire in the Power Grid",cd:60,blurb:"A plasma fire is spreading through the station's EPS grid.",
+ stages:[
+  {t:"The alert comes at 0340: plasma fire in the EPS conduits on the reactor level, spreading fast. The engineering teams are already in breathing masks.",
+   opts:[
+    {t:"Vent the affected sections to space",stat:"eng",dc:130,win:"{o} doesn't hesitate — explosive decompression starves the fire in seconds. The section is a mess, but the station is safe.",lose:"The venting is partial; the fire finds new fuel in a ruptured manifold. Damage control falls back.",fx:{cr:-1500,onLose:{cr:-4000,morale:-2}}},
+    {t:"Fight it with damage-control teams",stat:"cmd",dc:120,win:"You commit the teams in waves, rotating them before the heat gets dangerous. Slow, brave, effective.",lose:"The teams are driven back twice. It's going to be a long night.",fx:{onLose:{inj:1}}}
+   ]},
+  {t:"The fire is crawling toward the fusion reactors. If it reaches them, the whole level goes — and takes half the station's power grid with it.",
+   opts:[
+    {t:"Emergency shutdown of the reactors",stat:"eng",dc:140,win:"{o} reroutes the reactor feeds in under ninety seconds, hands flying across the console. The fire reaches dead conduits and dies, confused.",lose:"The shutdown sequence stalls on a fused relay. The fire keeps coming.",fx:{onLose:{cr:-4000}}},
+    {t:"Jettison the burning conduit module",stat:"tac",dc:120,win:"Explosive bolts fire. The burning module tumbles away into the dark, and the station shudders — wounded, but alive.",lose:"The ejection charges misfire on one side. The module hangs half-attached, still burning.",fx:{cr:-2500,onLose:{cr:-6000}}}
+   ]},
+  {t:"The fire is out. The reactor level is scorched, the air recyclers are working overtime, and the infirmary is treating burns and smoke inhalation.",
+   opts:[
+    {t:"Prioritize the wounded, then the station",stat:"med",dc:120,win:"Triage is swift and calm. Everyone who can be saved, is saved — and the crew sees their commander in the smoke beside them.",lose:"It's organized chaos. Everyone survives, but the infirmary will be busy for days.",fx:{morale:3,onLose:{morale:-2,inj:1}}},
+    {t:"Walk the level with the damage-control chief",stat:"cmd",dc:110,win:"You inspect every scorched panel personally. The crew stands straighter knowing you saw what they faced.",lose:"The damage is worse than the reports said. The repair estimate makes the quartermaster pale.",fx:{morale:2,onLose:{morale:-3,cr:-3000}}}
+   ]}
+ ]},
+s_entity:{name:"Something in the Shafts",cd:75,blurb:"Crew report whispers in the maintenance shafts — and the lights are flickering in patterns.",
+ stages:[
+  {t:"It starts as jokes: whispers in the maintenance shafts, lights flickering in patterns too regular for a malfunction. Then three crew members report the same dream — of something vast, pressing against the station's skin.",
+   opts:[
+    {t:"Run a full-spectrum internal scan",stat:"sci",dc:130,win:"{o} tunes the internal sensors past every safety limit and finds it: a non-corporeal entity, nesting in the power grid, feeding on the station's energy like a bird on a wire.",lose:"The scans show nothing but noise. Whatever it is, it knows how to hide.",fx:{onLose:{morale:-2}}},
+    {t:"Set a trap with a power shunt",stat:"eng",dc:120,win:"A controlled surge through the grid — and something <i>screams</i> through the bulkheads. It's real, it's angry, and now you know where it sleeps.",lose:"The shunt blows half the lighting on the habitat ring. The entity, if it exists, is unimpressed.",fx:{onLose:{cr:-2500}}}
+   ]},
+  {t:"The entity is real — a non-corporeal lifeform, feeding on the station's power flow. It's not malevolent. It's just hungry, and the station is dinner.",
+   opts:[
+    {t:"Modulate the deflector grid to expel it",stat:"sci",dc:140,win:"{o} shapes the deflector field like a hand, gently — firmly — pushing the entity out into the vacuum. It drifts away, already fading, like breath on a cold morning.",lose:"The modulation destabilizes. The entity digs in deeper, and half the station's lights go out.",fx:{onLose:{cr:-4000,morale:-3}}},
+    {t:"Try to communicate with it",stat:"dip",dc:130,win:"Through modulated power pulses, {o} manages something like language. The entity is <i>lonely</i>. You feed it from the auxiliary reactors until it detaches on its own — and it leaves something like gratitude in the sensor logs.",lose:"It doesn't understand. Or doesn't care. The lights flicker faster now.",fx:{pres:20,morale:2,onLose:{morale:-3}}}
+   ]},
+  {t:"The entity is gone — expelled, befriended, or simply moved on. The station feels quieter, in a way nobody can quite name.",
+   opts:[
+    {t:"Log it as a first contact",stat:"sci",dc:110,win:"Starfleet Science devours the sensor logs. Your station's name goes into the xenobiology textbooks — footnote and all.",lose:"The logs are inconclusive. Science files it under 'unexplained,' which is where the interesting things live.",fx:{pres:30,accolade:"Something in the Shafts — first contact"}},
+    {t:"Hold a station-wide briefing on what happened",stat:"cmd",dc:110,win:"You tell the crew the truth: something lived in the shafts, and it's gone. No ghost stories — just the facts. The rumor mill starves.",lose:"The briefing spawns seventeen new ghost stories. The maintenance shafts will never be the same.",fx:{morale:3,onLose:{morale:-2}}}
+   ]}
+ ]},
+s_holo:{name:"Safeties Off",cd:60,blurb:"The holosuite safeties have disengaged with civilians inside.",
+ stages:[
+  {t:"The holosuite doors seal with a sound like a coffin lid. Inside: two civilians, mid-program — a Dixon Hill mystery. Outside: every warning light the station owns. The safety protocols have disengaged, and the characters know it.",
+   opts:[
+    {t:"Go in after them yourself",stat:"cmd",dc:120,win:"You step through the arch into black-and-white San Francisco, rain on your shoulders. The civilians' faces when they see you — that's the moment they stop being afraid.",lose:"The arch flickers as you enter. You're in — but the program has already rewritten itself around you.",fx:{morale:3,onLose:{morale:-2}}},
+    {t:"Cut power from outside",stat:"eng",dc:130,win:"{o} bypasses three interlocks and kills the holosuite grid cleanly. The doors sigh open on two very relieved, very damp civilians.",lose:"The power cut fails — the suite is drawing from the auxiliary grid now. It's learning.",fx:{onLose:{morale:-2}}}
+   ]},
+  {t:"Inside the program, the rules have changed. The gangsters are too smart, the rain is too cold, and the detective — your detective — keeps looking directly at you. <i>\"You're not from around here,\"</i> he says.",
+   opts:[
+    {t:"Play along to reach the arch",stat:"dip",dc:130,win:"You feed him lines, play the informant, walk him right up to the exit. He tips his hat as the world dissolves. <i>\"You were good, kid.\"</i>",lose:"He sees through you. The program resets — deeper this time, and the doors are further away.",fx:{onLose:{morale:-2}}},
+    {t:"Shoot your way to the exit",stat:"tac",dc:130,win:"Two-fisted, black-and-white, utterly ridiculous — and it works. The program can't improvise faster than you can improvise.",lose:"The tommy guns are props. The gangsters' aren't. You retreat with dignity and a ruined hat.",fx:{onLose:{inj:1}}}
+   ]},
+  {t:"The civilians are out, the program is purged, and the holosuite sits dark and innocent. The promenade merchants want to know what you want done with it.",
+   opts:[
+    {t:"Full diagnostic and a stern talking-to",stat:"eng",dc:110,win:"The fault was a cascading heuristic error — fascinating, unrepeatable, and now thoroughly documented. The suites are safe. Probably.",lose:"The diagnostic finds nothing. Which is, somehow, worse.",fx:{morale:2,onLose:{morale:-2}}},
+    {t:"Buy the civilians a drink and laugh about it",stat:"dip",dc:110,win:"By midnight the whole thing is a story — the night the commander went into the movies. The promenade has never been livelier.",lose:"Nobody's laughing yet. Give it a week.",fx:{morale:4,onLose:{morale:1}}}
+   ]}
+ ]},
+s_stowaway:{name:"The Stowaway",cd:60,blurb:"Someone is aboard who shouldn't be — and they're just a kid.",
+ stages:[
+  {t:"Cargo bay inventory is off by exactly one meal's worth of rations, three days running. Security finds a nest of blankets behind the shield generators — and a teenager, all elbows and defiance.",
+   opts:[
+    {t:"Hear their story before anything else",stat:"dip",dc:110,win:"{o} sits on the deck plates and just… listens. The kid's colony failed. They hid aboard a freighter at the last port, chasing a rumor of a relative on a core world.",lose:"The kid won't talk. Just stares at the deck, arms crossed, daring the universe.",fx:{onLose:{morale:-1}}},
+    {t:"Brig first, questions later",stat:"tac",dc:110,win:"By the book. The brig is humane, the kid is safe, and security logs everything.",lose:"The kid cries in the cell. The deputy on post requests a transfer to anywhere else.",fx:{morale:-3,onLose:{morale:-4}}}
+   ]},
+  {t:"The story checks out: a failed colony, a dead transport schedule, a relative three sectors away who doesn't know they're coming. The kid asks — barely above a whisper — if Starfleet takes strays.",
+   opts:[
+    {t:"Grant them passage and protection",stat:"dip",dc:130,win:"You give them a berth, a duty roster in the replimat, and a promise. By week's end half the station has adopted them.",lose:"Regulations tie your hands. You do what you can, but the kid sees the hesitation.",fx:{pres:20,morale:5,accolade:"The Stowaway — sanctuary given",onLose:{morale:-2}}},
+    {t:"Turn them in to the next transport",stat:"cmd",dc:110,win:"The transport takes custody with proper paperwork and proper care. It's correct. It doesn't feel like enough.",lose:"The transport authority loses the file for a month. The kid waits. You hear about it.",fx:{pres:10,onLose:{morale:-4,pres:5}}}
+   ]},
+  {t:"Word of the stowaway has spread through the station. The crew is watching to see what kind of commander you are.",
+   opts:[
+    {t:"Address it openly on the promenade",stat:"dip",dc:120,win:"You tell the crew the truth and ask for their help watching over the kid. Volunteers line up before you finish the sentence.",lose:"The promenade goes quiet. Compassion is harder to order than obedience.",fx:{morale:4,onLose:{morale:-2}}},
+    {t:"Keep it quiet and handle it privately",stat:"cmd",dc:110,win:"Discretion works. The kid gets what they need, the station keeps its rhythm, and nobody's the wiser.",lose:"Secrets leak. The rumor version is worse than anything that actually happened.",fx:{morale:2,onLose:{morale:-3}}}
+   ]}
+ ]},
+s_whispers:{name:"Whispers in the Dark",cd:75,blurb:"Grumbling on the habitat ring is turning into something uglier.",
+ stages:[
+  {t:"The XO's report is careful, which means it's bad: organized grumbling on the habitat ring. Missed shifts, slow compliance, talk of refusing the next duty rotation. Something is rotting.",
+   opts:[
+    {t:"Address the crew directly, station-wide",stat:"cmd",dc:140,win:"You open a channel to every section and tell the truth — about the mission, the risks, and why it matters. The grumbling doesn't vanish, but it loses its leader.",lose:"The speech lands flat. Somewhere on the habitat ring, someone mutes it halfway through.",fx:{morale:3,onLose:{morale:-4}}},
+    {t:"Find the ringleader quietly",stat:"dip",dc:120,win:"{o} works the replimat and the maintenance shafts, listening more than talking. By week's end you know exactly whose voice is behind it.",lose:"Nobody talks. The habitat ring closes ranks like a fist.",fx:{onLose:{morale:-2}}}
+   ]},
+  {t:"The ringleader is a junior officer with a good record and a genuine grievance — months of double shifts, a denied transfer, a commander who never learned their name. They're not a villain. They're exhausted.",
+   opts:[
+    {t:"Hear them out, truly",stat:"dip",dc:130,win:"You listen until they're done — all of it. Then you fix what you can and own what you can't. They cry. Then they salute. Then they go back to work.",lose:"They don't believe you. The words are right, but the trust isn't there yet.",fx:{morale:4,accolade:"Whispers in the Dark — mutiny defused",onLose:{morale:-3}}},
+    {t:"Make an example of them",stat:"cmd",dc:120,win:"A formal reprimand, by the book, in front of witnesses. The grumbling stops. So does something else — something you can't quite name.",lose:"The punishment backfires. The habitat ring goes silent in a way that is worse than noise.",fx:{morale:-2,onLose:{morale:-6}}}
+   ]},
+  {t:"The ringleader is back on duty, and the habitat ring is watching to see if anything actually changes.",
+   opts:[
+    {t:"Fix the rotation schedule yourself",stat:"cmd",dc:120,win:"You rebuild the duty rotations with your own hands — fair shifts, real rest, no more doubles. It costs you a weekend. It buys you a crew.",lose:"The new schedule has a flaw and everyone finds it in a day. Back to the drawing board.",fx:{morale:4,onLose:{morale:-2}}},
+    {t:"Promote from within the grumblers",stat:"dip",dc:115,win:"You elevate two of the loudest voices into positions of real responsibility. Overnight, critics become stakeholders.",lose:"The promotions look like favoritism. The grumbling finds a new target: you.",fx:{pres:15,onLose:{morale:-3}}}
+   ]}
+ ]}
+};
+/* ---- end STATION INTERIOR (v2.5) ---- */
+
 /* ---- bridge command: RED ALERT while you\'re aboard ---- */
 function deckBattleCheck(s,e,z){
   // called from battleTick instead of queueing a generic interrupt (klaxon already sounded)
@@ -10125,7 +10884,6 @@ window.onload=function(){
   applyTheme(curTheme());
   render();
 };
-
 </script>
 <nav id="bottomNav">
   <button class="navBtn" onclick="goBack()"><span class="bIco"><svg viewBox="0 0 24 24"><path d="M14.5 5 7.5 12l7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Back</span></button>
@@ -10141,7 +10899,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.4</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.5</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
