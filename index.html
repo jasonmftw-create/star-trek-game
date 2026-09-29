@@ -4732,12 +4732,17 @@ function renderPersonnel(){
     if(persShow!=="all")list=list.filter(o=>officerShow(o)===persShow);
     list.sort((a,b)=>b.rank-a.rank||a.name.localeCompare(b.name));
     const _rankCounts={};list.forEach(o=>{_rankCounts[o.rank]=(_rankCounts[o.rank]||0)+1;});
+    let _civN=0,_cdtN=0;list.forEach(o=>{if(o.rankLabel==="Civilian")_civN++;else if(o.rankLabel==="Cadet")_cdtN++;});
     rankPills='<div class="cmdsubseg" style="margin:8px 0 0;">'+
       '<button class="btn small'+(persRank==="all"?" on":"")+'" onclick="persRank=\'all\';render()">All ('+list.length+')</button>'+
+      '<button class="btn small'+(persRank==="civ"?" on":"")+'" onclick="persRank=\'civ\';render()">Civ ('+_civN+')</button>'+
+      '<button class="btn small'+(persRank==="cadet"?" on":"")+'" onclick="persRank=\'cadet\';render()">Cdt ('+_cdtN+')</button>'+
       RANKS.map((r,i)=>'<button class="btn small'+(persRank===i?" on":"")+'" onclick="persRank='+i+';render()">'+RANK_ABBR[i]+' ('+(_rankCounts[i]||0)+')</button>').join("")+'</div>';
-    if(persRank!=="all")list=list.filter(o=>o.rank===persRank);
+    if(persRank==="civ")list=list.filter(o=>o.rankLabel==="Civilian");
+    else if(persRank==="cadet")list=list.filter(o=>o.rankLabel==="Cadet");
+    else if(persRank!=="all")list=list.filter(o=>o.rank===persRank);
   }
-  let h='<details class="card persOpts"><summary><span class="nm">Options</span><span class="dim">'+esc(filtLabels[persFilter]||persFilter)+' \u00b7 '+(persShow==="all"?"All eras":persShow)+(persRank!=="all"?' \u00b7 '+RANK_ABBR[persRank]:"")+'</span><span class="chev">\u25be</span></summary><div class="optBody">'+
+  let h='<details class="card persOpts"><summary><span class="nm">Options</span><span class="dim">'+esc(filtLabels[persFilter]||persFilter)+' \u00b7 '+(persShow==="all"?"All eras":persShow)+(persRank==="all"?"":' \u00b7 '+(persRank==="civ"?"Civ":persRank==="cadet"?"Cdt":RANK_ABBR[persRank]))+'</span><span class="chev">\u25be</span></summary><div class="optBody">'+
     '<div><label>Filter</label><select id="persSel" onchange="persFilter=this.value;render()">'+
     opts.map(o=>o.replace('value="'+persFilter+'"','value="'+persFilter+'" selected')).join("")+'</select></div>'+
     (showPills?'<div><label>Show</label>'+showPills+'</div>':"")+
@@ -6923,7 +6928,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.94</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.95</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
