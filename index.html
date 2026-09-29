@@ -2772,6 +2772,7 @@ function splashStarsStart(){
 }
 function splashDismiss(){
   if(splashDone)return;splashDone=true;
+  try{sessionStorage.setItem("stfc_splashSeen","1");}catch(e){}
   if(splashRAF)cancelAnimationFrame(splashRAF);
   var sp=document.getElementById("splash");
   if(sp)sp.classList.add("gone");
@@ -2804,6 +2805,7 @@ function splashShow(){
 }
 function splashInit(){
   var sp=document.getElementById("splash");if(!sp)return;
+  try{if(sessionStorage.getItem("stfc_splashSeen")==="1"){sp.classList.add("gone");splashDone=true;window._splashWired=true;return;}}catch(e){}
   if(window._splashWired){splashShow();return;}
   window._splashWired=true;
   sp.addEventListener("pointerdown",function(e){
@@ -6869,7 +6871,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.81</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.82</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
