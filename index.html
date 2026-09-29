@@ -343,6 +343,8 @@ body{touch-action:pan-y;}
 .faceWrap{position:relative;display:inline-block;flex:0 0 auto;line-height:0;}
 .billetBadge{position:absolute;right:-5px;bottom:-5px;width:26px;height:26px;border-radius:50%;background:#0d0d16;border:2px solid var(--dc,#9a9ab0);display:flex;align-items:center;justify-content:center;}
 .billetBadge svg{width:14px;height:14px;color:var(--dc,#9a9ab0);}
+.billetBadgeR{width:42px;height:42px;border-radius:50%;border:2px solid var(--dc,#9a9ab0);background:#0d0d16;display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
+.billetBadgeR svg{width:24px;height:24px;color:var(--dc,#9a9ab0);}
 .seniorRow{border:1px solid rgba(255,255,255,.14)!important;border-left:4px solid var(--dc,#9a9ab0)!important;border-radius:10px;background:rgba(255,255,255,.035);}
 .offGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 14px;}
 .offCell{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--line);border-radius:10px;cursor:pointer;background:#101828;min-width:0;}
@@ -5629,7 +5631,10 @@ function officerModal(id){
     if(readyForPromotion(o))h+='<p><span class="badge good">Ready for promotion</span></p>';
   }
   h+='<div class="btnRow"><button class="btn ghost" onclick="closeModal()">Close</button></div>';
+  const _wasOpen=$("modalRoot").classList.contains("open");
+  const _prevHtml=$("modalBox").innerHTML,_prevBack=modalBack;
   openModal(h);
+  if(_wasOpen)modalBack=function(){$("modalBox").innerHTML=_prevHtml;modalBack=_prevBack;};
 }
 /* ---------- accolades & service record ---------- */
 function awardAccolade(o,title){
@@ -5722,9 +5727,10 @@ function isSeniorStaff(o){return (o.roles||[]).some(r=>SENIOR_BILLETS.indexOf(r)
 function crewRowHTML(o,senior){
   const b=primaryBillet(o),dc=divColor(o.dept);
   const lbl=b?billetLabel(b):"Crew";
+  const face=senior?faceImg(o,"pfaceSm"):'<span class="faceWrap">'+faceImg(o,"pfaceSm")+'<span class="billetBadge">'+billetGlyph(b)+'</span></span>';
+  const right=senior?'<span class="billetBadgeR">'+billetGlyph(b)+'</span>':"";
   return '<div class="row'+(senior?" seniorRow":"")+'" style="--dc:'+dc+';cursor:pointer;padding:6px;" onclick="officerModal(\''+o.id+'\')">'+
-    '<span class="faceWrap">'+faceImg(o,"pfaceSm")+'<span class="billetBadge">'+billetGlyph(b)+'</span></span>'+
-    '<div class="grow"><div class="nm">'+nameHtml(o)+'</div><div class="sub2">'+esc(lbl)+' · '+esc(o.dept||"")+'</div></div></div>';
+    face+'<div class="grow"><div class="nm">'+nameHtml(o)+'</div><div class="sub2">'+esc(lbl)+' · '+esc(o.dept||"")+'</div></div>'+right+'</div>';
 }
 function crewSectionsHTML(crew,co,xo,cap,emptyHint){
   const ord=(a,b)=>((a===co?0:a===xo?1:2)-(b===co?0:b===xo?1:2))||b.rank-a.rank;
@@ -6863,7 +6869,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.80</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.81</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
