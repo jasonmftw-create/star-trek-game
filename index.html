@@ -6003,8 +6003,9 @@ function initMapZoom(){
     const k=key(),r=c.getBoundingClientRect(),u=400/r.width;
     if(k.length===2){
       const d=Math.hypot(pts[k[0]].x-pts[k[1]].x,pts[k[0]].y-pts[k[1]].y);
+      let nz=mapZ;
       if(lastD>0&&d>0){
-        const nz=Math.min(6,Math.max(1,mapZ*d/lastD));
+        nz=Math.min(6,Math.max(1,mapZ*d/lastD));
         mapX+=200*(mapZ-nz);mapY+=200*(mapZ-nz);mapZ=nz;applyMapT();
       }
       lastD=d;e.preventDefault();
@@ -6152,7 +6153,7 @@ function renderQuadrant(q){
     pm+="<g onclick=\""+mapPoiClick(p[0])+"\" style=\"cursor:pointer\">"
       +"<circle cx=\""+p[1]+"\" cy=\""+p[2]+"\" r=\"9\" fill=\"none\" stroke=\""+p[3]+"\" stroke-width=\"1\" opacity=\".55\"/>"
       +"<circle cx=\""+p[1]+"\" cy=\""+p[2]+"\" r=\"4.5\" fill=\""+p[3]+"\"/>"
-      +"<g class=\"mapLblG\" data-mx=\""+p[1]+"\" data-my=\""+p[2]+"\" data-dx=\"+(p[5]==null?12:p[5])+\" data-dy=\"+(p[6]==null?4:p[6])+\"\"><text x=\"0\" y=\"0\" class=\"mapLbl\">"+p[4]+"</text></g></g>";
+      +"<g class=\"mapLblG\" data-mx=\""+p[1]+"\" data-my=\""+p[2]+"\" data-dx=\""+(p[5]==null?12:p[5])+"\" data-dy=\""+(p[6]==null?4:p[6])+"\"\"><text x=\"0\" y=\"0\" class=\"mapLbl\">"+p[4]+"</text></g></g>";
   });
   let wh="";
   if(q==="alpha"&&mapLayers.planets){
@@ -6239,7 +6240,7 @@ const TERR=[
     pm+="<g onclick=\""+mapPoiClick(p[0])+"\" style=\"cursor:pointer\">"
       +"<circle cx=\""+p[1]+"\" cy=\""+p[2]+"\" r=\"9\" fill=\"none\" stroke=\""+p[3]+"\" stroke-width=\"1\" opacity=\".55\"/>"
       +"<circle cx=\""+p[1]+"\" cy=\""+p[2]+"\" r=\"4.5\" fill=\""+p[3]+"\"/>"
-      +"<g class=\"mapLblG\" data-mx=\""+p[1]+"\" data-my=\""+p[2]+"\" data-dx=\"+(p[5]==null?12:p[5])+\" data-dy=\"+(p[6]==null?4:p[6])+\"\"><text x=\"0\" y=\"0\" class=\"mapLbl\">"+p[4]+"</text></g></g>";
+      +"<g class=\"mapLblG\" data-mx=\""+p[1]+"\" data-my=\""+p[2]+"\" data-dx=\""+(p[5]==null?12:p[5])+"\" data-dy=\""+(p[6]==null?4:p[6])+"\"\"><text x=\"0\" y=\"0\" class=\"mapLbl\">"+p[4]+"</text></g></g>";
   });
   let wh="";
   if(mapLayers.planets){
@@ -6700,7 +6701,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.70</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v0.71</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
