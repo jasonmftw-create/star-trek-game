@@ -624,6 +624,7 @@ const BAR_HINTS={
  MED:"Medical skill — surgery, triage and xenobiology. High MED officers heal the injured and handle plagues.",
  DIP:"Diplomacy — negotiation, protocol and first contact. High DIP officers shine on diplomatic missions.",
  MOR:"Morale — how happy this officer is, 0 to 100. High morale boosts mission success; low morale hurts it and can lead to transfer requests.",
+ FATIGUE:"Crew fatigue — 0 to 100. Rises while the ship is deployed (faster on missions). At 70+ the crew is Weary: morale drains daily and battle power drops 10%. Grant shore leave at a starbase or the Academy to rest them.",
  LOY:"Loyalty — how committed this officer is to your command, 0 to 100. Below 30 they grow miserable; at 15 or less they may resign.",
  CLASS:"Cadet class training progress. When the bar fills, the class graduates and new ensigns join your crew."};
 
@@ -934,6 +935,29 @@ const DOCK_DEFS={
   medical:{crew:0,heal:3,morale:2,rep:0,blurb:"Hospital care: the wounded mend quickly and morale climbs."},
   academy:{crew:0.02,heal:0,morale:1,rep:0,blurb:"Academy berth: cadets run daily drills aboard, the crew rests, and morale lifts. Dock here to designate her as the Academy training vessel."}
 };
+/* ================= SHORE LEAVE (v2.41) ================= */
+/* Crews tire on deployment (s.fatigue 0-100). At 70+ the crew is Weary: morale
+   drains daily and battle power drops 10%. Dock at a starbase or the Academy
+   and grant shore leave: 7 days offline, fatigue melts, morale climbs. */
+function fatigueTick(){
+  G.ships.forEach(function(s){
+    if(!s||s.mothballed||s.status==="museum")return;
+    if(s.fatigue==null)s.fatigue=0;
+    if(s.status==="active"&&!s.dock)s.fatigue=Math.min(100,s.fatigue+(s.missionId?2:1));
+    if(s.fatigue>=70&&s.status==="active")crewOfShip(s.id).forEach(function(o){if(o.morale>0)o.morale=Math.max(0,o.morale-1);});
+  });
+}
+function uiGrantShoreLeave(id){
+  const s=ship(id);if(!s||!s.dock){toast("The ship must be docked first.");return;}
+  const st=station(s.dock);
+  if(!st||(st.type!=="starbase"&&st.type!=="academy")){toast("Shore leave needs a starbase or the Academy.");return;}
+  if(s.leave>0){toast("Already on shore leave.");return;}
+  if(!(s.fatigue>0)){toast("The crew is already rested.");return;}
+  s.leave=7;
+  log("command",s.name+" begins shore leave at "+st.name+" — the crew scatters to holodecks, promenades, and beaches. (7 days)");
+  toast("Shore leave granted — 7 days.");
+  save();render();
+}
 /* ================= CONFIG: MISSION DECK ================= */
 /* type, difficulty 20-95, duration days, rewards. shipStat/capSkill/dept drive success. */
 const MISSION_DECK=[
@@ -3633,8 +3657,8 @@ function tickDay(){
   if(G.tempCd>0)G.tempCd--;
   economyTick(); buildTick(); researchTick(); refitTick(); missionTick(); transitTick();
   if(typeof admiraltyTick==="function")admiraltyTick(); // v2.13: admiral projects upkeep + payoffs
-  healTick(); dockedTick(); ageTick(); romanceTick(); familyTick(); crewTick();
-  randomEventTick(); scriptedTick(); rankCheckTick(); battleTick(); socialTick(); arcTick(); holoTick(); holidayTick();
+  healTick(); dockedTick(); fatigueTick(); ageTick(); romanceTick(); familyTick(); crewTick();
+  randomEventTick(); scriptedTick(); rankCheckTick(); battleTick(); codexTick(); socialTick(); arcTick(); holoTick(); holidayTick();
   if(G.shipOps&&G.shipOps.length)G.shipOps=G.shipOps.filter(function(m){return ship(m.shipId);});
 }
 function economyTick(){
@@ -4039,10 +4063,90 @@ function fcOutcome(){
     text="It goes badly. The "+FC.name+" fire a parting shot across your bow before warping away. (-10 prestige)";
   }
   (G.contacts=G.contacts||[]).push({name:FC.name,disp:d,trait:FC.trait,outcome:outcome,sd:G.stardate});
+  codexRecord(FC.name,FC.trait,d,outcome);
   log("event","First contact with the "+FC.name+" ("+FC.trait+", "+d+") near "+(POST_LABELS[FC.sys]||FC.sys)+" — "+title+".");
   capLogAuto("First contact","Made first contact with the "+FC.name+" near "+(POST_LABELS[FC.sys]||FC.sys)+". "+title+".");
   FC=null;save();
   return {title:title,text:text};
+}
+/* ================= SPECIES CODEX (v2.41) ================= */
+/* Every first contact is recorded with a standing (-100..100). Friends send trade
+   delegations; enemies cause border incidents. The galaxy remembers. */
+function codexStandingLabel(st){
+  if(st>=60)return["Allied","var(--green)"];if(st>=25)return["Friendly","var(--teal)"];
+  if(st>-25)return["Neutral","var(--text)"];if(st>-60)return["Wary","var(--orange)"];
+  return["Hostile","var(--red)"];
+}
+function codexRecord(name,trait,disp,outcome){
+  G.codex=G.codex||{};
+  let cx=G.codex[name];
+  if(!cx)cx=G.codex[name]={name:name,trait:trait,disp:disp,standing:0,encounters:0,firstSd:G.stardate};
+  cx.encounters++;cx.lastSd=G.stardate;cx.lastOutcome=outcome;cx.trait=trait;cx.disp=disp;
+  const DST={treaty:40,peace:20,withdrawn:5,trade:4,appeased:0,standoff:0,skirmish:0};
+  cx.standing=clamp(cx.standing+(DST[outcome]!=null?DST[outcome]:-40),-100,100);
+  return cx;
+}
+function renderCodex(){
+  G.codex=G.codex||{};
+  const keys=Object.keys(G.codex).sort((a,b)=>G.codex[b].standing-G.codex[a].standing);
+  let h='<div class="card"><h3>Species Codex</h3><p class="dim">Every species you have made first contact with — and what they think of you. Friends send trade delegations; the hostile cause border incidents.</p></div>';
+  if(!keys.length)h+='<div class="card"><p class="dim">No first contacts yet. The galaxy awaits.</p></div>';
+  keys.forEach(function(k){
+    const cx=G.codex[k],lb=codexStandingLabel(cx.standing);
+    const pct=Math.round((cx.standing+100)/2);
+    h+='<div class="card"><div class="row"><div class="grow"><div class="nm">The '+esc(cx.name)+'</div>'+
+      '<div class="sub2">'+esc(cx.trait)+', '+esc(cx.disp)+' · '+cx.encounters+' encounter'+(cx.encounters===1?"":"s")+' · last contact stardate '+sdStr(cx.lastSd)+'</div></div>'+
+      '<span class="badge" style="background:'+lb[1]+';color:#fff;font-weight:700">'+lb[0]+'</span></div>'+
+      '<div class="statBar" style="margin-top:6px"><i style="width:'+pct+'%;background:'+lb[1]+'"></i></div>'+
+      '<div class="sub2" style="margin-top:4px">Standing '+cx.standing+' · last outcome: '+esc(cx.lastOutcome||"—")+'</div></div>';
+  });
+  return h;
+}
+function codexTick(){
+  if(FC)return;
+  G.codex=G.codex||{};
+  const keys=Object.keys(G.codex);
+  if(!keys.length||Math.random()>0.02)return;
+  const cx=G.codex[pick(keys)];
+  if(cx.standing>=25)codexFriendly(cx);
+  else if(cx.standing<=-25)codexHostile(cx);
+}
+function codexFriendly(cx){
+  const cr=ri(2000,7000),pr=ri(5,12);
+  gainCR(cr);gainPres(pr);
+  codexRecord(cx.name,cx.trait,cx.disp,"trade");
+  log("event","A "+cx.name+" trade delegation arrives bearing gifts — new markets, new friends. (+"+fmt(cr)+" CR, +"+pr+" prestige)");
+  toast("Trade delegation from the "+cx.name+" (+"+fmt(cr)+" CR)");
+  save();
+}
+function codexHostile(cx){
+  interruptQueue.push({title:"Border incident — the "+cx.name,sub:"Stardate "+sdStr(G.stardate),
+    html:'<p>The '+esc(cx.name)+' have seized a Federation freighter near the border and are demanding you answer for past insults. Their ships are powering weapons.</p>',
+    buttons:[
+      {t:"Apologize, pay reparations (−2,000 CR)",fn:function(){
+        if(G.credits<2000){toast("Not enough credits.");return null;}
+        G.credits-=2000;codexRecord(cx.name,cx.trait,cx.disp,"appeased");
+        const n=G.codex[cx.name];n.standing=Math.min(100,n.standing+15);
+        log("event","You apologize to the "+cx.name+" and pay reparations. Tensions ease. (−2,000 CR)");
+        save();
+        return {title:"Incident defused",sub:"",html:"<p>The "+esc(cx.name)+" release the freighter. Their commander almost smiles. Almost.</p>",buttons:[{t:"Continue"}]};
+      }},
+      {t:"Stand firm",fn:function(){
+        if(Math.random()<0.5){
+          gainPres(10);const n=codexRecord(cx.name,cx.trait,cx.disp,"standoff");
+          n.standing=Math.max(-100,n.standing-5);
+          log("event","You refuse to bow to the "+cx.name+". They back down — this time. (+10 prestige)");
+          save();
+          return {title:"They back down",sub:"",html:"<p>Your resolve holds. The "+esc(cx.name)+" power down their weapons and withdraw — but they will remember this.</p>",buttons:[{t:"Continue"}]};
+        }
+        gainPres(-10);const n2=codexRecord(cx.name,cx.trait,cx.disp,"skirmish");
+        n2.standing=Math.max(-100,n2.standing-10);moraleAll(-2);
+        log("event","The standoff with the "+cx.name+" turns hot — a border skirmish before both sides disengage. (−10 prestige)");
+        save();
+        return {title:"Shots fired",sub:"",html:"<p>Phaser fire lights the border for eleven minutes. Both sides limp home. The "+esc(cx.name)+" will not forget.</p>",buttons:[{t:"Continue"}]};
+      }}
+    ]});
+  save();
 }
 /* ---------- story arcs tab ---------- */
 function renderArcs(){
@@ -4357,6 +4461,12 @@ function dockedTick(){
     if(!s||!s.dock)return;
     const st=station(s.dock);
     if(!st||st.status!=="active"||st.mothballed||!DOCK_DEFS[st.type]){s.dock=null;return;}
+    if(s.leave>0){ // v2.41 shore leave: 7 days of rest
+      s.leave--;
+      s.fatigue=Math.max(0,(s.fatigue||0)-20);
+      crewOfShip(s.id).forEach(function(o){if(o.morale<100)o.morale=Math.min(100,o.morale+1);});
+      if(s.leave===0)log("command",s.name+" returns from shore leave — rested and ready for duty.");
+    }
     const d=DOCK_DEFS[st.type],max=shipCompMax(s),cur=shipCrewN(s);
     if(d.crew>0&&cur<max)s.crew=Math.min(max,cur+Math.max(2,Math.round((max-cur)*d.crew)));
     if(d.rep>0&&(s.damage||0)>0){s.damage=Math.max(0,(s.damage||0)-d.rep*(s.future?2:1));
@@ -6121,6 +6231,7 @@ function battlePower(s){
   if(s.post&&typeof sectorCommander==="function"&&sectorCommander(s.post))p=Math.round(p*1.2); // v2.13 sector command
   if(typeof flagAboardAdmiral==="function"&&flagAboardAdmiral(s.id))p=Math.round(p*1.15); // v2.13 flag aboard
   if(s.future)p=Math.round(p*1.3); // v2.18 future systems: temporal shielding + advanced weapons
+  if((s.fatigue||0)>=70)p=Math.round(p*0.9); // v2.41 weary crew fights worse
   return p;
 }
 function threatLabel(e,s){const r=e.pow/battlePower(s);
@@ -6138,6 +6249,7 @@ function battleTick(){
   G.ships.forEach(function(s){
     if(!s||s.status!=="active"||s.transit||s.mothballed||s.dock)return;
     const z=HOSTILE_ZONES[s.post];if(!z)return;
+    if(nemesisAmbush(s,z))return; // v2.41: your nemesis hunts you
     if(Math.random()<z.danger){
       const e=pick(ENEMY_POOLS[z.pool]);
       G.ledger.events++;
@@ -6151,7 +6263,8 @@ function battleTick(){
 }
 function battleHtml(s,e,z){
   const c=SHIP_CLASSES[s.cls];
-  return '<p class="dim">'+esc(z.blurb)+'</p>'+
+  const nem=e.nemesis?'<div class="redAlertFrame" style="margin-bottom:10px"><h3 style="color:var(--red)">YOUR NEMESIS</h3><p>'+esc(e.nemTitle)+' — grudge '+nemesisPips({grudge:e.nemGrudge})+'</p></div>':"";
+  return nem+'<p class="dim">'+esc(z.blurb)+'</p>'+
     '<div class="kv"><span class="k">Contact</span><span class="v" style="color:var(--red)">'+esc(e.n)+'</span></div>'+
     '<div class="kv"><span class="k">Threat</span><span class="v">'+threatLabel(e,s)+'</span></div>'+
     '<div class="kv"><span class="k">Victory odds</span><span class="v">~'+estEngageOdds(s,e)+'% if you engage</span></div>'+
@@ -6175,10 +6288,12 @@ function resolveBattle(sid,e,z,choice){
   if(choice==="engage"){sfx("phaser");setTimeout(function(){sfx("torpedo");},450);}
   const c=SHIP_CLASSES[s.cls];
   const en=anArt(e.n)+" "+e.n;
-  const done=function(html){save();return{title:s.name+" — After-Action Report",sub:z.terr+" · Stardate "+sdStr(G.stardate),html:"<p>"+html+"</p>",buttons:[{t:"Continue"}]};};
+  const done=function(html,btns){save();return{title:s.name+" — After-Action Report",sub:z.terr+" · Stardate "+sdStr(G.stardate),html:"<p>"+html+"</p>",buttons:(btns||[]).concat([{t:"Continue"}])};};
   if(choice==="qsnap"){
     gainPres(25);
     log("combat","Q snaps "+en+" out of existence. "+s.name+" is unharmed. (+25 prestige)");
+    if(e.nemesis){const _nn=G.nemesis;_nn.active=false;_nn.resolved="snapped";
+      log("combat","Q snaps "+_nn.title+" "+_nn.name+" out of existence. Anticlimactic — but effective. The grudge dies with them.");}
     qSnapFlash();
     return done("With an infuriating smirk, Q snaps his fingers. The "+esc(e.n)+" simply <i>ceases</i> — no debris, no subspace echo, nothing. &ldquo;You're welcome,&rdquo; the Continuum echoes. <b>+25 prestige.</b>");
   }
@@ -6189,7 +6304,8 @@ function resolveBattle(sid,e,z,choice){
       if(typeof shipCasualties==="function")shipCasualties(s,d,"evasive escape");
       if(s.damage>=40&&s.status==="active")s.status="damaged";
       log("combat",s.name+" evaded "+en+" in "+z.terr+", taking "+d+"% hull damage during the escape.");
-      return done("Helm lays in an evasive course and "+esc(s.name)+" warps out trailing plasma — but intact. The "+esc(e.n)+" does not pursue. <b>Escaped</b> with "+d+"% hull damage.");
+      if(e.nemesis){const _nn=G.nemesis;_nn.grudge=Math.min(10,_nn.grudge+1);_nn.lastDay=G.day;_nn.lastSd=G.stardate;}
+      return done("Helm lays in an evasive course and "+esc(s.name)+" warps out trailing plasma — but intact. The "+esc(e.n)+" does not pursue. <b>Escaped</b> with "+d+"% hull damage."+(e.nemesis?" <i>&ldquo;Coward! We will meet again.&rdquo;</i>":""));
     }
     log("combat",s.name+" failed to evade "+en+" — the enemy has the opening salvo!");
   }
@@ -6214,7 +6330,7 @@ function resolveBattle(sid,e,z,choice){
     gainCR(cr);gainDL(dl);gainPres(pr);
     log("combat",s.name+" defeated "+en+" in "+z.terr+". (+"+fmt(cr)+" CR, +"+fmt(dl)+" DL, +"+pr+" prestige)");
     capLogAuto("Battle won",s.name+" defeated "+en+" in "+z.terr+".");
-    return done("The "+esc(e.n)+" breaks apart under "+esc(s.name)+"&rsquo;s guns. <b>Victory!</b> Salvage teams recover <b>"+fmt(cr)+" CR</b>, <b>"+fmt(dl)+" dilithium</b>, and Starfleet awards <b>"+pr+" prestige</b>."+(dmg?" "+esc(s.name)+" took "+dmg+"% hull damage.":""));
+    return done("The "+esc(e.n)+" breaks apart under "+esc(s.name)+"&rsquo;s guns. <b>Victory!</b> Salvage teams recover <b>"+fmt(cr)+" CR</b>, <b>"+fmt(dl)+" dilithium</b>, and Starfleet awards <b>"+pr+" prestige</b>."+(dmg?" "+esc(s.name)+" took "+dmg+"% hull damage.":""),e.nemesis?nemesisVictoryBtns(s):(nemesisOfferOk(z)?nemesisOfferBtn(s,e,z):null));
   }
   const dmg=Math.min(95,Math.round(ep/p*70));
   applyDamage(dmg);
@@ -6223,13 +6339,125 @@ function resolveBattle(sid,e,z,choice){
   if(s.damage>=100){
     destroyShip(s,"destroyed in battle with "+e.n+" — "+z.terr);moraleAll(-12);
     log("combat",s.name+" was destroyed by "+en+" in "+z.terr+".");
-    return done("It was never a fair fight. "+esc(s.name)+" is <b>destroyed</b> by the "+esc(e.n)+". Escape pods scatter into the dark. Her name joins the Memorial.");
+    if(e.nemesis){const _nn=G.nemesis;_nn.active=false;_nn.resolved="triumphant";
+      log("combat",_nn.title+" "+_nn.name+" watches your escape pods drift by — and lets them go. Their vengeance is complete. They will not trouble you again.");}
+    return done("It was never a fair fight. "+esc(s.name)+" is <b>destroyed</b> by the "+esc(e.n)+". Escape pods scatter into the dark. Her name joins the Memorial."+(e.nemesis?" Among the wreckage, a familiar voice on an open channel: &ldquo;It is done. We are finished, you and I.&rdquo;":""));
   }
   let died=null;
   if(hurt.length&&Math.random()<0.2){died=pick(hurt);killOfficer(died,"killed in action aboard "+s.name+" — battle with "+e.n);}
   moraleAll(-6);
   log("combat",s.name+" was defeated by "+en+" in "+z.terr+" ("+dmg+"% hull damage"+(died?", "+fullName(died)+" killed":"")+") and limps away.");
-  return done("The "+esc(e.n)+" pounds "+esc(s.name)+" mercilessly. Outgunned, she breaks off and limps away — <b>defeated</b>, with "+dmg+"% hull damage."+(died?" "+fullName(died)+" did not survive.":"")+" She will need yard time.");
+  if(e.nemesis){const _nn=G.nemesis;_nn.grudge=Math.min(10,_nn.grudge+1);_nn.lastDay=G.day;_nn.lastSd=G.stardate;
+    log("combat",_nn.title+" "+_nn.name+" savors the victory. The grudge deepens.");}
+  return done("The "+esc(e.n)+" pounds "+esc(s.name)+" mercilessly. Outgunned, she breaks off and limps away — <b>defeated</b>, with "+dmg+"% hull damage."+(died?" "+fullName(died)+" did not survive.":"")+" She will need yard time."+(e.nemesis?" <i>&ldquo;"+esc(nemesisTaunt(G.nemesis,s))+"&rdquo;</i>":""));
+}
+
+/* ================= NEMESIS (v2.41) ================= */
+/* After a battle victory you may name the enemy commander your nemesis (and rename
+   them — your choice). They escape, nurse the grudge, and ambush you in hostile
+   space: taunts, escalating power, and a final choice each time you beat them. */
+const NEMESIS_FACTIONS={
+  romulan:{label:"Romulan Star Empire",title:"Commander",names:["T'Vrell","Jolan","Vrek","T'Peln","Soran","Vekal","T'Lar"],ships:["IRW Vengeance","IRW Stormcrow","IRW Nightfall"]},
+  cardassian:{label:"Cardassian Union",title:"Gul",names:["Revok","Maral","Trell","Hovat","Kemnar","Drel"],ships:["CDS Retribution","CDS Ironclaw","CDS Persecutor"]},
+  dominion:{label:"The Dominion",title:"First",names:["Arak'Tal","Yak'Nar","Kel'Rok","Vor'Tan","Jak'El"],ships:["Jem'Hadar Dreadnought","Dominion Strike Cruiser"]},
+  raider:{label:"Independent raiders",title:"Captain",names:["Voss","Kessa","Drel Mar","Jana Kor","Rook","Silas Vane"],ships:["Bloodwing","Marauder","Blackstar"]}
+};
+const NEMESIS_TAUNTS=[
+  "This ends today, {ship}. I've dreamed of your hull breaking apart.",
+  "You should have finished me when you had the chance.",
+  "Did you miss me? I counted every single day.",
+  "Your mercy was weakness. I have no such flaw.",
+  "I've studied every battle you've ever fought. You have no surprises left.",
+  "Run, little ship. I'll enjoy the chase.",
+  "Tell your Admiral: {name} is coming.",
+  "No luck this time. No mercy. Just me."
+];
+function nemesisActive(){return !!(G.nemesis&&G.nemesis.active);}
+function nemesisTaunt(n,s){return pick(NEMESIS_TAUNTS).replace(/\{name\}/g,n.name).replace(/\{ship\}/g,s.name);}
+function nemesisPips(n){return "◆".repeat(Math.min(8,n.grudge))+"◇".repeat(Math.max(0,8-Math.min(8,n.grudge)));}
+function nemesisOfferOk(z){return !!(!nemesisActive()&&z&&z.pool&&NEMESIS_FACTIONS[z.pool]);}
+function nemesisOfferBtn(s,e,z){return [{t:"Name their commander your nemesis",cls:"violet",fn:function(){return nemesisOffer(s,e,z);}}];}
+function nemesisOffer(s,e,z){
+  const f=NEMESIS_FACTIONS[z.pool];if(!f)return null;
+  const name=pick(f.names),shipName=pick(f.ships);
+  const html='<p>Among the wreckage, sensors catch a lone escape pod spinning away at warp. Its occupant is broadcasting on all frequencies — a name, a rank, and a promise.</p>'+
+    '<div class="kv"><span class="k">Allegiance</span><span class="v">'+esc(f.label)+'</span></div>'+
+    '<div class="kv"><span class="k">Vessel</span><span class="v">'+esc(shipName)+'</span></div>'+
+    '<div class="kv"><span class="k">Name them</span><span class="v"><input id="nemName" value="'+esc(name)+'" maxlength="40" style="width:100%;background:#0a0a12;color:var(--text);border:1px solid var(--orange);border-radius:6px;padding:8px;font-size:16px;"></span></div>'+
+    '<p class="dim">Mark them and they will hunt you across hostile space — stronger every time. This is your choice. Choose well.</p>';
+  return {title:"A survivor swears vengeance",sub:z.terr+" · Stardate "+sdStr(G.stardate),html:html,buttons:[
+    {t:"Mark as nemesis",cls:"violet",fn:function(){return confirmNemesis(z.pool,e.pow,shipName);}},
+    {t:"Let them go",fn:function(){return {title:s.name+" — After-Action Report",sub:"",html:"<p>You let the pod go. Perhaps mercy was the right call — this time.</p>",buttons:[{t:"Continue"}]};}}
+  ]};
+}
+function confirmNemesis(poolKey,pow,shipName){
+  const f=NEMESIS_FACTIONS[poolKey];if(!f)return null;
+  const inp=document.getElementById("nemName");
+  let name=inp?inp.value.trim().slice(0,40):"";
+  if(!name)name=f.names[0];
+  G.nemesis={name:name,title:f.title,faction:poolKey,factionLabel:f.label,shipName:shipName,pow:pow||100,grudge:1,encounters:0,bornDay:G.day,lastDay:G.day,lastAmbush:0,lastSd:G.stardate,active:true,resolved:null};
+  gainPres(10);
+  log("combat","You name "+f.title+" "+name+" ("+f.label+") your nemesis. Their ship: the "+shipName+". They will be back. (+10 prestige)");
+  capLogAuto("A nemesis sworn",f.title+" "+name+" of the "+f.label+" escaped the wreckage of their ship and swore vengeance against you. Their vessel: the "+shipName+".");
+  toast("Nemesis sworn: "+f.title+" "+name);
+  save();
+  return {title:"Nemesis sworn",sub:"Stardate "+sdStr(G.stardate),html:"<p>"+esc(f.title+" "+name)+" will hunt you across hostile space. Sleep lightly.</p>",buttons:[{t:"Continue"}]};
+}
+function renounceNemesis(){
+  const n=G.nemesis;if(!n||!n.active)return;
+  n.active=false;n.resolved="renounced";
+  log("command","You strike "+n.title+" "+n.name+" from your thoughts. Perhaps they will fade — or perhaps not.");
+  toast("Nemesis renounced.");
+  save();render();
+}
+function nemesisAmbush(s,z){
+  const n=G.nemesis;
+  if(!n||!n.active)return false;
+  if(G.day<=(n.lastAmbush||0)+10)return false;
+  if(Math.random()>=Math.min(0.16,0.05+0.02*n.grudge))return false;
+  n.lastAmbush=G.day;n.lastDay=G.day;n.lastSd=G.stardate;n.encounters++;
+  const e={n:n.shipName,pow:Math.round(n.pow*(1+0.12*(Math.min(10,n.grudge)-1))),line:nemesisTaunt(n,s),nemesis:true,nemTitle:n.title+" "+n.name,nemGrudge:n.grudge};
+  G.ledger.events++;
+  log("combat","RED ALERT: "+n.title+" "+n.name+" has ambushed "+s.name+" in "+z.terr+". &ldquo;"+e.line+"&rdquo;");
+  if(typeof DECK!=="undefined"&&DECK&&DECK.shipId===s.id&&!DECK.battle)deckBattleCheck(s,e,z);
+  else interruptQueue.push({title:"YOUR NEMESIS — AMBUSH",sub:z.terr+" · Stardate "+sdStr(G.stardate),html:battleHtml(s,e,z),buttons:battleButtons(s,e,z)});
+  sfx("klaxon");
+  save();
+  return true;
+}
+function nemesisVictoryBtns(s){
+  return [
+    {t:"Destroy them — end it",cls:"danger",fn:function(){return nemesisSlain(s);}},
+    {t:"Let them limp away",fn:function(){return nemesisSpared(s);}}
+  ];
+}
+function nemesisSlain(s){
+  const n=G.nemesis;n.active=false;n.resolved="slain";
+  gainPres(150);
+  log("combat",n.title+" "+n.name+" is dead — "+s.name+" ended it. The grudge dies with them. (+150 prestige)");
+  capLogAuto("Nemesis slain","After "+n.encounters+" encounters, "+n.title+" "+n.name+" of the "+n.factionLabel+" fell to "+s.name+". Your vengeance is complete.");
+  moraleAll(4);
+  save();
+  return {title:"Vengeance complete",sub:"Stardate "+sdStr(G.stardate),html:"<p>The "+esc(n.shipName)+" breaks apart. "+esc(n.title+" "+n.name)+" — who hunted you across "+n.encounters+" encounters — is gone. The crew feels the weight lift. <b>(+150 prestige, fleet morale up)</b></p>",buttons:[{t:"Continue"}]};
+}
+function nemesisSpared(s){
+  const n=G.nemesis;n.grudge=Math.min(10,n.grudge+1);n.lastDay=G.day;n.lastSd=G.stardate;
+  log("combat","You let "+n.title+" "+n.name+" escape. The grudge deepens — they will return stronger.");
+  save();
+  return {title:s.name+" — After-Action Report",sub:"Stardate "+sdStr(G.stardate),html:"<p>The "+esc(n.shipName)+" warps out trailing plasma. You could have ended it. You chose not to. Somewhere out there, "+esc(n.name)+" is already planning the next meeting.</p>",buttons:[{t:"Continue"}]};
+}
+function nemesisCard(){
+  const n=G.nemesis;
+  if(!n||!n.active)return "";
+  return '<div class="card" style="border:1px solid var(--red)"><h3 style="color:var(--red)">Nemesis</h3>'+
+    '<div class="kv"><span class="k">Name</span><span class="v" style="color:var(--red)">'+esc(n.title+" "+n.name)+'</span></div>'+
+    '<div class="kv"><span class="k">Allegiance</span><span class="v">'+esc(n.factionLabel)+'</span></div>'+
+    '<div class="kv"><span class="k">Vessel</span><span class="v">'+esc(n.shipName)+'</span></div>'+
+    '<div class="kv"><span class="k">Grudge</span><span class="v" style="color:var(--red)">'+nemesisPips(n)+'</span></div>'+
+    '<div class="kv"><span class="k">Encounters</span><span class="v">'+n.encounters+'</span></div>'+
+    '<div class="kv"><span class="k">Last seen</span><span class="v">Stardate '+sdStr(n.lastSd)+'</span></div>'+
+    '<p class="dim">They are hunting you. Expect an ambush in hostile space — stronger every time you spare them.</p>'+
+    '<div class="btnRow"><button class="btn small ghost" onclick="renounceNemesis()">Forget them</button></div></div>';
 }
 
 /* ================= Q MODE (SANDBOX) ================= */
@@ -6511,7 +6739,8 @@ const ICONS={
   log:'<svg viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 8h6M9 12h6M9 16h3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
   caplog:'<svg viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 8h6M9 12h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12 14.3l1.05 2.2 2.4.34-1.74 1.68.41 2.4-2.12-1.12-2.12 1.12.41-2.4-1.74-1.68 2.4-.34z" fill="currentColor"/></svg>',
   memorial:'<svg viewBox="0 0 24 24"><path d="M12 2.5l2.8 6 6.5.7-4.8 4.4 1.3 6.4L12 16.8 6.2 20l1.3-6.4L2.7 9.2l6.5-.7z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
-  settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3.4"/><path d="M12 2.6v3.2M12 18.2v3.2M2.6 12h3.2M18.2 12h3.2M5.3 5.3l2.3 2.3M16.4 16.4l2.3 2.3M18.7 5.3l-2.3 2.3M7.6 16.4l-2.3 2.3" stroke-linecap="round"/></svg>'
+  settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3.4"/><path d="M12 2.6v3.2M12 18.2v3.2M2.6 12h3.2M18.2 12h3.2M5.3 5.3l2.3 2.3M16.4 16.4l2.3 2.3M18.7 5.3l-2.3 2.3M7.6 16.4l-2.3 2.3" stroke-linecap="round"/></svg>',
+  codex:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z" stroke-linejoin="round"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20" stroke-linejoin="round"/><circle cx="12" cy="10.5" r="2.6"/></svg>'
 };
 const MEET_SCENE="ships/meet-scene.jpg";
 const MEET_CD=5;
@@ -7293,7 +7522,7 @@ function meetFinish(how){
   toast(how==="done"?"Meeting concluded.":"Dismissed.");
 }
 function openTabMenu(){
-  const tabs=[["personnel",ICONS.crew,"Essential Personnel"],["missions",ICONS.missions,"Missions"],["build",ICONS.build,"Build"],["log",ICONS.log,"Log"],["caplog",ICONS.caplog,"Captain's Log"],["arcs",ICONS.arcs,"Story Arcs"],["memorial",ICONS.memorial,"Memorial"],["settings",ICONS.settings,"Settings"]];
+  const tabs=[["personnel",ICONS.crew,"Essential Personnel"],["missions",ICONS.missions,"Missions"],["build",ICONS.build,"Build"],["log",ICONS.log,"Log"],["caplog",ICONS.caplog,"Captain's Log"],["arcs",ICONS.arcs,"Story Arcs"],["codex",ICONS.codex,"Species Codex"],["memorial",ICONS.memorial,"Memorial"],["settings",ICONS.settings,"Settings"]];
   let h='';
   tabs.forEach(function(t){
     h+='<button class="menuItem'+(currentTab===t[0]?" sel":"")+'" onclick="navGo(\''+t[0]+'\')"><span class="bIco">'+t[1]+'</span><span>'+t[2]+'</span></button>';
@@ -7328,6 +7557,7 @@ function render(){renderHUD();
   else if(currentTab==="log")v.innerHTML=renderLog();
   else if(currentTab==="caplog")v.innerHTML=renderCaptainLog();
   else if(currentTab==="arcs")v.innerHTML=renderArcs();
+  else if(currentTab==="codex")v.innerHTML=renderCodex();
   else if(currentTab==="memorial")v.innerHTML=renderMemorial();
   else if(currentTab==="settings")v.innerHTML=renderSettings();
   renderCmdSubBar();
@@ -7706,13 +7936,13 @@ function renderCommand(){
     '<b>4.</b> Fly ship missions from <b>Missions</b>. Success depends on ship stats, captain skill, crew, and morale.<br>'+
     '<b>5.</b> Crew fall in love, marry, and have children. Children grow up, join the Academy, and become officers — a generational fleet.<br>'+
     '<b>6.</b> Earn prestige from missions and events to unlock the Prometheus-class and rise to Fleet Admiral.<br>'+
-    '<b>7.</b> Damaged ships repair automatically at free shipyards. Injured crew heal — faster with a Medical Station.</p>'+
+    '<b>7.</b> Damaged ships repair automatically at free shipyards. Injured crew heal — faster with a Medical Station.<br>'+    '<b>8.</b> Crews tire on long deployments — grant <b>shore leave</b> at a starbase. After a battle victory you may name a <b>nemesis</b>... if you dare. Every first contact is recorded in the <b>Species Codex</b>.</p>'+
     '<div class="btnRow"><button class="btn small ghost" onclick="tutorialStart()">Replay the first-run tour</button></div></div>';
   let h=(G.qmode?renderQCard():"");
   if(cmdSub==="research")h+=cmdSubPills()+renderResearchCard();
   else if(cmdSub==="inst")h+=cmdSubPills()+cmdrInstitutions();
   else if(cmdSub==="rec")h+=cmdSubPills()+recCard;
-  else h+=renderNeedsAttention()+cmdrCard+cmdSubPills()+sectorCard+opsCard;
+  else h+=renderNeedsAttention()+cmdrCard+cmdSubPills()+sectorCard+nemesisCard()+opsCard;
   return h;
 }
 
@@ -10434,6 +10664,13 @@ function shipModal(id){
           h+='<p class="dim">'+(_tv?"She is the Academy training vessel — cadet classes graduate an extra ensign while she serves.":"Designate her as the Academy training vessel: cadet classes graduate an extra ensign while she serves.")+'</p>';
         }}
       else h+='<p class="dim">Only stations in this sector offer docking — starbases, shipyards, medical stations, and the Academy. Research arrays, embassies, Starfleet Command, and gates do not.</p>';
+    }
+    if(s.status==="active"||s.status==="damaged"){ // v2.41 shore leave
+      const _fat=s.fatigue||0;
+      h+=bar("FATIGUE",_fat,100,_fat>=70?"var(--red)":"var(--teal)");
+      if(s.leave>0)h+='<p class="dim">'+esc(s.name)+' is on shore leave — crew resting, '+s.leave+'d left. She cannot take orders until they return.</p>';
+      else if(s.dock&&(function(){const _d=station(s.dock);return _d&&(_d.type==="starbase"||_d.type==="academy");})()&&_fat>0)
+        h+='<div class="btnRow"><button class="btn small teal" onclick="uiGrantShoreLeave(\''+s.id+'\')">Grant shore leave (7 days)</button></div>';
     }
     if(!s.dock&&HOSTILE_ZONES[s.post||"sol"])h+='<p class="dim" style="color:var(--red)">Hostile territory ('+esc(HOSTILE_ZONES[s.post||"sol"].terr)+') — random RED ALERT battles can strike a ship posted here.</p>';
   }
@@ -13182,9 +13419,10 @@ window.onload=function(){
   if(s){G=s;
     // forward-compat defaults
     if(!G.flags)G.flags={};if(!G.flags.tutorialSeen)G.flags.tutorialSeen=true;if(!G.ledger)G.ledger={missions:0,crits:0,shipsBuilt:0,stationsBuilt:0,marriages:0,births:0,lost:0,events:0};
-    if(!G.memorial)G.memorial=[];if(!G.shipOps)G.shipOps=[];if(typeof G.dlIncome!=="number")G.dlIncome=0;if(typeof G.day!=="number")G.day=0;
+    if(!G.memorial)G.memorial=[];if(!G.shipOps)G.shipOps=[];if(!G.codex)G.codex={};if(typeof G.dlIncome!=="number")G.dlIncome=0;if(typeof G.day!=="number")G.day=0;
     if(!G.commander)G.commander={name:"",gender:"m",species:"human",portrait:0};if(G.commander.portrait==null)G.commander.portrait=0;
     G.ships.forEach(s=>{if(!s.post)s.post="sol";});
+    G.ships.forEach(s=>{if(s.fatigue==null)s.fatigue=0;}); // v2.41 shore leave
     // v2.40: docking is same-sector only — release berths at out-of-sector stations
     G.ships.forEach(s=>{if(s.dock){const _st=station(s.dock);if(_st&&((_st.post||"sol")!==(s.post||"sol"))){s.dock=null;if(!G.log)G.log=[];log("command",s.name+" released from "+_st.name+" — docking is now limited to stations in the same sector.");}}});
     G.officers.forEach(o=>{if(!Array.isArray(o.roles))o.roles=o.role?[o.role]:[];delete o.role;});
@@ -13212,7 +13450,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.40</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.41</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
