@@ -5018,7 +5018,7 @@ async function aiSend(oid){
 var aiLastErr=null; /* last aiGenText failure, for honest error toasts */
 async function aiGenText(prompt,maxTokens){
   aiLastErr=null;
-  const key=aiHasKey();if(!key){aiLastErr=new Error("no-key");return null;}
+  const key=String(G.aiKey||"").trim();if(!key){aiLastErr=new Error("no-key");return null;}
   const models=aiModelList();
   for(let i=0;i<models.length;i++){
     try{
@@ -12980,7 +12980,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.33</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.34</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
