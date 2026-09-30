@@ -5110,7 +5110,7 @@ async function dmStage(){
   openModal('<h2>Away Mission &mdash; '+esc(destLabel(AWAY.dest))+'</h2><div class="flavor">Stage '+(AWAY.stage+1)+' of 3 &middot; Team: '+esc(teamNames)+'</div><p class="dim">The dungeon master is setting the scene&hellip;</p>');
   let d=null;
   try{const t=await aiGenText(dmSetupPrompt(),320);if(myTok===dmTok&&AWAY===myAway)d=dmParse(t);}catch(e){}
-  if(!d||AWAY!==myAway){if(AWAY===myAway)awayStage();return;} /* fallback: classic stage */
+  if(!d||AWAY!==myAway){if(AWAY===myAway&&myTok===dmTok){toast("The Dungeon Master couldn\u2019t reach the AI \u2014 check your key in Settings. Running the classic mission instead.");awayStage();}return;} /* fallback: classic stage, now announced */
   AWAY.dm.cur=d;
   const info=AWAY_TERR_INFO[AWAY.terr];
   openModal('<h2>Away Mission &mdash; '+esc(destLabel(AWAY.dest))+'</h2><div class="flavor">Stage '+(AWAY.stage+1)+' of 3 &middot; Team: '+esc(teamNames)+'</div>'+
@@ -12965,7 +12965,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.29</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.30</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
