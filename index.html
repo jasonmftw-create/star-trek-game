@@ -4836,14 +4836,15 @@ async function uiTestAiKey(){
 function aiChatHist(o){if(!o.aiChat)o.aiChat=[];return o.aiChat;}
 function aiTrimHist(o){if(o.aiChat&&o.aiChat.length>20)o.aiChat=o.aiChat.slice(-20);}
 function aiSystemFor(o){
-  const cn=(G.commander&&G.commander.name)||"Commander";
+  const addr=aiAddrName(),pTitle=aiPlayerRankTitle();
   const partner=o.rel?officer(o.rel.partner):null;
   const nm=function(id){const x=officer(id);return x?x.name.split(" ")[0]:"";};
   const friends=(o.friends||[]).map(nm).filter(Boolean).slice(0,3);
   const rivals=(o.rivals||[]).map(nm).filter(Boolean).slice(0,2);
   const acc=(o.accolades||[]).slice(-2).map(function(a){return a.n;}).join("; ");
   let s="You are "+o.name+", a "+rankName(o)+" ("+o.species+", "+(o.gender==="M"?"male":o.gender==="F"?"female":"non-binary")+") serving as a "+o.dept+" officer in Starfleet, year 2379. ";
-  s+="You are speaking privately with "+cn+", the fleet commander, your superior officer. ";
+  s+="You are speaking privately with "+addr+", the fleet commander, your superior officer. ";
+  try{const ctx=aiFleetContext(o);if(ctx)s+="\nCURRENT FLEET STATUS \u2014 these facts are authoritative, never contradict them:\n"+ctx+"\n";}catch(e){}
   try{if(o.post)s+="Your posting: "+postName(o.post)+". ";}catch(e){}
   if(o.traits&&o.traits.length)s+="Personality traits: "+o.traits.join(", ")+". ";
   if(o.backstory)s+="Your backstory: "+o.backstory+" ";
@@ -4852,7 +4853,7 @@ function aiSystemFor(o){
   if(rivals.length)s+="Rivals aboard: "+rivals.join(", ")+". ";
   if(acc)s+="Recent service record: "+acc+". ";
   s+="Morale "+o.morale+"/100, loyalty "+(o.loyal==null?70:o.loyal)+"/100. ";
-  s+="Rules: stay fully in character as "+o.name+", a Starfleet officer — never mention being an AI or language model. Reply in first person, 1 to 4 sentences of natural spoken dialogue. No stage directions, no asterisks, no narrated actions. Address them as \""+cn+"\". Keep it Star Trek: professional, measured, warm when it fits. Never break character.";
+  s+="Rules: stay fully in character as "+o.name+", a Starfleet officer \u2014 never mention being an AI or language model. Reply in first person, 1 to 4 sentences of natural spoken dialogue. No stage directions, no asterisks, no narrated actions. Address the commander as \""+addr+"\" or simply \""+pTitle+"\" \u2014 never by first name or full civilian name. If asked about a ship, officer, posting, or mission not listed above, say you do not have that information; never invent names, ranks, or assignments, and never assume canon characters hold commands unless listed. Keep it Star Trek: professional, measured, warm when it fits. Never break character.";
   return s;
 }
 async function aiChatCall(o,userText){
@@ -4869,9 +4870,74 @@ async function aiChatCall(o,userText){
   }
   throw last||new Error("HTTP 404");
 }
+/* v2.14: proper form of address + shared fleet context for the AI */
+function aiPlayerRankTitle(){return ((typeof PLAYER_TITLES!=="undefined")&&PLAYER_TITLES[G.playerRank]&&PLAYER_TITLES[G.playerRank][1])||"Admiral";}
+function aiAddrName(){
+  const full=String((G.commander&&G.commander.name)||"").trim();
+  const parts=full.split(/\s+/).filter(Boolean);
+  const last=parts.length>1?parts[parts.length-1]:(parts[0]||"");
+  return aiPlayerRankTitle()+(last?" "+last:"");
+}
 function aiFallbackLine(){
-  const cn=(G.commander&&G.commander.name)||"Commander";
-  return "Forgive me, "+cn+" — the comm is full of static on my end. Say that again in a moment?";
+  return "Forgive me, "+aiAddrName()+" \u2014 the comm is full of static on my end. Say that again in a moment?";
+}
+function aiFleetContext(o){
+  const bits=[];
+  try{
+    const myBillets=(o.roles||[]).map(function(r){try{return billetLabel(r);}catch(e){return r;};}).filter(Boolean);
+    if(o.post&&o.post.t==="ship"){
+      const s=ship(o.post.id);
+      if(s){
+        let line="You serve"+(myBillets.length?" as "+myBillets.join(", "):"")+" aboard the "+s.name+" ("+((SHIP_CLASSES[s.cls]||{}).name||s.cls)+"-class). ";
+        if(typeof effShipCO==="function"){const e=effShipCO(s);
+          if(e&&e.o)line+="Your commanding officer is "+rankName(e.o)+" "+e.o.name+(e.acting?" (acting)":"")+". ";
+          const crew=crewOfShip(s.id);const xo=crew.find(function(x){return (x.roles||[]).indexOf("xo")>=0;});
+          if(xo&&(!e||!e.o||xo.id!==e.o.id))line+="The executive officer is "+rankName(xo)+" "+xo.name+". ";}
+        bits.push("YOUR POSTING: "+line.trim());
+      }
+    }else if(o.post&&o.post.t==="station"){
+      const st=station(o.post.id);
+      if(st){
+        let line="You serve"+(myBillets.length?" as "+myBillets.join(", "):"")+" aboard "+st.name+". ";
+        if(typeof effStationCO==="function"){const e=effStationCO(st);
+          if(e&&e.o)line+="The commanding officer is "+rankName(e.o)+" "+e.o.name+(e.acting?" (acting)":"")+". ";}
+        bits.push("YOUR POSTING: "+line.trim());
+      }
+    }
+  }catch(e){}
+  try{
+    const fleet=G.ships.filter(function(s){return s.status==="active"&&!s.mothballed;});
+    const shown=fleet.slice(0,10).map(function(s){
+      let co="";
+      try{if(typeof effShipCO==="function"){const e=effShipCO(s);if(e&&e.o)co=", CO "+rankName(e.o)+" "+e.o.name+(e.acting?" (acting)":"");}}catch(x){}
+      return s.name+" ("+((SHIP_CLASSES[s.cls]||{}).name||s.cls)+"-class, "+(POST_LABELS[s.post]||s.post)+", "+shipStatusLabel(s)+co+")";
+    });
+    if(shown.length)bits.push("ACTIVE SHIPS ("+fleet.length+"): "+shown.join("; ")+(fleet.length>10?" \u2014 plus "+(fleet.length-10)+" more":""));
+  }catch(e){}
+  try{
+    const sts=G.stations.filter(function(st){return st.status==="active"&&!st.mothballed;}).slice(0,8);
+    if(sts.length)bits.push("ACTIVE STATIONS: "+sts.map(function(st){return st.name+" ("+(((typeof STATION_DEFS!=="undefined")&&STATION_DEFS[st.type]&&STATION_DEFS[st.type].name)||st.type)+", "+(POST_LABELS[st.post]||st.post||"?")+")";}).join("; "));
+  }catch(e){}
+  try{
+    const ms=(G.missions||[]).slice(0,5).map(function(m){
+      const sh=ship(m.shipId);let mn="mission";
+      try{const t=MISSION_DECK.find(function(x){return x.id===m.tIdx;});if(t)mn=t.name;}catch(x){}
+      return (sh?sh.name:"a ship")+" \u2014 "+mn+" ("+Math.ceil(m.daysLeft)+"d left)";
+    });
+    if(ms.length)bits.push("MISSIONS UNDERWAY: "+ms.join("; "));
+  }catch(e){}
+  try{
+    const c=[];let nl=null;try{nl=notifList();}catch(e){}
+    if(nl){
+      if(nl.idle&&nl.idle.length)c.push(nl.idle.length+" idle ship"+(nl.idle.length>1?"s":"")+": "+nl.idle.slice(0,3).map(function(x){return x.name;}).join(", "));
+      if(nl.low&&nl.low.length)c.push(nl.low.length+" officer"+(nl.low.length>1?"s":"")+" with low loyalty");
+      if(nl.aud&&nl.aud.length)c.push(nl.aud.length+" audience request"+(nl.aud.length>1?"s":"")+" pending");
+    }
+    const dmg=G.ships.filter(function(x){return x.status==="damaged";}).length;
+    if(dmg)c.push(dmg+" damaged ship"+(dmg>1?"s":"")+" needing repair");
+    if(c.length)bits.push("CURRENT FLEET CONCERNS: "+c.join("; "));
+  }catch(e){}
+  return bits.join("\n");
 }
 function aiChatHtml(o){
   const log=aiChatHist(o).map(function(m){return '<div class="'+(m.r==="u"?"aiMsgU":"aiMsgO")+'">'+esc(m.t)+'</div>';}).join("");
@@ -11950,7 +12016,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.13</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.14</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
