@@ -8000,20 +8000,22 @@ const FUTURE_SHIPS=[
  {id:"enterprise-j",name:"Enterprise-J",reg:"",cls:"universe",era:"26th century",when:"2554",src:'ENT "Azati Prime"',blurb:"Universe-class — kilometers of Federation optimism. Archer walked her corridors before the Battle of Procyon V."},
  {id:"galaxyx",name:"USS Enterprise",reg:"NCC-1701-D",cls:"galaxyx",era:"alternate 2395",when:"2395",src:'TNG "All Good Things\u2026"',blurb:"The possible tomorrow: a Galaxy-class dreadnought with a third nacelle and a phaser lance — Admiral Riker's personal flagship."}
 ];
-function futureShipCard(){
-  const list=FUTURE_SHIPS.map((f,i)=>{
+function futureShipRows(sec){
+  return FUTURE_SHIPS.map((f,i)=>{
     const got=G.rescuedShips&&G.rescuedShips[f.id];
     const badge=got?'<span class="badge good">Recovered</span>'
       :G.tempCd>0?'<span class="badge warn">Array recharging — '+G.tempCd+'d</span>'
       :'<span class="badge">Temporal extraction available</span>';
     const ds=esc((f.name+" "+f.cls+" "+f.era+" "+f.src).toLowerCase());
-    return '<div class="row" data-search="'+ds+'" data-sec="futureship" style="padding:6px;cursor:pointer;" onclick="futureShipModal('+i+')">'+shipPic(f.cls)+
+    return '<div class="row" data-search="'+ds+'" data-sec="'+sec+'" style="padding:6px;cursor:pointer;" onclick="futureShipModal('+i+')">'+shipPic(f.cls)+
       '<div class="grow"><div class="nm">\u25F7 '+esc(f.name)+'<div class="rnkline">'+esc(f.reg||"registry unrecorded")+'</div></div>'+
       '<div class="sub2">'+esc(SHIP_CLASSES[f.cls].name)+'-class · '+esc(f.era)+' · '+esc(f.src)+'</div>'+
       '<div style="margin-top:4px;">'+badge+'</div></div></div>';
   }).join("");
+}
+function futureShipCard(){
   return '<div class="card" data-seccard="futureship"><h3>Future Vessels ('+FUTURE_SHIPS.length+')</h3>'+
-    '<p class="dim">Starships adrift ahead of their time — the 32nd century, the 29th, the 26th, and one possible tomorrow. Temporal Mechanics can pull a hull backward into 2379. A recovered ship serves as a normal fleet vessel, future systems intact.</p>'+list+'</div>';
+    '<p class="dim">Starships adrift ahead of their time — the 32nd century, the 29th, the 26th, and one possible tomorrow. Temporal Mechanics can pull a hull backward into 2379. A recovered ship serves as a normal fleet vessel, future systems intact.</p>'+futureShipRows("futureship")+'</div>';
 }
 function futureShipModal(i){
   const f=FUTURE_SHIPS[i];if(!f)return;
@@ -8197,16 +8199,17 @@ function renderMemorial(){
 
   let h='<div class="card"><h3>Memorial</h3><p class="dim">"They are gone, but their light travels on." — In honored memory of all who served.</p>'+
     '<label>Search</label><input type="search" placeholder="Search the memorial…" oninput="liveSearch(this,\'memList\')"></div><div id="memList">';
-  const LOST_SHOWS=[["all","All"],["TOS","TOS"],["ENT","ENT"],["SNW","SNW"],["DISCO","Discovery"],["SFA","Academy"],["PRO","Prodigy"]];
+  const LOST_SHOWS=[["all","All"],["TOS","TOS"],["ENT","ENT"],["SNW","SNW"],["DISCO","Discovery"],["SFA","Academy"],["PRO","Prodigy"],["SHIPS","Ships"]];
   const lostPills='<div class="cmdsubseg" style="margin:8px 0;">'+LOST_SHOWS.map(s=>'<button class="btn small'+(lostShow===s[0]?" on":"")+'" onclick="lostShow=\''+s[0]+'\';render()">'+s[1]+'</button>').join("")+'</div>';
-  const lostList=MEMORIAL_LOST.map((l,i)=>({l:l,i:i})).filter(o=>lostShow==="all"||o.l.show===lostShow);
+  const isShips=lostShow==="SHIPS";
+  const lostList=isShips?[]:MEMORIAL_LOST.map((l,i)=>({l:l,i:i})).filter(o=>lostShow==="all"||o.l.show===lostShow);
   const showFallen=lostShow==="all";
-  const fallenRows=showFallen?MEMORIAL_STATIC.map(sentry).join("")+offs.map((m,i)=>entry(m,m.rank+" · "+m.species,"lost",i)).join(""):"";
-  const lostTitle=showFallen?"Lost in Time ("+(offs.length+MEMORIAL_STATIC.length+MEMORIAL_LOST.length)+")":"Lost in Time — "+LOST_SHOWS.filter(s=>s[0]===lostShow)[0][1]+" ("+lostList.length+" of "+MEMORIAL_LOST.length+")";
+  const fallenRows=(!isShips&&showFallen)?MEMORIAL_STATIC.map(sentry).join("")+offs.map((m,i)=>entry(m,m.rank+" · "+m.species,"lost",i)).join(""):"";
+  const lostTitle=isShips?("Future Vessels ("+FUTURE_SHIPS.length+")"):(showFallen?"Lost in Time ("+(offs.length+MEMORIAL_STATIC.length+MEMORIAL_LOST.length)+")":"Lost in Time — "+LOST_SHOWS.filter(s=>s[0]===lostShow)[0][1]+" ("+lostList.length+" of "+MEMORIAL_LOST.length+")");
   portraitTabForce=true;
-  h+='<div class="card" data-seccard="lost"><h3>'+lostTitle+'</h3><p class="dim">Gone, but their light travels on — whether fallen in the line of duty or lost to the currents of time. Tap a name for their service record — Temporal Mechanics may be able to pull the fallen or the displaced forward into 2379.</p>'+lostPills+fallenRows+lostList.map(o=>lostEntry(o.l,o.i,"lost")).join("")+'</div>';
+  h+='<div class="card" data-seccard="lost"><h3>'+lostTitle+'</h3><p class="dim">'+(isShips?"Starships adrift ahead of their time — the 32nd century, the 29th, the 26th, and one possible tomorrow. Temporal Mechanics can pull a hull backward into 2379. A recovered ship serves as a normal fleet vessel, future systems intact.":"Gone, but their light travels on — whether fallen in the line of duty or lost to the currents of time. Tap a name for their service record — Temporal Mechanics may be able to pull the fallen or the displaced forward into 2379.")+'</p>'+lostPills+(isShips?futureShipRows("lost"):fallenRows+lostList.map(o=>lostEntry(o.l,o.i,"lost")).join(""))+'</div>';
   portraitTabForce=false;
-  h+=futureShipCard();
+  if(!isShips)h+=futureShipCard();
   h+='<div class="card" data-seccard="ship"><h3>Lost Ships ('+ships.length+')</h3>'+(ships.map(m=>entry(m,m.sub,"ship")).join("")||'<p class="dim">Every hull accounted for.</p>')+'</div>';
   h+='<div class="card" data-seccard="stn"><h3>Lost Stations ('+sts.length+')</h3>'+(sts.map(m=>entry(m,m.sub,"stn")).join("")||'<p class="dim">Every station accounted for.</p>')+'</div>';
   h+='<div class="card" data-seccard="hist"><h3>Historical Ships &amp; Stations ('+(HISTORICAL_SHIPS.length+HISTORICAL_STATIONS.length)+')</h3><p class="dim">Gone before your command began — but not forgotten.</p><h4>Historical Ships</h4>'+HISTORICAL_SHIPS.map(v=>histEntry(v,"hist")).join("")+'<h4>Historical Stations</h4>'+HISTORICAL_STATIONS.map(v=>histEntry(v,"hist")).join("")+'</div>';
@@ -12412,7 +12415,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.22</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.23</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
