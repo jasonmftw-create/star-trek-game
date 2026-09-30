@@ -10311,14 +10311,18 @@ function stationPic(type,big){
   const src=(typeof STATION_PICS!=="undefined"&&STATION_PICS[type])?STATION_PICS[type]:"";
   return src?'<img class="'+(big?"shipPicBig":"shipPic")+'" src="'+src+'" alt="">':"";
 }
-/* Map station marker: the DS9 cutout is used only for Deep Space 9 and Empok Nor;
-   every other station uses its own station photo. */
+/* Map station markers: the old blue-square indicator stands alone for most stations;
+   only Deep Space 9 and Empok Nor get the DS9 image, and Earth Spacedock gets Jason's
+   supplied birdseye photo. */
 function stationMapIcon(st){
   const id=String(st&&st.id||"");
   if(id==="ds9"||id==="empoknor")return"ships/icons/ds9.png";
-  const key=stationArtKey(st);
-  const src=(typeof STATION_PICS!=="undefined"&&STATION_PICS[key])?STATION_PICS[key]:((typeof STATION_PICS!=="undefined")?STATION_PICS.starbase:"");
-  return src||"";
+  if(id==="spacedock")return"ships/stations/spacedock.jpg";
+  return"";
+}
+function stationMapTag(s,x,y){
+  const src=stationMapIcon(s);
+  return src?'<image href="'+src+'" x="'+(x-11)+'" y="'+(y-11)+'" width="22" height="22"/>':"";
 }
 const AWARDS=[
   {id:"smoh",name:"Starfleet Medal of Honor",pres:60,morale:20,blurb:"Starfleet's highest decoration — for conspicuous gallantry above and beyond the call of duty."},
@@ -11454,7 +11458,7 @@ function renderQuadrant(q){
     const rr=rng(hashStr("qstn"+s.id)),a=rr()*Math.PI*2,d=14+rr()*22;
     const x=(spc[0]+Math.cos(a)*d).toFixed(1),y=(spc[1]+Math.sin(a)*d*0.75).toFixed(1);
     const nm2=esc(s.name.length>18?s.name.slice(0,17)+"\u2026":s.name);
-    stnLayer+="<g onclick=\"stationModal('"+s.id+"')\" style=\"cursor:pointer\"><rect x=\""+(x-4.5)+"\" y=\""+(y-4.5)+"\" width=\"9\" height=\"9\" fill=\"none\" stroke=\"#4cc9f0\" stroke-width=\"2\"/><image href=\""+stationMapIcon(s)+"\" x=\""+(x-11)+"\" y=\""+(y-11)+"\" width=\"22\" height=\"22\"/>"
+    stnLayer+="<g onclick=\"stationModal('"+s.id+"')\" style=\"cursor:pointer\"><rect x=\""+(x-4.5)+"\" y=\""+(y-4.5)+"\" width=\"9\" height=\"9\" fill=\"none\" stroke=\"#4cc9f0\" stroke-width=\"2\"/>"+stationMapTag(s,x,y)+""
       +"<g class=\"mapLblG\" data-mx=\""+x+"\" data-my=\""+y+"\" data-dx=\"8\" data-dy=\"3\"><text x=\"0\" y=\"0\" class=\"mapShipLbl\">"+nm2+"</text></g>"
       +"<title>"+esc(s.name)+"</title></g>";
   });
@@ -11533,7 +11537,7 @@ const TERR=[
     const rr=rng(hashStr("stn"+s.id)),a=rr()*Math.PI*2,d=30+rr()*44;
     const x=(spc[0]+Math.cos(a)*d).toFixed(1),y=(spc[1]+Math.sin(a)*d*0.75).toFixed(1);
     const nm2=esc(s.name.length>18?s.name.slice(0,17)+"\u2026":s.name);
-    stnLayer+="<g onclick=\"stationModal('"+s.id+"')\" style=\"cursor:pointer\"><rect x=\""+(x-4.5)+"\" y=\""+(y-4.5)+"\" width=\"9\" height=\"9\" fill=\"none\" stroke=\"#4cc9f0\" stroke-width=\"2\"/><image href=\""+stationMapIcon(s)+"\" x=\""+(x-11)+"\" y=\""+(y-11)+"\" width=\"22\" height=\"22\"/>"
+    stnLayer+="<g onclick=\"stationModal('"+s.id+"')\" style=\"cursor:pointer\"><rect x=\""+(x-4.5)+"\" y=\""+(y-4.5)+"\" width=\"9\" height=\"9\" fill=\"none\" stroke=\"#4cc9f0\" stroke-width=\"2\"/>"+stationMapTag(s,x,y)+""
       +"<g class=\"mapLblG\" data-mx=\""+x+"\" data-my=\""+y+"\" data-dx=\"8\" data-dy=\"3\"><text x=\"0\" y=\"0\" class=\"mapShipLbl\">"+nm2+"</text></g>"
       +"<title>"+esc(s.name)+"</title></g>";
   });
@@ -14658,7 +14662,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.55</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.56</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
 </body>
