@@ -10842,7 +10842,7 @@ function stationModal(id){
     if(st.cadets)h+=bar("CLASS",st.cadets.total-st.cadets.daysLeft,st.cadets.total);
     h+='<div class="btnRow">'+(st.cadets
       ?'<button class="btn small ghost" disabled>Cadet class in training</button>'
-      :'<button class="btn small teal" onclick="uiEnrollCadets(\'"+st.id+"\')">Enroll cadet class (1,500 CR)</button>')+
+      :'<button class="btn small teal" onclick="uiEnrollCadets(\''+st.id+'\')">Enroll cadet class (1,500 CR)</button>')+
       '<button class="btn small peach" onclick="uiCreateCadet()">Create-A-Cadet (1,000 CR)</button></div>';
     if(st.cadets&&st.cadets.cruise){const _cc=ship(st.cadets.cruise.shipId);
       h+='<div class="kv"><span class="k">Training cruise</span><span class="v">'+esc(_cc?_cc.name:"?")+' — returns in '+st.cadets.cruise.daysLeft+'d</span></div>'+bar("CRUISE",7-st.cadets.cruise.daysLeft,7);}
@@ -11245,7 +11245,7 @@ function uiEnrollCadets(id){
   gainCR(-1500);
   st.cadets={daysLeft:40,total:40};
   log("crew","A new cadet class enrolled at Starfleet Academy (graduates in 40 days).");
-  stationModal(id);renderAll();
+  save();stationModal(id);renderAll();
 }
 function uiCadetCruise(id){ // v2.43: cadet class training cruise aboard the training vessel
   const st=station(id);if(!st||st.type!=="academy"||st.status!=="active")return;
@@ -13558,7 +13558,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.44</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.45</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
 </body>
