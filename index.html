@@ -129,6 +129,9 @@
 @keyframes splashBlink{0%,100%{opacity:.35;}50%{opacity:1;}}
 #splashSound{position:relative;margin-top:14px;background:#141006;border:1px solid #ffd76a;color:#ffd76a;border-radius:999px;padding:10px 22px;font-size:13px;letter-spacing:2px;cursor:pointer;}
 #splashSound[hidden]{display:none;}
+#swUpdateBanner{position:fixed;left:50%;transform:translateX(-50%);bottom:76px;z-index:210000;background:#101418;border:1px solid #ffd76a;color:#ffd76a;border-radius:999px;padding:10px 12px 10px 18px;font-size:13px;letter-spacing:1px;display:flex;gap:12px;align-items:center;box-shadow:0 4px 24px rgba(0,0,0,.6);white-space:nowrap;}
+#swUpdateBanner button{background:#ffd76a;border:0;color:#111;border-radius:999px;padding:8px 16px;font-weight:700;letter-spacing:1px;cursor:pointer;font-size:13px;}
+#swUpdateBanner .swuX{background:none;border:0;color:#8a97a5;font-size:16px;cursor:pointer;padding:4px 6px;}
 
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
@@ -6053,7 +6056,18 @@ function splashInit(){
   });
   splashShow();
 }
-function qSnapFlash(){
+var _swuShown=false;
+function showUpdateBanner(){
+  if(_swuShown)return;_swuShown=true;
+  try{
+    var b=document.createElement("div");b.id="swUpdateBanner";
+    b.innerHTML='<span>Update downloaded</span><button id="swuGo">Refresh</button><button class="swuX" id="swuX" aria-label="Dismiss">\u00d7</button>';
+    document.body.appendChild(b);
+    document.getElementById("swuGo").addEventListener("click",function(){location.reload();});
+    document.getElementById("swuX").addEventListener("click",function(){var x=document.getElementById("swUpdateBanner");if(x)x.style.display="none";});
+  }catch(e){}
+}
+function qSnapFlash() {
   try{
     var el=document.getElementById("qsnap");
     if(!el){el=document.createElement("div");el.id="qsnap";document.body.appendChild(el);}
@@ -13544,8 +13558,8 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.43</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.44</div>
 </aside>
-<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
 </body>
 </html>
