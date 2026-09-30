@@ -7691,7 +7691,8 @@ function renderCommand(){
     '<b>4.</b> Launch missions from <b>Missions</b>. Success depends on ship stats, captain skill, crew, and morale.<br>'+
     '<b>5.</b> Crew fall in love, marry, and have children. Children grow up, join the Academy, and become officers — a generational fleet.<br>'+
     '<b>6.</b> Earn prestige from missions and events to unlock the Prometheus-class and rise to Fleet Admiral.<br>'+
-    '<b>7.</b> Damaged ships repair automatically at free shipyards. Injured crew heal — faster with a Medical Station.</p></div>';
+    '<b>7.</b> Damaged ships repair automatically at free shipyards. Injured crew heal — faster with a Medical Station.</p>'+
+    '<div class="btnRow"><button class="btn small ghost" onclick="tutorialStart()">Replay the first-run tour</button></div></div>';
   let h=(G.qmode?renderQCard():"");
   if(cmdSub==="research")h+=cmdSubPills()+renderResearchCard();
   else if(cmdSub==="inst")h+=cmdSubPills()+cmdrInstitutions();
@@ -10966,8 +10967,36 @@ function showIntro(){
     '<p>Starfleet Command has handed <b>you</b> a sector, a handful of starships, and a simple mandate: <i>hold it together and make it thrive.</i> Build ships. Raise stations. Send crews into the dark — and bring them home.</p>'+
     '<p>Your people will serve, strive, fall in love, marry, raise families, grow old, and be remembered. Their stories are yours to command.</p>'+
     '<p class="dim">Note: Captain Benjamin Sisko has returned from the Celestial Temple and resumed active duty.</p>'+
-    '<div class="btnRow"><button class="btn big" onclick="closeModal()">Take command</button></div>');
+    '<div class="btnRow"><button class="btn big" onclick="introDone()">Take command</button></div>');
 }
+
+/* ---------- first-run tutorial (v2.38) ---------- */
+const TUT_STEPS=[
+  {t:"Welcome to the sector, Commander",
+   b:"Starfleet has handed you a sector, a handful of starships, and one mandate: <i>hold it together and make it thrive.</i><br><br>This is a living fleet — time passes, crews serve, fall in love, grow old. Here is the 30-second tour."},
+  {t:"Time is your main control",
+   b:"The <b>+1 / +7 / +30 DAY</b> buttons at the top advance time. Missions fly, ships build, cadets graduate, events strike — all while the clock runs.<br><br>Watch the flashing <b>INCOMING PRIORITY MESSAGE</b> bar: tap it to see exactly what needs you — idle ships, damaged hulls, officers requesting a meeting."},
+  {t:"Ships, stations, people",
+   b:"<b>SHIPS</b> and <b>STATIONS</b> below list your fleet — tap any of them for its popup: <b>Enter</b> to walk the decks, launch away missions and ship missions, dock for repairs.<br><br><b>MENU</b> holds Personnel, Missions, Build, Log, Memorial and more. Your officers are people: talk to them, meet them, award them."},
+  {t:"The full manual awaits",
+   b:"That is the tour. The <b>Captain's Manual</b> (COMMAND &rarr; Records) holds the complete 7-step guide whenever you want it.<br><br>Good hunting, Commander. <i>Qapla'!</i>"}
+];
+let TUT={i:0};
+function tutHtml(){
+  const s=TUT_STEPS[TUT.i],last=TUT.i===TUT_STEPS.length-1;
+  return '<div class="flavor center">FIRST-RUN TOUR &middot; '+(TUT.i+1)+' OF '+TUT_STEPS.length+'</div>'+
+    '<h2>'+s.t+'</h2><p style="font-size:16px;line-height:1.6;">'+s.b+'</p>'+
+    '<div class="btnRow">'+
+    (TUT.i>0?'<button class="btn ghost" onclick="tutGo('+(TUT.i-1)+')">&larr; Back</button>':'')+
+    (last?'<button class="btn big" onclick="tutorialDone()">Begin</button>'
+         :'<button class="btn" onclick="tutGo('+(TUT.i+1)+')">Next &rarr;</button>')+
+    '<button class="btn ghost" onclick="tutorialSkip()">Skip tour</button></div>';
+}
+function tutGo(i){TUT.i=i;openModal(tutHtml());modalBack=tutorialSkip;}
+function tutorialStart(){TUT.i=0;openModal(tutHtml());modalBack=tutorialSkip;}
+function tutorialDone(){if(G&&G.flags)G.flags.tutorialSeen=true;try{save();}catch(e){}closeModal();}
+function tutorialSkip(){tutorialDone();toast("Tour skipped — the Captain's Manual is under Command \u2192 Records.");}
+function introDone(){closeModal();if(G&&G.flags&&!G.flags.tutorialSeen)setTimeout(tutorialStart,250);}
 
 
 /* ================= INTERIOR ALIVE (v2.6) =================
@@ -13135,7 +13164,7 @@ window.onload=function(){
   const s=load();
   if(s){G=s;
     // forward-compat defaults
-    if(!G.flags)G.flags={};if(!G.ledger)G.ledger={missions:0,crits:0,shipsBuilt:0,stationsBuilt:0,marriages:0,births:0,lost:0,events:0};
+    if(!G.flags)G.flags={};if(!G.flags.tutorialSeen)G.flags.tutorialSeen=true;if(!G.ledger)G.ledger={missions:0,crits:0,shipsBuilt:0,stationsBuilt:0,marriages:0,births:0,lost:0,events:0};
     if(!G.memorial)G.memorial=[];if(!G.shipOps)G.shipOps=[];if(typeof G.dlIncome!=="number")G.dlIncome=0;if(typeof G.day!=="number")G.day=0;
     if(!G.commander)G.commander={name:"",gender:"m",species:"human",portrait:0};if(G.commander.portrait==null)G.commander.portrait=0;
     G.ships.forEach(s=>{if(!s.post)s.post="sol";});
@@ -13163,7 +13192,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.37</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.38</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
