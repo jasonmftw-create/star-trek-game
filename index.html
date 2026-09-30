@@ -325,9 +325,10 @@ body{touch-action:pan-y;}
 .shipMedia{height:88px;border:2px solid var(--orange);border-radius:10px;overflow:hidden;margin-bottom:8px;background:#05080f;}
 .shipMedia img{width:100%;height:100%;max-height:none;border:none;border-radius:0;margin-bottom:0;display:block;}
 .shipMedia .shipPicEAS{padding:6px 10px;}
-.shipCardNm{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.shipCardNm{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;}
+.shipCardNmTxt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .shipCardNm .reg{font-size:12px;color:var(--dim);font-weight:400;}
-.shipDetBtn{width:100%;margin-top:6px;background:var(--panel2);border:1px solid var(--line);color:var(--peach);border-radius:8px;padding:5px 0;font-size:13px;font-weight:700;cursor:pointer;}
+.shipDetBtn{flex:none;background:var(--panel2);border:1px solid var(--line);color:var(--peach);border-radius:8px;padding:3px 9px;font-size:12px;font-weight:700;cursor:pointer;}
 .shipDet{display:none;border-top:1px solid var(--line);margin-top:8px;padding-top:8px;}
 .shipDet.open{display:block;}
 .cmdrGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px;}
@@ -9155,8 +9156,8 @@ function renderShips(){
     const detOpen=shipCardOpen.has(s.id);
     rows+='<div class="card shipCard" onclick="shipModal(\''+s.id+'\')" style="cursor:pointer;">'+
       '<div class="shipMedia">'+shipPic(s.cls,true)+'</div>'+
-      '<div class="shipCardNm">'+(fl?'<span class="flagGlyph">'+CMDR_GLYPH+'</span>':"")+esc(shipNameG(s))+' <span class="reg">'+esc(s.registry)+'</span></div>'+
-      '<button class="shipDetBtn" id="shipDetBtn-'+s.id+'" onclick="toggleShipDet(\''+s.id+'\',event)">'+(detOpen?'Details ▴':'Details ▾')+'</button>'+
+      '<div class="shipCardNm"><span class="shipCardNmTxt">'+(fl?'<span class="flagGlyph">'+CMDR_GLYPH+'</span>':"")+esc(shipNameG(s))+' <span class="reg">'+esc(s.registry)+'</span></span>'+
+      '<button class="shipDetBtn" id="shipDetBtn-'+s.id+'" onclick="toggleShipDet(\''+s.id+'\',event)">'+(detOpen?'Details ▴':'Details ▾')+'</button></div>'+
       '<div class="shipDet'+(detOpen?' open':'')+'" id="shipDet-'+s.id+'" onclick="event.stopPropagation()">'+
       (badges?'<div class="warnRow">'+badges+'</div>':"")+
       '<div class="sub2">'+c.name+'-class · '+shipStatusLabel(s)+' · '+shipPostName(s)+' · Crew '+crew.length+'/'+c.slots+'</div>'+
@@ -9185,8 +9186,8 @@ function museumCard(s){
   const detOpen=shipCardOpen.has(s.id);
   return '<div class="card shipCard"><div onclick="shipModal(\''+s.id+'\')" style="cursor:pointer;">'+
     '<div class="shipMedia">'+shipArtFor(s,true)+'</div>'+
-    '<div class="shipCardNm">'+esc(shipNameG(s))+' <span class="reg">'+esc(s.registry)+'</span></div></div>'+
-    '<button class="shipDetBtn" id="shipDetBtn-'+s.id+'" onclick="toggleShipDet(\''+s.id+'\',event)">'+(detOpen?'Details ▴':'Details ▾')+'</button>'+
+    '<div class="shipCardNm"><span class="shipCardNmTxt">'+esc(shipNameG(s))+' <span class="reg">'+esc(s.registry)+'</span></span>'+
+    '<button class="shipDetBtn" id="shipDetBtn-'+s.id+'" onclick="toggleShipDet(\''+s.id+'\',event)">'+(detOpen?'Details ▴':'Details ▾')+'</button></div></div>'+
     '<div class="shipDet'+(detOpen?' open':'')+'" id="shipDet-'+s.id+'" onclick="event.stopPropagation()">'+
     '<div class="sub2">'+c.name+'-class · <span style="color:var(--purple);font-weight:bold;">FLEET MUSEUM</span></div>'+
     '<div class="sub2 dim">'+svcLine+'</div>'+
@@ -14710,7 +14711,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.63</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.64</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
