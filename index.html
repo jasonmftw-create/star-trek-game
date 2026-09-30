@@ -928,7 +928,8 @@ const STATION_DEFS={
 const DOCK_DEFS={
   starbase:{crew:0.08,heal:1,morale:1,rep:0,blurb:"Full starbase services: crew berths refill daily, the wounded mend, and spirits lift."},
   shipyard:{crew:0,heal:0,morale:0,rep:8,blurb:"Drydock work crews repair 8% hull damage per day around the clock."},
-  medical:{crew:0,heal:3,morale:2,rep:0,blurb:"Hospital care: the wounded mend quickly and morale climbs."}
+  medical:{crew:0,heal:3,morale:2,rep:0,blurb:"Hospital care: the wounded mend quickly and morale climbs."},
+  academy:{crew:0.02,heal:0,morale:1,rep:0,blurb:"Academy berth: cadets run daily drills aboard, the crew rests, and morale lifts. Dock here to designate her as the Academy training vessel."}
 };
 /* ================= CONFIG: MISSION DECK ================= */
 /* type, difficulty 20-95, duration days, rewards. shipStat/capSkill/dept drive success. */
@@ -7646,9 +7647,9 @@ function renderShips(){
   list.forEach(s=>{
     const isMus=s.status==="museum";
     if(isMus){mus+=museumCard(s);return;}
-    const c=shipClass(s),crew=crewOfShip(s.id),warns=shipWarnings(s),om=s.status==="mission";const fl=flagshipId()===s.id;
+    const c=shipClass(s),crew=crewOfShip(s.id),warns=shipWarnings(s),om=s.status==="mission";const fl=flagshipId()===s.id;const tv=trainingShipId()===s.id;
     rows+='<div class="row'+(om?' omRow':'')+'" onclick="shipModal(\''+s.id+'\')" style="cursor:pointer;">'+shipPic(s.cls)+
-      '<div class="grow"><div class="nm">'+(fl?'<span class="flagGlyph">'+CMDR_GLYPH+'</span>':"")+esc(shipNameG(s))+(fl?' <span class="badge" style="background:var(--gold);color:#0b0b12;font-weight:bold;">FLAGSHIP</span>':"")+' <span class="dim">'+esc(s.registry)+'</span>'+(om?' <span class="badge" style="background:var(--violet);color:#0b0b12;font-weight:bold;">ON MISSION</span>':(s.transit?' <span class="badge" style="background:var(--teal);color:#0b0b12;font-weight:bold;">IN TRANSIT</span>':''))+'</div>'+
+      '<div class="grow"><div class="nm">'+(fl?'<span class="flagGlyph">'+CMDR_GLYPH+'</span>':"")+esc(shipNameG(s))+(fl?' <span class="badge" style="background:var(--gold);color:#0b0b12;font-weight:bold;">FLAGSHIP</span>':"")+(tv?' <span class="badge" style="background:var(--teal);color:#0b0b12;font-weight:bold;">TRAINING VESSEL</span>':"")+' <span class="dim">'+esc(s.registry)+'</span>'+(om?' <span class="badge" style="background:var(--violet);color:#0b0b12;font-weight:bold;">ON MISSION</span>':(s.transit?' <span class="badge" style="background:var(--teal);color:#0b0b12;font-weight:bold;">IN TRANSIT</span>':''))+'</div>'+
       '<div class="sub2">'+c.name+'-class · '+shipStatusLabel(s)+' · '+shipPostName(s)+' · Crew '+crew.length+'/'+c.slots+'</div>'+
       (warns.length?'<div class="warnRow">'+warns.map(w=>'<span class="badge warn"'+(WARN_HINTS[w.split(" (")[0]]?' data-hint="'+esc(WARN_HINTS[w.split(" (")[0]])+'"':"")+'>'+esc(w)+'</span>').join("")+'</div>':"")+
       (s.damage>0?'<div class="prog"><i style="width:'+(100-s.damage)+'%;background:var(--red);"></i></div>':"")+
@@ -9670,6 +9671,10 @@ function setShipDock(id,v){
     s.dock=st.id;
     log("command",s.name+" docked at "+st.name+". "+DOCK_DEFS[st.type].blurb);
   }
+  if(G.trainingShip===id&&!(s.dock&&station(s.dock)&&station(s.dock).type==="academy")){
+    G.trainingShip=null;
+    log("command",s.name+" is relieved as the Academy training vessel.");
+  }
   save();shipModal(id);render();
 }
 function setShipPost(id,post){
@@ -10249,10 +10254,28 @@ function destroyStation(st,cause,soulsOv){
 /* Flagship: one designated ship, marked with a gold delta glyph. */
 function flagshipId(){const s=G.flagship&&ship(G.flagship);if(s&&s.status!=="museum")return s.id;G.flagship=null;return null;}
 function uiSetFlagship(id){G.flagship=(flagshipId()===id)?null:id;save();shipModal(id);}
+/* Training vessel (v2.35): one ship docked at Starfleet Academy designated
+   as the cadet training vessel. Designation requires the berth; undocking
+   (or any dock change away from the Academy) relieves her automatically. */
+function trainingShipId(){const s=G.trainingShip&&ship(G.trainingShip);if(s&&s.dock){const st=station(s.dock);if(st&&st.type==="academy"&&(s.status==="active"||s.status==="damaged"))return s.id;}G.trainingShip=null;return null;}
+function uiSetTrainingShip(id){
+  const s=ship(id);if(!s)return;
+  if(trainingShipId()===id){
+    G.trainingShip=null;
+    log("command",s.name+" is relieved as the Academy training vessel.");
+  }else{
+    const st=s.dock?station(s.dock):null;
+    if(!st||st.type!=="academy"){toast("She must be docked at Starfleet Academy first.");return;}
+    G.trainingShip=id;
+    log("command",s.name+" is designated the Starfleet Academy training vessel — cadets will drill aboard her.");
+    toast(s.name+" is now the Academy training vessel.");
+  }
+  save();shipModal(id);render();
+}
 function shipModal(id){
-  const s=ship(id);if(!s)return;const c=shipClass(s),crew=crewOfShip(s.id);const isFl=flagshipId()===s.id;
+  const s=ship(id);if(!s)return;const c=shipClass(s),crew=crewOfShip(s.id);const isFl=flagshipId()===s.id;const isTv=trainingShipId()===s.id;
   const _eff=effShipCO(s),co=_eff.o,xo=_eff.acting?null:shipXO(s.id,co);
-  let h='<h2>'+(isFl?'<span class="flagGlyph">'+CMDR_GLYPH+'</span>':"")+esc(shipNameG(s))+(s.status!=="museum"?'<span class="flagStar'+(isFl?" on":"")+'" onclick="uiSetFlagship(\''+s.id+'\')" title="'+(isFl?"Stand down flagship":"Set as flagship")+'">'+(isFl?"\u2605":"\u2606")+'</span>':"")+(isFl?' <span class="badge" style="background:var(--gold);color:#0b0b12;font-weight:bold;">FLAGSHIP</span>':"")+'</h2><div class="flavor">'+esc(s.registry)+' · '+c.name+'-class · '+shipStatusLabel(s)+'</div>'+shipArtFor(s,true);
+  let h='<h2>'+(isFl?'<span class="flagGlyph">'+CMDR_GLYPH+'</span>':"")+esc(shipNameG(s))+(s.status!=="museum"?'<span class="flagStar'+(isFl?" on":"")+'" onclick="uiSetFlagship(\''+s.id+'\')" title="'+(isFl?"Stand down flagship":"Set as flagship")+'">'+(isFl?"\u2605":"\u2606")+'</span>':"")+(isFl?' <span class="badge" style="background:var(--gold);color:#0b0b12;font-weight:bold;">FLAGSHIP</span>':"")+(isTv?' <span class="badge" style="background:var(--teal);color:#0b0b12;font-weight:bold;">TRAINING VESSEL</span>':"")+'</h2><div class="flavor">'+esc(s.registry)+' · '+c.name+'-class · '+shipStatusLabel(s)+'</div>'+shipArtFor(s,true);
   const _fa=(typeof flagAboardAdmiral==="function")?flagAboardAdmiral(s.id):null;
   if(_fa)h+='<div class="kv"><span class="k">Flag officer</span><span class="v">'+esc(fullName(_fa))+' embarked \u00b7 +15% battle power</span></div>';
   if(s.future)h+='<div class="kv"><span class="k">Future systems</span><span class="v">\u25F7 '+(s.futureEra||"far future")+' tech</span></div><div class="sub2 dim">Programmable-matter hull (drydock repairs 2\u00D7 faster) \u00B7 temporal shielding (+30% battle power) \u00B7 advanced propulsion.</div>';
@@ -10279,8 +10302,13 @@ function shipModal(id){
     if(canDock(s)){
       h+='<div class="kv"><span class="k">Docked at</span><span class="v">'+sheetPick('Dock at station',dockOptions(s.dock||""),(function(_sid){return function(v){setShipDock(_sid,v);};})(s.id))+'</span></div>';
       if(s.dock){const _dst=station(s.dock);
-        if(_dst&&DOCK_DEFS[_dst.type])h+='<p class="dim">Docked at '+esc(_dst.name)+' — '+esc(DOCK_DEFS[_dst.type].blurb)+' Undock to resume operations.</p>';}
-      else h+='<p class="dim">Starbase, shipyard, and medical stations offer docking. Research arrays, embassies, academies, Starfleet Command, and gates do not.</p>';
+        if(_dst&&DOCK_DEFS[_dst.type])h+='<p class="dim">Docked at '+esc(_dst.name)+' — '+esc(DOCK_DEFS[_dst.type].blurb)+' Undock to resume operations.</p>';
+        if(_dst&&_dst.type==="academy"){
+          const _tv=trainingShipId()===s.id;
+          h+='<div class="btnRow"><button class="btn small teal" onclick="uiSetTrainingShip(\''+s.id+'\')">'+(_tv?"Relieve as training vessel":"Designate as Academy training vessel")+'</button></div>';
+          h+='<p class="dim">'+(_tv?"She is the Academy training vessel — cadet classes graduate an extra ensign while she serves.":"Designate her as the Academy training vessel: cadet classes graduate an extra ensign while she serves.")+'</p>';
+        }}
+      else h+='<p class="dim">Starbase, shipyard, medical stations, and the Academy offer docking. Research arrays, embassies, Starfleet Command, and gates do not.</p>';
     }
     if(!s.dock&&HOSTILE_ZONES[s.post||"sol"])h+='<p class="dim" style="color:var(--red)">Hostile territory ('+esc(HOSTILE_ZONES[s.post||"sol"].terr)+') — random RED ALERT battles can strike a ship posted here.</p>';
   }
@@ -10363,6 +10391,8 @@ function stationModal(id){
   });
     if(st.type==="academy"&&st.status==="active"){
     h+='<div class="kv"><span class="k">Cadet training</span><span class="v">'+(st.cadets?"Class graduates in "+st.cadets.daysLeft+"d":"No class enrolled")+'</span></div>';
+    const _tvs=trainingShipId();
+    if(_tvs&&ship(_tvs)&&ship(_tvs).dock===st.id)h+='<div class="kv"><span class="k">Training vessel</span><span class="v">'+esc(ship(_tvs).name)+' — +1 graduate per class</span></div>';
     if(st.cadets)h+=bar("CLASS",st.cadets.total-st.cadets.daysLeft,st.cadets.total);
     h+='<div class="btnRow">'+(st.cadets
       ?'<button class="btn small ghost" disabled>Cadet class in training</button>'
@@ -10568,7 +10598,7 @@ function cadetName(){
   return [name,pool[1],g];
 }
 function graduateCadets(st){
-  const n=ri(2,3),names=[];
+  const tv=trainingShipId(),n=ri(2,3)+(tv?1:0),names=[];
   for(let i=0;i<n;i++){
     const cn=cadetName();
     const grad=MK([cn[0],cn[1],cn[2],ri(21,26),1,
@@ -10578,7 +10608,7 @@ function graduateCadets(st){
     G.officers.push(grad);
     names.push(cn[0]);
   }
-  log("crew","Cadet class graduated from Starfleet Academy: "+names.join(", ")+" report to the personnel pool as ensigns.");
+  log("crew","Cadet class graduated from Starfleet Academy: "+names.join(", ")+" report to the personnel pool as ensigns."+(tv?" Hands-on drills aboard "+ship(tv).name+" sharpened the class.":""));
   toast("Cadet class graduated: "+n+" new ensigns in the personnel pool.");
 }
 /* ---------- Create-A-Cadet ---------- */
@@ -10983,6 +11013,50 @@ const ALIVE_ST_ARCS=[
    "The dock cat oversaw its hundredth on-time departure today. The crew threw it a party. It slept through the whole thing."],
   done:"The dock cat is officially crew. Morale on the docking ring has never been higher."}
 ];
+/* ---- bespoke micro-stories: Starfleet Command HQ & Starfleet Academy (v2.35) ----
+   Generic station arcs are room-gated and never surface in the bespoke
+   interiors, so HQ and the Academy get their own pools, picked by st.type
+   in aliveArcPool. Same shape as the generic pools: id, room (must exist
+   in the bespoke room set), name, fx (+2 morale on completion), 3 stages. */
+const ALIVE_SF_ARCS=[
+ {id:"promoboard",room:"boardroom",name:"The Promotion Board",fx:true,
+  stages:["The promotion board convenes tomorrow — three captaincies, one fourth pip, and a dozen hopefuls. The boardroom has been booked, swept, and booked again.",
+   "The board is deadlocked. Two finalists, one pip. Half the building has an opinion and the other half has a betting pool.",
+   "Decision day. The list is sealed in the C-in-C's office, and the whole of HQ is pretending not to watch the door."],
+  done:"The promotion list is posted. One new rear admiral, twelve disappointed captains, and a betting pool payout that HR will pretend not to notice."},
+ {id:"wager",room:"mess",name:"The Flag Officers' Wager",fx:true,
+  stages:["Over lunch in the Flag Officers' Mess, two admirals have made a wager on next week's fleet exercise. The stakes: the loser's parking spot.",
+   "The wager has escalated. Four admirals are in now, the stakes include a vintage bottle of Saurian brandy, and the exercise planners are under enormous, cheerful pressure.",
+   "Exercise day. The mess is empty — everyone who matters is watching the master board, and the brandy is already on the table."],
+  done:"The fleet exercise ends in a photo finish. The brandy changes hands, the parking spot changes admirals, and the mess will dine out on this for a year."},
+ {id:"retire",room:"cinc",name:"The Retirement Speech",fx:false,
+  stages:["Word around HQ: a legendary admiral is retiring next month, and the C-in-C's office wants a sendoff worthy of forty years. A committee has been formed. Nobody envies the committee.",
+   "The committee has collected forty years of stories and is now fighting over which ones are tellable. The admiral's old XO has threatened to tell the untellable ones anyway.",
+   "Rehearsal in the C-in-C's office. The speech is perfect, the honor guard is sharp, and the admiral keeps insisting they don't want a fuss. Nobody believes them."],
+  done:"The retirement ceremony was flawless — and the admiral cried, which made everyone else cry. Forty years, well served."}
+];
+const ALIVE_AC_ARCS=[
+ {id:"prankwar",room:"quarters",name:"The Cadet Prank War",fx:true,
+  stages:["A prank war has broken out between two cadet companies in the dormitories. So far: whoopee cushions calibrated to Vulcan hearing, and a lieutenant's door painted shut.",
+   "The prank war escalates. Someone reprogrammed the mess hall replicators to serve everything in the shape of a starship. The instructors are pretending to be furious.",
+   "Final offensive: the entire fourth-year class woke to find their dorm corridor redecorated as the bridge of the Enterprise. Even the commandant was seen smiling."],
+  done:"The prank war ends in a declared draw and a legendary party. Boothby's roses survived. Barely."},
+ {id:"kobayashi",room:"sims",name:"The Kobayashi Question",fx:false,
+  stages:["A third-year cadet has beaten the Kobayashi Maru scenario three times running. The instructors are split between awe and suspicion.",
+   "The honor board is reviewing the simulator logs frame by frame. No cheating found — just impossible reflexes and a refusal to accept the premise.",
+   "The commandant has ordered a special session: the cadet faces a scenario nobody has ever seen, written this morning, designed to be unwinnable."],
+  done:"The cadet lost the unwinnable scenario with such grace that the instructors applauded. Starfleet's future is in loud, stubborn hands."},
+ {id:"exchange",room:"grounds",name:"The Exchange Cadet",fx:true,
+  stages:["A Klingon exchange cadet has arrived at the Academy and is glaring at the Recreation Terrace like it personally offended their honor.",
+   "The exchange cadet has been spotted on the terrace at dawn, watching the fog over the Bay. A human roommate has started leaving coffee. It is being drunk.",
+   "Yesterday the exchange cadet laughed — out loud, in the mess hall — at a fourth-year's impression of a drill instructor. The whole table went silent, then cheered."],
+  done:"The exchange cadet stood on the terrace at graduation rehearsal and called the Academy 'a second House.' Not a dry eye on the grounds."}
+];
+function aliveArcPool(ent,isSt){
+  if(isSt&&ent&&ent.type==="sfcommand")return ALIVE_SF_ARCS;
+  if(isSt&&ent&&ent.type==="academy")return ALIVE_AC_ARCS;
+  return isSt?ALIVE_ST_ARCS:ALIVE_SHIP_ARCS;
+}
 function aliveArcTick(ent,isSt){
   const now=G.day;
   let a=ent.aliveArc;
@@ -10990,7 +11064,7 @@ function aliveArcTick(ent,isSt){
     if(now>a.day){
       a.stage++;a.day=now;
       if(a.stage>2){
-        const tpl=(isSt?ALIVE_ST_ARCS:ALIVE_SHIP_ARCS).find(t=>t.id===a.tpl);
+        const tpl=aliveArcPool(ent,isSt).find(t=>t.id===a.tpl);
         if(tpl){
           log("command",(ent.name||"The crew")+" — "+tpl.done);
           if(tpl.fx)(isSt?crewOfStation(ent.id):crewOfShip(ent.id)).forEach(o=>{o.morale=Math.min(100,(o.morale||70)+2);});
@@ -10999,14 +11073,14 @@ function aliveArcTick(ent,isSt){
       }
     }
   }else if(now>=(ent.aliveArcCd||0)&&Math.random()<0.45){
-    const pool=isSt?ALIVE_ST_ARCS:ALIVE_SHIP_ARCS;
+    const pool=aliveArcPool(ent,isSt);
     const t=pool[Math.floor(Math.random()*pool.length)];
     ent.aliveArc={tpl:t.id,stage:0,day:now};
   }
 }
 function aliveArcVignette(ent,rid,isSt){
   const a=ent.aliveArc;if(!a)return "";
-  const tpl=(isSt?ALIVE_ST_ARCS:ALIVE_SHIP_ARCS).find(t=>t.id===a.tpl);
+  const tpl=aliveArcPool(ent,isSt).find(t=>t.id===a.tpl);
   if(!tpl||tpl.room!==rid)return "";
   return '<div class="sceneCard" style="border:1px solid var(--teal);margin-top:8px;">'+
     '<div class="deckSec" style="color:var(--teal)">'+esc(tpl.name)+' · part '+(Math.min(a.stage,2)+1)+' of 3</div>'+
@@ -12980,7 +13054,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.34</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.35</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
