@@ -3675,6 +3675,18 @@ function economyTick(){
   G.stations.forEach(st=>{
     if(st.status!=="active")return;
     if(st.type==="academy"&&st.cadets){
+      const _cr=st.cadets.cruise; // v2.43 cadet cruise
+      if(_cr){
+        const _cs=ship(_cr.shipId);
+        if(!_cs||trainingShipId()!==_cs.id){
+          st.cadets.cruise=null;if(_cs)_cs.cruise=null;
+          log("crew","The cadet training cruise was cut short — "+(_cs?_cs.name:"the training vessel")+" is no longer serving as the Academy training vessel. No cruise credit earned.");
+        }else{
+          _cr.daysLeft--;_cs.cruise.daysLeft--;
+          if(_cr.daysLeft<=0){st.cadets.cruise=null;st.cadets.cruised=true;_cs.cruise=null;
+            log("crew","Training cruise complete: the cadet class returns to Starfleet Academy aboard "+_cs.name+" — seven days of hands-on drills. They will graduate sharper.");}
+        }
+      }
       st.cadets.daysLeft--;
       if(st.cadets.daysLeft<=0){graduateCadets(st);st.cadets=null;}
     }
@@ -4099,14 +4111,45 @@ function renderCodex(){
       '<div class="sub2">'+esc(cx.trait)+', '+esc(cx.disp)+' · '+cx.encounters+' encounter'+(cx.encounters===1?"":"s")+' · last contact stardate '+sdStr(cx.lastSd)+'</div></div>'+
       '<span class="badge" style="background:'+lb[1]+';color:#fff;font-weight:700">'+lb[0]+'</span></div>'+
       '<div class="statBar" style="margin-top:6px"><i style="width:'+pct+'%;background:'+lb[1]+'"></i></div>'+
-      '<div class="sub2" style="margin-top:4px">Standing '+cx.standing+' · last outcome: '+esc(cx.lastOutcome||"—")+'</div></div>';
+      '<div class="sub2" style="margin-top:4px">Standing '+cx.standing+' · last outcome: '+esc(cx.lastOutcome||"—")+'</div>'+summitCardHTML(cx)+'</div>';
   });
   return h;
+}
+function summitCardHTML(cx){ // v2.43 diplomatic summits
+  if(cx.summit)return '<div class="sub2" style="margin-top:4px;color:var(--teal)">Summit in progress aboard '+esc(cx.summit.host)+' — '+cx.summit.daysLeft+'d left</div>';
+  if(cx.standing<-25)return '<div class="sub2 dim" style="margin-top:4px">They refuse summits while '+codexStandingLabel(cx.standing)[0]+'.</div>';
+  return '<div class="btnRow" style="margin-top:6px"><button class="btn small teal" onclick="uiSummit(\''+cx.name+'\')">Host summit (3,000 CR)</button>'+(cx.summitCd>0?'<span class="dim" style="align-self:center">'+cx.summitCd+'d until they will meet again</span>':"")+'</div>';
+}
+function uiSummit(name){
+  G.codex=G.codex||{};const cx=G.codex[name];if(!cx)return;
+  if(cx.summit){toast("A summit with the "+name+" is already underway.");return;}
+  if((cx.summitCd||0)>0){toast("Too soon — the "+name+" need "+cx.summitCd+"d before another summit.");return;}
+  if(cx.standing<-25){toast("The "+name+" refuse to meet — relations are "+codexStandingLabel(cx.standing)[0].toLowerCase()+".");return;}
+  const host=G.stations.find(function(s){return s.status==="active"&&(s.type==="starbase"||s.type==="sfcommand");});
+  if(!host){toast("Summits need an active starbase or Starfleet Command to host.");return;}
+  if(G.credits<3000){toast("Not enough credits (3,000 CR needed).");return;}
+  gainCR(-3000);
+  cx.summit={daysLeft:5,host:host.name};cx.summitCd=30;
+  log("event","Diplomatic summit convened with the "+name+" aboard "+host.name+" — five days of talks. (−3,000 CR)");
+  save();render();toast("Summit with the "+name+" begins.");
+}
+function summitResolve(cx){
+  const breakthrough=Math.random()<0.3;
+  const dSt=breakthrough?25:12,pr=breakthrough?15:8;
+  cx.standing=clamp(cx.standing+dSt,-100,100);
+  cx.lastOutcome="summit";cx.lastSd=G.stardate;cx.encounters++;
+  gainPres(pr);
+  const lb=codexStandingLabel(cx.standing);
+  log("event",(breakthrough?"Breakthrough at the summit! The "+cx.name+" sign a new treaty.":"The summit with the "+cx.name+" concludes cordially — relations improve.")+" ("+lb[0]+", +"+pr+" prestige)");
+  toast(breakthrough?("Treaty signed with the "+cx.name+"!"):("Summit concludes — "+cx.name+" relations improve."));
 }
 function codexTick(){
   if(FC)return;
   G.codex=G.codex||{};
   const keys=Object.keys(G.codex);
+  keys.forEach(function(k){const cx=G.codex[k]; // v2.43 summits tick daily
+    if(cx.summitCd>0)cx.summitCd--;
+    if(cx.summit){cx.summit.daysLeft--;if(cx.summit.daysLeft<=0){cx.summit=null;summitResolve(cx);}}});
   if(!keys.length||Math.random()>0.02)return;
   const cx=G.codex[pick(keys)];
   if(cx.standing>=25)codexFriendly(cx);
@@ -7567,6 +7610,7 @@ function render(){renderHUD();
   applyQTheme();
   window.scrollTo(0,_sy);
 }
+function renderAll(){render();} // v2.43: alias — two older call sites referenced this missing name
 function renderCmdSubBar(){
   const bar=$("cmdSubBar");if(!bar)return;
   bar.innerHTML="";bar.style.display="none";
@@ -7937,7 +7981,7 @@ function renderCommand(){
     '<b>4.</b> Fly ship missions from <b>Missions</b>. Success depends on ship stats, captain skill, crew, and morale.<br>'+
     '<b>5.</b> Crew fall in love, marry, and have children. Children grow up, join the Academy, and become officers — a generational fleet.<br>'+
     '<b>6.</b> Earn prestige from missions and events to unlock the Prometheus-class and rise to Fleet Admiral.<br>'+
-    '<b>7.</b> Damaged ships repair automatically at free shipyards. Injured crew heal — faster with a Medical Station.<br>'+    '<b>8.</b> Crews tire on long deployments — grant <b>shore leave</b> at a starbase. After a battle victory you may name a <b>nemesis</b>... if you dare. Every first contact is recorded in the <b>Species Codex</b>.<br><b>9.</b> Retire a ship to the Museum and <b>build a legacy ship</b> to carry on her name — when the successor commissions, one tap transfers her whole crew aboard.</p>'+
+    '<b>7.</b> Damaged ships repair automatically at free shipyards. Injured crew heal — faster with a Medical Station.<br>'+    '<b>8.</b> Crews tire on long deployments — grant <b>shore leave</b> at a starbase. After a battle victory you may name a <b>nemesis</b>... if you dare. Every first contact is recorded in the <b>Species Codex</b>.<br><b>9.</b> Retire a ship to the Museum and <b>build a legacy ship</b> to carry on her name — when the successor commissions, one tap transfers her whole crew aboard.<br><b>10.</b> Send a cadet class on a <b>training cruise</b> aboard the Academy training vessel — they graduate sharper. Host <b>summits</b> with Codex species at a starbase to turn rivals into friends.</p>'+
     '<div class="btnRow"><button class="btn small ghost" onclick="tutorialStart()">Replay the first-run tour</button></div></div>';
   let h=(G.qmode?renderQCard():"");
   if(cmdSub==="research")h+=cmdSubPills()+renderResearchCard();
@@ -7951,6 +7995,7 @@ function renderCommand(){
 function shipStatusLabel(s){
   if(s.abandoned)return "Derelict — abandoned";
   if(s.mothballed)return "Mothballed";
+  if(s.cruise)return "On cadet cruise ("+s.cruise.daysLeft+"d)"; // v2.43
   if(s.transit)return (s.transit.via==="gate"?"Slipstream transit":"Wormhole transit")+" \u2014 "+s.transit.daysLeft+"d to "+(POST_LABELS[s.transit.dest]||"?");
   if(s.status==="refit")return "Refit — "+s.daysLeft+"d";
   if(s.status==="mission")return "On Mission";
@@ -10036,6 +10081,7 @@ function dockOptions(s){
 function canDock(s){return s&&(s.status==="active"||s.status==="damaged")&&!s.transit&&!s.mothballed;}
 function setShipDock(id,v){
   const s=ship(id);if(!s)return;
+  if(!v&&s.cruise){toast("She is on a training cruise — "+s.cruise.daysLeft+"d left.");return;} // v2.43
   if(!v){
     if(s.dock){const st=station(s.dock);log("command",s.name+" undocked"+(st?" from "+st.name:"")+".");s.dock=null;}
   }else{
@@ -10784,6 +10830,11 @@ function stationModal(id){
       ?'<button class="btn small ghost" disabled>Cadet class in training</button>'
       :'<button class="btn small teal" onclick="uiEnrollCadets(\'"+st.id+"\')">Enroll cadet class (1,500 CR)</button>')+
       '<button class="btn small peach" onclick="uiCreateCadet()">Create-A-Cadet (1,000 CR)</button></div>';
+    if(st.cadets&&st.cadets.cruise){const _cc=ship(st.cadets.cruise.shipId);
+      h+='<div class="kv"><span class="k">Training cruise</span><span class="v">'+esc(_cc?_cc.name:"?")+' — returns in '+st.cadets.cruise.daysLeft+'d</span></div>'+bar("CRUISE",7-st.cadets.cruise.daysLeft,7);}
+    else if(st.cadets&&!st.cadets.cruised&&st.cadets.daysLeft>=10&&trainingShipId())
+      h+='<div class="btnRow"><button class="btn small teal" onclick="uiCadetCruise(\''+st.id+'\')">Training cruise (7 days, 1,000 CR)</button></div><p class="dim">Send the class out aboard the training vessel — they graduate sharper.</p>';
+    else if(st.cadets&&st.cadets.cruised)h+='<p class="dim">This class completed its training cruise — they will graduate sharper.</p>';
   }
   if(st.type==="sfcommand"&&st.status==="active"){
     h+='<div class="kv"><span class="k">Requisition</span><span class="v">'+(st.reqCd>0?"Ready in "+st.reqCd+"d":"Available now")+'</span></div>';
@@ -10984,17 +11035,19 @@ function cadetName(){
   return [name,pool[1],g];
 }
 function graduateCadets(st){
-  const tv=trainingShipId(),n=ri(2,3)+(tv?1:0),names=[];
+  const tv=trainingShipId(),cruised=!!(st.cadets&&st.cadets.cruised),n=ri(2,3)+(tv?1:0),names=[]; // v2.43 cruise bonus
   for(let i=0;i<n;i++){
     const cn=cadetName();
+    const _lo=cruised?45:40,_hi=cruised?75:70;
     const grad=MK([cn[0],cn[1],cn[2],ri(21,26),1,
       pick(["Command","Engineering","Medical","Operations","Science","Security"]),
-      [ri(40,70),ri(40,70),ri(40,70),ri(40,70),ri(40,70),ri(40,70)],[],"pool"]);
+      [ri(_lo,_hi),ri(_lo,_hi),ri(_lo,_hi),ri(_lo,_hi),ri(_lo,_hi),ri(_lo,_hi)],[],"pool"]);
     grad.accolades.push({n:"Graduated Starfleet Academy",d:String(sdYear(G.stardate))});
+    if(cruised)grad.accolades.push({n:"Training cruise veteran",d:String(sdYear(G.stardate))});
     G.officers.push(grad);
     names.push(cn[0]);
   }
-  log("crew","Cadet class graduated from Starfleet Academy: "+names.join(", ")+" report to the personnel pool as ensigns."+(tv?" Hands-on drills aboard "+ship(tv).name+" sharpened the class.":""));
+  log("crew","Cadet class graduated from Starfleet Academy: "+names.join(", ")+" report to the personnel pool as ensigns."+(tv?" Hands-on drills aboard "+ship(tv).name+" sharpened the class.":"")+(cruised?" The training cruise sharpened them further.":""));
   toast("Cadet class graduated: "+n+" new ensigns in the personnel pool.");
 }
 /* ---------- Create-A-Cadet ---------- */
@@ -11179,6 +11232,23 @@ function uiEnrollCadets(id){
   st.cadets={daysLeft:40,total:40};
   log("crew","A new cadet class enrolled at Starfleet Academy (graduates in 40 days).");
   stationModal(id);renderAll();
+}
+function uiCadetCruise(id){ // v2.43: cadet class training cruise aboard the training vessel
+  const st=station(id);if(!st||st.type!=="academy"||st.status!=="active")return;
+  if(!st.cadets){toast("No cadet class in training.");return;}
+  if(st.cadets.cruise){toast("The class is already on a training cruise.");return;}
+  if(st.cadets.cruised){toast("This class has already completed its training cruise.");return;}
+  if(st.cadets.daysLeft<10){toast("Too late — the class graduates in "+st.cadets.daysLeft+"d.");return;}
+  const tv=trainingShipId();
+  if(!tv){toast("Designate an Academy training vessel first.");return;}
+  const s=ship(tv);
+  if(s.cruise){toast(s.name+" is already on a training cruise.");return;}
+  if(G.credits<1000){toast("Not enough credits (1,000 CR needed).");return;}
+  gainCR(-1000);
+  st.cadets.cruise={daysLeft:7,shipId:tv};
+  s.cruise={daysLeft:7};
+  log("crew","Training cruise: the cadet class ships out aboard "+s.name+" for seven days of hands-on drills. (−1,000 CR)");
+  save();stationModal(id);render();toast("The cadet class is on a training cruise.");
 }
 function uiClaimRequisition(){
   const st=G.stations.find(x=>x.type==="sfcommand"&&x.status==="active");
@@ -13474,7 +13544,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.42</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.43</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
