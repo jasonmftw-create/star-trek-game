@@ -10887,9 +10887,9 @@ function mapTerrSVG(t){
 }
 function mapShipRing(s,x,y,post){
   let r="";const cy=(+y)+5;
-  if(mapMode==="deploy"&&((s.damage||0)>0||s.status==="damaged"))r+='<circle cx="'+x+'" cy="'+cy+'" r="9" class="hurtRing"/>';
-  if(mapMode==="intel"&&HOSTILE_ZONES[post||"sol"])r+='<circle cx="'+x+'" cy="'+cy+'" r="9" class="alertRing"/>';
-  if(mapMode==="deploy"&&deployShip===s.id)r+='<circle cx="'+x+'" cy="'+cy+'" r="12" fill="none" stroke="#7fd4ff" stroke-width="2" stroke-dasharray="4 3"/>';
+  if(mapMode==="deploy"&&((s.damage||0)>0||s.status==="damaged"))r+='<circle cx="'+x+'" cy="'+cy+'" r="12" class="hurtRing"/>';
+  if(mapMode==="intel"&&HOSTILE_ZONES[post||"sol"])r+='<circle cx="'+x+'" cy="'+cy+'" r="12" class="alertRing"/>';
+  if(mapMode==="deploy"&&deployShip===s.id)r+='<circle cx="'+x+'" cy="'+cy+'" r="14" fill="none" stroke="#7fd4ff" stroke-width="2" stroke-dasharray="4 3"/>';
   if(mapMode==="deploy")r+='<circle cx="'+x+'" cy="'+cy+'" r="16" fill="transparent"/>';
   return r;
 }
@@ -11178,6 +11178,48 @@ beta:[["typhon","TYPHON EXPANSE",308,80,66,56,"#b565ff",341,72]],
 gamma:[],
 delta:[["thevoid","THE VOID",150,100,140,110,"#000000",220,92],["chaotic","CHAOTIC SPACE",60,250,90,66,"#e07a5f",105,242]]
 };
+function mapShipSVG(shp){
+  // SVG mirror of the tacDrawShip silhouettes, drawn in a +/-28 box, nose +x.
+  const H="#ffb703",D="#8a5f00",N="#ffe3a3",B="#fff8dd";
+  const E=(x,y,rx,ry)=>'<ellipse cx="'+x+'" cy="'+y+'" rx="'+rx+'" ry="'+ry+'" fill="'+H+'" stroke="'+D+'" stroke-width="1.5"/>';
+  const R=(x,y,w,h,f)=>'<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+(f||H)+'"/>';
+  const P=d=>'<path d="'+d+'" fill="'+H+'" stroke="'+D+'" stroke-width="1.5"/>';
+  const Cc=(x,y,r)=>'<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+H+'"/>';
+  const Br=(x,y,r)=>'<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+B+'"/>';
+  const ES=(x,y,rx,ry)=>'<ellipse cx="'+x+'" cy="'+y+'" rx="'+rx+'" ry="'+ry+'" fill="none" stroke="'+H+'" stroke-width="5"/>';
+  const CS=(x,y,r)=>'<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="none" stroke="'+H+'" stroke-width="4"/>';
+  const RS=(x,y,w,h)=>'<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="none" stroke="'+H+'" stroke-width="3"/>';
+  const LN=(x1,y1,x2,y2)=>'<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+N+'" stroke-width="2"/>';
+  switch(shp){
+  case"intrepid":return R(-11,-11.5,15,2.8,N)+R(-11,8.7,15,2.8,N)+P("M16 0L-8 -4.5L-13 0L-8 4.5Z")+Br(6,0,1.8);
+  case"defiant":return R(-11,-9.5,9,2.8,N)+R(-11,6.7,9,2.8,N)+P("M14 0L2 -7L-11 -5L-13 0L-11 5L2 7Z")+Br(6,0,2);
+  case"akira":return R(-17,-13.5,15,2.8)+R(-17,10.7,15,2.8)+R(-24,-14.2,8,4.2,N)+R(-24,10,8,4.2,N)+E(3,0,11,7.6)+R(-9,-1.8,11,3.6)+Br(5,0,2.2);
+  case"galaxy":return R(-15,-15.5,21,3.6,N)+R(-15,11.9,21,3.6,N)+E(1,0,13,8.6)+E(-11,0,5.5,3.6)+Br(3,0,2.4);
+  case"galaxyx":return R(-15,-15.5,21,3.6,N)+R(-15,11.9,21,3.6,N)+R(-18,-1.8,24,3.6,N)+E(1,0,13,8.6)+E(-11,0,5.5,3.6)+Br(3,0,2.4);
+  case"sovereign":return R(-13,-12.5,19,3.2,N)+R(-13,9.3,19,3.2,N)+E(2,0,10.5,6.6)+P("M-6 -2.4L-15 0L-6 2.4Z")+Br(4,0,2.2);
+  case"mercy":return R(-10,-13.5,8,3,N)+R(-10,10.5,8,3,N)+E(0,0,13.5,9.4)+Br(2,0,2.8);
+  case"bop":return E(0,0,6.5,3)+P("M0 -2.5L-5 -13L-9 -12L-5 -3Z")+P("M0 2.5L-5 13L-9 12L-5 3Z")+Cc(-7,-12.5,1.6)+Cc(-7,12.5,1.6)+P("M13 0L5 -2.2L5 2.2Z");
+  case"constellation":return R(-13,-13.5,16,3,N)+R(-13,10.5,16,3,N)+R(-13,-6.8,16,3,N)+R(-13,3.8,16,3,N)+E(2,0,10,6.8)+P("M-6 -2.4L-14 0L-6 2.4Z")+Br(4,0,2.2);
+  case"ktinga":return R(-9,-1.6,17,3.2)+E(9,0,4.2,2.6)+E(-10,0,5,3.4)+P("M-6 -2L-17 -11L-12 -11.5L-3 -3Z")+P("M-6 2L-17 11L-12 11.5L-3 3Z");
+  case"warbird":return E(1,0,7,3.4)+P("M2 -2L-17 -14L-12 -15L-3 -4Z")+P("M2 2L-17 14L-12 15L-3 4Z")+Br(5,0,1.8);
+  case"odyssey":return R(-17,-16.5,23,4,N)+R(-17,12.5,23,4,N)+E(1,0,14,9.4)+E(-12,0,6,4)+Br(3,0,2.6);
+  case"ark":return R(-13,-14,8,3,N)+R(-13,11,8,3,N)+R(-15,-7,8,3,N)+R(-15,4,8,3,N)+'<rect x="-15" y="-5.5" width="13" height="11" fill="'+H+'" stroke="'+D+'" stroke-width="1.5"/>'+E(5,0,10,6.5)+Br(7,0,2);
+  case"forge":return RS(-17,-11,34,22)+E(0,0,7,4.5)+R(14,-12,4,24,N);
+  case"relay":return LN(-5,-2,-23,-10)+LN(-5,2,-23,10)+E(-2,0,8,4)+Cc(9,0,9)+Br(9,0,2);
+  case"crossfield":return ES(0,0,12,8)+E(0,0,4.5,3.4)+R(-4,-15,16,3.2,N)+R(-4,11.8,16,3.2,N)+Br(0,0,1.8);
+  case"detach32":return P("M16 0L-6 -5L-14 0L-6 5Z")+R(-8,-13,14,2.8,N)+R(-8,10.2,14,2.8,N)+R(-27,-0.8,13,1.6,N)+Br(6,0,1.8);
+  case"ring":return CS(0,0,12.5)+E(0,0,7,4)+Br(0,0,1.8);
+  case"academy":return R(-26,-14.5,24,4.4,N)+R(-26,10.1,24,4.4,N)+E(4,0,12,10.2)+Br(6,0,2.6);
+  case"wells":return P("M16 0C10 -8 -6 -9 -14 -4C-17 0 -6 9 10 8Z")+Br(4,0,2);
+  default:return R(-4,-13,15,3.4,N)+R(-4,9.6,15,3.4,N)+E(0,0,11,7.5)+Br(2,0,2.4);
+  }
+}
+function mapShipIcon(s,x,yt,destXY){
+  // ship marker for the galaxy maps: class silhouette, nose toward destination when en route
+  let deg=-90;
+  if(destXY)deg=(Math.atan2(destXY[1]-yt,destXY[0]-x)*180/Math.PI).toFixed(1);
+  return '<g transform="translate('+x+' '+yt+') rotate('+deg+') scale(0.42)">'+mapShipSVG(tacPlayerShape(s.cls))+'</g>';
+}
 function renderQuadrant(q){
   const R=rng(20260928+q.charCodeAt(0));
   let stars="";
@@ -11224,8 +11266,9 @@ function renderQuadrant(q){
     const d=post===q?24+rr()*30:10+rr()*14;
     const x=(pc[0]+Math.cos(a)*d).toFixed(1),yt=(pc[1]+Math.sin(a)*d*0.75-6).toFixed(1);
     const nm=esc(s.name.length>18?s.name.slice(0,17)+"\u2026":s.name);
-    fleet+="<g onclick=\""+mapShipClick(s.id)+"\" style=\"cursor:pointer\"><path d=\"M"+x+" "+yt+" l5 11 -5 -3 -5 3 Z\" fill=\"#ffb703\"/>"+mapShipRing(s,x,yt,post)
-      +"<g class=\"mapLblG\" data-mx=\""+x+"\" data-my=\""+yt+"\" data-dx=\"8\" data-dy=\"4\"><text x=\"0\" y=\"0\" class=\"mapShipLbl\">"+nm+"</text></g>"
+    const _dc=(_rt&&_rt.f<1)?(_rt.dest===q?[200,200]:(qp[_rt.dest]||[200,200])):null;
+    fleet+="<g onclick=\""+mapShipClick(s.id)+"\" style=\"cursor:pointer\">"+mapShipIcon(s,x,yt,_dc)+mapShipRing(s,x,yt,post)
+      +"<g class=\"mapLblG\" data-mx=\""+x+"\" data-my=\""+yt+"\" data-dx=\"13\" data-dy=\"4\"><text x=\"0\" y=\"0\" class=\"mapShipLbl\">"+nm+"</text></g>"
       +"<title>"+esc(s.name)+(_rt&&_rt.f<1?" → "+esc(POST_LABELS[_rt.dest]||_rt.dest):"")+"</title></g>";
   });
   let stnLayer="",nStn=0;
@@ -11305,8 +11348,9 @@ const TERR=[
     const d=post==="sol"?28+rr()*38:(isQ?26+rr()*40:15+rr()*15);
     const x=(pc[0]+Math.cos(a)*d).toFixed(1),yt=(pc[1]+Math.sin(a)*d*0.75-6).toFixed(1);
     const nm=esc(s.name.length>18?s.name.slice(0,17)+"\u2026":s.name);
-    fleet+="<g onclick=\""+mapShipClick(s.id)+"\" style=\"cursor:pointer\"><path d=\"M"+x+" "+yt+" l5 11 -5 -3 -5 3 Z\" fill=\"#ffb703\"/>"+mapShipRing(s,x,yt,post)
-      +"<g class=\"mapLblG\" data-mx=\""+x+"\" data-my=\""+yt+"\" data-dx=\"8\" data-dy=\"4\"><text x=\"0\" y=\"0\" class=\"mapShipLbl\">"+nm+"</text></g>"
+    const _dc2=(_rt&&_rt.f<1&&POST_COORDS[_rt.dest])?POST_COORDS[_rt.dest]:null;
+    fleet+="<g onclick=\""+mapShipClick(s.id)+"\" style=\"cursor:pointer\">"+mapShipIcon(s,x,yt,_dc2)+mapShipRing(s,x,yt,post)
+      +"<g class=\"mapLblG\" data-mx=\""+x+"\" data-my=\""+yt+"\" data-dx=\"13\" data-dy=\"4\"><text x=\"0\" y=\"0\" class=\"mapShipLbl\">"+nm+"</text></g>"
       +"<title>"+esc(s.name)+(_rt&&_rt.f<1?" → "+esc(POST_LABELS[_rt.dest]||_rt.dest):"")+"</title></g>";
   });
   let stnLayer="";
@@ -14441,7 +14485,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.48</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.49</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
 </body>
