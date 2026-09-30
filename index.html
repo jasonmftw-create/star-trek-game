@@ -10317,7 +10317,7 @@ function stationPic(type,big){
 function stationMapIcon(st){
   const id=String(st&&st.id||"");
   if(id==="ds9"||id==="empoknor")return"ships/icons/ds9.png";
-  if(id==="spacedock")return"ships/stations/spacedock.jpg";
+  if(id==="spacedock")return"ships/icons/spacedock.png";
   return"";
 }
 function stationMapTag(s,x,y){
@@ -14662,7 +14662,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.56</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.57</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
 </body>
