@@ -5511,19 +5511,82 @@ const NPC_QUIRKS=["never loses at dom-jot","names every shuttle they fly","takes
 function npcSeasoned(n){return !!n&&(n.m||0)>=3;}
 function npcByLabel(roster,lbl){if(!roster||!lbl)return null;for(let i=0;i<roster.length;i++){const x=roster[i];if(x.r+" "+x.n===lbl)return x;}return null;}
 function npcSurvived(n,src){
-  if(!n)return false;
+  if(!n)return null;
   n.m=(n.m||0)+1;
   if(n.m===3){
     if(!n.q)n.q=pick(NPC_QUIRKS);
     log("personnel","★ "+npcLabel(n)+" is now one of "+src+"'s familiar faces — 3 missions survived.");
-    return true;
+    return "seasoned";
   }
-  return false;
+  if(n.m===5){
+    n.commission=true;
+    log("personnel","★ "+npcLabel(n)+" has earned a field commission — grant it from "+src+"'s roster.");
+    return "commission";
+  }
+  return null;
 }
 function npcRosterLine(n){
   let s=npcLabel(n)+" · "+n.d;
-  if(npcSeasoned(n))s+=" · ★ familiar face"+(n.q?" — "+n.q:"");
+  if(n.commission&&(n.m||0)>=5)s+=" · ★ eligible for commission";
+  else if(npcSeasoned(n))s+=" · ★ familiar face"+(n.q?" — "+n.q:"");
   return s;
+}
+/* redshirt attach (v2.37 fix): per-ship away missions always sailed without
+   NPCs, because the old code only attached when the destination was literally
+   "ship:ID" — and the destination picker only offers planets/sectors. */
+/* field commissions for standout NPCs (v2.37): at 5 survivals the player may
+   commission them as a real Ensign — they leave the named crew and join the
+   officer roster with their mission record intact. */
+const NPC_COM_SPECIES=["Human","Human","Human","Human","Vulcan","Andorian","Tellarite","Trill"];
+function npcCommissionEligible(n){return !!n&&n.commission&&(n.m||0)>=5;}
+function uiNpcCommission(t,id,ix){
+  const src=t==="ship"?ship(id):station(id);if(!src)return;
+  const roster=t==="ship"?shipNpcs(src):stNpcs(src);
+  const n=roster&&roster[ix];
+  if(!npcCommissionEligible(n))return;
+  const back=t==="ship"?("shipModal('"+id+"')"):("stationModal('"+id+"')");
+  openModal('<h2>Field commission?</h2><p class="dim">'+esc(npcLabel(n))+" has survived "+n.m+" missions"+(n.q?(" — and is known for the fact that they "+esc(n.q)+"."):".")+" Grant a field commission as <b>Ensign</b>? This is permanent: they leave the named crew and join your officers.</p>"+
+    '<div class="btnRow"><button class="btn" onclick="'+back+'">Not yet</button> '+
+    '<button class="btn peach" onclick="uiNpcCommissionGo(\''+t+'\',\''+id+'\','+ix+')">Commission</button></div>');
+}
+function uiNpcCommissionGo(t,id,ix){
+  const src=t==="ship"?ship(id):station(id);if(!src)return;
+  const roster=t==="ship"?shipNpcs(src):stNpcs(src);
+  const n=roster&&roster[ix];
+  if(!npcCommissionEligible(n))return;
+  roster.splice(ix,1);
+  const first=String(n.n).split(" ")[0];
+  const gi=(typeof NPC_GIVEN!=="undefined")?NPC_GIVEN.indexOf(first):-1;
+  const gender=(gi>=24||(gi<0&&Math.random()<0.5))?"F":"M";
+  const species=pick(NPC_COM_SPECIES);
+  const st=[ri(30,44),ri(30,44),ri(30,44),ri(30,44),ri(30,44),ri(30,44)];
+  const db={Command:0,Science:1,Engineering:2,Medical:3,Operations:2,Security:5}[n.d];
+  if(db!=null)st[db]=ri(45,60);
+  const o=MK([n.n,species,gender,ri(22,32),0,n.d,st,[],"pool",null,"adult"]);
+  o.post={t:t,id:id};
+  o.missions={s:n.m,t:n.m};
+  o.morale=90;o.loyal=clamp((o.loyal||70)+10,0,100);
+  o.backstory="Rose from the "+src.name+"'s named crew after surviving "+n.m+" missions."+(n.q?(" Known for the fact that they "+n.q+"."):"");
+  G.officers.push(o);
+  awardAccolade(o,"Field-commissioned to Ensign");
+  log("personnel","FIELD COMMISSION: "+o.name+" — commissioned as Ensign by order of the commander.");
+  save();
+  if(t==="ship")shipModal(id);else stationModal(id);
+  render();
+  toast(o.name+" is now an Ensign.");
+}
+function awayAttachNpcs(dest,shipLockId){
+  AWAY.npcs=[];AWAY.npcSrc=null;
+  var _dm=String(dest||"").match(/^(ship|station):(.*)$/);
+  if(_dm){
+    var _asrc=_dm[1]==="ship"?ship(_dm[2]):station(_dm[2]);
+    var _aroster=_asrc?((_dm[1]==="ship"&&(typeof shipNpcs==="function"))?shipNpcs(_asrc):((typeof stNpcs==="function")?stNpcs(_asrc):[])):[];
+    if(_aroster.length>=2){AWAY.npcs=_aroster.slice().sort(function(){return Math.random()-0.5;}).slice(0,2);AWAY.npcSrc={t:_dm[1],id:_dm[2]};return;}
+  }
+  if(shipLockId&&(typeof shipNpcs==="function")){
+    const _lck=ship(shipLockId),_lro=_lck?shipNpcs(_lck):[];
+    if(_lro.length>=2){AWAY.npcs=_lro.slice().sort(function(){return Math.random()-0.5;}).slice(0,2);AWAY.npcSrc={t:"ship",id:shipLockId};}
+  }
 }
 function npcBeatNames(npcs,n){
   if(!npcs||!npcs.length)return [];
@@ -7979,13 +8042,7 @@ function uiAwayStart(){
     .map(s=>({t:s.t,opts:s.opts.map(o=>({t:o.t,stat:o.stat,dc:o.dc+info.dc,win:o.win,lose:o.lose}))}));
   AWAY.dest=dest;AWAY.sits=sits;AWAY.stage=0;AWAY.wins=0;AWAY.terr=terr;
   AWAY.dm=_dmOn?{log:[],cur:null,debrief:false}:null;
-  AWAY.npcs=[];AWAY.npcSrc=null;
-  var _dm=String(dest||"").match(/^(ship|station):(.*)$/);
-  if(_dm){
-    var _asrc=_dm[1]==="ship"?ship(_dm[2]):station(_dm[2]);
-    var _aroster=_asrc?((_dm[1]==="ship"&&(typeof shipNpcs==="function"))?shipNpcs(_asrc):((typeof stNpcs==="function")?stNpcs(_asrc):[])):[];
-    if(_aroster.length>=2){AWAY.npcs=_aroster.slice().sort(function(){return Math.random()-0.5;}).slice(0,2);AWAY.npcSrc={t:_dm[1],id:_dm[2]};}
-  }
+  awayAttachNpcs(dest,AWAY.shipLock);
   if(AWAY.dm)dmStage();else awayStage();
 }
 function awayStage(){
@@ -8047,7 +8104,9 @@ function awayResolve(){
     const _asrc=AWAY.npcSrc?(AWAY.npcSrc.t==="ship"?ship(AWAY.npcSrc.id):station(AWAY.npcSrc.id)):null;
     const _anm=_asrc?_asrc.name:destLabel(AWAY.dest);
     AWAY.npcs.forEach(function(_sn){if(_sn===_deadNpc)return;
-      if(npcSurvived(_sn,_anm))detail+=" "+npcLabel(_sn)+" is becoming a familiar face around here — "+_sn.m+" missions and counting.";});
+      const _sv=npcSurvived(_sn,_anm);
+      if(_sv==="commission")detail+=" "+npcLabel(_sn)+" has earned a <b>field commission</b> — grant it from the roster.";
+      else if(_sv)detail+=" "+npcLabel(_sn)+" is becoming a familiar face around here — "+_sn.m+" missions and counting.";});
   }
   gainPres(pres);
   team.forEach(o=>{o.morale=clamp(o.morale+mor,0,100);o.missions.t++;if(w>=2)o.missions.s++;awardAccolade(o,"Away mission: "+destLabel(AWAY.dest)+" \u2014 "+outcome);});
@@ -10378,7 +10437,7 @@ function shipModal(id){
   }
   if(typeof shipNpcs==="function"&&typeof npcLabel==="function"){
     const _snpcs=shipNpcs(s);
-    if(_snpcs.length)h+='<h4>Ship\u2019s Company ('+_snpcs.length+' named)</h4><div class="dim">'+_snpcs.map(n=>esc(typeof npcRosterLine==="function"?npcRosterLine(n):(npcLabel(n)+" · "+n.d))).join("<br>")+'</div>';
+    if(_snpcs.length)h+='<h4>Ship\u2019s Company ('+_snpcs.length+' named)</h4><div class="dim">'+_snpcs.map(function(n,ix){let _r=esc(typeof npcRosterLine==="function"?npcRosterLine(n):(npcLabel(n)+" · "+n.d));if((typeof npcCommissionEligible==="function")&&npcCommissionEligible(n))_r+=' <button class="btn small peach" onclick="uiNpcCommission(\'ship\',\''+s.id+'\','+ix+')">Commission</button>';return _r;}).join("<br>")+'</div>';
   }
   h+=crewSectionsHTML(crew,co,xo,"/"+c.slots,"No essential personnel assigned. Visit Personnel to assign officers.",_eff.acting&&co?co.id:null);
   const shs=shuttlesOfShip(s.id);
@@ -10426,7 +10485,7 @@ function stationModal(id){
   }
   if(typeof stNpcs==="function"&&typeof npcLabel==="function"){
     const _tnpcs=stNpcs(st);
-    if(_tnpcs.length)h+='<h4>Station Personnel ('+_tnpcs.length+' named)</h4><div class="dim">'+_tnpcs.map(n=>esc(typeof npcRosterLine==="function"?npcRosterLine(n):(npcLabel(n)+" · "+n.d))).join("<br>")+'</div>';
+    if(_tnpcs.length)h+='<h4>Station Personnel ('+_tnpcs.length+' named)</h4><div class="dim">'+_tnpcs.map(function(n,ix){let _r=esc(typeof npcRosterLine==="function"?npcRosterLine(n):(npcLabel(n)+" · "+n.d));if((typeof npcCommissionEligible==="function")&&npcCommissionEligible(n))_r+=' <button class="btn small peach" onclick="uiNpcCommission(\'station\',\''+st.id+'\','+ix+')">Commission</button>';return _r;}).join("<br>")+'</div>';
   }
   h+=crewSectionsHTML(crew,co,xo,"","No essential personnel assigned.",_seff.acting&&co?co.id:null);
   const shs=shuttlesOfStation(st.id);
@@ -11821,7 +11880,7 @@ function deckOpResolve(s,op,def){
   else if(w>=1){outcome="Contained";pres=35;mor=1;detail="It\'s handled — mostly. The debrief will be spirited, and the repair crews are already at work.";}
   else{outcome="Costly";pres=10;mor=-5;detail="The crisis passed, but it took its toll. Sickbay is busy and the mood is somber.";const _cd=ri(5,15);s.damage=Math.min(120,(s.damage||0)+_cd);if(typeof shipCasualties==="function")shipCasualties(s,_cd,"crisis");if(s.damage>=40&&s.status==="active")s.status="damaged";}
   if(op.npcs&&op.npcs.length){const _nd=pick(op.npcs);detail+=" "+(w>=n-1?pick([_nd+" buys the first round in the mess hall.",_nd+" is already telling the story like it happened to someone braver."]):pick(["In sickbay, "+_nd+" is already joking about it.","You make a note to commend "+_nd+" \u2014 they held it together."]));}
-  if(op.npcs&&op.npcs.length&&typeof npcSurvived==="function"){const _rs=shipNpcs(s);op.npcs.forEach(function(_lb){const _x=npcByLabel(_rs,_lb);if(_x&&npcSurvived(_x,s.name))detail+=" "+npcLabel(_x)+" is becoming a familiar face around here — "+_x.m+" operations and counting.";});}
+  if(op.npcs&&op.npcs.length&&typeof npcSurvived==="function"){const _rs=shipNpcs(s);op.npcs.forEach(function(_lb){const _x=npcByLabel(_rs,_lb);if(!_x)return;const _sv=npcSurvived(_x,s.name);if(_sv==="commission")detail+=" "+npcLabel(_x)+" has earned a <b>field commission</b> — grant it from the roster.";else if(_sv)detail+=" "+npcLabel(_x)+" is becoming a familiar face around here — "+_x.m+" operations and counting.";});}
   gainPres(pres);
   crewOfShip(s.id).forEach(o=>{o.morale=clamp(o.morale+mor,0,100);o.missions.t++;if(w>=n-1)o.missions.s++;});
   const b=deckOpBest(s,"cmd");
@@ -12788,7 +12847,7 @@ function sdeckOpResolve(st,op,def){
   gainPres(pres);
   if(repCost)gainCR(-repCost);
   if(op.npcs&&op.npcs.length){const _nd=pick(op.npcs);detail+=" "+(w>=n-1?pick([_nd+" buys the first round on the promenade.",_nd+" is already telling the story like it happened to someone braver."]):pick(["In the infirmary, "+_nd+" is already joking about it.","You make a note to commend "+_nd+" \u2014 they held it together."]));}
-  if(op.npcs&&op.npcs.length&&typeof npcSurvived==="function"){const _rs=stNpcs(st);op.npcs.forEach(function(_lb){const _x=npcByLabel(_rs,_lb);if(_x&&npcSurvived(_x,st.name))detail+=" "+npcLabel(_x)+" is becoming a familiar face around here — "+_x.m+" operations and counting.";});}
+  if(op.npcs&&op.npcs.length&&typeof npcSurvived==="function"){const _rs=stNpcs(st);op.npcs.forEach(function(_lb){const _x=npcByLabel(_rs,_lb);if(!_x)return;const _sv=npcSurvived(_x,st.name);if(_sv==="commission")detail+=" "+npcLabel(_x)+" has earned a <b>field commission</b> — grant it from the roster.";else if(_sv)detail+=" "+npcLabel(_x)+" is becoming a familiar face around here — "+_x.m+" operations and counting.";});}
   crewOfStation(st.id).forEach(o=>{o.morale=clamp(o.morale+mor,0,100);o.missions.t++;if(w>=n-1)o.missions.s++;});
   const b=sdeckOpBest(st,"cmd");
   if(b.o&&w>=n-1)awardAccolade(b.o,"Station operation: "+def.name+" — "+outcome);
@@ -13104,7 +13163,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.36</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.37</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
