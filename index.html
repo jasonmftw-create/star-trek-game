@@ -3966,9 +3966,11 @@ function fcTick(){if(!FC&&Math.random()<0.004)fcStart();}
 function fcStart(sys){
   const sysK=sys||pick(Object.keys(POST_LABELS));
   FC={name:fcName(),disp:pick(["peaceful","curious","xenophobic","warlike"]),trait:pick(["telepathic","crystalline","aquatic","nomadic","hive-minded","silicon-based"]),sys:sysK,stage:0,wins:0};
+  const _fcBtns=[{t:"Respond",cls:"violet",fn:()=>fcStageItem()}];
+  if(aiHasKey())_fcBtns.unshift({t:"\uD83D\uDCAC Open a dialogue",cls:"teal",fn:()=>fcDialogue()});
   interruptQueue.push({title:"Unknown vessel detected",sub:"Near "+(POST_LABELS[sysK]||sysK)+" — stardate "+sdStr(G.stardate),
     html:'<p>A vessel of unknown configuration has appeared on sensors. They are transmitting — a greeting, or a targeting scan. It\'s hard to tell.</p>',
-    buttons:[{t:"Respond",cls:"violet",fn:()=>fcStageItem()}]});
+    buttons:_fcBtns});
   save();
 }
 const FC_STAGES=[
@@ -5056,6 +5058,357 @@ async function aiNarrateEvent(item,tok){
   }catch(e){}
 }
 /* ---- end AI CONVERSATIONS (v2.7) ---- */
+
+/* ================= AI IDEAS + READY ROOM (v2.28) =================
+   The shelved ideas, built on the v2.7/v2.8 AI layer. Same frugality rule:
+   player-triggered, one short call per viewed moment, silent static fallback.
+   No key = the classic flows, untouched. */
+
+/* ---------- 1. AI DUNGEON MASTER away missions ---------- */
+var DM_STATS=["cmd","dip","eng","med","sci","sec"];
+var dmTok=0;
+function dmTeamLine(){
+  const team=AWAY.team.map(officer).filter(Boolean);
+  return team.map(function(o){return o.name+" ("+rankName(o)+", "+(o.dept||"")+", traits: "+((o.traits||[]).join(", ")||"none")+")";}).join("; ");
+}
+function dmSetupPrompt(){
+  const info=AWAY_TERR_INFO[AWAY.terr];
+  const npc=(AWAY.npcs&&AWAY.npcs.length)?("Redshirts along: "+AWAY.npcs.map(npcLabel).join(", ")+". "):"";
+  const prev=AWAY.dm.log.length?("So far this mission: "+AWAY.dm.log.join(" ")):"The team has just beamed down.";
+  return "You are the dungeon master of a Star Trek episode, narrating an away mission. "+
+    "Destination: "+destLabel(AWAY.dest)+" ("+info.label+" — "+info.blurb+"). "+
+    "Landing party: "+dmTeamLine()+". "+npc+prev+" "+
+    "This is stage "+(AWAY.stage+1)+" of 3. Describe the situation in 2 to 3 vivid sentences, Starfleet tone, plain prose, no stage directions. "+
+    "Then give EXACTLY 3 distinct courses of action, each testing one Starfleet skill. "+
+    "Format your whole reply EXACTLY like this, on one line per part, separated by || :\n"+
+    "SCENE: <your 2-3 sentences> || A: <action> [<skill>] || B: <action> [<skill>] || C: <action> [<skill>]\n"+
+    "where <skill> is exactly one of: cmd, dip, eng, med, sci, sec. Keep each action under 20 words.";
+}
+function dmParse(t){
+  try{
+    const parts=String(t||"").split("||").map(function(s){return s.trim();}).filter(Boolean);
+    if(parts.length<4)return null;
+    const scene=parts[0].replace(/^SCENE:\s*/i,"");
+    if(!scene)return null;
+    const opts=[];
+    for(let i=1;i<=3;i++){
+      const m=/^(?:[A-C]:\s*)?(.+?)\s*\[(\w+)\]\s*$/i.exec(parts[i]);
+      if(!m)return null;
+      const st=m[2].toLowerCase();
+      if(DM_STATS.indexOf(st)<0)return null;
+      opts.push({t:m[1].trim(),stat:st});
+    }
+    return {scene:scene,opts:opts};
+  }catch(e){return null;}
+}
+function dmStatName(s){return {cmd:"Command",dip:"Diplomacy",eng:"Engineering",med:"Medical",sci:"Science",sec:"Security"}[s]||s;}
+async function dmStage(){
+  if(!AWAY||!AWAY.dm)return;
+  const myTok=++dmTok,myAway=AWAY;
+  const teamNames=AWAY.team.map(function(id){const o=officer(id);return o?o.name.split(" ")[0]:"?";}).join(", ")+
+    ((AWAY.npcs&&AWAY.npcs.length)?" + "+AWAY.npcs.map(npcLabel).join(", "):"");
+  openModal('<h2>Away Mission &mdash; '+esc(destLabel(AWAY.dest))+'</h2><div class="flavor">Stage '+(AWAY.stage+1)+' of 3 &middot; Team: '+esc(teamNames)+'</div><p class="dim">The dungeon master is setting the scene&hellip;</p>');
+  let d=null;
+  try{const t=await aiGenText(dmSetupPrompt(),320);if(myTok===dmTok&&AWAY===myAway)d=dmParse(t);}catch(e){}
+  if(!d||AWAY!==myAway){if(AWAY===myAway)awayStage();return;} /* fallback: classic stage */
+  AWAY.dm.cur=d;
+  const info=AWAY_TERR_INFO[AWAY.terr];
+  openModal('<h2>Away Mission &mdash; '+esc(destLabel(AWAY.dest))+'</h2><div class="flavor">Stage '+(AWAY.stage+1)+' of 3 &middot; Team: '+esc(teamNames)+'</div>'+
+    '<div class="flavor" data-hint="'+esc(info.blurb)+'">'+esc(info.label)+'</div><p>'+esc(d.scene)+'</p>'+
+    d.opts.map(function(op,i){return '<div style="margin:6px 0;"><button class="btn violet" style="width:100%;text-align:left;" onclick="dmChoose('+i+')"><b>'+esc(dmStatName(op.stat))+'</b> &mdash; '+esc(op.t)+'</button></div>';}).join("")+
+    '<div class="hr"></div><label>Or improvise</label><div class="aiChatBar"><input id="dmCustom" maxlength="200" placeholder="Describe what the team does&hellip;" onkeydown="if(event.key===\'Enter\'){dmCustomGo();}"><button class="btn teal" onclick="dmCustomGo()">Go</button></div>');
+}
+function dmChoose(i){
+  const d=AWAY&&AWAY.dm&&AWAY.dm.cur;if(!d||!d.opts[i])return;
+  dmResolveAct(d.opts[i].t,d.opts[i].stat);
+}
+function dmCustomGo(){
+  const el=document.getElementById("dmCustom");const v=el?el.value.trim():"";
+  if(!v){toast("Describe what the team does.");return;}
+  const team=AWAY.team.map(officer).filter(Boolean);
+  let bs="cmd",bv=-1;
+  team.forEach(function(o){DM_STATS.forEach(function(s){const x=(o.stats&&o.stats[s])||0;if(x>bv){bv=x;bs=s;}});});
+  dmResolveAct(v,bs);
+}
+async function dmResolveAct(actionText,stat){
+  const myAway=AWAY;if(!myAway||!myAway.dm)return;
+  const team=myAway.team.map(officer).filter(Boolean);
+  const info=AWAY_TERR_INFO[myAway.terr];
+  const best=Math.max.apply(null,team.map(function(o){return (o.stats&&o.stats[stat])||30;}));
+  const dc=55+(info.dc||0)+myAway.stage*4;
+  const win=(best+ri(1,100))>=dc;
+  if(win)myAway.wins++;
+  openModal('<h2>'+(win?"Success":"Setback")+'</h2><p class="dim">Resolving&hellip;</p>');
+  let txt=null;
+  try{
+    txt=await aiGenText("You are the dungeon master of a Star Trek episode. The landing party ("+dmTeamLine()+") "+(win?"SUCCEEDS":"FAILS")+
+      " at this action: \""+String(actionText).slice(0,200)+"\". Narrate the outcome in 2 to 3 vivid sentences, Starfleet tone, plain prose, no stage directions. "+
+      "Name one officer doing something specific.",220);
+  }catch(e){}
+  if(AWAY!==myAway)return;
+  AWAY.dm.log.push((win?"Won":"Lost")+": "+String(actionText).slice(0,90)+".");
+  AWAY.stage++;
+  const more=AWAY.stage<3;
+  openModal('<h2>'+(win?"Success":"Setback")+'</h2><p>'+esc(txt||(win?"It works — cleanly, professionally, the Starfleet way.":"It goes sideways, and the team adapts the hard way."))+'</p>'+
+    '<div class="btnRow"><button class="btn violet" onclick="'+(more?"dmStage()":"dmFinish()")+'">'+(more?"Continue":"Debrief")+'</button></div>');
+}
+function dmFinish(){
+  if(AWAY&&AWAY.dm)AWAY.dm.debrief=true;
+  awayResolve();
+}
+/* AI debrief line on the outcome screen (non-blocking; static detail stays if it fails) */
+async function dmDebriefAsync(outcome,pres,destLabelStr,logLines){
+  try{
+    const t=await aiGenText("You are the dungeon master of a Star Trek episode, closing the log on an away mission to "+destLabelStr+
+      ". Outcome: "+outcome+" (+"+pres+" prestige). What happened: "+logLines.join(" ")+
+      " Write a 2-sentence debrief in the captain's voice, first person, Starfleet tone, plain prose.",180);
+    const el=document.getElementById("awayDetail");
+    if(t&&el)el.textContent=t;
+  }catch(e){}
+}
+
+/* ---------- 2. COUNSELOR SESSIONS ---------- */
+var COUNS=null;
+function fleetCounselor(excludeId){
+  const pool=G.officers.filter(function(o){return o.status==="active"&&!o.dead&&!o.retired&&o.stage==="adult"&&(o.traits||[]).indexOf("Counselor")>=0&&o.id!==excludeId;});
+  if(!pool.length)return null;
+  pool.sort(function(a,b){return b.rank-a.rank;});
+  return pool[0];
+}
+function counselBrief(o){
+  const bits=[];
+  bits.push("Morale "+o.morale+"/100, loyalty "+(o.loyal==null?70:o.loyal)+"/100.");
+  if(o.health&&o.health!=="fit")bits.push("Currently "+o.health+(o.healDays?" ("+o.healDays+" days recovery)":"")+".");
+  if(o.missions&&o.missions.t)bits.push("Mission record: "+o.missions.s+"/"+o.missions.t+" successful.");
+  const deadFriends=(o.friends||[]).filter(function(id){const f=officer(id);return f&&f.dead;});
+  if(deadFriends.length)bits.push("Recently lost: "+deadFriends.map(function(id){return officer(id).name;}).join(", ")+".");
+  if(o.rel){const p=officer(o.rel.partner);bits.push("Relationship: "+o.rel.stage+(p?(p.dead?" — partner is deceased":" with "+p.name):"")+".");}
+  try{
+    if(o.post&&o.post.t==="ship"){const s=ship(o.post.id);if(s&&s.status==="damaged")bits.push("Posted aboard the "+s.name+", currently damaged.");}
+  }catch(e){}
+  return bits.join(" ");
+}
+function coSay(who,text){
+  const log=document.getElementById("coLog");if(!log)return;
+  const cls=who==="u"?"aiMsgU":"aiMsgO";
+  const pre=who==="o"?('<b>'+esc(COUNS.o.name.split(" ")[0])+":</b> "):"";
+  log.insertAdjacentHTML("beforeend",'<div class="'+cls+'">'+pre+esc(text)+'</div>');
+  log.scrollTop=log.scrollHeight;
+}
+function coSystem(){
+  const c=COUNS.c,o=COUNS.o;
+  const addr=(typeof aiAddrName==="function")?aiAddrName():"the fleet commander";
+  return "You are "+c.name+", "+rankName(c)+" ("+(c.species||"")+") and ship's counselor in Starfleet, year 2379. "+
+    "You are holding a private counseling session with "+o.name+", "+rankName(o)+" ("+(o.species||"")+", "+(o.dept||"")+" department). "+
+    "Brief on them: "+counselBrief(o)+" "+
+    "The fleet commander ("+addr+") is sitting in and may speak. "+
+    "Rules: stay fully in character as the counselor — never mention being an AI. Reply in 1 to 3 sentences of warm, professional spoken dialogue. "+
+    "No stage directions, no asterisks. Help them process what is weighing on them; do not invent facts beyond the brief.";
+}
+var COUNS_OPEN=[
+  "Come in. Sit wherever you are comfortable. I am not here to evaluate you — I am here to listen. What has been weighing on you lately?",
+  "Thank you for coming. The door is closed, and nothing said here leaves this room. Tell me — how are you, really?",
+  "I have been watching the duty rosters, and I thought it was time we talked. No agenda. Just — how are you holding up?"
+];
+var COUNS_MID=[
+  "That makes sense. It is a lot to carry, and you do not have to carry it alone.",
+  "I hear you. Let us sit with that for a moment — there is no rush here.",
+  "Thank you for trusting me with that. What do you think you need most right now?"
+];
+var COUNS_CLOSE=[
+  "You have done good work today just by showing up and being honest. My door stays open — come back any time.",
+  "We will keep working on this together. For now: rest, breathe, and be a little kinder to yourself than duty usually allows."
+];
+function uiCounsel(oid){
+  const o=officer(oid);if(!o||o.dead||o.retired||o.stage!=="adult")return;
+  const c=fleetCounselor(o.id);
+  if(!c){toast("No counselor in the fleet — look for the Counselor trait.");return;}
+  COUNS={o:o,c:c,turns:0,spoke:false};
+  const key=aiHasKey();
+  let h='<h2>Counseling Session</h2><div class="flavor">'+esc(c.name)+' is sitting down with '+esc(o.name.split(" ")[0])+'.</div>';
+  h+='<div id="coLog" class="aiChatLog"></div>';
+  if(key){
+    h+='<div class="aiChatBar"><input id="coIn" maxlength="300" placeholder="Speak as the commander&hellip;" autocomplete="off" onkeydown="if(event.key===\'Enter\'){coSend();}">'+
+       '<button class="btn teal" onclick="coSend()">Send</button></div>';
+    h+='<div class="btnRow"><button class="btn small violet" onclick="coOfficerSpeaks()">Let '+esc(o.name.split(" ")[0])+' talk</button>'+
+       '<button class="btn small gold" onclick="coEnd()">End session</button><button class="btn ghost" onclick="closeModal()">Leave</button></div>';
+  }else{
+    h+='<div class="btnRow"><button class="btn small gold" onclick="coEnd()">End session</button><button class="btn ghost" onclick="closeModal()">Leave</button></div>';
+  }
+  openModal(h);
+  if(key){
+    setTimeout(function(){const el=document.getElementById("coIn");if(el)el.focus();},350);
+  }else{
+    coSay("c",pick(COUNS_OPEN));coSay("o","\"Honestly? It helps just to say it out loud. Thank you for listening, Counselor.\"");coSay("c",pick(COUNS_CLOSE));
+  }
+}
+async function coSend(){
+  if(!COUNS)return;
+  const inp=document.getElementById("coIn");const v=inp?inp.value.trim():"";if(!v)return;
+  if(COUNS.turns>=6){toast("The hour is up — end the session.");return;}
+  coSay("u",v);if(inp)inp.value="";COUNS.turns++;
+  const log=document.getElementById("coLog");
+  if(log)log.insertAdjacentHTML("beforeend",'<div class="aiMsgO aiTyping" id="coTyping">&hellip;</div>'),log.scrollTop=log.scrollHeight;
+  let reply=null;
+  try{reply=await aiGenText(coSystem()+"\n\nThe commander says: \""+v.slice(0,400)+"\" Respond as the counselor.",200);}catch(e){}
+  const ty=document.getElementById("coTyping");
+  if(ty)ty.outerHTML='<div class="aiMsgO">'+esc(reply||"\"I understand. Tell me more about that.\"")+'</div>';
+  const lg=document.getElementById("coLog");if(lg)lg.scrollTop=lg.scrollHeight;
+}
+async function coOfficerSpeaks(){
+  if(!COUNS||COUNS.spoke)return;
+  COUNS.spoke=true;COUNS.turns++;
+  const log=document.getElementById("coLog");
+  if(log)log.insertAdjacentHTML("beforeend",'<div class="aiMsgO aiTyping" id="coTyping">&hellip;</div>'),log.scrollTop=log.scrollHeight;
+  let line=null,resp=null;
+  try{
+    line=await aiGenText(aiSystemFor(COUNS.o)+"\n\nYou are in a private counseling session with the ship's counselor. In 2 to 3 sentences of honest spoken dialogue, say how you are really feeling — what is weighing on you.",180);
+    if(line)resp=await aiGenText(coSystem()+"\n\n"+COUNS.o.name+" says: \""+String(line).slice(0,400)+"\" Respond as the counselor.",200);
+  }catch(e){}
+  const ty=document.getElementById("coTyping");if(ty)ty.remove();
+  coSay("o",line||"\"I… I am not sure where to start. It has just been a lot lately.\"");
+  if(resp)coSay("c",resp);
+}
+function coEnd(){
+  if(!COUNS)return;
+  const o=COUNS.o,c=COUNS.c;
+  const engaged=COUNS.turns>0||COUNS.spoke;
+  o.morale=clamp(o.morale+(engaged?5:2),0,100);
+  log("personnel","Counseling session: "+c.name+" met with "+fullName(o)+".");
+  COUNS=null;save();
+  closeModal();render();
+  toast("Session complete — "+o.name.split(" ")[0]+" seems lighter.");
+}
+
+/* ---------- 3. FIRST CONTACT by dialogue ---------- */
+function fcAlienSystem(){
+  return "You are the "+FC.disp+" "+FC.trait+" commander of the alien "+FC.name+", meeting Starfleet for the very first time near "+(POST_LABELS[FC.sys]||FC.sys)+", year 2379. "+
+    "You speak through the universal translator — formal, alien, proud. "+
+    "Rules: stay fully in character as the alien — never mention being an AI. Reply in 1 to 3 sentences of spoken dialogue only. "+
+    "No stage directions, no asterisks. You do not know Federation customs; judge these strangers by their words.";
+}
+function fcSay(who,text){
+  const log=document.getElementById("fcLog");if(!log)return;
+  log.insertAdjacentHTML("beforeend",'<div class="'+(who==="u"?"aiMsgU":"aiMsgO")+'">'+esc(text)+'</div>');
+  log.scrollTop=log.scrollHeight;
+}
+function fcDialogue(){
+  if(!FC)return;
+  FC.dlg={busy:false};
+  const _prevHtml=$("modalBox").innerHTML,_prevBack=modalBack;
+  openModal('<h2>First Contact &mdash; Dialogue</h2><div class="flavor" id="fcSub">The '+esc(FC.name)+' ('+esc(FC.disp)+', '+esc(FC.trait)+') await your words. Exchange '+(FC.stage+1)+' of 3.</div>'+
+    '<div id="fcLog" class="aiChatLog"><div class="dim" style="text-align:center;padding:10px 4px;">They are waiting for you to speak first.</div></div>'+
+    '<div class="aiChatBar"><input id="fcIn" maxlength="300" placeholder="Address the '+esc(FC.name)+'&hellip;" autocomplete="off" onkeydown="if(event.key===\'Enter\'){fcSend();}">'+
+    '<button class="btn teal" onclick="fcSend()">Send</button></div>'+
+    '<div class="btnRow"><button class="btn small gold" onclick="fcConclude()">Conclude talks</button></div>');
+  modalBack=function(){$("modalBox").innerHTML=_prevHtml;modalBack=_prevBack;};
+  setTimeout(function(){const el=document.getElementById("fcIn");if(el)el.focus();},350);
+}
+async function fcSend(){
+  if(!FC||!FC.dlg||FC.dlg.busy)return;
+  const inp=document.getElementById("fcIn");const v=inp?inp.value.trim():"";if(!v)return;
+  FC.dlg.busy=true;
+  const pool=G.officers.filter(function(o){return o.status==="active"&&!o.dead&&!o.retired&&o.stage==="adult";});
+  const best=pool.length?Math.max.apply(null,pool.map(function(o){return (o.stats&&o.stats.dip)||30;})):30;
+  let dc=55+FC.stage*5;
+  if(FC.disp==="warlike")dc+=10;else if(FC.disp==="xenophobic")dc+=8;else if(FC.disp==="peaceful")dc-=8;
+  const win=(best+ri(1,100))>=dc;
+  if(win)FC.wins++;
+  fcSay("u",v);if(inp)inp.value="";
+  const log=document.getElementById("fcLog");
+  if(log)log.insertAdjacentHTML("beforeend",'<div class="aiMsgO aiTyping" id="fcTyping">&hellip;</div>'),log.scrollTop=log.scrollHeight;
+  let reply=null;
+  try{
+    reply=await aiGenText(fcAlienSystem()+"\n\nTheir words "+(win?"land well — you find yourself receptive, even intrigued.":"put you on edge — you grow wary and cold.")+
+      " The stranger says: \""+v.slice(0,400)+"\" Reply in character.",200);
+  }catch(e){}
+  const ty=document.getElementById("fcTyping");
+  if(ty)ty.outerHTML='<div class="aiMsgO">'+esc(reply||(win?"\"Your words carry weight, stranger. Speak on.\"":"\"We do not trust easy words.\""))+'</div>';
+  FC.stage++;FC.dlg.busy=false;
+  const sub=document.getElementById("fcSub");
+  if(FC.stage>=3){fcConclude();return;}
+  if(sub)sub.textContent="The "+FC.name+" ("+FC.disp+", "+FC.trait+") consider your words. Exchange "+(FC.stage+1)+" of 3.";
+}
+function fcConclude(){
+  if(!FC)return;
+  const oc=fcOutcome();
+  openModal('<h2>'+esc(oc.title)+'</h2><div class="flavor">Stardate '+sdStr(G.stardate)+'</div><p>'+esc(oc.text)+'</p><div class="btnRow"><button class="btn violet" onclick="closeModal();render()">Continue</button></div>');
+}
+
+/* ---------- 4. AI-DRAFTED CAPTAIN'S LOG ---------- */
+async function aiDraftLog(){
+  const bEl=document.getElementById("capB"),tEl=document.getElementById("capT");
+  if(!bEl||!aiHasKey())return;
+  const oldPh=bEl.placeholder;bEl.placeholder="Drafting…";
+  try{
+    const ctx=(G.log||[]).slice(0,6).map(function(e){return String(e.text||"").replace(/<[^>]*>/g,"");}).filter(Boolean).join("\n");
+    const auto=(G.captainsLog||[]).filter(function(e){return e.auto;}).slice(-3).map(function(e){return e.t+": "+String(e.b||"").slice(0,200);}).join("\n");
+    const cn=(G.commander&&G.commander.name)?G.commander.name:"the fleet commander";
+    const txt=await aiGenText("You are "+cn+", a Starfleet captain writing a personal captain's log, stardate "+sdStr(G.stardate)+
+      ". Recent fleet events:\n"+ctx+"\n"+auto+
+      "\nWrite a 3 to 5 sentence log entry in the first person — reflective, professional, human. Plain prose, no stage directions.",280);
+    if(txt){bEl.value=txt;if(tEl&&!tEl.value.trim())tEl.value="Captain's log — "+sdStr(G.stardate);}
+  }catch(e){}
+  bEl.placeholder=oldPh||"Write your log...";
+}
+
+/* ---------- 5. READY ROOM, full version ---------- */
+const MEET_R_ASPIRE=[
+  "Where do I see myself? In a center chair, honestly. I have been studying command decisions since the Academy — one day I want the weight of them to be mine.",
+  "Ten years? I want to be the officer people ask for by name when something impossible needs doing. Everything else is just rank.",
+  "I would like to teach, eventually. The Academy, maybe. Pass on what the stars taught me before I forget the lessons.",
+  "Honestly, sir? I just want to be worthy of this uniform every single day. The rest — rank, postings — that is logistics.",
+  "I dream of first contacts. Real ones, where nobody has a playbook. I want my name on a star chart somewhere nobody has been.",
+  "I want to build something that outlasts me — a program, a protocol, a ship that still flies when I am gone.",
+  "Family, eventually. A posting where I can have both the stars and someone to come home to. That is the real ambition.",
+  "I want to be the officer you call when it matters. That is it. That is the whole aspiration."
+];
+const MEET_R_OPINION_T=[
+  "On {m}? Honestly, it worries me. We should deal with it before it deals with us.",
+  "My take on {m}: it is a leadership problem, not a resources problem. Someone needs to own it.",
+  "{m} — I have thoughts, but the short version is: act now, while our options are still good.",
+  "You want my honest opinion on {m}? It keeps me up. I would rather we face it head-on than brief it away.",
+  "On {m}: the crew notices these things before command does. Whatever we do, do it visibly.",
+  "{m} is above my pay grade to solve, but not above it to see clearly. I say we move before it moves."
+];
+const MEET_R_REPRIMAND=[
+  "Understood, sir. It will not happen again. I will make sure of it personally.",
+  "You are right to call me on it. No excuses — I will correct course.",
+  "I hear you. I let the standard slip, and that is on me. It will not be repeated.",
+  "Acknowledged. I would rather hear it straight from you than read it in a review.",
+  "Fair. I have been carrying too much and it showed in my work. Consider me corrected.",
+  "Yes, sir. I will take it to heart — and I will earn back your confidence."
+];
+const MEET_R_REPRIMAND_COLD=[
+  "With respect, sir — noted. Is there anything else?",
+  "I understand the regulation. Whether I agree with the reading of events is another matter.",
+  "Heard. I will comply, of course. That is what the uniform requires."
+];
+function meetMatter(){
+  try{
+    const nl=(typeof notifList==="function")?notifList():null;
+    if(nl&&nl.idle&&nl.idle.length)return "the idle ships sitting without orders ("+nl.idle.slice(0,2).map(function(x){return x.name;}).join(", ")+")";
+    const dmg=G.ships.filter(function(s){return s.status==="damaged";});
+    if(dmg.length)return "the damaged ships awaiting repair ("+dmg.slice(0,2).map(function(s){return s.name;}).join(", ")+")";
+    if(nl&&nl.low&&nl.low.length)return "low loyalty among some of the officers";
+    if(nl&&nl.aud&&nl.aud.length)return "the pending audience requests";
+    const ms=(G.missions||[])[0];
+    if(ms){const sh=ship(ms.shipId);return "the mission "+(sh?sh.name+" is flying":"currently underway");}
+  }catch(e){}
+  return "the state of the fleet";
+}
+/* one AI line inside a meeting; static pool if no key or the call fails */
+function meetAiReply(kind,aiPrompt,pool,followups){
+  const o=MEET.o;
+  const done=function(line){if(MEET&&MEET.o===o)renderMeeting(line,followups);};
+  if(!aiHasKey()){done(pick(pool));return;}
+  renderMeeting("\u2026",[{t:"That will be all.",fn:"meetChoose('leave')"}]);
+  aiGenText(aiSystemFor(o)+"\n\n"+aiPrompt,180).then(function(t){
+    done(t&&String(t).trim()?String(t).trim():pick(pool));
+  }).catch(function(){done(pick(pool));});
+}
+/* ---- end AI IDEAS + READY ROOM (v2.28) ---- */
+
 
 /* ================= CREW COMPLEMENT & NPCs (v2.9) =================
    Two tiers: Essential Personnel (named officers on the Personnel tab) and
@@ -6731,7 +7084,10 @@ function uiRequestMeeting(oid){
     {t:"I wanted to recognize your good work.",fn:"meetChoose('commend')"},
     {t:"What's your read on the crew?",fn:"meetChoose('crew')"},
     {t:"Tell me about your career.",fn:"meetChoose('career')"},
+    {t:"What are your aspirations?",fn:"meetChoose('aspire')"},
+    {t:"What's your take on fleet matters?",fn:"meetChoose('opinion')"},
     {t:"I'd like to get to know you better.",fn:"meetChoose('know')"},
+    {t:"I need to address a concern.",fn:"meetChoose('reprimand')"},
     {t:"That will be all.",fn:"meetChoose('leave')"}
   ]);
 }
@@ -6756,6 +7112,24 @@ function meetChoose(kind){
     renderMeeting(pick(MEET_R_CAREER),[
       {t:"Impressive.",fn:"meetChoose('end2')"}]);return;}
   if(kind==="know"){meetKnow();return;}
+  if(kind==="aspire"){MEET.path="aspire";
+    meetAiReply("aspire",
+      "The commander asks: \"What are your aspirations? Where do you see yourself in ten years?\" Answer in character, 2 to 3 sentences of spoken dialogue. Be specific and personal.",
+      MEET_R_ASPIRE,[
+      {t:"Noted. Dismissed.",fn:"meetChoose('end2')"}]);return;}
+  if(kind==="opinion"){MEET.path="opinion";
+    const _matter=meetMatter();
+    meetAiReply("opinion",
+      "The commander asks for your honest opinion on a current fleet matter: \""+_matter+"\". Give your genuine take in character, 2 to 3 sentences of spoken dialogue. Refer to the matter directly.",
+      MEET_R_OPINION_T.map(function(t){return t.replace("{m}",_matter);}),[
+      {t:"Good to know.",fn:"meetChoose('end2')"}]);return;}
+  if(kind==="reprimand"){MEET.path="reprimand";
+    const _cold=(o.loyal==null?70:o.loyal)<35;
+    meetAiReply("reprimand",
+      "The commander is formally addressing a concern about your recent conduct — a reprimand, delivered firmly but fairly. React in character, 2 to 3 sentences of spoken dialogue. "+(_cold?"You are already disgruntled with command; push back with cool professionalism.":"You respect the chain of command; take it seriously and own your part."),
+      _cold?MEET_R_REPRIMAND_COLD:MEET_R_REPRIMAND,[
+      {t:"See that it doesn't happen again.",fn:"meetChoose('end3r')"}]);return;}
+  if(kind==="end3r"){renderMeeting(meetVoice(o,"close")||pick(MEET_CLOSE),[{t:"End meeting",fn:"meetFinish('done')"}]);return;}
   if(kind==="detail"){MEET.detailRevealed=true;
     renderMeeting(meetVoice(o,"detail")||pick(MEET_R_DETAIL),[
       {t:"Fascinating. Thanks for sharing that.",fn:"meetChoose('end2')"}]);return;}
@@ -6773,6 +7147,10 @@ function meetFinish(how){
     else if(MEET.path==="commend"){o.morale=clamp(o.morale+6,0,100);}
     else if(MEET.path==="crew"){o.morale=clamp(o.morale+2,0,100);}
     else if(MEET.path==="career"){o.morale=clamp(o.morale+2,0,100);}
+    else if(MEET.path==="aspire"){o.morale=clamp(o.morale+2,0,100);}
+    else if(MEET.path==="opinion"){o.morale=clamp(o.morale+2,0,100);}
+    else if(MEET.path==="reprimand"){o.morale=clamp(o.morale-4,0,100);o.loyal=clamp((o.loyal==null?70:o.loyal)-2,0,100);
+      log("personnel","Reprimanded "+fullName(o)+" in the ready room.");}
     else if(MEET.path==="know"){o.morale=clamp(o.morale+3,0,100);
       if(MEET.detailRevealed){o.morale=clamp(o.morale+2,0,100);awardAccolade(o,"Shared personal history with the Commander");}}
     (G.meetings=G.meetings||{})[o.id]=G.stardate;
@@ -7521,6 +7899,7 @@ function uiAwayPicker(){
     '<label>Filter by posting</label>'+sheetPickDeferred('awayPostFilter','Filter by posting','<option value="">All postings</option>'+'<optgroup label="Ships">'+shipOpts+'</optgroup><optgroup label="Stations">'+stOpts+'</optgroup>'+'<option value="pool">Unassigned pool</option><option value="hq">Starfleet HQ</option>',function(){uiAwayRefilter();})+
     '<div id="awayTeamList" style="max-height:230px;overflow:auto;">'+awayTeamRows("")+'</div>'+
     '<label>Destination</label>'+sheetPickDeferred('awayDest','Destination',destOpts)+
+    (aiHasKey()?'<label style="display:flex;gap:8px;align-items:flex-start;margin:10px 0;cursor:pointer;"><input type="checkbox" id="awayDM" style="width:18px;height:18px;margin-top:2px;"><span>&#127922; <b>AI Dungeon Master</b><br><span class="dim">The AI narrates each stage and you improvise the team&rsquo;s actions.</span></span></label>':"")+
     '<div class="btnRow"><button class="btn small violet" onclick="uiAwayStart()">Beam down</button> <button class="btn ghost" onclick="closeModal()">Cancel</button></div>');
 }
 function uiAwayRefilter(){$("awayTeamList").innerHTML=awayTeamRows($("awayPostFilter").value);}
@@ -7532,11 +7911,13 @@ function uiAwayToggle(oid,el){
 function uiAwayStart(){
   if(!AWAY||AWAY.team.length<2){toast("Select at least 2 officers.");return;}
   sfx("transporter");
+  const _dmOn=aiHasKey()&&document.getElementById("awayDM")&&document.getElementById("awayDM").checked;
   const dest=$("awayDest").value;
   const terr=awayTerritory(dest),info=AWAY_TERR_INFO[terr];
   const sits=AWAY_SITS.slice().sort(()=>Math.random()-0.5).slice(0,3)
     .map(s=>({t:s.t,opts:s.opts.map(o=>({t:o.t,stat:o.stat,dc:o.dc+info.dc,win:o.win,lose:o.lose}))}));
   AWAY.dest=dest;AWAY.sits=sits;AWAY.stage=0;AWAY.wins=0;AWAY.terr=terr;
+  AWAY.dm=_dmOn?{log:[],cur:null,debrief:false}:null;
   AWAY.npcs=[];AWAY.npcSrc=null;
   var _dm=String(dest||"").match(/^(ship|station):(.*)$/);
   if(_dm){
@@ -7544,7 +7925,7 @@ function uiAwayStart(){
     var _aroster=_asrc?((_dm[1]==="ship"&&(typeof shipNpcs==="function"))?shipNpcs(_asrc):((typeof stNpcs==="function")?stNpcs(_asrc):[])):[];
     if(_aroster.length>=2){AWAY.npcs=_aroster.slice().sort(function(){return Math.random()-0.5;}).slice(0,2);AWAY.npcSrc={t:_dm[1],id:_dm[2]};}
   }
-  awayStage();
+  if(AWAY.dm)dmStage();else awayStage();
 }
 function awayStage(){
   const s=AWAY.sits[AWAY.stage];
@@ -7600,8 +7981,10 @@ function awayResolve(){
   team.forEach(o=>{o.morale=clamp(o.morale+mor,0,100);o.missions.t++;if(w>=2)o.missions.s++;awardAccolade(o,"Away mission: "+destLabel(AWAY.dest)+" \u2014 "+outcome);});
   log("mission","Away mission to "+destLabel(AWAY.dest)+" ("+info.label+") &mdash; "+outcome+". (+"+pres+" prestige)");
   capLogAuto("Away mission","Led a landing party to "+destLabel(AWAY.dest)+". "+outcome+".");
+  const _dmLog=AWAY.dm,_dmDest=destLabel(AWAY.dest);
   AWAY=null;save();
-  openModal('<h2>Away Mission &mdash; '+outcome+'</h2><p>'+detail+'</p><div class="kv"><span class="k">Prestige</span><span class="v">+'+pres+'</span></div><div class="btnRow"><button class="btn violet" onclick="closeModal();render()">Continue</button></div>');
+  openModal('<h2>Away Mission &mdash; '+outcome+'</h2><p id="awayDetail">'+detail+'</p><div class="kv"><span class="k">Prestige</span><span class="v">+'+pres+'</span></div><div class="btnRow"><button class="btn violet" onclick="closeModal();render()">Continue</button></div>');
+  if(_dmLog&&_dmLog.debrief&&_dmLog.log&&aiHasKey())dmDebriefAsync(outcome,pres,_dmDest,_dmLog.log);
 }
 
 var msnDraft=null;
@@ -8329,7 +8712,7 @@ function renderCaptainLog(){
   return h+'</div>';
 }
 function uiCapLogNew(){
-  $("capForm").innerHTML='<div class="card"><h3>New log entry</h3><label>Title</label><input id="capT" class="txtIn" maxlength="80" placeholder="Entry title..."><label>Entry</label><textarea id="capB" class="txtIn" rows="5" style="width:100%;box-sizing:border-box;" placeholder="Write your log..."></textarea><div class="btnRow" style="margin-top:8px;"><button class="btn small violet" onclick="uiCapLogSave()">Save entry</button><button class="btn small ghost" onclick="$(\'capForm\').innerHTML=\'\'">Cancel</button></div></div>';
+  $("capForm").innerHTML='<div class="card"><h3>New log entry</h3><label>Title</label><input id="capT" class="txtIn" maxlength="80" placeholder="Entry title..."><label>Entry</label><textarea id="capB" class="txtIn" rows="5" style="width:100%;box-sizing:border-box;" placeholder="Write your log..."></textarea><div class="btnRow" style="margin-top:8px;"><button class="btn small violet" onclick="uiCapLogSave()">Save entry</button>'+(aiHasKey()?'<button class="btn small teal" onclick="aiDraftLog()">\u2728 Draft with AI</button>':"")+'<button class="btn small ghost" onclick="$(\'capForm\').innerHTML=\'\'">Cancel</button></div></div>';
   const t=$("capT");if(t)t.focus();
 }
 function uiCapLogSave(){
@@ -8510,6 +8893,7 @@ function officerModal(id){
       _cmd+='<button class="btn small gold" onclick="uiFlagOrders(\''+o.id+'\')">Flag orders</button>';
     const mLast=(G.meetings||{})[o.id];const mCd=mLast!==undefined&&G.stardate-mLast<MEET_CD;
     _cmd+='<button class="btn small teal" '+(mCd?"disabled":"")+' onclick="uiRequestMeeting(\''+o.id+'\')">Request meeting'+(mCd?" ("+Math.ceil(MEET_CD-(G.stardate-mLast))+"d)":"")+'</button>';
+    _cmd+='<button class="btn small violet" onclick="uiCounsel(\''+o.id+'\')">Counseling</button>';
     _cmd+='<button class="btn small violet" onclick="uiAwardPicker(\''+o.id+'\')">Award honor</button>';
     if(o.rankLabel==="Civilian")
       _cmd+='<button class="btn small peach" onclick="uiCommission(\''+o.id+'\',\'civ\')">Grant field commission</button>';
@@ -12572,7 +12956,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.27</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.28</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
