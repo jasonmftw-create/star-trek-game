@@ -741,9 +741,11 @@ const TRAIT_COMPLEMENT={ // pairs that spark chemistry
 const SHIP_PICS={"crossfield32":"ships/crossfield32.jpg","intrepid32":"ships/intrepid32.jpg","eisenberg":"ships/eisenberg.jpg","credence":"ships/credence.jpg","mars32":"ships/mars32.jpg","angelou":"ships/angelou.jpg","courage":"ships/courage.jpg","saturn":"ships/saturn.jpg","tikhov":"ships/tikhov.jpg","athena":"ships/athena.jpg","constitution32":"ships/constitution32.jpg","merian":"ships/merian.jpg","friendship":"ships/friendship.jpg","wells":"ships/wells.jpg","universe":"ships/universe.jpg","galaxyx":"ships/galaxyx.jpg","nova":"ships/class/nova_1a9c91.jpg","intrepid":"ships/class/intrepid_f81640.jpg","defiant":"ships/class/defiant_e35c1f.jpg","akira":"ships/class/akira_96eea1.jpg","nebula":"ships/class/nebula_2852de.jpg","galaxy":"ships/class/galaxy_e03239.jpg","sovereign":"ships/class/sovereign_e81038.jpg","prometheus":"ships/class/prometheus_e4f006.jpg","luna":"ships/class/luna_ba8a48.jpg","california":"ships/class/california_c66988.jpg","saber":"ships/class/saber_2bde79.jpg","steamrunner":"ships/class/steamrunner_ef6ba2.jpg","norway":"ships/class/norway_e6e685.jpg","parliament":"ships/class/parliament_556124.jpg","vesta":"ships/class/vesta_285c65.jpg","odyssey":"ships/class/odyssey_22fc78.jpg","nx":"ships/class/nx_97893f.jpg","constitution":"ships/class/constitution_448b62.jpg","excelsior":"ships/class/excelsior_3e8a5f.jpg","ambassador":"ships/class/ambassador_1a4b20.jpg","miranda":"ships/class/miranda_1ee187.jpg","oberth":"ships/class/oberth_5d43f1.jpg","constellation":"ships/class/constellation_b05449.jpg",
 mercy:"ships/class/mercy_bf2ff2.jpg",harbinger:"ships/class/harbinger_7b52da.jpg",ark:"ships/class/ark_0d8b93.jpg",forge:"ships/class/forge_228410.jpg",shepherd:"ships/class/shepherd_ee03b2.jpg",relay:"ships/class/relay_31747c.jpg",tempest:"ships/class/tempest_6ad853.jpg",protostar:"ships/class/protostar_d8f724.jpg"};
 const MUSEUM_ART={"mus-enta":"ships/museum/mus_enta_c11ddd.jpg","mus-bounty":"ships/museum/mus_bounty_75a00f.jpg","mus-newjersey":"ships/museum/mus_newjersey_acff7a.jpg","mus-nx01":"ships/museum/mus_nx01_021bb1.jpg","mus-entd":"ships/museum/mus_entd_137a0e.jpg","mus-stargazer":"ships/museum/mus_stargazer_0843f5.jpg","mus-excelsior":"ships/museum/mus_excelsior_490d1a.jpg","mus-kronos1":"ships/museum/mus_kronos1_c64adb.jpg","mus-rombop":"ships/museum/mus_rombop_651e26.jpg"};
-const STATION_PICS={"starbase":"ships/station/starbase_7889be.jpg","shipyard":"ships/station/shipyard_f9a775.jpg","medical":"ships/station/medical_7cbdd4.jpg","research":"ships/station/research_7412df.jpg","ds9":"ships/station/ds9_74f65d.jpg","academy":"ships/station/academy_d5a9c7.jpg","sfcommand":"ships/station/sfcommand_19916f.jpg","douglas":"ships/station/douglas_3b16dc.jpg","sb80":"ships/station/sb80_4fdeae.jpg","sb25":"ships/station/sb25_6aae5c.jpg","jupiter":"ships/station/jupiter_27a514.jpg","spacedock":"ships/station/spacedock_2b6d03.jpg","mckinley":"ships/station/mckinley_47aa3d.jpg","sb375":"ships/station/sb375_f071eb.jpg","sb74":"ships/station/sb74_fe3703.jpg","empoknor":"ships/station/empoknor_045f8f.jpg","utopia":"ships/station/utopia_20f110.jpg","caretaker":"ships/station/caretaker_3ba981.jpg",
+const STATION_PICS={"starbase":"ships/station/starbase_7889be.jpg","shipyard":"ships/station/shipyard_f9a775.jpg","medical":"ships/station/medical_7cbdd4.jpg","research":"ships/station/research_7412df.jpg","ds9":"ships/stations/ds9.jpg","academy":"ships/station/academy_d5a9c7.jpg","sfcommand":"ships/station/sfcommand_19916f.jpg","douglas":"ships/station/douglas_3b16dc.jpg","sb80":"ships/station/sb80_4fdeae.jpg","sb25":"ships/station/sb25_6aae5c.jpg","jupiter":"ships/stations/jupiter.jpg","spacedock":"ships/stations/spacedock.jpg","mckinley":"ships/station/mckinley_47aa3d.jpg","sb375":"ships/station/sb375_f071eb.jpg","sb74":"ships/station/sb74_fe3703.jpg","empoknor":"ships/station/empoknor_045f8f.jpg","utopia":"ships/station/utopia_20f110.jpg","caretaker":"ships/station/caretaker_3ba981.jpg",
 embassy:"ships/station/embassy_38232e.jpg",
-gate:"ships/station/gate_63d721.jpg"};
+gate:"ships/station/gate_63d721.jpg",
+daystrom:"ships/stations/daystrom.jpg",
+museum:"ships/stations/museum.jpg"};
 const SHIP_CLASSES={
   nova:      {name:"Nova",      cr:8000,  dl:200,  days:30,  hull:60,  tac:30,  sci:85, speed:8.0, slots:8,  upkeep:40, comp:80},
   intrepid:  {name:"Intrepid",  cr:15000, dl:400,  days:60,  hull:75,  tac:55,  sci:90, speed:9.9, slots:12, upkeep:80, comp:140},
@@ -6633,12 +6635,15 @@ function shipParts(shape){
    photo cutouts in ships/icons/. One source of truth for battle + map icons.
    SHIP_PATHS vectors remain the fallback while an image loads (or fails);
    enemy-only shapes (cube/sphere/galor/crescent/wedge) stay vector. ---- */
-const SHIP_ICON_META={academy:[309,128],akira:[145,134],ark:[320,54],bop:[320,218],constellation:[320,155],constitution:[320,199],crossfield:[320,120],defiant:[79,58],detach32:[320,152],excelsior:[251,129],fed:[222,84],forge:[320,132],galaxy:[320,238],galaxyx:[320,238],intrepid:[231,147],ktinga:[230,166],mercy:[320,142],odyssey:[320,140],prometheus:[268,110],relay:[320,222],ring:[320,320],sovereign:[320,117],universe:[320,265],warbird:[320,187],wells:[320,168]};
-const SHIP_ICON_CLASS={constitution:"constitution",constitution32:"constitution",prometheus:"prometheus",excelsior:"excelsior",universe:"universe"};
+const SHIP_ICON_META={academy:[309,128],akira:[157,92],angelou:[520,526],ark:[320,54],bop:[320,218],california:[231,148],constellation:[320,155],constitution:[320,199],constitution32:[629,366],courage:[509,210],crossfield:[320,120],defiant:[80,59],detach32:[320,152],eisenberg:[414,159],excelsior:[306,125],fed:[222,84],forge:[320,132],galaxy:[320,238],galaxyx:[320,238],intrepid:[272,112],ktinga:[230,166],luna:[201,108],mercy:[320,142],nebula:[252,129],nova:[223,94],odyssey:[502,187],prometheus:[268,110],protostar:[143,73],relay:[320,222],ring:[320,320],saturn:[520,498],sovereign:[320,117],steamrunner:[145,136],universe:[320,265],voyagerj:[289,136],warbird:[320,187],wells:[320,168]};
+/* Class -> icon photo mapping (corrected 2026-09-30 against Jason's reference images).
+   Supplied photos are exclusive to their own class — never shared. null = no matching
+   photo: use the class's vector silhouette instead of another class's picture. */
+const SHIP_ICON_CLASS={constitution:"constitution",constitution32:"constitution32",excelsior:"excelsior",intrepid:"intrepid",luna:"luna",california:"california",nova:"nova",defiant:"defiant",akira:"akira",steamrunner:"steamrunner",nebula:"nebula",protostar:"protostar",odyssey:"odyssey",universe:"universe",intrepid32:"voyagerj",angelou:"angelou",courage:"courage",saturn:"saturn",eisenberg:"eisenberg",vesta:null,norway:null,harbinger:null,credence:null,saber:null,shepherd:null,mars32:null,merian:null,tempest:null,galaxy:"galaxy",galaxyx:"galaxyx",sovereign:"sovereign",prometheus:"prometheus",constellation:"constellation",mercy:"mercy",ark:"ark",forge:"forge",tikhov:null,relay:"relay",crossfield32:"crossfield",friendship:null,parliament:null,brel:"bop",ktinga:"ktinga",rombop:null,wells:"wells",athena:"academy"};
 const SHIP_IMGS={};
 function shipIconName(shape,cls){
   const c=String(cls||"").toLowerCase();
-  if(SHIP_ICON_CLASS[c])return SHIP_ICON_CLASS[c];
+  if(c in SHIP_ICON_CLASS)return SHIP_ICON_CLASS[c]; // null = vector fallback, never another class's photo
   return SHIP_ICON_META[shape]?shape:null;
 }
 function shipImgFor(shape,cls){
@@ -6656,7 +6661,7 @@ function shipIconAspect(shape,cls){
    Odyssey/Enterprise-J reads big without swallowing the screen. One scale
    shared by battle sprites and map icons. Lengths are canonical where known,
    role estimates for game-original classes. */
-const SHIP_ICON_LEN={defiant:171,bop:157,constellation:231,ktinga:246,constitution:305,intrepid:344,prometheus:415,akira:464,excelsior:467,fed:360,mercy:600,forge:550,galaxy:641,galaxyx:641,sovereign:685,crossfield:750,academy:650,relay:260,ark:900,detach32:950,odyssey:1070,warbird:1041,ring:850,universe:1600,wells:320};
+const SHIP_ICON_LEN={defiant:171,bop:157,constellation:231,ktinga:246,constitution:305,intrepid:344,prometheus:415,akira:464,excelsior:467,fed:360,mercy:600,forge:550,galaxy:641,galaxyx:641,sovereign:685,crossfield:750,academy:650,relay:260,ark:900,detach32:950,odyssey:1070,warbird:1041,ring:850,universe:1600,wells:320,california:480,nova:165,luna:450,steamrunner:375,nebula:440,protostar:130,voyagerj:900,angelou:850,saturn:1000,constitution32:900,courage:500,eisenberg:1212};
 function shipIconScale(shape,cls){
   const n=shipIconName(shape,cls);if(!n)return 1;
   const L=SHIP_ICON_LEN[n]||500;
@@ -10305,8 +10310,27 @@ function shipPic(cls,big){
   const src=(typeof SHIP_PICS!=="undefined"&&SHIP_PICS[cls])?SHIP_PICS[cls]:"";
   return src?'<img class="'+(big?"shipPicBig":"shipPic")+'" src="'+src+'" alt="">':"";
 }
-const STATION_ART_IDS={ds9:"ds9",utopia:"utopia",douglas:"douglas",sb80:"sb80",sb25:"sb25",jupiter:"jupiter",spacedock:"spacedock",mckinley:"mckinley",sb375:"sb375",sb74:"sb74",empoknor:"empoknor"};
-function stationArtKey(st){return (st&&STATION_ART_IDS[st.id])||(st&&st.type);}
+const STATION_ART_IDS={ds9:"ds9",utopia:"utopia",douglas:"douglas",sb80:"sb80",sb25:"sb25",jupiter:"jupiter",daystrom:"daystrom",museum:"museum",spacedock:"spacedock",mckinley:"mckinley",sb375:"sb375",sb74:"sb74",empoknor:"empoknor"};
+/* Earth Spacedock's photo is the default for generic/otherwise-unspecified starbases.
+   DS9's photo is only ever used for Deep Space 9; Empok Nor keeps its own distinct art. */
+function stationArtKey(st){
+  const byId=(st&&STATION_ART_IDS[st.id]);
+  if(byId)return byId;
+  const t=st&&st.type;
+  if(t==="starbase")return"spacedock";
+  if(t&&typeof STATION_PICS!=="undefined"&&STATION_PICS[t])return t;
+  return"spacedock";
+}
+/* Galaxy-map station marker: per-station supplied photo; generic starbases get Spacedock. */
+function stationMapIcon(st){
+  const id=String(st&&st.id||"");
+  if(id==="ds9")return"ships/icons/ds9.png";
+  if(id==="jupiter")return"ships/icons/jupiter.png";
+  if(id==="daystrom")return"ships/icons/daystrom.png";
+  if(id==="museum")return"ships/icons/museum.png";
+  if(id==="empoknor")return"ships/station/empoknor_045f8f.jpg";
+  return"ships/icons/spacedock.png";
+}
 function stationPic(type,big){
   const src=(typeof STATION_PICS!=="undefined"&&STATION_PICS[type])?STATION_PICS[type]:"";
   return src?'<img class="'+(big?"shipPicBig":"shipPic")+'" src="'+src+'" alt="">':"";
@@ -10845,6 +10869,7 @@ function uiBilletOfficers(kind,id,bid){
 function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;var t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 function hashStr(s){var h=0;for(var i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))|0;}return Math.abs(h);}
 const MAP_PICS={
+"museum":"ships/stations/museum.jpg",
 "bajor":"ships/map/bajor_ffbb22.jpg",
 "borg":"ships/map/borg_d40ac2.jpg",
 "cardassia":"ships/map/cardassia_5e05ea.jpg",
@@ -10882,6 +10907,7 @@ qonos:{t:"Qo'noS",b:"Homeworld of the Klingon Empire. The High Council rules fro
 romulus:{t:"Romulus",b:"Homeworld of the Romulan Star Empire, guarded by the Neutral Zone and the Tal Shiar."},
 bajor:{t:"Bajor",b:"Homeworld of the Bajorans, rebuilding after the Cardassian Occupation."},
 ds9:{t:"Deep Space 9",b:"Federation-administered station guarding the Bajoran wormhole. Formerly the Cardassian ore-processing station Terok Nor."},
+museum:{t:"Starfleet Museum",b:"Starfleet's museum of historic starships, parked in orbit past Jupiter. Restored legends from Archer's Enterprise to the Voyager-J are preserved here for the public."},
 wormhole:{t:"Bajoran Wormhole",b:"A stable wormhole linking the Bajor system to the Idran system in the Gamma Quadrant \u2014 the Celestial Temple of the Prophets. Ships posted at Bajor or Deep Space 9 can traverse it in just 3 days; ships in the Gamma Quadrant can ride it home, and mission planners can route Alpha-Quadrant to Gamma-Quadrant missions through it via DS9. The only shortcut to Dominion space."},
 cardassia:{t:"Cardassia Prime",b:"Seat of the Cardassian Union \u2014 rebuilding after the devastation of the Dominion War."},
 ferenginar:{t:"Ferenginar",b:"Homeworld of the Ferengi Alliance. Constant rain, constant profit."},
@@ -11344,8 +11370,9 @@ function applyMapLabels(){
 }
 
 const QNAME={alpha:"Alpha Quadrant",beta:"Beta Quadrant",gamma:"Gamma Quadrant",delta:"Delta Quadrant"};
+const POI_ICONS={ds9:"ships/icons/ds9.png",museum:"ships/icons/museum.png"};
 const QPOIS={
-alpha:[["sol",200,200,"#ffd166","Sol"],["vulcan",254,246,"#ff9f1c","Vulcan",-48,-6],["andoria",146,154,"#90e0ef","Andoria"],["betazed",250,100,"#b565ff","Betazed"],["trill",294,150,"#4cc9f0","Trill"],["risa",166,306,"#80ed99","Risa"],["bajor",250,250,"#4cc9f0","Bajor",-40,8],["ds9",296,216,"#ff9f1c","Deep Space 9",12,-16],["cardassia",324,304,"#e9c46a","Cardassia"],["ferenginar",334,180,"#b5cc4e","Ferenginar",-70,4],["wolf359",116,240,"#9e9e9e","Wolf 359"],["chintoka",290,334,"#ef476f","Chin'toka"]],
+alpha:[["sol",200,200,"#ffd166","Sol"],["vulcan",254,246,"#ff9f1c","Vulcan",-48,-6],["andoria",146,154,"#90e0ef","Andoria"],["betazed",250,100,"#b565ff","Betazed"],["trill",294,150,"#4cc9f0","Trill"],["risa",166,306,"#80ed99","Risa"],["bajor",250,250,"#4cc9f0","Bajor",-40,8],["ds9",296,216,"#ff9f1c","Deep Space 9",12,-16],["cardassia",324,304,"#e9c46a","Cardassia"],["ferenginar",334,180,"#b5cc4e","Ferenginar",-70,4],["wolf359",116,240,"#9e9e9e","Wolf 359"],["chintoka",290,334,"#ef476f","Chin'toka"],["museum",178,232,"#c9a86a","Starfleet Museum",-70,4]],
 beta:[["qonos",150,200,"#ff5d5d","Qo'noS"],["praxis",108,158,"#c9a86a","Praxis"],["rurapenthe",88,252,"#a8c5d6","Rura Penthe"],["khitomer",182,282,"#ef476f","Khitomer"],["romulus",262,222,"#2f8f5b","Romulus"],["nimbus3",222,148,"#e0a458","Nimbus III"],["narendra3",302,282,"#ff8c42","Narendra III"]],
 gamma:[["idran",118,118,"#4cc9f0","Idran System"],["newbajor",182,182,"#80ed99","New Bajor"],["meridian",262,132,"#b565ff","Meridian"],["dominion",282,262,"#a855f7","The Dominion"],["founders",218,302,"#e07a5f","Founders' Homeworld"]],
 delta:[["borg",310,120,"#58b368","Borg Unicomplex",-110,4],["ocampa",330,40,"#ffd97d","Ocampa"],["talax",180,270,"#f4a259","New Talax"],["haakona",220,300,"#c96f4a","Haakona Prime",-95,4],["malonprime",320,310,"#8a9a5b","Malon Prime",-10,4],["kazon",100,190,"#f4a259","Kazon",-18,22],["vidiians",250,40,"#b08968","Vidiians",-70,4]]
@@ -11395,7 +11422,7 @@ function renderQuadrant(q){
   QPOIS[q].forEach(function(p){
     pm+="<g onclick=\""+mapPoiClick(p[0])+"\" style=\"cursor:pointer\">"
       +"<circle cx=\""+p[1]+"\" cy=\""+p[2]+"\" r=\"9\" fill=\"none\" stroke=\""+p[3]+"\" stroke-width=\"1\" opacity=\".55\"/>"
-      +(p[0]==="ds9"?'<image href="ships/icons/ds9.png" x="'+(p[1]-11)+'" y="'+(p[2]-11)+'" width="22" height="22"/>':"<circle cx=\""+p[1]+"\" cy=\""+p[2]+"\" r=\"4.5\" fill=\""+p[3]+"\"/>")
+      +(POI_ICONS[p[0]]?'<image href="'+POI_ICONS[p[0]]+'" x="'+(p[1]-11)+'" y="'+(p[2]-11)+'" width="22" height="22"/>':"<circle cx=\""+p[1]+"\" cy=\""+p[2]+"\" r=\"4.5\" fill=\""+p[3]+"\"/>")
       +"<g class=\"mapLblG\" data-mx=\""+p[1]+"\" data-my=\""+p[2]+"\" data-dx=\""+(p[5]==null?12:p[5])+"\" data-dy=\""+(p[6]==null?4:p[6])+"\"\"><text x=\"0\" y=\"0\" class=\"mapLbl\">"+p[4]+"</text></g></g>";
   });
   let wh="";
@@ -11445,7 +11472,7 @@ function renderQuadrant(q){
     const rr=rng(hashStr("qstn"+s.id)),a=rr()*Math.PI*2,d=14+rr()*22;
     const x=(spc[0]+Math.cos(a)*d).toFixed(1),y=(spc[1]+Math.sin(a)*d*0.75).toFixed(1);
     const nm2=esc(s.name.length>18?s.name.slice(0,17)+"\u2026":s.name);
-    stnLayer+="<g onclick=\"stationModal('"+s.id+"')\" style=\"cursor:pointer\"><rect x=\""+(x-4.5)+"\" y=\""+(y-4.5)+"\" width=\"9\" height=\"9\" fill=\"none\" stroke=\"#4cc9f0\" stroke-width=\"2\"/><image href=\"ships/icons/ds9.png\" x=\""+(x-11)+"\" y=\""+(y-11)+"\" width=\"22\" height=\"22\"/>"
+    stnLayer+="<g onclick=\"stationModal('"+s.id+"')\" style=\"cursor:pointer\"><rect x=\""+(x-4.5)+"\" y=\""+(y-4.5)+"\" width=\"9\" height=\"9\" fill=\"none\" stroke=\"#4cc9f0\" stroke-width=\"2\"/><image href=\""+stationMapIcon(s)+"\" x=\""+(x-11)+"\" y=\""+(y-11)+"\" width=\"22\" height=\"22\"/>"
       +"<g class=\"mapLblG\" data-mx=\""+x+"\" data-my=\""+y+"\" data-dx=\"8\" data-dy=\"3\"><text x=\"0\" y=\"0\" class=\"mapShipLbl\">"+nm2+"</text></g>"
       +"<title>"+esc(s.name)+"</title></g>";
   });
@@ -11471,7 +11498,7 @@ function renderGalaxy(){
   const quads=[["q_alpha","ALPHA QUADRANT",100,360],["q_beta","BETA QUADRANT",300,360],["q_gamma","GAMMA QUADRANT",100,76],["q_delta","DELTA QUADRANT",300,76]];
   let ql="";
   quads.forEach(q=>{const qv=q[0].replace("q_","");ql+="<g class=\"mapLblG\" data-mx=\""+q[2]+"\" data-my=\""+q[3]+"\" data-dx=\"0\" data-dy=\"0\"><text x=\"0\" y=\"0\" text-anchor=\"middle\" class=\"mapQ\" onclick=\""+mapQuadClick(qv)+"\" style=\"cursor:pointer\">"+q[1]+"</text></g>";});
-  const pois=[["sol",200,282,"#ffd166","Sol",-26,16],["qonos",292,318,"#ff5d5d","Qo'noS",-52,10],["romulus",272,266,"#2f8f5b","Romulus",12,-10],["bajor",148,290,"#4cc9f0","Bajor",-38,-2],["ds9",166,270,"#ff9f1c","Deep Space 9",14,-14],["cardassia",105,328,"#e9c46a","Cardassia",-62,6],["ferenginar",122,232,"#b5cc4e","Ferenginar",-64,-8],["borg",296,112,"#58b368","Borg Unicomplex",-105,4],["dominion",108,118,"#a855f7","Dominion"],["vulcan",230,306,"#ff9f1c","Vulcan",14,-14],["andoria",132,244,"#90e0ef","Andoria",-48,0],["betazed",148,266,"#b565ff","Betazed",-48,0],["trill",138,250,"#4cc9f0","Trill",12,-14],["risa",160,322,"#80ed99","Risa",16,4],["khitomer",305,298,"#ef476f","Khitomer",14,12],["ocampa",342,42,"#ffd97d","Ocampa"],["talax",332,152,"#f4a259","New Talax",-70,4],["kazon",238,92,"#f4a259","Kazon"],["vidiians",368,96,"#b08968","Vidiians",-58,22],["malonprime",270,175,"#8a9a5b","Malon Prime"],["founders",140,90,"#e07a5f","Founders' Homeworld"],["idran",122,102,"#4cc9f0","Idran System",14,-14],["wolf359",170,300,"#9e9e9e","Wolf 359",-58,4]];
+  const pois=[["sol",200,282,"#ffd166","Sol",-26,16],["qonos",292,318,"#ff5d5d","Qo'noS",-52,10],["romulus",272,266,"#2f8f5b","Romulus",12,-10],["bajor",148,290,"#4cc9f0","Bajor",-38,-2],["ds9",166,270,"#ff9f1c","Deep Space 9",14,-14],["cardassia",105,328,"#e9c46a","Cardassia",-62,6],["ferenginar",122,232,"#b5cc4e","Ferenginar",-64,-8],["borg",296,112,"#58b368","Borg Unicomplex",-105,4],["dominion",108,118,"#a855f7","Dominion"],["vulcan",230,306,"#ff9f1c","Vulcan",14,-14],["andoria",132,244,"#90e0ef","Andoria",-48,0],["betazed",148,266,"#b565ff","Betazed",-48,0],["trill",138,250,"#4cc9f0","Trill",12,-14],["risa",160,322,"#80ed99","Risa",16,4],["khitomer",305,298,"#ef476f","Khitomer",14,12],["ocampa",342,42,"#ffd97d","Ocampa"],["talax",332,152,"#f4a259","New Talax",-70,4],["kazon",238,92,"#f4a259","Kazon"],["vidiians",368,96,"#b08968","Vidiians",-58,22],["malonprime",270,175,"#8a9a5b","Malon Prime"],["founders",140,90,"#e07a5f","Founders' Homeworld"],["idran",122,102,"#4cc9f0","Idran System",14,-14],["wolf359",170,300,"#9e9e9e","Wolf 359",-58,4],["museum",212,252,"#c9a86a","Starfleet Museum",12,-14]];
 const TERR=[
  ["t_fed","UNITED FEDERATION OF PLANETS",140,295,95,60,"#4cc9f0",230,215],
  ["t_klingon","KLINGON EMPIRE",295,312,55,42,"#ff5d5d",295,342],
@@ -11485,7 +11512,7 @@ const TERR=[
   pois.forEach(p=>{
     pm+="<g onclick=\""+mapPoiClick(p[0])+"\" style=\"cursor:pointer\">"
       +"<circle cx=\""+p[1]+"\" cy=\""+p[2]+"\" r=\"9\" fill=\"none\" stroke=\""+p[3]+"\" stroke-width=\"1\" opacity=\".55\"/>"
-      +(p[0]==="ds9"?'<image href="ships/icons/ds9.png" x="'+(p[1]-11)+'" y="'+(p[2]-11)+'" width="22" height="22"/>':"<circle cx=\""+p[1]+"\" cy=\""+p[2]+"\" r=\"4.5\" fill=\""+p[3]+"\"/>")
+      +(POI_ICONS[p[0]]?'<image href="'+POI_ICONS[p[0]]+'" x="'+(p[1]-11)+'" y="'+(p[2]-11)+'" width="22" height="22"/>':"<circle cx=\""+p[1]+"\" cy=\""+p[2]+"\" r=\"4.5\" fill=\""+p[3]+"\"/>")
       +"<g class=\"mapLblG\" data-mx=\""+p[1]+"\" data-my=\""+p[2]+"\" data-dx=\""+(p[5]==null?12:p[5])+"\" data-dy=\""+(p[6]==null?4:p[6])+"\"\"><text x=\"0\" y=\"0\" class=\"mapLbl\">"+p[4]+"</text></g></g>";
   });
   let wh="";
@@ -11524,7 +11551,7 @@ const TERR=[
     const rr=rng(hashStr("stn"+s.id)),a=rr()*Math.PI*2,d=30+rr()*44;
     const x=(spc[0]+Math.cos(a)*d).toFixed(1),y=(spc[1]+Math.sin(a)*d*0.75).toFixed(1);
     const nm2=esc(s.name.length>18?s.name.slice(0,17)+"\u2026":s.name);
-    stnLayer+="<g onclick=\"stationModal('"+s.id+"')\" style=\"cursor:pointer\"><rect x=\""+(x-4.5)+"\" y=\""+(y-4.5)+"\" width=\"9\" height=\"9\" fill=\"none\" stroke=\"#4cc9f0\" stroke-width=\"2\"/><image href=\"ships/icons/ds9.png\" x=\""+(x-11)+"\" y=\""+(y-11)+"\" width=\"22\" height=\"22\"/>"
+    stnLayer+="<g onclick=\"stationModal('"+s.id+"')\" style=\"cursor:pointer\"><rect x=\""+(x-4.5)+"\" y=\""+(y-4.5)+"\" width=\"9\" height=\"9\" fill=\"none\" stroke=\"#4cc9f0\" stroke-width=\"2\"/><image href=\""+stationMapIcon(s)+"\" x=\""+(x-11)+"\" y=\""+(y-11)+"\" width=\"22\" height=\"22\"/>"
       +"<g class=\"mapLblG\" data-mx=\""+x+"\" data-my=\""+y+"\" data-dx=\"8\" data-dy=\"3\"><text x=\"0\" y=\"0\" class=\"mapShipLbl\">"+nm2+"</text></g>"
       +"<title>"+esc(s.name)+"</title></g>";
   });
@@ -14649,7 +14676,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.52</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.53</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
 </body>
