@@ -5015,16 +5015,19 @@ async function aiSend(oid){
    Frugal by design: one short call each, only when the player is looking at
    the moment (a death, an award tap, an event interrupt on screen). Every
    feature falls back silently to the existing static text — no key, no call. */
+var aiLastErr=null; /* last aiGenText failure, for honest error toasts */
 async function aiGenText(prompt,maxTokens){
-  const key=aiHasKey();if(!key)return null;
+  aiLastErr=null;
+  const key=aiHasKey();if(!key){aiLastErr=new Error("no-key");return null;}
   const models=aiModelList();
   for(let i=0;i<models.length;i++){
     try{
       const t=await aiGenReq(models[i],key,{contents:[{role:"user",parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:maxTokens||160,temperature:0.9}});
       if(models[i]!==G.aiModel){G.aiModel=models[i];save();}
       return t;
-    }catch(e){if(!/HTTP 404/.test(String((e&&e.message)||e)))return null;}
+    }catch(e){aiLastErr=e;if(!/HTTP 404/.test(String((e&&e.message)||e)))return null;}
   }
+  if(!aiLastErr)aiLastErr=new Error("no working model");
   return null;
 }
 /* Eulogy: composed once, at the moment of death, stored on the memorial entry. */
@@ -5122,7 +5125,7 @@ async function dmStage(){
   openModal('<h2>Away Mission &mdash; '+esc(destLabel(AWAY.dest))+'</h2><div class="flavor">Stage '+(AWAY.stage+1)+' of 3 &middot; Team: '+esc(teamNames)+'</div><p class="dim">The dungeon master is setting the scene&hellip;</p>');
   let d=null,gotText=false;
   try{const t=await aiGenText(dmSetupPrompt(),320);if(t)gotText=true;if(myTok===dmTok&&AWAY===myAway)d=dmParse(t);}catch(e){gotText=false;}
-  if(!d||AWAY!==myAway){if(AWAY===myAway&&myTok===dmTok){toast(gotText?"The Dungeon Master sent back something unreadable \u2014 running the classic mission instead.":"The Dungeon Master couldn\u2019t reach the AI (network or rate limit) \u2014 try again in a moment. Running the classic mission instead.");awayStage();}return;} /* fallback: classic stage, announced */
+  if(!d||AWAY!==myAway){if(AWAY===myAway&&myTok===dmTok){toast(gotText?"The Dungeon Master sent back something unreadable \u2014 running the classic mission instead.":"Dungeon Master: "+aiErrMsg(aiLastErr)+". Running the classic mission instead.");awayStage();}return;} /* fallback: classic stage, announced with the real reason */
   AWAY.dm.cur=d;
   const info=AWAY_TERR_INFO[AWAY.terr];
   openModal('<h2>Away Mission &mdash; '+esc(destLabel(AWAY.dest))+'</h2><div class="flavor">Stage '+(AWAY.stage+1)+' of 3 &middot; Team: '+esc(teamNames)+'</div>'+
@@ -12977,7 +12980,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.31</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.32</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
