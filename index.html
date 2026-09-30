@@ -904,7 +904,7 @@ const SHUTTLE_NAME_POOL=["Galileo","Columbus","Copernicus","Curie","Einstein","F
 /* ================= CONFIG: STATIONS ================= */
 const STATION_DEFS={
   starbase:{name:"Starbase", cr:25000, dl:800, days:60, upkeep:120, comp:3000,
-    desc:"+1 ship command cap (base 6). +2 prestige/day. Houses large crews."},
+    desc:"+2 prestige/day. Houses large crews."},
   shipyard:{name:"Shipyard", cr:20000, dl:700, days:45, upkeep:100, comp:800,
     desc:"+1 concurrent ship build/repair slot. Each yard past the first cuts all build times 10% (max 40%)."},
   medical:{name:"Medical Station", cr:12000, dl:400, days:30, upkeep:60, comp:400,
@@ -3587,7 +3587,7 @@ function activeStations(type){return G.stations.filter(s=>s.type===type&&s.statu
 function hasStation(type){return activeStations(type).length>0;}
 function rankName(o){return o.rankLabel||RANKS[o.rank];}
 function fullName(o){return rankName(o)+" "+o.name;} function nameHtml(o,extra){return esc(o.name)+(extra||"")+'<div class="rnkline">'+esc(rankName(o))+"</div>";}
-function shipCap(){return 6+activeStations("starbase").length;}
+
 function activeShipCount(){return G.ships.filter(s=>s.status!=="construction").length;}
 function shipClass(s){return SHIP_CLASSES[s.cls];}
 function freeYards(){const yards=activeStations("shipyard");
@@ -5911,7 +5911,7 @@ function renderHUD(){
     hudStat("Credits",fmt(G.credits),"c2")+
     hudStat("Dilithium",fmt(G.dilithium),"c3")+
     hudStat("Prestige",fmt(G.prestige),"c4")+
-    hudStat("Ships",activeShipCount()+" / "+shipCap(),"c5")+
+    hudStat("Ships",activeShipCount(),"c5")+
     hudStat("Rank",PLAYER_TITLES[G.playerRank][1],"c6");
   var _ptl=$("playerTitleLine");if(_ptl)_ptl.textContent="SECTOR OPERATIONS — "+PLAYER_TITLES[G.playerRank][1].toUpperCase();
 }
@@ -7624,7 +7624,7 @@ function renderBuild(){
   h+='<div class="card"><h3>Shipyard Capacity</h3>'+
     '<div class="kv"><span class="k">Free yard slots</span><span class="v">'+yards.length+' / '+activeStations("shipyard").length+'</span></div>'+
     '<div class="kv"><span class="k">Build-time modifier</span><span class="v">×'+buildTimeMod().toFixed(2)+'</span></div>'+
-    '<div class="kv"><span class="k">Ship command cap</span><span class="v">'+activeShipCount()+' / '+shipCap()+'</span></div></div>';
+    '</div>';
   let qh='';
   if(G.builds.length){
     qh+='<div class="card"><h3>Construction Queue</h3>';
@@ -8031,7 +8031,7 @@ function futureShipModal(i){
   }else{
     h+='<p class="dim">Pull '+esc(f.name)+' from '+esc(f.when)+' into 2379. Cost: '+TEMP_SHIP_COST_PRES+' prestige + '+TEMP_SHIP_COST_DIL+' dilithium. Success rate 85%. Shares the temporal array — '+TEMP_CD+'-day recharge between extractions.</p>';
     if(G.tempCd>0)h+='<p><span class="badge bad">Array recharging — '+G.tempCd+'d remaining</span></p>';
-    else if(activeShipCount()>=shipCap())h+='<p><span class="badge bad">Ship command cap reached ('+activeShipCount()+'/'+shipCap()+') — free a berth first</span></p>';
+    
     else if(G.prestige<TEMP_SHIP_COST_PRES||G.dilithium<TEMP_SHIP_COST_DIL)
       h+='<p><span class="badge bad">Requires '+TEMP_SHIP_COST_PRES+' prestige + '+TEMP_SHIP_COST_DIL+' dilithium</span></p>';
     else h+='<button class="btn" onclick="uiFutureShipExtract('+i+')">\u27F3 Initiate Temporal Extraction</button>';
@@ -8048,7 +8048,7 @@ function uiFutureShipExtract(i){
 }
 function uiFutureShipExtractGo(i){
   const f=FUTURE_SHIPS[i];if(!f)return;
-  if((G.rescuedShips&&G.rescuedShips[f.id])||G.tempCd>0||G.prestige<TEMP_SHIP_COST_PRES||G.dilithium<TEMP_SHIP_COST_DIL||activeShipCount()>=shipCap()){futureShipModal(i);return;}
+  if((G.rescuedShips&&G.rescuedShips[f.id])||G.tempCd>0||G.prestige<TEMP_SHIP_COST_PRES||G.dilithium<TEMP_SHIP_COST_DIL){futureShipModal(i);return;}
   gainPres(-TEMP_SHIP_COST_PRES);G.dilithium=Math.max(0,G.dilithium-TEMP_SHIP_COST_DIL);G.tempCd=TEMP_CD;
   sfx("temporal");
   if(Math.random()<TEMP_ODDS){
@@ -12415,7 +12415,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.23</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.24</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
