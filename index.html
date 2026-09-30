@@ -6651,6 +6651,17 @@ function shipIconAspect(shape,cls){
   const n=shipIconName(shape,cls);if(!n)return 0;
   const m=SHIP_ICON_META[n];return m[0]/m[1];
 }
+/* Compressed canon scale (Jason approved 2026-09-30): icon width scales with
+   sqrt(canon length in metres), clamped so a Defiant stays visible and an
+   Odyssey/Enterprise-J reads big without swallowing the screen. One scale
+   shared by battle sprites and map icons. Lengths are canonical where known,
+   role estimates for game-original classes. */
+const SHIP_ICON_LEN={defiant:171,bop:157,constellation:231,ktinga:246,constitution:305,intrepid:344,prometheus:415,akira:464,excelsior:467,fed:360,mercy:600,forge:550,galaxy:641,galaxyx:641,sovereign:685,crossfield:750,academy:650,relay:260,ark:900,detach32:950,odyssey:1070,warbird:1041,ring:850,universe:1600,wells:320};
+function shipIconScale(shape,cls){
+  const n=shipIconName(shape,cls);if(!n)return 1;
+  const L=SHIP_ICON_LEN[n]||500;
+  return Math.max(0.60,Math.min(1.40,Math.sqrt(L/520)));
+}
 const DS9_IMG=new Image();DS9_IMG.src="ships/icons/ds9.png";
 function tacSteerTo(t,cx,cy){
   const cv=document.getElementById("tacCanvas");if(!cv||!t||!t.steer)return;
@@ -7023,7 +7034,7 @@ function tacDrawShip(ctx,p,isPlayer,style){
     const _sim=shipImgFor(shape,p.cls);
     if(_sim){
       // actual ship artwork; vector silhouette is the fallback while loading
-      const _asp=shipIconAspect(shape,p.cls),_w=46,_h=_w/_asp;
+      const _asp=shipIconAspect(shape,p.cls),_w=46*shipIconScale(shape,p.cls),_h=_w/_asp;
       if(isPlayer){
         ctx.fillStyle="rgba(127,212,255,"+(0.5+0.3*Math.sin(performance.now()/90))+")";
         ctx.beginPath();ctx.moveTo(-_w/2+2,-6);ctx.lineTo(-_w/2-8,0);ctx.lineTo(-_w/2+2,6);ctx.closePath();ctx.fill();
@@ -11354,8 +11365,8 @@ delta:[["thevoid","THE VOID",150,100,140,110,"#000000",220,92],["chaotic","CHAOT
 function mapShipSVG(shp,cls){
   // galaxy-map icon: same artwork as tactical battles (photo cutout, vector fallback)
   const _in=shipIconName(shp,cls);
-  if(_in){const _m=SHIP_ICON_META[_in],_h=(52*_m[1]/_m[0]);
-    return '<image href="ships/icons/'+_in+'.png" x="-26" y="'+(-_h/2).toFixed(1)+'" width="52" height="'+_h.toFixed(1)+'"/>';}
+  if(_in){const _m=SHIP_ICON_META[_in],_w=52*shipIconScale(shp,cls),_h=(_w*_m[1]/_m[0]);
+    return '<image href="ships/icons/'+_in+'.png" x="'+(-_w/2).toFixed(1)+'" y="'+(-_h/2).toFixed(1)+'" width="'+_w.toFixed(1)+'" height="'+_h.toFixed(1)+'"/>';}
   const MC={H:"#ffb703",N:"#ffe3a3",D:"#8a5f00",L:"#fff8dd"};
   const parts=shipParts(shp);
   if(!parts)return '<ellipse cx="0" cy="0" rx="11" ry="7.5" fill="#ffb703"/>';
@@ -14638,7 +14649,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.51</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.52</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
 </body>
