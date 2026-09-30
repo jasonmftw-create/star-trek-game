@@ -6508,6 +6508,127 @@ function tacPlayerShape(cls){
   if(c==="rombop")return"warbird";
   return"fed";
 }
+/* ---- silhouette path set: one source of truth for battle + map icons ----
+   Top view, nose +x, ~±28 box. Roles: H hull, N nacelle, D dark detail, L light.
+   e=ellipses [cx,cy,rx,ry,role], c=circles [cx,cy,r,role], p=filled paths [d,role],
+   s=stroked paths [d,role,width]. Grounded in the class art + Jason's references. */
+function _ell(cx,cy,rx,ry){return "M"+(cx-rx)+","+cy+" a"+rx+","+ry+" 0 1,0 "+(2*rx)+",0 a"+rx+","+ry+" 0 1,0 "+(-2*rx)+",0";}
+const SHIP_PATHS={
+fed:{e:[[2,0,10.5,7.2,"H"]],c:[[4,0,2.2,"L"]],p:[
+ ["M-16,-12.5 L2,-12.5 Q4.5,-12.5 4.5,-10.5 Q4.5,-8.5 2,-8.5 L-16,-8.5 Q-18,-8.5 -18,-10.5 Q-18,-12.5 -16,-12.5 Z","N"],
+ ["M-16,8.5 L2,8.5 Q4.5,8.5 4.5,10.5 Q4.5,12.5 2,12.5 L-16,12.5 Q-18,12.5 -18,10.5 Q-18,8.5 -16,8.5 Z","N"],
+ ["M0,-4.5 L-7,-9 L-5,-9.8 L2,-4 Z","D"],["M0,4.5 L-7,9 L-5,9.8 L2,4 Z","D"],
+ ["M-4,-3.2 L-13,-1.8 Q-15.5,0 -13,1.8 L-4,3.2 Z","H"]]},
+intrepid:{c:[[7,0,1.8,"L"]],p:[
+ ["M-18,-13 L-2,-13 Q0,-13 0,-11.6 Q0,-10.2 -2,-10.2 L-18,-10.2 Q-20,-10.2 -20,-11.6 Q-20,-13 -18,-13 Z","N"],
+ ["M-18,10.2 L-2,10.2 Q0,10.2 0,11.6 Q0,13 -2,13 L-18,13 Q-20,13 -20,11.6 Q-20,10.2 -18,10.2 Z","N"],
+ ["M-7,-4 L-13,-10.4 L-11,-11 L-5,-4.8 Z","D"],["M-7,4 L-13,10.4 L-11,11 L-5,4.8 Z","D"],
+ ["M17,0 C12,-5.5 4,-6.8 -4,-5.6 C-10,-4.8 -14,-2.6 -15,0 C-14,2.6 -10,4.8 -4,5.6 C4,6.8 12,5.5 17,0 Z","H"]]},
+defiant:{c:[[6,0,2,"L"]],p:[
+ ["M-12,-8.8 L-3,-8.8 Q-1,-8.8 -1,-7.5 Q-1,-6.2 -3,-6.2 L-12,-6.2 Q-14,-6.2 -14,-7.5 Q-14,-8.8 -12,-8.8 Z","N"],
+ ["M-12,6.2 L-3,6.2 Q-1,6.2 -1,7.5 Q-1,8.8 -3,8.8 L-12,8.8 Q-14,8.8 -14,7.5 Q-14,6.2 -12,6.2 Z","N"],
+ ["M15,0 C13,-4.5 8,-6.8 2,-7.2 L-9,-6 C-12.5,-5.6 -14,-3 -14,0 C-14,3 -12.5,5.6 -9,6 L2,7.2 C8,6.8 13,4.5 15,0 Z","H"]]},
+akira:{e:[[4,0,10.5,7.4,"H"]],c:[[6,0,2.2,"L"]],p:[
+ ["M-1,-4.5 C-7,-7.5 -14,-10.8 -20,-12.4 L-19,-9.6 C-13,-8.4 -6,-5.8 -2,-3 Z","H"],
+ ["M-1,4.5 C-7,7.5 -14,10.8 -20,12.4 L-19,9.6 C-13,8.4 -6,5.8 -2,3 Z","H"],
+ ["M-27,-14.8 L-17,-14.8 Q-15,-14.8 -15,-13.1 Q-15,-11.4 -17,-11.4 L-27,-11.4 Q-29,-11.4 -29,-13.1 Q-29,-14.8 -27,-14.8 Z","N"],
+ ["M-27,11.4 L-17,11.4 Q-15,11.4 -15,13.1 Q-15,14.8 -17,14.8 L-27,14.8 Q-29,14.8 -29,13.1 Q-29,11.4 -27,11.4 Z","N"],
+ ["M-13,-1.8 L1,-1.8 L1,1.8 L-13,1.8 Z","D"]]},
+galaxy:{e:[[2,0,13,8.8,"H"]],c:[[4,0,2.4,"L"]],p:[
+ ["M-20,-16.2 L2,-16.2 Q4,-16.2 4,-14.3 Q4,-12.4 2,-12.4 L-20,-12.4 Q-22,-12.4 -22,-14.3 Q-22,-16.2 -20,-16.2 Z","N"],
+ ["M-20,12.4 L2,12.4 Q4,12.4 4,14.3 Q4,16.2 2,16.2 L-20,16.2 Q-22,16.2 -22,14.3 Q-22,12.4 -20,12.4 Z","N"],
+ ["M-6,-5 C-10,-8 -13,-10.6 -14.5,-12.8 L-11.5,-13.6 C-9.5,-11 -7,-8.4 -4,-6 Z","D"],
+ ["M-6,5 C-10,8 -13,10.6 -14.5,12.8 L-11.5,13.6 C-9.5,11 -7,8.4 -4,6 Z","D"],
+ ["M-6,-3.6 L-13,-2.6 Q-15.5,0 -13,2.6 L-6,3.6 Z","H"]]},
+galaxyx:{e:[[2,0,13,8.8,"H"]],c:[[4,0,2.4,"L"]],p:[
+ ["M-20,-16.2 L2,-16.2 Q4,-16.2 4,-14.3 Q4,-12.4 2,-12.4 L-20,-12.4 Q-22,-12.4 -22,-14.3 Q-22,-16.2 -20,-16.2 Z","N"],
+ ["M-20,12.4 L2,12.4 Q4,12.4 4,14.3 Q4,16.2 2,16.2 L-20,16.2 Q-22,16.2 -22,14.3 Q-22,12.4 -20,12.4 Z","N"],
+ ["M-20,-1.9 L4,-1.9 Q6,-1.9 6,0 Q6,1.9 4,1.9 L-20,1.9 Q-22,1.9 -22,0 Q-22,-1.9 -20,-1.9 Z","N"],
+ ["M-6,-5 C-10,-8 -13,-10.6 -14.5,-12.8 L-11.5,-13.6 C-9.5,-11 -7,-8.4 -4,-6 Z","D"],
+ ["M-6,5 C-10,8 -13,10.6 -14.5,12.8 L-11.5,13.6 C-9.5,11 -7,8.4 -4,6 Z","D"],
+ ["M-6,-3.6 L-13,-2.6 Q-15.5,0 -13,2.6 L-6,3.6 Z","H"]]},
+sovereign:{e:[[3,0,11,6.4,"H"]],c:[[5,0,2.2,"L"]],p:[
+ ["M-18,-13.5 L4,-13.5 Q6,-13.5 6,-11.9 Q6,-10.3 4,-10.3 L-18,-10.3 Q-20,-10.3 -20,-11.9 Q-20,-13.5 -18,-13.5 Z","N"],
+ ["M-18,10.3 L4,10.3 Q6,10.3 6,11.9 Q6,13.5 4,13.5 L-18,13.5 Q-20,13.5 -20,11.9 Q-20,10.3 -18,10.3 Z","N"],
+ ["M-3,-4.5 L-9,-10.5 L-7,-11.2 L-1,-5.2 Z","D"],["M-3,4.5 L-9,10.5 L-7,11.2 L-1,5.2 Z","D"],
+ ["M-2,-3 L-15,-1.6 Q-17.5,0 -15,1.6 L-2,3 Z","H"]]},
+mercy:{e:[[1,0,13.5,9.6,"H"]],c:[[3,0,2.8,"L"]],p:[
+ ["M-14,-14.2 L-6,-14.2 Q-4,-14.2 -4,-12.7 Q-4,-11.2 -6,-11.2 L-14,-11.2 Q-16,-11.2 -16,-12.7 Q-16,-14.2 -14,-14.2 Z","N"],
+ ["M-14,11.2 L-6,11.2 Q-4,11.2 -4,12.7 Q-4,14.2 -6,14.2 L-14,14.2 Q-16,14.2 -16,12.7 Q-16,11.2 -14,11.2 Z","N"],
+ ["M-8,-2.8 L-13,-1.8 Q-15,0 -13,1.8 L-8,2.8 Z","H"]]},
+bop:{e:[[-1,0,6,3.2,"H"]],c:[[-8,-13.8,1.7,"N"],[-8,13.8,1.7,"N"],[10,0,1.5,"L"]],p:[
+ ["M0,-3 L-10.5,-13.5 L-6.8,-15 L3,-4.5 Z","H"],
+ ["M0,3 L-10.5,13.5 L-6.8,15 L3,4.5 Z","H"],
+ ["M2,-1.6 L11,-2 L14.5,0 L11,2 L2,1.6 Z","H"]]},
+constellation:{e:[[2,0,10,6.6,"H"]],c:[[4,0,2.2,"L"]],p:[
+ ["M-15,-14.8 L1,-14.8 Q3,-14.8 3,-13.3 Q3,-11.8 1,-11.8 L-15,-11.8 Q-17,-11.8 -17,-13.3 Q-17,-14.8 -15,-14.8 Z","N"],
+ ["M-15,-7.6 L1,-7.6 Q3,-7.6 3,-6.1 Q3,-4.6 1,-4.6 L-15,-4.6 Q-17,-4.6 -17,-6.1 Q-17,-7.6 -15,-7.6 Z","N"],
+ ["M-15,4.6 L1,4.6 Q3,4.6 3,6.1 Q3,7.6 1,7.6 L-15,7.6 Q-17,7.6 -17,6.1 Q-17,4.6 -15,4.6 Z","N"],
+ ["M-15,11.8 L1,11.8 Q3,11.8 3,13.3 Q3,14.8 1,14.8 L-15,14.8 Q-17,14.8 -17,13.3 Q-17,11.8 -15,11.8 Z","N"],
+ ["M-3,-3.5 L-8,-5.2 L-6,-6 L-1,-4 Z","D"],["M-3,3.5 L-8,5.2 L-6,6 L-1,4 Z","D"],
+ ["M-5,-4.5 L-11,-12.2 L-9,-12.9 L-3,-5.2 Z","D"],["M-5,4.5 L-11,12.2 L-9,12.9 L-3,5.2 Z","D"],
+ ["M-4,-2.6 L-13,-1.7 Q-15,0 -13,1.7 L-4,2.6 Z","H"]]},
+ktinga:{e:[[11,0,4.5,2.8,"H"],[-9,0,5.5,3.6,"H"]],c:[[11,0,1.6,"L"]],p:[
+ ["M-5,-2.5 L-19,-10.5 L-15,-12.5 L-2,-4 Z","H"],
+ ["M-5,2.5 L-19,10.5 L-15,12.5 L-2,4 Z","H"],
+ ["M-4,-1.7 L9,-1.7 L9,1.7 L-4,1.7 Z","H"]]},
+warbird:{e:[[0,0,7.5,3.6,"H"]],c:[[4,0,1.8,"L"]],p:[
+ ["M2,-2.5 C-4,-8 -12,-13 -18.5,-14.2 L-15.5,-9.8 C-9.5,-7.8 -4,-4.8 0,-2 Z","H"],
+ ["M2,2.5 C-4,8 -12,13 -18.5,14.2 L-15.5,9.8 C-9.5,7.8 -4,4.8 0,2 Z","H"],
+ ["M-16,-10.6 L-3,-10.6 Q-1,-10.6 -1,-9.1 Q-1,-7.6 -3,-7.6 L-16,-7.6 Q-18,-7.6 -18,-9.1 Q-18,-10.6 -16,-10.6 Z","N"],
+ ["M-16,7.6 L-3,7.6 Q-1,7.6 -1,9.1 Q-1,10.6 -3,10.6 L-16,10.6 Q-18,10.6 -18,9.1 Q-18,7.6 -16,7.6 Z","N"]]},
+odyssey:{e:[[2,0,13.5,9,"H"]],c:[[4,0,2.6,"L"]],p:[
+ ["M-22,-17.2 L4,-17.2 Q6,-17.2 6,-15.1 Q6,-13 4,-13 L-22,-13 Q-24,-13 -24,-15.1 Q-24,-17.2 -22,-17.2 Z","N"],
+ ["M-22,13 L4,13 Q6,13 6,15.1 Q6,17.2 4,17.2 L-22,17.2 Q-24,17.2 -24,15.1 Q-24,13 -22,13 Z","N"],
+ ["M-4,-5 L-12,-13.5 L-10,-14.2 L-2,-6 Z","D"],["M-4,5 L-12,13.5 L-10,14.2 L-2,6 Z","D"],
+ ["M-5,-3.8 L-14,-2.8 Q-16.5,0 -14,2.8 L-5,3.8 Z","H"]]},
+ark:{e:[[6,0,9.5,6.2,"H"]],c:[[8,0,2,"L"]],p:[
+ ["M-15,-14 L-10,-14 Q-8,-14 -8,-12.7 Q-8,-11.4 -10,-11.4 L-15,-11.4 Q-17,-11.4 -17,-12.7 Q-17,-14 -15,-14 Z","N"],
+ ["M-15,-6.5 L-10,-6.5 Q-8,-6.5 -8,-5.2 Q-8,-3.9 -10,-3.9 L-15,-3.9 Q-17,-3.9 -17,-5.2 Q-17,-6.5 -15,-6.5 Z","N"],
+ ["M-15,3.9 L-10,3.9 Q-8,3.9 -8,5.2 Q-8,6.5 -10,6.5 L-15,6.5 Q-17,6.5 -17,5.2 Q-17,3.9 -15,3.9 Z","N"],
+ ["M-15,11.4 L-10,11.4 Q-8,11.4 -8,12.7 Q-8,14 -10,14 L-15,14 Q-17,14 -17,12.7 Q-17,11.4 -15,11.4 Z","N"],
+ ["M-16,-5.5 L-3,-5.5 L-3,5.5 L-16,5.5 Z","H"],
+ ["M-12.5,-5.5 L-10.5,-5.5 L-10.5,5.5 L-12.5,5.5 Z","D"],
+ ["M-7.5,-5.5 L-5.5,-5.5 L-5.5,5.5 L-7.5,5.5 Z","D"]]},
+forge:{e:[[0,0,7,4.5,"H"]],p:[
+ ["M15,-13 L19,-13 L19,13 L15,13 Z","N"],
+ ["M-18,-1.5 L-7,-1.5 L-7,1.5 L-18,1.5 Z","D"],["M7,-1.5 L18,-1.5 L18,1.5 L7,1.5 Z","D"]],
+ s:[["M-17,-11 L17,-11 L17,11 L-17,11 Z","H",3]]},
+relay:{c:[[11,0,9,"H"],[11,0,5.5,"D"],[11,0,2,"L"],[-24,-11,1.6,"L"],[-24,11,1.6,"L"]],p:[
+ ["M6,0 C2,-3.6 -6,-4.2 -10,-2.4 C-12,-1.4 -12,1.4 -10,2.4 C-6,4.2 2,3.6 6,0 Z","H"]],
+ s:[["M-4,-2 L-24,-11","N",1.6],["M-4,2 L-24,11","N",1.6],["M-13,-6.5 L-20,8","N",1.2],["M-13,6.5 L-20,-8","N",1.2]]},
+crossfield:{e:[[0,0,4.6,3.4,"H"]],c:[[0,0,1.8,"L"]],p:[
+ ["M-2,-1.5 L-10,0 L-2,1.5 Z","H"],
+ ["M-6,-16.5 L10,-16.5 Q12,-16.5 12,-15.2 Q12,-13.9 10,-13.9 L-6,-13.9 Q-8,-13.9 -8,-15.2 Q-8,-16.5 -6,-16.5 Z","N"],
+ ["M-6,13.9 L10,13.9 Q12,13.9 12,15.2 Q12,16.5 10,16.5 L-6,16.5 Q-8,16.5 -8,15.2 Q-8,13.9 -6,13.9 Z","N"]],
+ s:[[_ell(0,0,12,8),"H",4.5]]},
+detach32:{c:[[7,0,1.8,"L"]],p:[
+ ["M-9,-13.5 L6,-13.5 Q8,-13.5 8,-12.2 Q8,-10.9 6,-10.9 L-9,-10.9 Q-11,-10.9 -11,-12.2 Q-11,-13.5 -9,-13.5 Z","N"],
+ ["M-9,10.9 L6,10.9 Q8,10.9 8,12.2 Q8,13.5 6,13.5 L-9,13.5 Q-11,13.5 -11,12.2 Q-11,10.9 -9,10.9 Z","N"],
+ ["M-16,-0.9 L-27,-0.9 L-27,0.9 L-16,0.9 Z","N"],
+ ["M17,0 C10,-4.6 0,-5.6 -8,-4.4 C-13,-3.6 -16,-1.8 -16.5,0 C-16,1.8 -13,3.6 -8,4.4 C0,5.6 10,4.6 17,0 Z","H"]]},
+ring:{e:[[0,0,6.5,3.8,"H"]],c:[[0,0,1.8,"L"]],p:[
+ ["M-12.5,-0.8 L-6,-0.8 L-6,0.8 L-12.5,0.8 Z","D"],["M6,-0.8 L12.5,-0.8 L12.5,0.8 L6,0.8 Z","D"],
+ ["M-7,-1.4 L-13,-3.4 L-13,3.4 L-7,1.4 Z","N"]],
+ s:[[_ell(0,0,12.5,12.5),"H",4]]},
+academy:{e:[[7,0,9.5,9.5,"H"]],c:[[8,0,2.4,"L"]],p:[
+ ["M0,-5.5 C-10,-8 -20,-10 -27,-9.6 L-26,-5.6 C-17,-6 -7,-4.8 1,-3 Z","N"],
+ ["M0,5.5 C-10,8 -20,10 -27,9.6 L-26,5.6 C-17,6 -7,4.8 1,3 Z","N"],
+ ["M7,-2.6 C1,-3.4 -3,-2.6 -5,0 C-3,2.6 1,3.4 7,2.6 Z","H"]]},
+wells:{e:[[6,0,4,2.2,"D"]],c:[[5,0,1.8,"L"]],p:[
+ ["M17,0 C12,-7.5 2,-9.5 -7,-7.5 C-14,-6 -17,-3 -17,0 C-17,3 -14,6 -7,7.5 C2,9.5 12,7.5 17,0 Z","H"]]}
+};
+const _shipPartsCache={};
+function shipParts(shape){
+  if(_shipPartsCache[shape])return _shipPartsCache[shape];
+  const def=SHIP_PATHS[shape];if(!def)return null;
+  const out=[];
+  (def.e||[]).forEach(function(a){out.push({d:_ell(a[0],a[1],a[2],a[3]),role:a[4],mode:"fill"});});
+  (def.c||[]).forEach(function(a){out.push({d:_ell(a[0],a[1],a[2],a[2]),role:a[3],mode:"fill"});});
+  (def.p||[]).forEach(function(a){out.push({d:a[0],role:a[1],mode:"fill"});});
+  (def.s||[]).forEach(function(a){if(a[2])out.push({d:a[0],role:a[1],mode:"stroke",w:a[2]});});
+  _shipPartsCache[shape]=out;return out;
+}
 function tacSteerTo(t,cx,cy){
   const cv=document.getElementById("tacCanvas");if(!cv||!t||!t.steer)return;
   const r=cv.getBoundingClientRect();
@@ -6881,7 +7002,22 @@ function tacDrawShip(ctx,p,isPlayer,style){
       ctx.beginPath();ctx.moveTo(-16,-9);ctx.lineTo(-23,0);ctx.lineTo(-16,9);ctx.closePath();ctx.fill();
     }
     ctx.fillStyle=hull;ctx.strokeStyle=dark;ctx.lineWidth=1.5;
-    if(shape==="warbird"){
+    const SP=shipParts(shape);
+    if(SP){
+      // vector silhouette set (shared with the galaxy map icons)
+      for(let i=0;i<SP.length;i++){
+        const pt=SP[i];
+        if(!pt.p2)pt.p2=new Path2D(pt.d);
+        if(pt.mode==="stroke"){
+          ctx.strokeStyle=pt.role==="N"?nac:(pt.role==="D"?dark:hull);
+          ctx.lineWidth=pt.w;ctx.stroke(pt.p2);
+        }else{
+          ctx.fillStyle=pt.role==="N"?nac:(pt.role==="D"?dark:(pt.role==="L"?(flash?"#ffffff":"#dfeeff"):hull));
+          ctx.fill(pt.p2);
+          if(pt.role==="H"){ctx.strokeStyle=dark;ctx.lineWidth=1.2;ctx.stroke(pt.p2);}
+        }
+      }
+    }else if(shape==="warbird"){
       // Romulan warbird: swept wings around a central hull
       ctx.beginPath();ctx.ellipse(1,0,7,3.4,0,0,6.29);ctx.fill();ctx.stroke();
       ctx.beginPath();
@@ -11179,40 +11315,17 @@ gamma:[],
 delta:[["thevoid","THE VOID",150,100,140,110,"#000000",220,92],["chaotic","CHAOTIC SPACE",60,250,90,66,"#e07a5f",105,242]]
 };
 function mapShipSVG(shp){
-  // SVG mirror of the tacDrawShip silhouettes, drawn in a +/-28 box, nose +x.
-  const H="#ffb703",D="#8a5f00",N="#ffe3a3",B="#fff8dd";
-  const E=(x,y,rx,ry)=>'<ellipse cx="'+x+'" cy="'+y+'" rx="'+rx+'" ry="'+ry+'" fill="'+H+'" stroke="'+D+'" stroke-width="1.5"/>';
-  const R=(x,y,w,h,f)=>'<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+(f||H)+'"/>';
-  const P=d=>'<path d="'+d+'" fill="'+H+'" stroke="'+D+'" stroke-width="1.5"/>';
-  const Cc=(x,y,r)=>'<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+H+'"/>';
-  const Br=(x,y,r)=>'<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+B+'"/>';
-  const ES=(x,y,rx,ry)=>'<ellipse cx="'+x+'" cy="'+y+'" rx="'+rx+'" ry="'+ry+'" fill="none" stroke="'+H+'" stroke-width="5"/>';
-  const CS=(x,y,r)=>'<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="none" stroke="'+H+'" stroke-width="4"/>';
-  const RS=(x,y,w,h)=>'<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="none" stroke="'+H+'" stroke-width="3"/>';
-  const LN=(x1,y1,x2,y2)=>'<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+N+'" stroke-width="2"/>';
-  switch(shp){
-  case"intrepid":return R(-11,-11.5,15,2.8,N)+R(-11,8.7,15,2.8,N)+P("M16 0L-8 -4.5L-13 0L-8 4.5Z")+Br(6,0,1.8);
-  case"defiant":return R(-11,-9.5,9,2.8,N)+R(-11,6.7,9,2.8,N)+P("M14 0L2 -7L-11 -5L-13 0L-11 5L2 7Z")+Br(6,0,2);
-  case"akira":return R(-17,-13.5,15,2.8)+R(-17,10.7,15,2.8)+R(-24,-14.2,8,4.2,N)+R(-24,10,8,4.2,N)+E(3,0,11,7.6)+R(-9,-1.8,11,3.6)+Br(5,0,2.2);
-  case"galaxy":return R(-15,-15.5,21,3.6,N)+R(-15,11.9,21,3.6,N)+E(1,0,13,8.6)+E(-11,0,5.5,3.6)+Br(3,0,2.4);
-  case"galaxyx":return R(-15,-15.5,21,3.6,N)+R(-15,11.9,21,3.6,N)+R(-18,-1.8,24,3.6,N)+E(1,0,13,8.6)+E(-11,0,5.5,3.6)+Br(3,0,2.4);
-  case"sovereign":return R(-13,-12.5,19,3.2,N)+R(-13,9.3,19,3.2,N)+E(2,0,10.5,6.6)+P("M-6 -2.4L-15 0L-6 2.4Z")+Br(4,0,2.2);
-  case"mercy":return R(-10,-13.5,8,3,N)+R(-10,10.5,8,3,N)+E(0,0,13.5,9.4)+Br(2,0,2.8);
-  case"bop":return E(0,0,6.5,3)+P("M0 -2.5L-5 -13L-9 -12L-5 -3Z")+P("M0 2.5L-5 13L-9 12L-5 3Z")+Cc(-7,-12.5,1.6)+Cc(-7,12.5,1.6)+P("M13 0L5 -2.2L5 2.2Z");
-  case"constellation":return R(-13,-13.5,16,3,N)+R(-13,10.5,16,3,N)+R(-13,-6.8,16,3,N)+R(-13,3.8,16,3,N)+E(2,0,10,6.8)+P("M-6 -2.4L-14 0L-6 2.4Z")+Br(4,0,2.2);
-  case"ktinga":return R(-9,-1.6,17,3.2)+E(9,0,4.2,2.6)+E(-10,0,5,3.4)+P("M-6 -2L-17 -11L-12 -11.5L-3 -3Z")+P("M-6 2L-17 11L-12 11.5L-3 3Z");
-  case"warbird":return E(1,0,7,3.4)+P("M2 -2L-17 -14L-12 -15L-3 -4Z")+P("M2 2L-17 14L-12 15L-3 4Z")+Br(5,0,1.8);
-  case"odyssey":return R(-17,-16.5,23,4,N)+R(-17,12.5,23,4,N)+E(1,0,14,9.4)+E(-12,0,6,4)+Br(3,0,2.6);
-  case"ark":return R(-13,-14,8,3,N)+R(-13,11,8,3,N)+R(-15,-7,8,3,N)+R(-15,4,8,3,N)+'<rect x="-15" y="-5.5" width="13" height="11" fill="'+H+'" stroke="'+D+'" stroke-width="1.5"/>'+E(5,0,10,6.5)+Br(7,0,2);
-  case"forge":return RS(-17,-11,34,22)+E(0,0,7,4.5)+R(14,-12,4,24,N);
-  case"relay":return LN(-5,-2,-23,-10)+LN(-5,2,-23,10)+E(-2,0,8,4)+Cc(9,0,9)+Br(9,0,2);
-  case"crossfield":return ES(0,0,12,8)+E(0,0,4.5,3.4)+R(-4,-15,16,3.2,N)+R(-4,11.8,16,3.2,N)+Br(0,0,1.8);
-  case"detach32":return P("M16 0L-6 -5L-14 0L-6 5Z")+R(-8,-13,14,2.8,N)+R(-8,10.2,14,2.8,N)+R(-27,-0.8,13,1.6,N)+Br(6,0,1.8);
-  case"ring":return CS(0,0,12.5)+E(0,0,7,4)+Br(0,0,1.8);
-  case"academy":return R(-26,-14.5,24,4.4,N)+R(-26,10.1,24,4.4,N)+E(4,0,12,10.2)+Br(6,0,2.6);
-  case"wells":return P("M16 0C10 -8 -6 -9 -14 -4C-17 0 -6 9 10 8Z")+Br(4,0,2);
-  default:return R(-4,-13,15,3.4,N)+R(-4,9.6,15,3.4,N)+E(0,0,11,7.5)+Br(2,0,2.4);
+  // galaxy-map icon: renders the same SHIP_PATHS silhouettes as tactical battles
+  const MC={H:"#ffb703",N:"#ffe3a3",D:"#8a5f00",L:"#fff8dd"};
+  const parts=shipParts(shp);
+  if(!parts)return '<ellipse cx="0" cy="0" rx="11" ry="7.5" fill="#ffb703"/>';
+  let out="";
+  for(let i=0;i<parts.length;i++){
+    const pt=parts[i];
+    if(pt.mode==="stroke")out+='<path d="'+pt.d+'" fill="none" stroke="'+MC[pt.role]+'" stroke-width="'+pt.w+'"/>';
+    else out+='<path d="'+pt.d+'" fill="'+MC[pt.role]+'"/>';
   }
+  return out;
 }
 function mapShipIcon(s,x,yt,destXY){
   // ship marker for the galaxy maps: class silhouette, nose toward destination when en route
@@ -14485,7 +14598,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.49</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.50</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
 </body>
