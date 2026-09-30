@@ -766,7 +766,7 @@ const SHIP_CLASSES={
   courage:     {name:"Courage",cr:0,dl:0,days:0,hull:105,tac:105,sci:85,speed:10.4,slots:10,upkeep:140,comp:180,futureOnly:1},
   saturn:      {name:"Saturn",cr:0,dl:0,days:0,hull:125,tac:90,sci:95,speed:10.0,slots:12,upkeep:150,comp:220,futureOnly:1},
   tikhov:      {name:"Seedvault",cr:0,dl:0,days:0,hull:60,tac:30,sci:120,speed:8.5,slots:6,upkeep:60,comp:40,futureOnly:1},
-  athena:      {name:"Athena",cr:0,dl:0,days:0,hull:135,tac:100,sci:110,speed:10.2,slots:18,upkeep:190,comp:500,futureOnly:1},
+  athena:      {name:"Academy",cr:0,dl:0,days:0,hull:135,tac:100,sci:110,speed:10.2,slots:18,upkeep:190,comp:500,futureOnly:1},
   constitution32:{name:"Constitution (32nd)",cr:0,dl:0,days:0,hull:130,tac:115,sci:95,speed:10.3,slots:14,upkeep:170,comp:350,futureOnly:1},
   merian:      {name:"Merian",cr:0,dl:0,days:0,hull:110,tac:100,sci:90,speed:10.2,slots:12,upkeep:150,comp:200,futureOnly:1},
   friendship:  {name:"Friendship",cr:0,dl:0,days:0,hull:120,tac:105,sci:90,speed:10.1,slots:12,upkeep:155,comp:250,futureOnly:1},
@@ -7984,11 +7984,11 @@ const FUTURE_SHIPS=[
  {id:"discovery-a",name:"USS Discovery",reg:"NCC-1031-A",cls:"crossfield32",era:"32nd century",when:"3189",src:"Star Trek: Discovery",blurb:"The Crossfield-class science vessel that jumped 930 years forward — refit with detached nacelles, programmable matter, and a spore drive Starfleet still doesn't fully understand."},
  {id:"voyager-j",name:"USS Voyager",reg:"NCC-74656-J",cls:"intrepid32",era:"32nd century",when:"3190",src:"Star Trek: Discovery",blurb:"Tenth of the name. Saru reported her working the DMA crisis alongside the Enterprise — the Intrepid lineage, a millennium on."},
  {id:"nog",name:"USS Nog",reg:"NCC-325070",cls:"eisenberg",era:"32nd century",when:"3189",src:"Star Trek: Discovery",blurb:"Eisenberg-class, named for the first Ferengi in Starfleet. Aron Eisenberg's legacy, gliding past Discovery at Federation HQ."},
- {id:"credence",name:"USS Credence",reg:"NCC-2604",cls:"credence",era:"32nd century",when:"3190",src:"Star Trek: Discovery",blurb:"Credence-class workhorse — twin saucers, six nacelles. She was hauling dilithium on a goodwill run when J'Vini struck in 3190."},
- {id:"leguin",name:"USS Le Guin",reg:"",cls:"mars32",era:"32nd century",when:"3189",src:"Star Trek: Discovery",blurb:"Mars-class, under Captain Bandra. Named for Ursula K. Le Guin."},
- {id:"maathai",name:"USS Maathai",reg:"",cls:"angelou",era:"32nd century",when:"3189",src:"Star Trek: Discovery",blurb:"Angelou-class, named for Wangari Maathai. Her class itself honors Maya Angelou."},
- {id:"jubayr",name:"USS Jubayr",reg:"",cls:"courage",era:"32nd century",when:"3189",src:"Star Trek: Discovery",blurb:"Courage-class, named for the 13th-century geographer Ibn Jubayr."},
- {id:"annan",name:"USS Annan",reg:"",cls:"saturn",era:"32nd century",when:"3189",src:"Star Trek: Discovery",blurb:"Saturn-class, named for Kofi Annan."},
+ {id:"credence",name:"USS Credence",reg:"NCC-2604",cls:"credence",era:"32nd century",when:"3190",src:"Star Trek: Discovery",blurb:"Credence-class workhorse — broad saucer with an open cutout, twin detached nacelles. She was hauling dilithium on a goodwill run when J'Vini struck in 3190."},
+ {id:"leguin",name:"USS Le Guin",reg:"NCC-325060",cls:"mars32",era:"32nd century",when:"3189",src:"Star Trek: Discovery",blurb:"Mars-class, under Captain Bandra. Named for Ursula K. Le Guin."},
+ {id:"maathai",name:"USS Maathai",reg:"NCC-325023",cls:"angelou",era:"32nd century",when:"3189",src:"Star Trek: Discovery",blurb:"Angelou-class, named for Wangari Maathai. Her class itself honors Maya Angelou."},
+ {id:"jubayr",name:"USS Jubayr",reg:"NCC-325068",cls:"courage",era:"32nd century",when:"3189",src:"Star Trek: Discovery",blurb:"Courage-class, named for the 13th-century geographer Ibn Jubayr."},
+ {id:"annan",name:"USS Annan",reg:"NCC-325051",cls:"saturn",era:"32nd century",when:"3189",src:"Star Trek: Discovery",blurb:"Saturn-class, named for Kofi Annan."},
  {id:"tikhov",name:"USS Tikhov",reg:"NCC-1067-M",cls:"tikhov",era:"32nd century",when:"3189",src:"Star Trek: Discovery",blurb:"A seed vault since the 23rd century — every plant in the known galaxy, carried through the Burn itself. Commander Nhan stood the Barzan watch aboard her."},
  {id:"athena",name:"USS Athena",reg:"",cls:"athena",era:"32nd century",when:"3195",src:"Star Trek: Starfleet Academy",blurb:"Starfleet Academy's school-ship — part campus, part starship. Captain Nahla Ake's teaching hospital among the stars."},
  {id:"capricorn",name:"USS Capricorn",reg:"",cls:"constitution32",era:"32nd century",when:"3195",src:"Star Trek: Starfleet Academy",blurb:"The Constitution silhouette reborn — 32nd-century bones under the old lines. She answered Athena's call at Faan Alpha."},
@@ -12412,7 +12412,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.20</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.21</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
