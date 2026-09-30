@@ -7887,17 +7887,20 @@ function awayTeamRows(f){
     return true;});
   return list.map(o=>'<div class="row" onclick="uiAwayToggle(\''+o.id+'\',this)" style="cursor:pointer;">'+faceImg(o,"pface")+'<div class="grow"><div class="nm">'+nameHtml(o)+'</div><div class="sub2">'+esc(o.dept)+' &middot; '+esc(postName(o.post))+'</div></div><span class="awayTick" style="font-size:20px;color:var(--teal);min-width:24px;text-align:center;">'+(AWAY.team.indexOf(o.id)>=0?"\u2713":"")+'</span></div>').join("");
 }
-function uiAwayPicker(){
-  const list=awayEligible().sort((a,b)=>b.rank-a.rank);
-  if(list.length<2){toast("Not enough healthy officers available.");return;}
-  AWAY={team:[]};
+/* lockSid (optional): restrict the landing party to officers posted to that ship */
+function uiAwayPicker(lockSid){
+  const s=lockSid?ship(lockSid):null;
+  let list=awayEligible().sort((a,b)=>b.rank-a.rank);
+  if(s)list=list.filter(o=>o.post.t==="ship"&&o.post.id===s.id);
+  if(list.length<2){toast(s?("Not enough of the "+s.name+"\u2019s crew available for a landing party."):"Not enough healthy officers available.");return;}
+  AWAY={team:[],shipLock:s?s.id:null};
   const unch=["Kepler-438c","Wolf 1061c","TRAPPIST-1e","Proxima b","Tau Ceti e"].map(p=>'<option value="Uncharted world ('+p+')">Uncharted world ('+p+') &mdash; Unknown territory</option>').join("");
-  const destOpts=Object.keys(POST_LABELS).map(k=>'<option value="'+k+'">'+esc(POST_LABELS[k])+' &mdash; '+AWAY_TERR_INFO[awayTerritory(k)].label+'</option>').join("")+unch;
-  const shipOpts=G.ships.map(s=>'<option value="ship:'+s.id+'">'+esc(s.name)+'</option>').join("");
-  const stOpts=G.stations.map(s=>'<option value="station:'+s.id+'">'+esc(s.name)+'</option>').join("");
-  openModal('<h2>Away Mission</h2><p class="dim">Select 2&ndash;4 officers for the landing party.</p>'+
-    '<label>Filter by posting</label>'+sheetPickDeferred('awayPostFilter','Filter by posting','<option value="">All postings</option>'+'<optgroup label="Ships">'+shipOpts+'</optgroup><optgroup label="Stations">'+stOpts+'</optgroup>'+'<option value="pool">Unassigned pool</option><option value="hq">Starfleet HQ</option>',function(){uiAwayRefilter();})+
-    '<div id="awayTeamList" style="max-height:230px;overflow:auto;">'+awayTeamRows("")+'</div>'+
+  const homePost=s?(s.post||"sol"):null;
+  const destOpts=Object.keys(POST_LABELS).map(k=>'<option value="'+k+'"'+(homePost&&k===homePost?" selected":"")+'>'+esc(POST_LABELS[k])+' &mdash; '+AWAY_TERR_INFO[awayTerritory(k)].label+'</option>').join("")+unch;
+  const filterRow=s?"":('<label>Filter by posting</label>'+sheetPickDeferred('awayPostFilter','Filter by posting','<option value="">All postings</option>'+'<optgroup label="Ships">'+G.ships.map(x=>'<option value="ship:'+x.id+'">'+esc(x.name)+'</option>').join("")+'</optgroup><optgroup label="Stations">'+G.stations.map(x=>'<option value="station:'+x.id+'">'+esc(x.name)+'</option>').join("")+'</optgroup>'+'<option value="pool">Unassigned pool</option><option value="hq">Starfleet HQ</option>',function(){uiAwayRefilter();}));
+  openModal('<h2>Away Mission'+(s?" &mdash; "+esc(s.name):"")+'</h2><p class="dim">'+(s?("Select 2&ndash;4 officers. Only the "+esc(s.name)+"\u2019s assigned crew can join this landing party."):"Select 2&ndash;4 officers for the landing party.")+'</p>'+
+    filterRow+
+    '<div id="awayTeamList" style="max-height:230px;overflow:auto;">'+awayTeamRows(s?("ship:"+s.id):"")+'</div>'+
     '<label>Destination</label>'+sheetPickDeferred('awayDest','Destination',destOpts)+
     (aiHasKey()?'<label style="display:flex;gap:8px;align-items:flex-start;margin:10px 0;cursor:pointer;"><input type="checkbox" id="awayDM" style="width:18px;height:18px;margin-top:2px;"><span>&#127922; <b>AI Dungeon Master</b><br><span class="dim">The AI narrates each stage and you improvise the team&rsquo;s actions.</span></span></label>':"")+
     '<div class="btnRow"><button class="btn small violet" onclick="uiAwayStart()">Beam down</button> <button class="btn ghost" onclick="closeModal()">Cancel</button></div>');
@@ -7910,6 +7913,11 @@ function uiAwayToggle(oid,el){
 }
 function uiAwayStart(){
   if(!AWAY||AWAY.team.length<2){toast("Select at least 2 officers.");return;}
+  if(AWAY.shipLock){
+    const _ls=ship(AWAY.shipLock);
+    AWAY.team=AWAY.team.filter(function(id){const o=officer(id);return o&&o.post.t==="ship"&&o.post.id===AWAY.shipLock;});
+    if(AWAY.team.length<2){toast("This landing party must come from the "+(_ls?_ls.name:"ship")+"\u2019s assigned crew.");return;}
+  }
   sfx("transporter");
   const _dmOn=aiHasKey()&&document.getElementById("awayDM")&&document.getElementById("awayDM").checked;
   const dest=$("awayDest").value;
@@ -10294,6 +10302,7 @@ function shipModal(id){
   const _canFly=s.status==="active"&&!s.transit&&!s.mothballed&&!s.dock;
   let _ops="";
   if(_canFly)_ops+='<button class="btn small teal" onclick="_mShip=\''+s.id+'\';closeModal();setTab(\'missions\')">Launch mission</button>';
+  if((s.status==="active"||s.status==="damaged")&&!s.mothballed)_ops+='<button class="btn small violet" onclick="uiAwayPicker(\''+s.id+'\')">Away mission</button>';
   _ops+='<button class="btn small teal" onclick="uiCrewAssign(\'ship\',\''+s.id+'\')">Assign crew</button>';
   _ops+='<button class="btn small peach" onclick="uiShoreLeave(\'ship\',\''+s.id+'\')">Shore leave (500 CR)</button>';
   if(_canFly&&hasStation("gate"))_ops+='<button class="btn small violet" onclick="uiGateTransit(\''+s.id+'\')">Slipstream transit</button>';
@@ -12956,7 +12965,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.28</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.29</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
