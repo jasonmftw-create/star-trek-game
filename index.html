@@ -4813,7 +4813,7 @@ function aiModelList(){const m=String(G.aiModel||"").trim();const l=m?[m]:[];AI_
 async function aiGenReq(model,key,body){
   const url="https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent";
   const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify(body)});
-  if(!res.ok)throw new Error("HTTP "+res.status);
+  if(!res.ok){let b="";try{b=await res.text();}catch(e){}throw new Error("HTTP "+res.status+(b?": "+b.slice(0,200):""));}
   const j=await res.json();
   let t="";try{t=j.candidates[0].content.parts.map(function(p){return p.text||"";}).join("").trim();}catch(e){}
   if(!t)throw new Error("empty reply");
@@ -4832,7 +4832,7 @@ function aiSetupHtml(){
 }
 function uiSaveAiKey(){const el=document.getElementById("aiKeyIn");const v=el?el.value.trim():"";G.aiKey=v;save();render();toast(v?"AI key saved — go talk to your crew.":"Key cleared.");}
 function uiClearAiKey(){G.aiKey="";save();render();}
-function aiErrMsg(e){const m=String((e&&e.message)||e||"");if(m==="no-key")return "no key saved";if(/401|403/.test(m))return "key rejected — double-check the paste";if(/404/.test(m))return "model not available for this key";if(/429/.test(m))return "rate limit — wait a minute, then retry";if(/Failed to fetch|NetworkError|Load failed/.test(m))return "network error — are you online?";return m.slice(0,110);}
+function aiErrMsg(e){const m=String((e&&e.message)||e||"");if(m==="no-key")return "no key saved";if(/401|403/.test(m))return "key rejected — double-check the paste";if(/404/.test(m))return "model not available for this key";if(/429/.test(m))return "rate limit — wait a minute, then retry";if(/Failed to fetch|NetworkError|Load failed/.test(m))return "network error — are you online?";const jm=/"message"\s*:\s*"([^"]{4,180})/.exec(m);if(jm)return jm[1];return m.slice(0,110);}
 async function aiRawProbe(){
   const key=String(G.aiKey||"").trim();if(!key)throw new Error("no-key");
   const models=aiModelList();let last=null;
@@ -12980,7 +12980,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.32</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.33</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
