@@ -5082,22 +5082,34 @@ function dmSetupPrompt(){
     "Then give EXACTLY 3 distinct courses of action, each testing one Starfleet skill. "+
     "Format your whole reply EXACTLY like this, on one line per part, separated by || :\n"+
     "SCENE: <your 2-3 sentences> || A: <action> [<skill>] || B: <action> [<skill>] || C: <action> [<skill>]\n"+
-    "where <skill> is exactly one of: cmd, dip, eng, med, sci, sec. Keep each action under 20 words.";
+    "where <skill> is exactly one of: cmd, dip, eng, med, sci, sec. Keep each action under 20 words. Reply with ONLY these parts and no other text.";
 }
 function dmParse(t){
   try{
-    const parts=String(t||"").split("||").map(function(s){return s.trim();}).filter(Boolean);
+    let txt=String(t||"").trim();
+    if(!txt)return null;
+    let parts=txt.split("||").map(function(s){return s.trim();}).filter(Boolean);
+    if(parts.length<4){
+      /* model ignored the || separators: fall back to line splitting */
+      const lines=txt.split(/\n+/).map(function(s){return s.trim();}).filter(Boolean);
+      let si=0;
+      for(let i=0;i<lines.length;i++){if(/^SCENE:/i.test(lines[i])){si=i;break;}}
+      parts=lines.slice(si);
+    }
     if(parts.length<4)return null;
-    const scene=parts[0].replace(/^SCENE:\s*/i,"");
-    if(!scene)return null;
+    let scene=parts[0];
+    const mS=/(?:^|\n)\s*SCENE:\s*/i.exec(scene);
+    scene=(mS?scene.slice(mS.index+mS[0].length):scene).trim();
+    const skillMap={cmd:"cmd",command:"cmd",dip:"dip",diplomacy:"dip",eng:"eng",engineering:"eng",med:"med",medical:"med",sci:"sci",science:"sci",sec:"sec",security:"sec",tac:"sec",tactical:"sec"};
     const opts=[];
-    for(let i=1;i<=3;i++){
-      const m=/^(?:[A-C]:\s*)?(.+?)\s*\[(\w+)\]\s*$/i.exec(parts[i]);
-      if(!m)return null;
-      const st=m[2].toLowerCase();
-      if(DM_STATS.indexOf(st)<0)return null;
+    for(let i=1;i<parts.length&&opts.length<3;i++){
+      const m=/^(?:[A-C1-3][.:)]\s*)?(.+?)\s*\[(\w+)\]\s*$/i.exec(parts[i]);
+      if(!m)continue;
+      const st=skillMap[m[2].toLowerCase()];
+      if(!st||!m[1].trim())continue;
       opts.push({t:m[1].trim(),stat:st});
     }
+    if(!scene||opts.length<3)return null;
     return {scene:scene,opts:opts};
   }catch(e){return null;}
 }
@@ -5108,9 +5120,9 @@ async function dmStage(){
   const teamNames=AWAY.team.map(function(id){const o=officer(id);return o?o.name.split(" ")[0]:"?";}).join(", ")+
     ((AWAY.npcs&&AWAY.npcs.length)?" + "+AWAY.npcs.map(npcLabel).join(", "):"");
   openModal('<h2>Away Mission &mdash; '+esc(destLabel(AWAY.dest))+'</h2><div class="flavor">Stage '+(AWAY.stage+1)+' of 3 &middot; Team: '+esc(teamNames)+'</div><p class="dim">The dungeon master is setting the scene&hellip;</p>');
-  let d=null;
-  try{const t=await aiGenText(dmSetupPrompt(),320);if(myTok===dmTok&&AWAY===myAway)d=dmParse(t);}catch(e){}
-  if(!d||AWAY!==myAway){if(AWAY===myAway&&myTok===dmTok){toast("The Dungeon Master couldn\u2019t reach the AI \u2014 check your key in Settings. Running the classic mission instead.");awayStage();}return;} /* fallback: classic stage, now announced */
+  let d=null,gotText=false;
+  try{const t=await aiGenText(dmSetupPrompt(),320);if(t)gotText=true;if(myTok===dmTok&&AWAY===myAway)d=dmParse(t);}catch(e){gotText=false;}
+  if(!d||AWAY!==myAway){if(AWAY===myAway&&myTok===dmTok){toast(gotText?"The Dungeon Master sent back something unreadable \u2014 running the classic mission instead.":"The Dungeon Master couldn\u2019t reach the AI (network or rate limit) \u2014 try again in a moment. Running the classic mission instead.");awayStage();}return;} /* fallback: classic stage, announced */
   AWAY.dm.cur=d;
   const info=AWAY_TERR_INFO[AWAY.terr];
   openModal('<h2>Away Mission &mdash; '+esc(destLabel(AWAY.dest))+'</h2><div class="flavor">Stage '+(AWAY.stage+1)+' of 3 &middot; Team: '+esc(teamNames)+'</div>'+
@@ -12965,7 +12977,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.30</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.31</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
