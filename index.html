@@ -10670,8 +10670,11 @@ function renderDeck(){
 }
 function deckStatusStrip(s){
   const c=shipClass(s);
+  const _cc=shipCompMax(s),_cn=shipCrewN(s),_uc=shipUndercrewed(s);
   return '<div class="deckStrip"><div style="flex:1;">'+bar("HULL",Math.max(0,100-Math.round(s.damage||0)),100)+'</div>'+
+    '<div style="flex:1;">'+bar("CREW",_cn,_cc)+'</div>'+
     '<div style="font-size:11px;opacity:.75;">'+(s.dock&&station(s.dock)?"Docked: "+esc(station(s.dock).name):esc(POST_LABELS[s.post||"sol"]||"Deep Space"))+'</div></div>'+
+    '<div class="kv"><span class="k">Crew</span><span class="v">'+_cn+' / '+_cc+(_uc?' <span class="badge" style="background:var(--red);color:#fff;font-weight:bold;">UNDERCREWED</span>':"")+'</span></div>'+
     ((s.damage||0)>0?'<div class="kv"><span class="k">Hull damage</span><span class="v" style="color:var(--red)">'+Math.round(s.damage)+'%</span></div>':"")+
     (HOSTILE_ZONES[s.post||"sol"]?'<p class="dim" style="color:var(--red)">Hostile territory ('+esc(HOSTILE_ZONES[s.post||"sol"].terr)+') — RED ALERT can sound at any time.</p>':"");
 }
@@ -12409,7 +12412,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.18</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.19</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
