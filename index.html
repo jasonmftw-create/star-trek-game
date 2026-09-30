@@ -322,6 +322,14 @@ body{touch-action:pan-y;}
 .musPhoto img{width:100%;height:auto;display:block;}
 .musPhoto div{font-size:9px;letter-spacing:.14em;color:#8fa3c8;padding:5px 8px;text-transform:uppercase;}
 .shipPicBig.shipPicEAS{padding:18px 14px;max-height:240px;}
+.shipMedia{height:88px;border:2px solid var(--orange);border-radius:10px;overflow:hidden;margin-bottom:8px;background:#05080f;}
+.shipMedia img{width:100%;height:100%;max-height:none;border:none;border-radius:0;margin-bottom:0;display:block;}
+.shipMedia .shipPicEAS{padding:6px 10px;}
+.shipCardNm{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.shipCardNm .reg{font-size:12px;color:var(--dim);font-weight:400;}
+.shipDetBtn{width:100%;margin-top:6px;background:var(--panel2);border:1px solid var(--line);color:var(--peach);border-radius:8px;padding:5px 0;font-size:13px;font-weight:700;cursor:pointer;}
+.shipDet{display:none;border-top:1px solid var(--line);margin-top:8px;padding-top:8px;}
+.shipDet.open{display:block;}
 .cmdrGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px;}
 .cmdrOpt{border:2px solid transparent;border-radius:10px;overflow:hidden;cursor:pointer;background:#000;}
 .cmdrOpt.sel{border-color:var(--orange);box-shadow:0 0 8px var(--orange);}
@@ -9111,6 +9119,15 @@ const WARN_HINTS={
  "Under-crewed":"Ships work best with at least 5 officers posted. Below that the crew is stretched thin and missions suffer — assign more officers from Personnel or the ship's Assign crew button.",
  "No captain":"No commanding officer is posted — no one holding the Captain or XO position, and no officer of Commander rank or higher. Missions launch without a captain's skill bonus.",
  "Hull damage":"The ship has taken damage in combat or hazards. Damaged ships fight worse; send her to a shipyard to repair."};
+const shipCardOpen=new Set();
+function toggleShipDet(id,ev){
+  if(ev)ev.stopPropagation();
+  const el=document.getElementById('shipDet-'+id),b=document.getElementById('shipDetBtn-'+id);
+  if(!el)return;
+  const open=el.classList.toggle('open');
+  if(open)shipCardOpen.add(id);else shipCardOpen.delete(id);
+  if(b)b.textContent=open?'Details ▴':'Details ▾';
+}
 function renderShips(){
   let rows="",mus="";
   const flId=flagshipId();
@@ -9134,12 +9151,18 @@ function renderShips(){
     const isMus=s.status==="museum";
     if(isMus){mus+=museumCard(s);return;}
     const c=shipClass(s),crew=crewOfShip(s.id),warns=shipWarnings(s),om=s.status==="mission";const fl=flagshipId()===s.id;const tv=trainingShipId()===s.id;
-    rows+='<div class="card" onclick="shipModal(\''+s.id+'\')" style="cursor:pointer;">'+shipPic(s.cls,true)+
-      '<div class="nm">'+(fl?'<span class="flagGlyph">'+CMDR_GLYPH+'</span>':"")+esc(shipNameG(s))+(fl?' <span class="badge" style="background:var(--gold);color:#0b0b12;font-weight:bold;">FLAGSHIP</span>':"")+(tv?' <span class="badge" style="background:var(--teal);color:#0b0b12;font-weight:bold;">TRAINING VESSEL</span>':"")+' <span class="dim">'+esc(s.registry)+'</span>'+(om?' <span class="badge" style="background:var(--violet);color:#0b0b12;font-weight:bold;">ON MISSION</span>':(s.transit?' <span class="badge" style="background:var(--teal);color:#0b0b12;font-weight:bold;">IN TRANSIT</span>':''))+'</div>'+
+    const badges=[fl?'<span class="badge" style="background:var(--gold);color:#0b0b12;font-weight:bold;">FLAGSHIP</span>':"",tv?'<span class="badge" style="background:var(--teal);color:#0b0b12;font-weight:bold;">TRAINING VESSEL</span>':"",om?'<span class="badge" style="background:var(--violet);color:#0b0b12;font-weight:bold;">ON MISSION</span>':"",(!om&&s.transit)?'<span class="badge" style="background:var(--teal);color:#0b0b12;font-weight:bold;">IN TRANSIT</span>':""].filter(Boolean).join(" ");
+    const detOpen=shipCardOpen.has(s.id);
+    rows+='<div class="card shipCard" onclick="shipModal(\''+s.id+'\')" style="cursor:pointer;">'+
+      '<div class="shipMedia">'+shipPic(s.cls,true)+'</div>'+
+      '<div class="shipCardNm">'+(fl?'<span class="flagGlyph">'+CMDR_GLYPH+'</span>':"")+esc(shipNameG(s))+' <span class="reg">'+esc(s.registry)+'</span></div>'+
+      '<button class="shipDetBtn" id="shipDetBtn-'+s.id+'" onclick="toggleShipDet(\''+s.id+'\',event)">'+(detOpen?'Details ▴':'Details ▾')+'</button>'+
+      '<div class="shipDet'+(detOpen?' open':'')+'" id="shipDet-'+s.id+'" onclick="event.stopPropagation()">'+
+      (badges?'<div class="warnRow">'+badges+'</div>':"")+
       '<div class="sub2">'+c.name+'-class · '+shipStatusLabel(s)+' · '+shipPostName(s)+' · Crew '+crew.length+'/'+c.slots+'</div>'+
       (warns.length?'<div class="warnRow">'+warns.map(w=>'<span class="badge warn"'+(WARN_HINTS[w.split(" (")[0]]?' data-hint="'+esc(WARN_HINTS[w.split(" (")[0]])+'"':"")+'>'+esc(w)+'</span>').join("")+'</div>':"")+
-      (s.damage>0?'<div class="prog"><i style="width:'+(100-s.damage)+'%;background:var(--red);"></i></div>':"")+
-      '</div>';
+      (s.damage>0?'<div class="sub2" style="color:var(--red);">Hull damage '+Math.round(s.damage)+'%</div><div class="prog"><i style="width:'+(100-s.damage)+'%;background:var(--red);"></i></div>':"")+
+      '</div></div>';
   });
   let h="";
   if(rows)h+=rows;
@@ -9159,8 +9182,12 @@ function museumCard(s){
   else if(bat>=1)legacy+=" Victor of "+bat+" battle"+(bat>1?"s":"")+".";
   const svcLine=s.commTxt?esc(s.commTxt):('Commissioned stardate '+sdStr(s.commSd||54973.4)+' · Mothballed stardate '+sdStr(s.musSd||G.stardate)+' · '+yrs.toFixed(1)+' years of service');
   const story=s.blurb?esc(s.blurb):legacy;
-  return '<div class="card"><div onclick="shipModal(\''+s.id+'\')" style="cursor:pointer;">'+shipArtFor(s,true)+
-    '<div class="nm">'+esc(shipNameG(s))+' <span class="dim">'+esc(s.registry)+'</span></div>'+
+  const detOpen=shipCardOpen.has(s.id);
+  return '<div class="card shipCard"><div onclick="shipModal(\''+s.id+'\')" style="cursor:pointer;">'+
+    '<div class="shipMedia">'+shipArtFor(s,true)+'</div>'+
+    '<div class="shipCardNm">'+esc(shipNameG(s))+' <span class="reg">'+esc(s.registry)+'</span></div></div>'+
+    '<button class="shipDetBtn" id="shipDetBtn-'+s.id+'" onclick="toggleShipDet(\''+s.id+'\',event)">'+(detOpen?'Details ▴':'Details ▾')+'</button>'+
+    '<div class="shipDet'+(detOpen?' open':'')+'" id="shipDet-'+s.id+'" onclick="event.stopPropagation()">'+
     '<div class="sub2">'+c.name+'-class · <span style="color:var(--purple);font-weight:bold;">FLEET MUSEUM</span></div>'+
     '<div class="sub2 dim">'+svcLine+'</div>'+
     '<div class="sub2 dim">Service tour'+((s.tours||1)>1?"s":"")+': '+(s.tours||1)+' · Missions '+won+'/'+msn+' successful · Battles won '+bat+' · Caretaker crew '+crew.length+'</div>'+
@@ -14683,7 +14710,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.62</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.63</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
