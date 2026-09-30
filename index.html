@@ -6483,11 +6483,26 @@ function tacFactionStyle(name){
 }
 function tacPlayerShape(cls){
   const c=String(cls||"").toLowerCase();
+  // reviewed against the ship art 2026-09-30: each class maps to the silhouette
+  // that matches its picture (saucer count, nacelle count/layout, special frames)
+  if(c==="akira")return"akira";
   if(c==="galaxy"||c==="nebula")return"galaxy";
+  if(c==="galaxyx")return"galaxyx";
   if(c==="odyssey")return"odyssey";
-  if(c==="sovereign"||c==="prometheus"||c==="excelsior"||c==="constitution"||c==="constellation"||c==="nx")return"sovereign";
-  if(c==="defiant")return"defiant";
-  if(c==="intrepid"||c==="luna"||c==="vesta"||c==="parliament")return"intrepid";
+  if(c==="sovereign"||c==="prometheus"||c==="excelsior"||c==="constitution"||c==="constitution32")return"sovereign";
+  if(c==="defiant"||c==="saber"||c==="shepherd")return"defiant";
+  if(c==="intrepid"||c==="luna"||c==="vesta"||c==="norway"||c==="protostar"||c==="harbinger"||c==="credence")return"intrepid";
+  if(c==="constellation")return"constellation";
+  if(c==="mercy"||c==="tempest")return"mercy";
+  if(c==="ark")return"ark";
+  if(c==="forge"||c==="tikhov")return"forge";
+  if(c==="relay")return"relay";
+  if(c==="crossfield32"||c==="friendship")return"crossfield";
+  if(c==="intrepid32"||c==="eisenberg"||c==="mars32"||c==="merian")return"detach32";
+  if(c==="angelou"||c==="courage"||c==="saturn")return"ring";
+  if(c==="wells")return"wells";
+  if(c==="athena")return"academy";
+  if(c==="parliament"||c==="steamrunner"||c==="universe")return"galaxy";
   if(c==="brel")return"bop";
   if(c==="ktinga")return"ktinga";
   if(c==="rombop")return"warbird";
@@ -6950,6 +6965,108 @@ function tacDrawShip(ctx,p,isPlayer,style){
       ctx.moveTo(16,0);ctx.lineTo(-8,-4.5);ctx.lineTo(-13,0);ctx.lineTo(-8,4.5);
       ctx.closePath();ctx.fill();ctx.stroke();
       ctx.fillStyle="#dfeeff";ctx.beginPath();ctx.arc(6,0,1.8,0,6.29);ctx.fill();
+    }else if(shape==="academy"){
+      // Academy-class (USS Athena): big saucer, two long flat blade nacelles
+      ctx.fillStyle=nac;
+      ctx.fillRect(-26,-14.5,24,4.4);ctx.fillRect(-26,10.1,24,4.4);
+      ctx.fillStyle=hull;
+      ctx.beginPath();ctx.ellipse(4,0,12,10.2,0,0,6.29);ctx.fill();ctx.stroke();
+      ctx.fillStyle="#dfeeff";ctx.beginPath();ctx.arc(6,0,2.6,0,6.29);ctx.fill();
+    }else if(shape==="akira"){
+      // Akira-class: saucer, twin long booms ending in nacelles, center pod
+      ctx.fillStyle=hull;
+      ctx.fillRect(-17,-13.5,15,2.8);ctx.fillRect(-17,10.7,15,2.8);
+      ctx.fillStyle=nac;
+      ctx.fillRect(-24,-14.2,8,4.2);ctx.fillRect(-24,10,8,4.2);
+      ctx.fillStyle=hull;
+      ctx.beginPath();ctx.ellipse(3,0,11,7.6,0,0,6.29);ctx.fill();ctx.stroke();
+      ctx.fillRect(-9,-1.8,11,3.6);
+      ctx.fillStyle="#dfeeff";ctx.beginPath();ctx.arc(5,0,2.2,0,6.29);ctx.fill();
+    }else if(shape==="constellation"){
+      // Constellation-class: saucer, four nacelles
+      ctx.fillStyle=nac;
+      ctx.fillRect(-13,-13.5,16,3);ctx.fillRect(-13,10.5,16,3);
+      ctx.fillRect(-13,-6.8,16,3);ctx.fillRect(-13,3.8,16,3);
+      ctx.fillStyle=hull;
+      ctx.beginPath();ctx.ellipse(2,0,10,6.8,0,0,6.29);ctx.fill();ctx.stroke();
+      ctx.beginPath();ctx.moveTo(-6,-2.4);ctx.lineTo(-14,0);ctx.lineTo(-6,2.4);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.fillStyle="#dfeeff";ctx.beginPath();ctx.arc(4,0,2.2,0,6.29);ctx.fill();
+    }else if(shape==="mercy"){
+      // Mercy/Tempest-class: huge saucer-dominant hull, stubby nacelles
+      ctx.fillStyle=nac;
+      ctx.fillRect(-10,-13.5,8,3);ctx.fillRect(-10,10.5,8,3);
+      ctx.fillStyle=hull;
+      ctx.beginPath();ctx.ellipse(0,0,13.5,9.4,0,0,6.29);ctx.fill();ctx.stroke();
+      ctx.fillStyle="#dfeeff";ctx.beginPath();ctx.arc(2,0,2.8,0,6.29);ctx.fill();
+    }else if(shape==="ark"){
+      // Ark-class: saucer, bulky habitat cylinder, four nacelle stubs
+      ctx.fillStyle=nac;
+      ctx.fillRect(-13,-14,8,3);ctx.fillRect(-13,11,8,3);
+      ctx.fillRect(-15,-7,8,3);ctx.fillRect(-15,4,8,3);
+      ctx.fillStyle=hull;
+      ctx.fillRect(-15,-5.5,13,11);ctx.strokeRect(-15,-5.5,13,11);
+      ctx.beginPath();ctx.ellipse(5,0,10,6.5,0,0,6.29);ctx.fill();ctx.stroke();
+      ctx.fillStyle="#dfeeff";ctx.beginPath();ctx.arc(7,0,2,0,6.29);ctx.fill();
+    }else if(shape==="forge"){
+      // Forge/Tikhov-class: open gantry frame around a core hull
+      ctx.strokeStyle=hull;ctx.lineWidth=3;
+      ctx.strokeRect(-17,-11,34,22);
+      ctx.lineWidth=1.5;ctx.strokeStyle=dark;
+      ctx.fillStyle=hull;
+      ctx.beginPath();ctx.ellipse(0,0,7,4.5,0,0,6.29);ctx.fill();ctx.stroke();
+      ctx.fillStyle=nac;ctx.fillRect(14,-12,4,24);
+    }else if(shape==="relay"){
+      // Relay-class: small hull, giant comm dish, long lattice booms
+      ctx.strokeStyle=nac;ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(-5,-2);ctx.lineTo(-23,-10);ctx.moveTo(-5,2);ctx.lineTo(-23,10);ctx.stroke();
+      ctx.lineWidth=1.5;ctx.strokeStyle=dark;ctx.fillStyle=hull;
+      ctx.beginPath();ctx.ellipse(-2,0,8,4,0,0,6.29);ctx.fill();ctx.stroke();
+      ctx.beginPath();ctx.arc(9,0,9,0,6.29);ctx.fill();ctx.stroke();
+      ctx.fillStyle="#dfeeff";ctx.beginPath();ctx.arc(9,0,2,0,6.29);ctx.fill();
+    }else if(shape==="crossfield"){
+      // Crossfield-class: saucer ring with spore-drive gap, detached nacelles
+      ctx.strokeStyle=hull;ctx.lineWidth=5;
+      ctx.beginPath();ctx.ellipse(0,0,12,8,0,0,6.29);ctx.stroke();
+      ctx.lineWidth=1.5;ctx.strokeStyle=dark;ctx.fillStyle=hull;
+      ctx.beginPath();ctx.ellipse(0,0,4.5,3.4,0,0,6.29);ctx.fill();ctx.stroke();
+      ctx.fillStyle=nac;
+      ctx.fillRect(-4,-15,16,3.2);ctx.fillRect(-4,11.8,16,3.2);
+      ctx.fillStyle="#dfeeff";ctx.beginPath();ctx.arc(0,0,1.8,0,6.29);ctx.fill();
+    }else if(shape==="detach32"){
+      // 32nd-century: sleek hull, detached floating nacelles, trailing spike
+      ctx.fillStyle=hull;
+      ctx.beginPath();
+      ctx.moveTo(16,0);ctx.lineTo(-6,-5);ctx.lineTo(-14,0);ctx.lineTo(-6,5);
+      ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.fillStyle=nac;
+      ctx.fillRect(-8,-13,14,2.8);ctx.fillRect(-8,10.2,14,2.8);
+      ctx.fillRect(-27,-0.8,13,1.6);
+      ctx.fillStyle="#dfeeff";ctx.beginPath();ctx.arc(6,0,1.8,0,6.29);ctx.fill();
+    }else if(shape==="ring"){
+      // Angelou/Courage/Saturn: great habitat ring around a small hull
+      ctx.strokeStyle=hull;ctx.lineWidth=4;
+      ctx.beginPath();ctx.arc(0,0,12.5,0,6.29);ctx.stroke();
+      ctx.lineWidth=1.5;ctx.strokeStyle=dark;ctx.fillStyle=hull;
+      ctx.beginPath();ctx.ellipse(0,0,7,4,0,0,6.29);ctx.fill();ctx.stroke();
+      ctx.fillStyle="#dfeeff";ctx.beginPath();ctx.arc(0,0,1.8,0,6.29);ctx.fill();
+    }else if(shape==="wells"){
+      // Wells-class timeship: smooth ovoid, no saucer
+      ctx.fillStyle=hull;
+      ctx.beginPath();
+      ctx.moveTo(16,0);
+      ctx.bezierCurveTo(10,-8,-6,-9,-14,-4);
+      ctx.bezierCurveTo(-17,0,-6,9,10,8);
+      ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.fillStyle="#dfeeff";ctx.beginPath();ctx.arc(4,0,2,0,6.29);ctx.fill();
+    }else if(shape==="galaxyx"){
+      // Galaxy-X: Galaxy frame with a third centerline nacelle
+      ctx.fillStyle=nac;
+      ctx.fillRect(-15,-15.5,21,3.6);ctx.fillRect(-15,11.9,21,3.6);
+      ctx.fillRect(-18,-1.8,24,3.6);
+      ctx.fillStyle=hull;
+      ctx.beginPath();ctx.ellipse(1,0,13,8.6,0,0,6.29);ctx.fill();ctx.stroke();
+      ctx.beginPath();ctx.ellipse(-11,0,5.5,3.6,0,0,6.29);ctx.fill();ctx.stroke();
+      ctx.fillStyle="#dfeeff";ctx.beginPath();ctx.arc(3,0,2.4,0,6.29);ctx.fill();
     }else{
       // generic wedge (raiders) or Federation saucer ship
       if(isPlayer){
@@ -14324,7 +14441,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.47</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.48</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
 </body>
