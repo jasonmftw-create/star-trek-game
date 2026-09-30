@@ -8018,8 +8018,8 @@ function futureShipCard(){
 function futureShipModal(i){
   const f=FUTURE_SHIPS[i];if(!f)return;
   const c=SHIP_CLASSES[f.cls],got=G.rescuedShips&&G.rescuedShips[f.id];
-  let h='<div class="pfaceWrap">'+shipPic(f.cls,true)+'<div style="flex:1;min-width:0;"><h2>\u25F7 '+esc(f.name)+'<div class="rnkline">'+esc(f.reg||"registry unrecorded")+'</div></h2>'+
-    '<div class="flavor">'+esc(c.name)+'-class · '+esc(f.era)+' · '+esc(f.src)+'</div></div></div>';
+  let h=shipPic(f.cls,true)+'<h2>\u25F7 '+esc(f.name)+'<div class="rnkline">'+esc(f.reg||"registry unrecorded")+'</div></h2>'+
+    '<div class="flavor">'+esc(c.name)+'-class · '+esc(f.era)+' · '+esc(f.src)+'</div>';
   h+='<p>'+esc(f.blurb)+'</p>';
   h+='<h4>Future systems</h4><div class="kv"><span class="k">Hull / Tactical / Science</span><span class="v">'+c.hull+' / '+c.tac+' / '+c.sci+'</span></div>'+
     '<div class="sub2 dim">Recovered with future systems intact: +30% battle power, programmable-matter hull (drydock repairs twice as fast), advanced propulsion.</div>';
@@ -12412,7 +12412,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.21</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.22</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
