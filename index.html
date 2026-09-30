@@ -4836,7 +4836,7 @@ async function uiTestAiKey(){
 function aiChatHist(o){if(!o.aiChat)o.aiChat=[];return o.aiChat;}
 function aiTrimHist(o){if(o.aiChat&&o.aiChat.length>20)o.aiChat=o.aiChat.slice(-20);}
 function aiSystemFor(o){
-  const addr=aiAddrName(),pTitle=aiPlayerRankTitle();
+  const addr=aiAddrName(),pTitle=aiAddrTitle();
   const partner=o.rel?officer(o.rel.partner):null;
   const nm=function(id){const x=officer(id);return x?x.name.split(" ")[0]:"";};
   const friends=(o.friends||[]).map(nm).filter(Boolean).slice(0,3);
@@ -4872,11 +4872,12 @@ async function aiChatCall(o,userText){
 }
 /* v2.14: proper form of address + shared fleet context for the AI */
 function aiPlayerRankTitle(){return ((typeof PLAYER_TITLES!=="undefined")&&PLAYER_TITLES[G.playerRank]&&PLAYER_TITLES[G.playerRank][1])||"Admiral";}
+function aiAddrTitle(){const t=aiPlayerRankTitle();return /admiral/i.test(t)?"Admiral":t;}
 function aiAddrName(){
   const full=String((G.commander&&G.commander.name)||"").trim();
   const parts=full.split(/\s+/).filter(Boolean);
   const last=parts.length>1?parts[parts.length-1]:(parts[0]||"");
-  return aiPlayerRankTitle()+(last?" "+last:"");
+  return aiAddrTitle()+(last?" "+last:"");
 }
 function aiFallbackLine(){
   return "Forgive me, "+aiAddrName()+" \u2014 the comm is full of static on my end. Say that again in a moment?";
@@ -12016,7 +12017,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.14</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.15</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
