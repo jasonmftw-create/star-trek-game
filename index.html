@@ -315,6 +315,8 @@ body{touch-action:pan-y;}
 .pfaceInit{display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;color:var(--peach);background:var(--panel2);}
 .shipPic{width:84px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--orange);flex:none;background:#000;}
 .shipPicBig{width:100%;max-height:190px;object-fit:cover;border-radius:10px;border:2px solid var(--orange);margin-bottom:8px;background:#000;display:block;}
+.shipPicEAS{object-fit:contain;background:radial-gradient(ellipse at 50% 62%,#12264d 0%,#05080f 78%);box-sizing:border-box;padding:4px;}
+.shipPicBig.shipPicEAS{padding:18px 14px;max-height:240px;}
 .cmdrGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px;}
 .cmdrOpt{border:2px solid transparent;border-radius:10px;overflow:hidden;cursor:pointer;background:#000;}
 .cmdrOpt.sel{border-color:var(--orange);box-shadow:0 0 8px var(--orange);}
@@ -757,8 +759,8 @@ const SHIP_CLASSES={
   luna:      {name:"Luna",      cr:35000, dl:1000, days:130, hull:100, tac:75,  sci:100,speed:9.7, slots:12, upkeep:180, comp:350,
               lock:"stardate55150"},
   california:{name:"California",cr:12000, dl:350,  days:50,  hull:70,  tac:50,  sci:70, speed:8.5, slots:10, upkeep:70,  comp:200},
-  mercy:     {name:"Mercy",     cr:9000,  dl:350,  days:25,  hull:90,  tac:25,  sci:100,speed:8.5, slots:12, upkeep:50,  comp:200,
-              special:"Hospital ship. Each active Mercy-class adds +1/day to fleet-wide crew healing (stacks with Medical Station)." },
+  olympic:     {name:"Olympic",   cr:9000,  dl:350,  days:25,  hull:90,  tac:25,  sci:100,speed:8.5, slots:12, upkeep:50,  comp:200,
+              special:"Hospital ship. Each active Olympic-class adds +1/day to fleet-wide crew healing (stacks with Medical Station)." },
   constitution:{name:"Constitution II",cr:9000, dl:250, days:60, hull:70, tac:45, sci:60, speed:9.0, slots:14, upkeep:90, comp:430, museumOnly:true},
   nx:        {name:"NX",          cr:4000, dl:100, days:40, hull:40, tac:25, sci:45, speed:5.2, slots:10, upkeep:50, comp:83,  museumOnly:true},
   brel:      {name:"B'rel Bird-of-Prey",cr:6000, dl:150, days:35, hull:45, tac:55, sci:30, speed:9.2, slots:8, upkeep:45, comp:36, museumOnly:true, special:"Klingon cloaking device fitted."},
@@ -770,21 +772,21 @@ const SHIP_CLASSES={
   steamrunner:{name:"Steamrunner",cr:14000,dl:420,  days:55,  hull:85,  tac:75,  sci:60, speed:9.2, slots:12, upkeep:85,  comp:200, lock:"research:steamrunner"},
   norway:    {name:"Norway",    cr:16000, dl:480,  days:65,  hull:88,  tac:70,  sci:70, speed:9.1, slots:14, upkeep:95,  comp:350, lock:"research:norway"},
   parliament:{name:"Parliament",cr:22000, dl:650,  days:95,  hull:95,  tac:75,  sci:80, speed:9.0, slots:16, upkeep:110, comp:600, lock:"research:parliament"},
-  vesta:     {name:"Vesta",     cr:26000, dl:800,  days:110, hull:100, tac:85,  sci:95, speed:9.9, slots:18, upkeep:130, comp:750, lock:"research:vesta",special:"Quantum slipstream drive"},
+  sagan:     {name:"Sagan",     cr:26000, dl:800,  days:110, hull:100, tac:85,  sci:95, speed:9.9, slots:18, upkeep:130, comp:750, lock:"research:sagan",special:"Quantum slipstream drive"},
   odyssey:   {name:"Odyssey",   cr:32000, dl:1000, days:130, hull:120, tac:90,  sci:90, speed:9.5, slots:22, upkeep:160, comp:1200,lock:"research:odyssey"},
   protostar: {name:"Protostar", cr:28000, dl:900,  days:120, hull:70,  tac:55,  sci:100,speed:9.99,slots:10, upkeep:120, comp:500, lock:"research:protostar",special:"Proto-drive: its missions complete 25% faster"},
-  harbinger: {name:"Harbinger", cr:16000, dl:450,  days:70,  hull:55,  tac:40,  sci:95, speed:9.8, slots:8,  upkeep:75,  comp:60,
-              special:"Reconnaissance picket. +20 science on Exploration and Science missions."},
-  ark:       {name:"Ark",       cr:22000, dl:600,  days:100, hull:100, tac:30,  sci:60, speed:7.5, slots:16, upkeep:120, comp:2000,
-              special:"+2 prestige/day when posted at a notable system (colony support)."},
-  forge:     {name:"Forge",     cr:20000, dl:550,  days:85,  hull:95,  tac:35,  sci:65, speed:8.8, slots:12, upkeep:110, comp:400,
-              special:"Mobile repair tender. Ships under repair finish 2x faster while an active Forge is in service."},
-  shepherd:  {name:"Shepherd",  cr:11000, dl:300,  days:45,  hull:75,  tac:80,  sci:45, speed:9.7, slots:8,  upkeep:60,  comp:120,
-              special:"Convoy escort cutter. +25% credits on Supply and Combat Patrol missions."},
-  relay:     {name:"Relay",     cr:13000, dl:380,  days:55,  hull:60,  tac:35,  sci:80, speed:9.0, slots:8,  upkeep:65,  comp:90,
-              special:"Subspace relay ship. +10% dilithium on all mission rewards while a Relay is active."},
-  tempest:   {name:"Tempest",   cr:14000, dl:400,  days:60,  hull:85,  tac:45,  sci:75, speed:9.3, slots:10, upkeep:70,  comp:250,
-              special:"Atmospheric relief specialist. +30% credits and +10 prestige on Rescue missions."},
+  raven: {name:"Raven", cr:16000, dl:450,  days:70,  hull:55,  tac:40,  sci:95, speed:9.8, slots:8,  upkeep:75,  comp:60,
+              special:"Reconnaissance scout. +20 science on Exploration and Science missions."},
+  ambassador:       {name:"Ambassador", cr:22000, dl:600,  days:100, hull:100, tac:30,  sci:60, speed:7.5, slots:16, upkeep:120, comp:750,
+              special:"+2 prestige/day when posted at a notable system (diplomatic flagship)."},
+  challenger:     {name:"Challenger",     cr:20000, dl:550,  days:85,  hull:95,  tac:35,  sci:65, speed:8.8, slots:12, upkeep:110, comp:400,
+              special:"Support cruiser refitted as a mobile repair tender. Ships under repair finish 2x faster while an active Challenger is in service."},
+  centaur:  {name:"Centaur",  cr:11000, dl:300,  days:45,  hull:75,  tac:80,  sci:45, speed:9.7, slots:8,  upkeep:60,  comp:120,
+              special:"Convoy escort. +25% credits on Supply and Combat Patrol missions."},
+  miranda:     {name:"Miranda",     cr:13000, dl:380,  days:55,  hull:60,  tac:35,  sci:80, speed:9.0, slots:8,  upkeep:65,  comp:90,
+              special:"Fleet logistics workhorse. +10% dilithium on all mission rewards while a Miranda is active."},
+  curry:   {name:"Curry",   cr:14000, dl:400,  days:60,  hull:85,  tac:45,  sci:75, speed:9.3, slots:10, upkeep:70,  comp:250,
+              special:"Transport and relief ship. +30% credits and +10 prestige on Rescue missions."},
 
   crossfield32:{name:"Crossfield (32nd refit)",cr:0,dl:0,days:0,hull:120,tac:85,sci:130,speed:9.9,slots:14,upkeep:160,comp:150,futureOnly:1},
   intrepid32:  {name:"Intrepid (32nd)",cr:0,dl:0,days:0,hull:110,tac:95,sci:110,speed:10.5,slots:12,upkeep:150,comp:160,futureOnly:1},
@@ -801,14 +803,14 @@ const SHIP_CLASSES={
   friendship:  {name:"Friendship",cr:0,dl:0,days:0,hull:120,tac:105,sci:90,speed:10.1,slots:12,upkeep:155,comp:250,futureOnly:1},
   wells:       {name:"Wells",cr:0,dl:0,days:0,hull:150,tac:130,sci:140,speed:11.0,slots:10,upkeep:200,comp:120,futureOnly:1},
   universe:    {name:"Universe",cr:0,dl:0,days:0,hull:200,tac:140,sci:120,speed:10.5,slots:24,upkeep:300,comp:2000,futureOnly:1},
-  galaxyx:     {name:"Galaxy-X",cr:0,dl:0,days:0,hull:160,tac:150,sci:80,speed:9.9,slots:18,upkeep:220,comp:1015,futureOnly:1},
+  dresselhaus: {name:"Dresselhaus",cr:0,dl:0,days:0,hull:160,tac:150,sci:80,speed:9.9,slots:18,upkeep:220,comp:1015,futureOnly:1},
 };
 const RESEARCH_DEFS={
   saber:{name:"Saber",cr:3000,dl:100,days:20,blurb:"Compact rapid-response escort. Twin nacelles on swept pylons — built for border patrol and fast interception."},
   steamrunner:{name:"Steamrunner",cr:4500,dl:140,days:30,blurb:"Rugged light frigate riding its catamaran warp sled. A workhorse for convoy escort and planetary defense."},
   norway:{name:"Norway",cr:5000,dl:160,days:35,blurb:"Sleek light cruiser balancing science and tactical systems. An elegant all-rounder for deep-space task forces."},
   parliament:{name:"Parliament",cr:7000,dl:220,days:50,blurb:"Modern utility cruiser descended from the California line. Roomy, dependable, easy to maintain on long deployments."},
-  vesta:{name:"Vesta",cr:9000,dl:280,days:65,blurb:"Next-generation explorer built around a quantum slipstream drive — the fastest science vessel Starfleet has ever drafted."},
+  sagan:{name:"Sagan",cr:9000,dl:280,days:65,blurb:"Picard-era deep-space explorer — the USS Stargazer's class — with a cutting-edge sensor suite and a quantum-slipstream retrofit."},
   odyssey:{name:"Odyssey",cr:12000,dl:350,days:80,blurb:"Dreadnought-scale explorer flagship. Nothing projects Federation presence like an Odyssey on the horizon."},
   protostar:{name:"Protostar",cr:14000,dl:420,days:90,blurb:"Experimental proto-drive testbed out of the Prodigy program. Small, blindingly fast, and bristling with untested science."}
 };
@@ -830,7 +832,7 @@ function researchTick(){
     R.done[key]=true;R.active=null;
     log("research","Breakthrough! "+d.name+"-class design finalized — the class is now available at your shipyards.");
     toast("Research complete: "+d.name+"-class unlocked!");
-    queueCompletion({kind:"research",name:d.name+"-class",sub:"Design finalized \u2014 now available at your shipyards",art:(typeof SHIP_PICS!=="undefined"&&SHIP_PICS[key])?SHIP_PICS[key]:""});
+    queueCompletion({kind:"research",name:d.name+"-class",sub:"Design finalized \u2014 now available at your shipyards",art:compArtFor(key)});
   }
 }
 function renderResearchCard(){
@@ -844,7 +846,7 @@ function renderResearchCard(){
   }else{
     h+='<div class="kv"><span class="k">Design bureau</span><span class="v">Idle</span></div>';
   }
-  ["saber","steamrunner","norway","parliament","vesta","odyssey","protostar"].forEach(k=>{
+  ["saber","steamrunner","norway","parliament","sagan","odyssey","protostar"].forEach(k=>{
     const d=RESEARCH_DEFS[k];
     if(R.done[k]){h+='<div class="row">'+shipPic(k)+'<div class="grow"><div class="nm">'+d.name+'-class <span class="badge good">UNLOCKED</span></div><div class="sub2">'+esc(d.blurb)+'</div></div></div>';return;}
     if(R.active&&R.active.key===k)return;
@@ -3475,6 +3477,9 @@ function migrateSave(g){
   (g.officers||[]).forEach(o=>{(o.accolades||[]).forEach(a=>{a.n=_de(a.n);});});
   (g.log||[]).forEach(e=>{e.text=_de(e.text);});
   (g.ships||[]).forEach(s=>{if(s.comp==null)s.comp=SHIP_CLASSES[s.cls]?SHIP_CLASSES[s.cls].comp:100;if(s.commSd==null)s.commSd=54973.4;if(s.tours==null)s.tours=1;});
+  const _CLSMAP={mercy:"olympic",harbinger:"raven",ark:"ambassador",forge:"challenger",shepherd:"centaur",relay:"miranda",tempest:"curry",vesta:"sagan",galaxyx:"dresselhaus"};
+  (g.ships||[]).forEach(s=>{if(s&&_CLSMAP[s.cls])s.cls=_CLSMAP[s.cls];});
+  if(g.research){if(g.research.done)for(const _k in _CLSMAP)if(g.research.done[_k]){g.research.done[_CLSMAP[_k]]=true;delete g.research.done[_k];}if(g.research.active&&_CLSMAP[g.research.active.key])g.research.active.key=_CLSMAP[g.research.active.key];}
   (g.stations||[]).forEach(st=>{if(st.comp==null)st.comp=STATION_DEFS[st.type]?STATION_DEFS[st.type].comp:100;});
   if(!(g.stations||[]).some(st=>st.id==="ds9")){
     g.stations.push({id:"ds9",name:"Deep Space 9",type:"starbase",status:"active",daysLeft:0,post:"bajor",comp:STATION_DEFS.starbase.comp});
@@ -3694,7 +3699,7 @@ function economyTick(){
   G.ships.forEach(s=>{if(s.status!=="museum"&&!s.mothballed)upkeep+=SHIP_CLASSES[s.cls].upkeep;});
   G.stations.forEach(st=>{if(st.status==="active"&&!st.mothballed)upkeep+=STATION_DEFS[st.type].upkeep;});
   G.credits+=income-upkeep;
-  gainPres(2*activeStations("starbase").length+3*activeStations("embassy").length+2*G.ships.filter(s=>s.status==="active"&&s.cls==="ark"&&!s.transit&&s.post&&s.post!=="sol"&&["alpha","beta","gamma","delta"].indexOf(s.post)<0).length);
+  gainPres(2*activeStations("starbase").length+3*activeStations("embassy").length+2*G.ships.filter(s=>s.status==="active"&&s.cls==="ambassador"&&!s.transit&&s.post&&s.post!=="sol"&&["alpha","beta","gamma","delta"].indexOf(s.post)<0).length);
   G.dilithium+=(G.dlIncome||0);
   // Starfleet Academy cadet classes + Starfleet Command requisition cooldown
   G.stations.forEach(st=>{
@@ -3736,7 +3741,7 @@ function buildTick(){
       const _nid=uid("s");
       G.ships.push({id:_nid,name:b.name,registry:b.registry,cls:b.cls,status:"active",daysLeft:0,damage:0,missionId:null,yardId:null,post:"sol",comp:SHIP_CLASSES[b.cls].comp,commSd:G.stardate,tours:1,legacyOf:b.legacyOf||null});
       G.ledger.shipsBuilt++;gainPres(20);gainPres(5);sfx("success");
-      queueCompletion({kind:"ship",id:_nid,name:b.name,sub:b.registry+" \u00b7 "+SHIP_CLASSES[b.cls].name+"-class · Christened (+5 prestige)",art:(typeof SHIP_PICS!=="undefined"&&SHIP_PICS[b.cls])?SHIP_PICS[b.cls]:""});
+      queueCompletion({kind:"ship",id:_nid,name:b.name,sub:b.registry+" \u00b7 "+SHIP_CLASSES[b.cls].name+"-class · Christened (+5 prestige)",art:compArtFor(b.cls)});
       log("build","Christening ceremony: "+b.name+" ("+b.registry+", "+SHIP_CLASSES[b.cls].name+"-class) is commissioned. A bottle of champagne is broken across her hull. (+5 prestige)");
       capLogAuto("Ship commissioned",b.name+" ("+b.registry+", "+SHIP_CLASSES[b.cls].name+"-class) has joined the fleet.");
       if(b.legacyOf){const _ls0=ship(b.legacyOf);if(_ls0)log("build",b.name+" carries on the lineage of "+_ls0.name+" ("+_ls0.registry+"). Her crew can transfer aboard from the ship's popup.");}}}
@@ -3762,13 +3767,13 @@ function buildTick(){
 }
 function refitTick(){
   G.ships.forEach(s=>{
-  const forgeTender=G.ships.some(x=>x.status==="active"&&x.cls==="forge"&&!x.transit);
+  const forgeTender=G.ships.some(x=>x.status==="active"&&x.cls==="challenger"&&!x.transit);
     if(s.status==="refit"){s.daysLeft--;if(s.daysLeft<=0){s.status="active";s.yardId=null;
       log("system",s.name+" has completed refit and is ready for duty.");
-      queueCompletion({kind:"refit",id:s.id,name:s.name,sub:"Refit complete \u2014 ready for duty",art:(typeof SHIP_PICS!=="undefined"&&SHIP_PICS[s.cls])?SHIP_PICS[s.cls]:""});}}
+      queueCompletion({kind:"refit",id:s.id,name:s.name,sub:"Refit complete \u2014 ready for duty",art:compArtFor(s.cls)});}}
     if(s.status==="repair"){s.daysLeft--;if(forgeTender)s.daysLeft--;if(s.daysLeft<=0){s.status="active";s.damage=0;s.yardId=null;
       log("system",s.name+" repairs complete. All decks operational.");
-      queueCompletion({kind:"repair",id:s.id,name:s.name,sub:"All decks operational",art:(typeof SHIP_PICS!=="undefined"&&SHIP_PICS[s.cls])?SHIP_PICS[s.cls]:""});}}
+      queueCompletion({kind:"repair",id:s.id,name:s.name,sub:"All decks operational",art:compArtFor(s.cls)});}}
   });
 }
 function missionTick(){
@@ -4396,7 +4401,7 @@ function resolveMission(m){
   const cls=SHIP_CLASSES[s.cls];
   let shipStat=t.shipStat==="hull"?cls.hull:cls[t.shipStat];
   if(s.cls==="prometheus"&&t.type==="Combat Patrol")shipStat+=20;
-  if(s.cls==="harbinger"&&(t.type==="Exploration"||t.type==="Science"))shipStat+=20;
+  if(s.cls==="raven"&&(t.type==="Exploration"||t.type==="Science"))shipStat+=20;
   const crew=crewOfShip(s.id);
   const officers=crew.slice().sort((a,b)=>b.rank-a.rank);
   const captain=officers.find(o=>o.rank>=5)||officers.find(o=>o.rank===4)||null;
@@ -4410,9 +4415,9 @@ function resolveMission(m){
   let outcome,cr=t.cr,dl=t.dl,pres=t.pres,detail="";
   if(t.type==="Science"&&hasStation("research"))cr=Math.round(cr*1.25);
   if(t.type==="Diplomacy"&&hasStation("embassy"))cr=Math.round(cr*1.25);
-  if(s.cls==="shepherd"&&(t.type==="Supply"||t.type==="Combat Patrol"))cr=Math.round(cr*1.25);
-  if(s.cls==="tempest"&&t.type==="Rescue"){cr=Math.round(cr*1.3);pres+=10;}
-  if(G.ships.some(x=>x.status==="active"&&x.cls==="relay"&&!x.transit))dl=Math.round(dl*1.1);
+  if(s.cls==="centaur"&&(t.type==="Supply"||t.type==="Combat Patrol"))cr=Math.round(cr*1.25);
+  if(s.cls==="curry"&&t.type==="Rescue"){cr=Math.round(cr*1.3);pres+=10;}
+  if(G.ships.some(x=>x.status==="active"&&x.cls==="miranda"&&!x.transit))dl=Math.round(dl*1.1);
   if(roll<chance-35){outcome="Critical Success";cr=Math.round(cr*1.5);dl=Math.round(dl*1.5);pres=Math.round(pres*1.5);
     if(captain){captain.medals.push("★ Mission Valor");awardAccolade(captain,"Mission Valor");}G.ledger.crits++;
     detail="Flawless execution. Starfleet Command is already writing the commendations.";}
@@ -4519,7 +4524,7 @@ function resolveShuttleMission(m){
 
 /* ---------- healing / aging / death ---------- */
 function healTick(){
-  const rate=(hasStation("medical")?3:1)+G.ships.filter(s=>s.status==="active"&&s.cls==="mercy"&&!s.transit).length
+  const rate=(hasStation("medical")?3:1)+G.ships.filter(s=>s.status==="active"&&s.cls==="olympic"&&!s.transit).length
     +((typeof projectAdmirals==="function"&&projectAdmirals("medical").length)?1:0); // v2.13 medical program
   crewActive().forEach(o=>{if(o.health==="injured"){o.healDays-=rate;
     if(o.healDays<=0){o.health="healthy";o.healDays=0;log("personnel",fullName(o)+" has been cleared for duty.");}}});
@@ -6486,17 +6491,15 @@ function tacPlayerShape(cls){
   // reviewed against the ship art 2026-09-30: each class maps to the silhouette
   // that matches its picture (saucer count, nacelle count/layout, special frames)
   if(c==="akira")return"akira";
-  if(c==="galaxy"||c==="nebula")return"galaxy";
-  if(c==="galaxyx")return"galaxyx";
+  if(c==="galaxy"||c==="nebula"||c==="ambassador")return"galaxy";
+  if(c==="dresselhaus")return"detach32";
   if(c==="odyssey")return"odyssey";
-  if(c==="sovereign"||c==="prometheus"||c==="excelsior"||c==="constitution"||c==="constitution32")return"sovereign";
-  if(c==="defiant"||c==="saber"||c==="shepherd")return"defiant";
-  if(c==="intrepid"||c==="luna"||c==="vesta"||c==="norway"||c==="protostar"||c==="harbinger"||c==="credence")return"intrepid";
+  if(c==="sovereign"||c==="prometheus"||c==="excelsior"||c==="constitution"||c==="constitution32"||c==="challenger")return"sovereign";
+  if(c==="defiant"||c==="saber"||c==="centaur"||c==="raven")return"defiant";
+  if(c==="intrepid"||c==="luna"||c==="sagan"||c==="norway"||c==="protostar"||c==="credence")return"intrepid";
   if(c==="constellation")return"constellation";
-  if(c==="mercy"||c==="tempest")return"mercy";
-  if(c==="ark")return"ark";
-  if(c==="forge"||c==="tikhov")return"forge";
-  if(c==="relay")return"relay";
+  if(c==="olympic"||c==="curry")return"mercy";
+  if(c==="tikhov")return"forge";
   if(c==="crossfield32"||c==="friendship")return"crossfield";
   if(c==="intrepid32"||c==="eisenberg"||c==="mars32"||c==="merian")return"detach32";
   if(c==="angelou"||c==="courage"||c==="saturn")return"ring";
@@ -6633,8 +6636,9 @@ function shipParts(shape){
    photo cutouts in ships/icons/. One source of truth for battle + map icons.
    SHIP_PATHS vectors remain the fallback while an image loads (or fails);
    enemy-only shapes (cube/sphere/galor/crescent/wedge) stay vector. ---- */
-const SHIP_ICON_META={academy:[309,128],akira:[145,134],ark:[320,54],bop:[320,218],constellation:[320,155],constitution:[320,199],crossfield:[320,120],defiant:[79,58],detach32:[320,152],excelsior:[251,129],fed:[222,84],forge:[320,132],galaxy:[320,238],galaxyx:[320,238],intrepid:[231,147],ktinga:[230,166],mercy:[320,142],odyssey:[320,140],prometheus:[268,110],relay:[320,222],ring:[320,320],sovereign:[320,117],universe:[320,265],warbird:[320,187],wells:[320,168]};
-const SHIP_ICON_CLASS={constitution:"constitution",constitution32:"constitution",prometheus:"prometheus",excelsior:"excelsior",universe:"universe"};
+const SHIP_ICON_META={academy:[309,128],akira:[446,89],ambassador:[532,138],angelou:[1060,113],bop:[116,64],california:[541,151],centaur:[216,41],challenger:[396,120],constellation:[317,95],constitution:[288,71],constitution32:[705,114],courage:[577,463],credence:[804,169],crescent:[655,179],crossfield32:[382,37],curry:[232,35],defiant:[126,30],dresselhaus:[334,128],eisenberg:[611,204],excelsior:[460,74],fed:[222,84],friendship:[601,27],galaxy:[649,148],galor:[487,84],intrepid:[350,74],intrepid32:[233,45],ktinga:[220,66],luna:[456,89],mars32:[213,57],merian:[394,65],miranda:[193,54],nebula:[445,140],norway:[360,58],nova:[186,41],nx:[231,41],odyssey:[1065,159],olympic:[326,123],parliament:[585,109],prometheus:[420,71],protostar:[145,31],raven:[96,23],rombop:[137,49],saber:[229,63],sagan:[546,134],saturn:[526,42],sovereign:[691,88],steamrunner:[361,65],tikhov:[32,20],universe:[320,265],warbird:[276,82],wells:[200,39]};
+const SHIP_ICON_CLASS={nova:"nova",intrepid:"intrepid",defiant:"defiant",akira:"akira",nebula:"nebula",galaxy:"galaxy",sovereign:"sovereign",prometheus:"prometheus",luna:"luna",california:"california",olympic:"olympic",constitution:"constitution",nx:"nx",brel:"bop",constellation:"constellation",excelsior:"excelsior",ktinga:"ktinga",rombop:"rombop",saber:"saber",steamrunner:"steamrunner",norway:"norway",parliament:"parliament",sagan:"sagan",odyssey:"odyssey",protostar:"protostar",raven:"raven",ambassador:"ambassador",challenger:"challenger",centaur:"centaur",miranda:"miranda",curry:"curry",crossfield32:"crossfield32",intrepid32:"intrepid32",eisenberg:"eisenberg",credence:"credence",mars32:"mars32",angelou:"angelou",courage:"courage",saturn:"saturn",tikhov:"tikhov",athena:"academy",constitution32:"constitution32",merian:"merian",friendship:"friendship",wells:"wells",universe:"universe",dresselhaus:"dresselhaus",warbird:"warbird",bop:"bop",crescent:"crescent",galor:"galor"};
+const EAS_ICONS={"akira":1,"ambassador":1,"angelou":1,"bop":1,"california":1,"centaur":1,"challenger":1,"constellation":1,"constitution":1,"constitution32":1,"courage":1,"credence":1,"crescent":1,"crossfield32":1,"curry":1,"defiant":1,"dresselhaus":1,"eisenberg":1,"excelsior":1,"friendship":1,"galaxy":1,"galor":1,"intrepid":1,"intrepid32":1,"ktinga":1,"luna":1,"mars32":1,"merian":1,"miranda":1,"nebula":1,"norway":1,"nova":1,"nx":1,"odyssey":1,"olympic":1,"parliament":1,"prometheus":1,"protostar":1,"raven":1,"rombop":1,"saber":1,"sagan":1,"saturn":1,"sovereign":1,"steamrunner":1,"tikhov":1,"warbird":1,"wells":1};
 const SHIP_IMGS={};
 function shipIconName(shape,cls){
   const c=String(cls||"").toLowerCase();
@@ -6656,7 +6660,7 @@ function shipIconAspect(shape,cls){
    Odyssey/Enterprise-J reads big without swallowing the screen. One scale
    shared by battle sprites and map icons. Lengths are canonical where known,
    role estimates for game-original classes. */
-const SHIP_ICON_LEN={defiant:171,bop:157,constellation:231,ktinga:246,constitution:305,intrepid:344,prometheus:415,akira:464,excelsior:467,fed:360,mercy:600,forge:550,galaxy:641,galaxyx:641,sovereign:685,crossfield:750,academy:650,relay:260,ark:900,detach32:950,odyssey:1070,warbird:1041,ring:850,universe:1600,wells:320};
+const SHIP_ICON_LEN={academy:650,akira:440,ambassador:526,angelou:2109,bop:110,california:535,centaur:210,challenger:390,constellation:310,constitution:305,constitution32:1400,courage:1142,credence:1600,crescent:650,crossfield32:751,curry:272,defiant:120,dresselhaus:655,eisenberg:1212,excelsior:467,fed:360,friendship:1189,galaxy:643,galor:481,intrepid:344,intrepid32:453,ktinga:214,luna:453,mars32:415,merian:777,miranda:243,nebula:440,norway:355,nova:180,nx:225,odyssey:1060,olympic:320,parliament:580,prometheus:414,protostar:139,raven:90,rombop:131,saber:223,sagan:541,saturn:1042,sovereign:685,steamrunner:356,tikhov:51,universe:3200,warbird:1353,wells:193};
 function shipIconScale(shape,cls){
   const n=shipIconName(shape,cls);if(!n)return 1;
   const L=SHIP_ICON_LEN[n]||500;
@@ -6691,7 +6695,7 @@ function openTacticalBattle(sid,e,z,opts){
   const off=tacOfficer(sid);
   const root=document.getElementById("tacRoot");
   root.innerHTML=
-    '<div id="tacHead"><div id="tacTitle">'+((typeof SHIP_PICS!=="undefined"&&SHIP_PICS[s.cls])?'<img class="tacShipPic" src="'+SHIP_PICS[s.cls]+'">':'')+(sim?"🕹️ HOLODECK SIMULATION — ":"⚔️ TACTICAL — ")+esc(s.name)+' <span class="dim">vs</span> <span style="color:var(--red)">'+esc(e.n)+'</span></div>'+
+    '<div id="tacHead"><div id="tacTitle">'+(compArtFor(s.cls)?'<img class="tacShipPic" src="'+compArtFor(s.cls)+'">':'')+(sim?"🕹️ HOLODECK SIMULATION — ":"⚔️ TACTICAL — ")+esc(s.name)+' <span class="dim">vs</span> <span style="color:var(--red)">'+esc(e.n)+'</span></div>'+
     '<div id="tacTaunt"></div><div id="tacAdvice" style="display:none"></div></div>'+
     '<div id="tacWrap"><canvas id="tacCanvas"></canvas><div id="tacMsg"></div></div>'+
     '<div id="tacOrders">'+
@@ -7030,11 +7034,12 @@ function tacDrawShip(ctx,p,isPlayer,style){
     ctx.strokeStyle=nac;ctx.lineWidth=1.5;ctx.shadowBlur=8;ctx.shadowColor=nac;
     ctx.beginPath();ctx.arc(0,0,11,0,6.29);ctx.stroke();ctx.shadowBlur=0;
   }else{
-    ctx.rotate(p.a);
     const _sim=shipImgFor(shape,p.cls);
     if(_sim){
-      // actual ship artwork; vector silhouette is the fallback while loading
-      const _asp=shipIconAspect(shape,p.cls),_w=46*shipIconScale(shape,p.cls),_h=_w/_asp;
+      // actual EAS side-profile artwork: flies upright, mirrors to face its heading
+      ctx.rotate(Math.max(-0.18,Math.min(0.18,Math.sin(p.a)*0.18)));
+      if(Math.cos(p.a)<0)ctx.scale(-1,1);
+      const _asp=shipIconAspect(shape,p.cls),_w=(isPlayer?54:48)*shipIconScale(shape,p.cls),_h=_w/_asp;
       if(isPlayer){
         ctx.fillStyle="rgba(127,212,255,"+(0.5+0.3*Math.sin(performance.now()/90))+")";
         ctx.beginPath();ctx.moveTo(-_w/2+2,-6);ctx.lineTo(-_w/2-8,0);ctx.lineTo(-_w/2+2,6);ctx.closePath();ctx.fill();
@@ -7044,6 +7049,7 @@ function tacDrawShip(ctx,p,isPlayer,style){
       ctx.filter="none";
       ctx.restore();return;
     }
+    ctx.rotate(p.a);
     if(isPlayer){
       // engine glow
       ctx.fillStyle="rgba(127,212,255,"+(0.5+0.3*Math.sin(performance.now()/90))+")";
@@ -9902,7 +9908,7 @@ const HISTORICAL_STATIONS=[
 ];
 function histEntry(v,sec){
   const ds=esc((v.name+" "+(v.reg||"")+" "+v.cls+" "+v.fate).toLowerCase());
-  const pic=(typeof SHIP_PICS!=="undefined"&&SHIP_PICS[v.art])?shipPic(v.art):((typeof STATION_PICS!=="undefined"&&STATION_PICS[v.art])?stationPic(v.art):"");
+  const pic=shipPic(v.art)||stationPic(v.art);
   return '<div class="row" data-search="'+ds+'" data-sec="'+sec+'" style="padding:6px;cursor:default;">'+pic+'<div class="grow"><div class="nm">'+esc(v.name)+(v.reg?' <span class="dim">'+esc(v.reg)+'</span>':"")+'</div><div class="sub2">'+esc(v.cls)+'</div><div class="sub2 dim">'+esc(v.fate)+'</div></div></div>';
 }
 /* ---------- temporal extraction: rescue the lost to time ---------- */
@@ -10302,8 +10308,12 @@ function faceImg(o,cls){
 }
 function shipArtFor(s,big){if(s&&s.id&&typeof MUSEUM_ART!=="undefined"&&MUSEUM_ART[s.id])return '<img class="'+(big?"shipPicBig":"shipPic")+'" src="'+MUSEUM_ART[s.id]+'" alt="">';return shipPic(s?s.cls:"",big);}
 function shipPic(cls,big){
+  const _icn=(typeof shipIconName==="function"&&typeof SHIP_ICON_META!=="undefined"&&typeof tacPlayerShape==="function")?shipIconName(tacPlayerShape(cls),cls):null;
+  if(_icn&&SHIP_ICON_META[_icn])return '<img class="'+(big?"shipPicBig":"shipPic")+' shipPicEAS" src="ships/icons/'+_icn+'.png" alt="">';
   const src=(typeof SHIP_PICS!=="undefined"&&SHIP_PICS[cls])?SHIP_PICS[cls]:"";
   return src?'<img class="'+(big?"shipPicBig":"shipPic")+'" src="'+src+'" alt="">':"";
+}
+function compArtFor(cls){const _icn=(typeof shipIconName==="function"&&typeof SHIP_ICON_META!=="undefined"&&typeof tacPlayerShape==="function")?shipIconName(tacPlayerShape(cls),cls):null;if(_icn&&SHIP_ICON_META[_icn])return "ships/icons/"+_icn+".png";return (typeof SHIP_PICS!=="undefined"&&SHIP_PICS[cls])?SHIP_PICS[cls]:"";
 }
 const STATION_ART_IDS={ds9:"ds9",utopia:"utopia",douglas:"douglas",sb80:"sb80",sb25:"sb25",jupiter:"jupiter",spacedock:"spacedock",mckinley:"mckinley",sb375:"sb375",sb74:"sb74",empoknor:"empoknor"};
 function stationArtKey(st){return (st&&STATION_ART_IDS[st.id])||(st&&st.type);}
@@ -11217,8 +11227,8 @@ const GATE_COST_DL=100,GATE_DAYS=14,WORM_COST_DL=25,WORM_DAYS=3;
 /* ---------- mission travel: distances, drives & route planning ---------- */
 const PX_TO_LY=250;                 // full-map pixels -> light years
 const WARP_LY_DAY=200;              // conventional warp cruise
-const SLIP_LY_DAY=5000;             // quantum slipstream (Vesta-class)
-function hasSlipstream(s){return !!s&&s.cls==="vesta";}
+const SLIP_LY_DAY=5000;             // quantum slipstream (Sagan-class)
+function hasSlipstream(s){return !!s&&s.cls==="sagan";}
 function postDist(a,b){             // light years between two postings
   const A=POST_COORDS[a]||POST_COORDS.sol,B=POST_COORDS[b]||POST_COORDS.sol;
   const dx=A[0]-B[0],dy=A[1]-B[1];
@@ -11291,7 +11301,7 @@ function transitTick(){
     capLogAuto("Transit complete",s.name+" arrived at "+POST_LABELS[dest]+" via "+(via==="gate"?"slipstream gate":"the Bajoran wormhole")+".");
     queueCompletion({kind:"transit",id:s.id,name:s.name,
       sub:(via==="gate"?"Slipstream transit complete":"Wormhole traversal complete")+" \u00b7 arrived at "+POST_LABELS[dest],
-      art:(typeof SHIP_PICS!=="undefined"&&SHIP_PICS[s.cls])?SHIP_PICS[s.cls]:""});
+      art:compArtFor(s.cls)});
   }
 }
 function uiGateTransit(id){
@@ -11392,10 +11402,12 @@ function mapShipSVG(shp,cls){
   return out;
 }
 function mapShipIcon(s,x,yt,destXY){
-  // ship marker for the galaxy maps: class silhouette, nose toward destination when en route
+  // ship marker for the galaxy maps: side-profile art stays upright; vector fallback aims at destination
+  const _shp=tacPlayerShape(s.cls);
+  if(shipIconName(_shp,s.cls))return '<g transform="translate('+x+' '+yt+') scale(0.5)">'+mapShipSVG(_shp,s.cls)+'</g>';
   let deg=-90;
   if(destXY)deg=(Math.atan2(destXY[1]-yt,destXY[0]-x)*180/Math.PI).toFixed(1);
-  return '<g transform="translate('+x+' '+yt+') rotate('+deg+') scale(0.42)">'+mapShipSVG(tacPlayerShape(s.cls),s.cls)+'</g>';
+  return '<g transform="translate('+x+' '+yt+') rotate('+deg+') scale(0.42)">'+mapShipSVG(_shp,s.cls)+'</g>';
 }
 function renderQuadrant(q){
   const R=rng(20260928+q.charCodeAt(0));
@@ -12759,10 +12771,10 @@ function deckCount(s){const c=shipClass(s);return clamp(4+Math.round((c.slots||1
 function deckOfRoom(s,room){const n=deckCount(s);return 1+Math.round(room.frac*(n-1));}
 
 /* ship class -> on-screen era for interior set photos */
-const DECK_ERA={crossfield32:"future",intrepid32:"future",eisenberg:"future",credence:"future",mars32:"future",angelou:"future",courage:"future",saturn:"future",tikhov:"future",athena:"future",constitution32:"future",merian:"future",friendship:"future",wells:"future",universe:"future",galaxyx:"future",constitution:"snw",nx:"ent",excelsior:"tng",constellation:"tng",galaxy:"tng",nebula:"tng",
-akira:"tng",saber:"tng",steamrunner:"tng",norway:"tng",sovereign:"tng",luna:"tng",california:"tng",mercy:"tng",
-parliament:"tng",harbinger:"tng",ark:"tng",forge:"tng",shepherd:"tng",relay:"tng",tempest:"tng",
-defiant:"ds9",intrepid:"voy",nova:"voy",prometheus:"voy",protostar:"voy",vesta:"pic",odyssey:"pic",
+const DECK_ERA={crossfield32:"future",intrepid32:"future",eisenberg:"future",credence:"future",mars32:"future",angelou:"future",courage:"future",saturn:"future",tikhov:"future",athena:"future",constitution32:"future",merian:"future",friendship:"future",wells:"future",universe:"future",dresselhaus:"future",constitution:"snw",nx:"ent",excelsior:"tng",constellation:"tng",galaxy:"tng",nebula:"tng",
+akira:"tng",saber:"tng",steamrunner:"tng",norway:"tng",sovereign:"tng",luna:"tng",california:"tng",olympic:"tng",
+parliament:"tng",raven:"voy",centaur:"ds9",curry:"ds9",miranda:"tng",challenger:"tng",ambassador:"tng",sagan:"pic",
+defiant:"ds9",intrepid:"voy",nova:"voy",prometheus:"voy",protostar:"voy",odyssey:"pic",
 brel:"klingon",ktinga:"klingon",rombop:"romulan"};
 const DECK_ERA_NAMES={future:"Far Future",snw:"Strange New Worlds",ent:"Enterprise",tng:"The Next Generation",ds9:"Deep Space Nine",
 voy:"Voyager",pic:"Picard",klingon:"Klingon",romulan:"Romulan"};
@@ -14662,7 +14674,8 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.57</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.58</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
 </body>
