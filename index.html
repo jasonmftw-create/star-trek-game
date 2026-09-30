@@ -7204,7 +7204,7 @@ function museumCard(s){
 function renderStations(){
   let rows="";
   G.stations.forEach(st=>{
-    if(st.type==="academy"||st.type==="sfcommand")return;
+    if(st.type==="academy")return;
     if(stationQuad!=="all"&&postQuadOf(st)!==stationQuad)return;
     const d=STATION_DEFS[st.type],crew=crewOfStation(st.id);
     rows+='<div class="row" onclick="stationModal(\''+st.id+'\')" style="cursor:pointer;">'+stationPic(stationArtKey(st))+
@@ -12017,7 +12017,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.15</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.16</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
