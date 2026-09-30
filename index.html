@@ -5491,7 +5491,7 @@ function mkNpc(used){
   used=used||{};let n,tries=0;
   do{n=pick(NPC_GIVEN)+" "+pick(NPC_SURN);tries++;}while(used[n]&&tries<50);
   used[n]=1;
-  return {n:n,r:pick(NPC_RANKS),d:pick(NPC_DEPTS)};
+  return {n:n,r:pick(NPC_RANKS),d:pick(NPC_DEPTS),m:0};
 }
 function shipNpcs(s){
   if(!s.npcs)s.npcs=[];
@@ -5506,6 +5506,25 @@ function stNpcs(st){
   return st.npcs;
 }
 function npcLabel(n){return n.r+" "+n.n;}
+/* standout NPCs (v2.36): redshirts who survive become familiar faces */
+const NPC_QUIRKS=["never loses at dom-jot","names every shuttle they fly","takes their coffee black, like their humor","somehow keeps a tribble","quotes regulations from memory","always volunteers for the rough shifts","knows every Jeffries tube by heart","is unbeaten at darts in the mess hall","brews something questionably legal in engineering","keeps a holo of the whole deck crew","has never once been on time for gamma shift","tells the same shore-leave story, better every time"];
+function npcSeasoned(n){return !!n&&(n.m||0)>=3;}
+function npcByLabel(roster,lbl){if(!roster||!lbl)return null;for(let i=0;i<roster.length;i++){const x=roster[i];if(x.r+" "+x.n===lbl)return x;}return null;}
+function npcSurvived(n,src){
+  if(!n)return false;
+  n.m=(n.m||0)+1;
+  if(n.m===3){
+    if(!n.q)n.q=pick(NPC_QUIRKS);
+    log("personnel","★ "+npcLabel(n)+" is now one of "+src+"'s familiar faces — 3 missions survived.");
+    return true;
+  }
+  return false;
+}
+function npcRosterLine(n){
+  let s=npcLabel(n)+" · "+n.d;
+  if(npcSeasoned(n))s+=" · ★ familiar face"+(n.q?" — "+n.q:"");
+  return s;
+}
 function npcBeatNames(npcs,n){
   if(!npcs||!npcs.length)return [];
   return npcs.slice().sort(function(){return Math.random()-0.5;}).slice(0,Math.max(1,n||2)).map(npcLabel);
@@ -5581,9 +5600,22 @@ function sdeckNpcRooms(st){
 function sdeckNpcsFor(st,rid){
   return (sdeckNpcRooms(st)[rid]||[]).slice(0,4);
 }
+function npcAmbientPick(npcs){
+  if(typeof npcSeasoned==="function"){
+    const v=npcs.filter(npcSeasoned);
+    if(v.length&&Math.random()<0.6)return pick(v);
+  }
+  return pick(npcs);
+}
 function npcAmbient(s){
   const npcs=shipNpcs(s);if(!npcs.length||Math.random()>0.35)return "";
-  const n=pick(npcs),nm=npcLabel(n);
+  const n=npcAmbientPick(npcs),nm=npcLabel(n);
+  if(npcSeasoned(n)&&Math.random()<0.5)return pick([
+    "The new transfers all know "+n.n+" by reputation now.",
+    nm+" handles it the way they always do \u2014 like they've done it a hundred times.",
+    "Someone asks "+n.n+" for the story again. They pretend to mind.",
+    nm+" gets a nod from the bridge crew. Earned, that one."
+  ]);
   return pick([
     nm+" hurries past with a hyperspanner and an apology.",
     "Overheard: "+n.n+" explaining to a crewmate why the replicator owes them a favor.",
@@ -5595,7 +5627,12 @@ function npcAmbient(s){
 }
 function npcAmbientSt(st){
   const npcs=stNpcs(st);if(!npcs.length||Math.random()>0.35)return "";
-  const n=pick(npcs),nm=npcLabel(n);
+  const n=npcAmbientPick(npcs),nm=npcLabel(n);
+  if(npcSeasoned(n)&&Math.random()<0.5)return pick([
+    nm+" is a promenade legend at this point.",
+    "New arrivals hear about "+n.n+" within the hour.",
+    nm+" has seen this station through worse."
+  ]);
   return pick([
     nm+" waves from across the section, juggling three PADDs.",
     "Overheard: "+n.n+" trading shift-swap offers like a stockbroker.",
@@ -7957,7 +7994,12 @@ function awayStage(){
   let _nbHtml="";
   if(AWAY.npcs&&AWAY.npcs.length&&Math.random()<0.55){
     const _n1=npcLabel(AWAY.npcs[0]),_n2=AWAY.npcs[1]?npcLabel(AWAY.npcs[1]):null;
-    _nbHtml='<p class="dim"><i>'+esc(pick([
+    const _n1v=(typeof npcSeasoned==="function")&&npcSeasoned(AWAY.npcs[0])&&Math.random()<0.5;
+    _nbHtml='<p class="dim"><i>'+esc(_n1v?pick([
+      _n1+" moves like they've done this a dozen times. They have.",
+      _n1+" checks the rookies' gear without being asked.",
+      "The team relaxes a fraction — "+_n1+" is along, and that counts for something."
+    ]):pick([
       _n1+" has the perimeter, tricorder up.",
       _n1+" keeps glancing at the sky like it might fall.",
       _n2?_n1+" and "+_n2+" are on point, trying to look bored and failing.":_n1+" is on point, trying to look bored and failing.",
@@ -7984,7 +8026,7 @@ function awayChoose(i){
 function awayResolve(){
   const w=AWAY.wins,team=AWAY.team.map(officer).filter(Boolean);
   const info=AWAY_TERR_INFO[AWAY.terr];
-  let outcome,pres,mor,detail;
+  let outcome,pres,mor,detail,_deadNpc=null;
   if(w>=3){outcome="Critical Success";pres=Math.round(80*info.presMult)+(info.presBonus||0);mor=6;detail="Flawless. Three for three &mdash; the kind of away mission they teach at the Academy.";}
   else if(w===2){outcome="Success";pres=Math.round(50*info.presMult)+(info.presBonus||0);mor=4;detail="Objectives achieved. The team beams back tired, dirty, and grinning.";}
   else if(w===1){outcome="Partial Success";pres=Math.round(25*info.presMult)+(info.presBonus||0);mor=1;detail="Some objectives met. The debrief will be spirited.";}
@@ -7993,7 +8035,7 @@ function awayResolve(){
     if(AWAY.npcs&&AWAY.npcs.length&&AWAY.npcSrc&&Math.random()<0.6){
       const _nsrc=AWAY.npcSrc.t==="ship"?ship(AWAY.npcSrc.id):station(AWAY.npcSrc.id);
       const _nroster=_nsrc?((AWAY.npcSrc.t==="ship"&&typeof shipNpcs==="function")?shipNpcs(_nsrc):((typeof stNpcs==="function")?stNpcs(_nsrc):[])):[];
-      const _dead=pick(AWAY.npcs),_dlbl=npcLabel(_dead);
+      const _dead=pick(AWAY.npcs),_dlbl=npcLabel(_dead);_deadNpc=_dead;
       const _dix=_nroster.indexOf(_dead);if(_dix>=0)_nroster.splice(_dix,1);
       detail+=" "+_dlbl+" didn't make it back.";
       log("mission",_dlbl+" was killed on the away mission to "+destLabel(AWAY.dest)+".");
@@ -8001,6 +8043,12 @@ function awayResolve(){
       detail+=" "+npcLabel(pick(AWAY.npcs))+" took a glancing hit and will be telling the story for months.";
     }}
   if(w>=2)sfx("success");else if(w===0)sfx("fail");
+  if(AWAY.npcs&&AWAY.npcs.length&&typeof npcSurvived==="function"){
+    const _asrc=AWAY.npcSrc?(AWAY.npcSrc.t==="ship"?ship(AWAY.npcSrc.id):station(AWAY.npcSrc.id)):null;
+    const _anm=_asrc?_asrc.name:destLabel(AWAY.dest);
+    AWAY.npcs.forEach(function(_sn){if(_sn===_deadNpc)return;
+      if(npcSurvived(_sn,_anm))detail+=" "+npcLabel(_sn)+" is becoming a familiar face around here — "+_sn.m+" missions and counting.";});
+  }
   gainPres(pres);
   team.forEach(o=>{o.morale=clamp(o.morale+mor,0,100);o.missions.t++;if(w>=2)o.missions.s++;awardAccolade(o,"Away mission: "+destLabel(AWAY.dest)+" \u2014 "+outcome);});
   log("mission","Away mission to "+destLabel(AWAY.dest)+" ("+info.label+") &mdash; "+outcome+". (+"+pres+" prestige)");
@@ -10330,7 +10378,7 @@ function shipModal(id){
   }
   if(typeof shipNpcs==="function"&&typeof npcLabel==="function"){
     const _snpcs=shipNpcs(s);
-    if(_snpcs.length)h+='<h4>Ship\u2019s Company ('+_snpcs.length+' named)</h4><div class="dim">'+_snpcs.map(n=>esc(npcLabel(n))+" \u00b7 "+esc(n.d)).join("<br>")+'</div>';
+    if(_snpcs.length)h+='<h4>Ship\u2019s Company ('+_snpcs.length+' named)</h4><div class="dim">'+_snpcs.map(n=>esc(typeof npcRosterLine==="function"?npcRosterLine(n):(npcLabel(n)+" · "+n.d))).join("<br>")+'</div>';
   }
   h+=crewSectionsHTML(crew,co,xo,"/"+c.slots,"No essential personnel assigned. Visit Personnel to assign officers.",_eff.acting&&co?co.id:null);
   const shs=shuttlesOfShip(s.id);
@@ -10378,7 +10426,7 @@ function stationModal(id){
   }
   if(typeof stNpcs==="function"&&typeof npcLabel==="function"){
     const _tnpcs=stNpcs(st);
-    if(_tnpcs.length)h+='<h4>Station Personnel ('+_tnpcs.length+' named)</h4><div class="dim">'+_tnpcs.map(n=>esc(npcLabel(n))+" \u00b7 "+esc(n.d)).join("<br>")+'</div>';
+    if(_tnpcs.length)h+='<h4>Station Personnel ('+_tnpcs.length+' named)</h4><div class="dim">'+_tnpcs.map(n=>esc(typeof npcRosterLine==="function"?npcRosterLine(n):(npcLabel(n)+" · "+n.d))).join("<br>")+'</div>';
   }
   h+=crewSectionsHTML(crew,co,xo,"","No essential personnel assigned.",_seff.acting&&co?co.id:null);
   const shs=shuttlesOfStation(st.id);
@@ -11313,7 +11361,7 @@ function deckRoomHtml(s,rid){
   if(typeof deckNpcsFor==="function"){
     const dnpcs=deckNpcsFor(s,rid);
     if(dnpcs.length){
-      h+='<div class="deckSec" style="margin-top:6px;">Also aboard</div><div class="dim">'+dnpcs.map(n=>esc(npcLabel(n))).join(" · ")+'</div>';
+      h+='<div class="deckSec" style="margin-top:6px;">Also aboard</div><div class="dim">'+dnpcs.map(n=>esc(npcLabel(n)+((typeof npcSeasoned==="function"&&npcSeasoned(n))?" ★":""))).join(" · ")+'</div>';
       if(typeof aiHasKey==="function"&&aiHasKey())h+='<div class="npcReact dim" style="font-style:italic;margin-top:4px;"></div>';
     }
     const _namb=npcAmbient(s);if(_namb)h+='<div class="aliveTick">'+esc(_namb)+'</div>';
@@ -11583,11 +11631,11 @@ function deckMakeEncounter(){
   { // an NPC crosses your path
     const _npcs=(typeof shipNpcs==="function")?shipNpcs(s):[];
     if(_npcs.length&&Math.random()<0.4){
-      const _n=pick(_npcs),_lbl=npcLabel(_n);
+      const _n=(typeof npcAmbientPick==="function")?npcAmbientPick(_npcs):pick(_npcs),_lbl=npcLabel(_n);
       const _doing={Command:"carrying orders fresh off the bridge",Operations:"juggling three PADDs",Security:"walking the patrol route",Engineering:"with plasma coolant on their cuffs",Medical:"humming on the way to a shift",Science:"muttering about sensor ghosts"}[_n.d]||"on the way somewhere";
       return {kind:"npc",npc:_lbl,
         title:"Shipboard life",
-        text:"You pass "+_lbl+" in the corridor, "+_doing+". They straighten at the sight of you.",
+        text:"You pass "+_lbl+" in the corridor, "+_doing+". "+(((typeof npcSeasoned==="function")&&npcSeasoned(_n))?"They give you the nod of someone who's earned it.":"They straighten at the sight of you."),
         opts:[
           {t:"Ask how the shift is going",fn:"deckEncNpcChat"},
           {t:"Nod and move on",fn:"deckEncDismiss"}
@@ -11773,6 +11821,7 @@ function deckOpResolve(s,op,def){
   else if(w>=1){outcome="Contained";pres=35;mor=1;detail="It\'s handled — mostly. The debrief will be spirited, and the repair crews are already at work.";}
   else{outcome="Costly";pres=10;mor=-5;detail="The crisis passed, but it took its toll. Sickbay is busy and the mood is somber.";const _cd=ri(5,15);s.damage=Math.min(120,(s.damage||0)+_cd);if(typeof shipCasualties==="function")shipCasualties(s,_cd,"crisis");if(s.damage>=40&&s.status==="active")s.status="damaged";}
   if(op.npcs&&op.npcs.length){const _nd=pick(op.npcs);detail+=" "+(w>=n-1?pick([_nd+" buys the first round in the mess hall.",_nd+" is already telling the story like it happened to someone braver."]):pick(["In sickbay, "+_nd+" is already joking about it.","You make a note to commend "+_nd+" \u2014 they held it together."]));}
+  if(op.npcs&&op.npcs.length&&typeof npcSurvived==="function"){const _rs=shipNpcs(s);op.npcs.forEach(function(_lb){const _x=npcByLabel(_rs,_lb);if(_x&&npcSurvived(_x,s.name))detail+=" "+npcLabel(_x)+" is becoming a familiar face around here — "+_x.m+" operations and counting.";});}
   gainPres(pres);
   crewOfShip(s.id).forEach(o=>{o.morale=clamp(o.morale+mor,0,100);o.missions.t++;if(w>=n-1)o.missions.s++;});
   const b=deckOpBest(s,"cmd");
@@ -12259,7 +12308,7 @@ function sdeckRoomHtml(st,rid){
   if(typeof sdeckNpcsFor==="function"){
     const snpcs=sdeckNpcsFor(st,rid);
     if(snpcs.length){
-      h+='<div class="deckSec" style="margin-top:6px;">Also aboard</div><div class="dim">'+snpcs.map(n=>esc(npcLabel(n))).join(" · ")+'</div>';
+      h+='<div class="deckSec" style="margin-top:6px;">Also aboard</div><div class="dim">'+snpcs.map(n=>esc(npcLabel(n)+((typeof npcSeasoned==="function"&&npcSeasoned(n))?" ★":""))).join(" · ")+'</div>';
       if(typeof aiHasKey==="function"&&aiHasKey())h+='<div class="npcReact dim" style="font-style:italic;margin-top:4px;"></div>';
     }
     const _snamb=npcAmbientSt(st);if(_snamb)h+='<div class="aliveTick">'+esc(_snamb)+'</div>';
@@ -12739,6 +12788,7 @@ function sdeckOpResolve(st,op,def){
   gainPres(pres);
   if(repCost)gainCR(-repCost);
   if(op.npcs&&op.npcs.length){const _nd=pick(op.npcs);detail+=" "+(w>=n-1?pick([_nd+" buys the first round on the promenade.",_nd+" is already telling the story like it happened to someone braver."]):pick(["In the infirmary, "+_nd+" is already joking about it.","You make a note to commend "+_nd+" \u2014 they held it together."]));}
+  if(op.npcs&&op.npcs.length&&typeof npcSurvived==="function"){const _rs=stNpcs(st);op.npcs.forEach(function(_lb){const _x=npcByLabel(_rs,_lb);if(_x&&npcSurvived(_x,st.name))detail+=" "+npcLabel(_x)+" is becoming a familiar face around here — "+_x.m+" operations and counting.";});}
   crewOfStation(st.id).forEach(o=>{o.morale=clamp(o.morale+mor,0,100);o.missions.t++;if(w>=n-1)o.missions.s++;});
   const b=sdeckOpBest(st,"cmd");
   if(b.o&&w>=n-1)awardAccolade(b.o,"Station operation: "+def.name+" — "+outcome);
@@ -13054,7 +13104,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.35</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.36</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
