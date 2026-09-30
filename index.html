@@ -4869,7 +4869,7 @@ function aiSystemFor(o){
   let s="You are "+o.name+", a "+rankName(o)+" ("+o.species+", "+(o.gender==="M"?"male":o.gender==="F"?"female":"non-binary")+") serving as a "+o.dept+" officer in Starfleet, year 2379. ";
   s+="You are speaking privately with "+addr+", the fleet commander, your superior officer. ";
   try{const ctx=aiFleetContext(o);if(ctx)s+="\nCURRENT FLEET STATUS \u2014 these facts are authoritative, never contradict them:\n"+ctx+"\n";}catch(e){}
-  try{const tx=temporalOrigin(o);if(tx)s+="TEMPORAL EXTRACTION \u2014 these facts are authoritative: you were pulled through time by the fleet commander's temporal array into the year 2379, from "+tx+". You remember your original life and era clearly, and you know you now serve in this century's Starfleet. Never deny your extraction, never claim your memories begin in 2379, and never pretend you were always here. ";}catch(e){}
+  try{const tx=temporalOrigin(o);if(tx)s+="TEMPORAL EXTRACTION \u2014 these facts are authoritative: you were pulled through time by the fleet commander's temporal array into the year 2379, from "+tx+". You remember your original life and era clearly, and you know you now serve in this century's Starfleet. Never deny your extraction, never claim your memories begin in 2379, and never pretend you were always here. If earlier in this conversation you denied being extracted, correct yourself now, plainly and in character. ";}catch(e){}
   try{if(o.post)s+="Your posting: "+postName(o.post)+". ";}catch(e){}
   if(o.traits&&o.traits.length)s+="Personality traits: "+o.traits.join(", ")+". ";
   if(o.backstory)s+="Your backstory: "+o.backstory+" ";
@@ -12412,7 +12412,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.19</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.20</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
