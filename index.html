@@ -315,7 +315,12 @@ body{touch-action:pan-y;}
 .pfaceInit{display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;color:var(--peach);background:var(--panel2);}
 .shipPic{width:84px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--orange);flex:none;background:#000;}
 .shipPicBig{width:100%;max-height:190px;object-fit:cover;border-radius:10px;border:2px solid var(--orange);margin-bottom:8px;background:#000;display:block;}
-.shipPicEAS{object-fit:contain;background:radial-gradient(ellipse at 50% 62%,#12264d 0%,#05080f 78%);box-sizing:border-box;padding:4px;}
+.shipPicEAS{object-fit:contain;background:#05080f url(ships/nebula-a.jpg) center/cover no-repeat;box-sizing:border-box;padding:4px;}
+.shipPicEAS.nebB{background-image:url(ships/nebula-b.jpg);}
+.shipPicEAS.nebC{background-image:url(ships/nebula-c.jpg);}
+.musPhoto{margin:10px 0 2px;border:1px solid #2a3550;border-radius:10px;overflow:hidden;background:#0a0e18;}
+.musPhoto img{width:100%;height:auto;display:block;}
+.musPhoto div{font-size:9px;letter-spacing:.14em;color:#8fa3c8;padding:5px 8px;text-transform:uppercase;}
 .shipPicBig.shipPicEAS{padding:18px 14px;max-height:240px;}
 .cmdrGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px;}
 .cmdrOpt{border:2px solid transparent;border-radius:10px;overflow:hidden;cursor:pointer;background:#000;}
@@ -9125,15 +9130,15 @@ function renderShips(){
     const isMus=s.status==="museum";
     if(isMus){mus+=museumCard(s);return;}
     const c=shipClass(s),crew=crewOfShip(s.id),warns=shipWarnings(s),om=s.status==="mission";const fl=flagshipId()===s.id;const tv=trainingShipId()===s.id;
-    rows+='<div class="row'+(om?' omRow':'')+'" onclick="shipModal(\''+s.id+'\')" style="cursor:pointer;">'+shipPic(s.cls)+
-      '<div class="grow"><div class="nm">'+(fl?'<span class="flagGlyph">'+CMDR_GLYPH+'</span>':"")+esc(shipNameG(s))+(fl?' <span class="badge" style="background:var(--gold);color:#0b0b12;font-weight:bold;">FLAGSHIP</span>':"")+(tv?' <span class="badge" style="background:var(--teal);color:#0b0b12;font-weight:bold;">TRAINING VESSEL</span>':"")+' <span class="dim">'+esc(s.registry)+'</span>'+(om?' <span class="badge" style="background:var(--violet);color:#0b0b12;font-weight:bold;">ON MISSION</span>':(s.transit?' <span class="badge" style="background:var(--teal);color:#0b0b12;font-weight:bold;">IN TRANSIT</span>':''))+'</div>'+
+    rows+='<div class="card" onclick="shipModal(\''+s.id+'\')" style="cursor:pointer;">'+shipPic(s.cls,true)+
+      '<div class="nm">'+(fl?'<span class="flagGlyph">'+CMDR_GLYPH+'</span>':"")+esc(shipNameG(s))+(fl?' <span class="badge" style="background:var(--gold);color:#0b0b12;font-weight:bold;">FLAGSHIP</span>':"")+(tv?' <span class="badge" style="background:var(--teal);color:#0b0b12;font-weight:bold;">TRAINING VESSEL</span>':"")+' <span class="dim">'+esc(s.registry)+'</span>'+(om?' <span class="badge" style="background:var(--violet);color:#0b0b12;font-weight:bold;">ON MISSION</span>':(s.transit?' <span class="badge" style="background:var(--teal);color:#0b0b12;font-weight:bold;">IN TRANSIT</span>':''))+'</div>'+
       '<div class="sub2">'+c.name+'-class · '+shipStatusLabel(s)+' · '+shipPostName(s)+' · Crew '+crew.length+'/'+c.slots+'</div>'+
       (warns.length?'<div class="warnRow">'+warns.map(w=>'<span class="badge warn"'+(WARN_HINTS[w.split(" (")[0]]?' data-hint="'+esc(WARN_HINTS[w.split(" (")[0]])+'"':"")+'>'+esc(w)+'</span>').join("")+'</div>':"")+
       (s.damage>0?'<div class="prog"><i style="width:'+(100-s.damage)+'%;background:var(--red);"></i></div>':"")+
-      '</div></div>';
+      '</div>';
   });
   let h="";
-  if(rows)h+='<div class="card fleetList">'+rows+'</div>';
+  if(rows)h+=rows;
   h+=mus;
   return h||'<div class="card"><p class="dim">'+(shipQuad==="all"?"No ships.":shipQuad==="museum"?"The museum halls are empty — mothball a ship to begin the collection.":"No ships in this quadrant.")+'</p></div>';
 }
@@ -9150,14 +9155,14 @@ function museumCard(s){
   else if(bat>=1)legacy+=" Victor of "+bat+" battle"+(bat>1?"s":"")+".";
   const svcLine=s.commTxt?esc(s.commTxt):('Commissioned stardate '+sdStr(s.commSd||54973.4)+' · Mothballed stardate '+sdStr(s.musSd||G.stardate)+' · '+yrs.toFixed(1)+' years of service');
   const story=s.blurb?esc(s.blurb):legacy;
-  return '<div class="card"><div class="row" onclick="shipModal(\''+s.id+'\')" style="cursor:pointer;align-items:flex-start;">'+shipArtFor(s)+
-    '<div class="grow"><div class="nm">'+esc(shipNameG(s))+' <span class="dim">'+esc(s.registry)+'</span></div>'+
+  return '<div class="card"><div onclick="shipModal(\''+s.id+'\')" style="cursor:pointer;">'+shipArtFor(s,true)+
+    '<div class="nm">'+esc(shipNameG(s))+' <span class="dim">'+esc(s.registry)+'</span></div>'+
     '<div class="sub2">'+c.name+'-class · <span style="color:var(--purple);font-weight:bold;">FLEET MUSEUM</span></div>'+
     '<div class="sub2 dim">'+svcLine+'</div>'+
     '<div class="sub2 dim">Service tour'+((s.tours||1)>1?"s":"")+': '+(s.tours||1)+' · Missions '+won+'/'+msn+' successful · Battles won '+bat+' · Caretaker crew '+crew.length+'</div>'+
     '<div class="sub2"><i>&ldquo;'+story+'&rdquo;</i></div>'+
     '<div class="btnRow"><button class="btn small teal" onclick="event.stopPropagation();uiRecommission(\''+s.id+'\')">Return to duty</button></div>'+
-    '</div></div></div>';
+    '</div></div>';
 }
 
 /* ---------- STATIONS tab ---------- */
@@ -9997,7 +10002,7 @@ const FUTURE_SHIPS=[
  {id:"horizon",name:"USS Horizon",reg:"",cls:"eisenberg",era:"32nd century",when:"3195",src:"Star Trek: Starfleet Academy",blurb:"Eisenberg-class. Flew with Athena's reinforcement wing at Faan Alpha."},
  {id:"relativity",name:"USS Relativity",reg:"NCV-474439-G",cls:"wells",era:"29th century",when:"2752",src:'VOY "Relativity"',blurb:"Wells-class timeship. Captain Braxton policed the timeline from her bridge — usually."},
  {id:"enterprise-j",name:"Enterprise-J",reg:"",cls:"universe",era:"26th century",when:"2554",src:'ENT "Azati Prime"',blurb:"Universe-class — kilometers of Federation optimism. Archer walked her corridors before the Battle of Procyon V."},
- {id:"galaxyx",name:"USS Enterprise",reg:"NCC-1701-D",cls:"galaxyx",era:"alternate 2395",when:"2395",src:'TNG "All Good Things\u2026"',blurb:"The possible tomorrow: a Galaxy-class dreadnought with a third nacelle and a phaser lance — Admiral Riker's personal flagship."}
+ {id:"galaxyx",name:"USS Enterprise",reg:"NCC-1701-D",cls:"galaxy",era:"alternate 2395",when:"2395",src:'TNG "All Good Things\u2026"',blurb:"The possible tomorrow: a Galaxy-class dreadnought with a third nacelle and a phaser lance — Admiral Riker's personal flagship."}
 ];
 function futureShipRows(sec){
   return FUTURE_SHIPS.map((f,i)=>{
@@ -10008,7 +10013,7 @@ function futureShipRows(sec){
     const ds=esc((f.name+" "+f.cls+" "+f.era+" "+f.src).toLowerCase());
     return '<div class="row" data-search="'+ds+'" data-sec="'+sec+'" style="padding:6px;cursor:pointer;" onclick="futureShipModal('+i+')">'+shipPic(f.cls)+
       '<div class="grow"><div class="nm">\u25F7 '+esc(f.name)+'<div class="rnkline">'+esc(f.reg||"registry unrecorded")+'</div></div>'+
-      '<div class="sub2">'+esc(SHIP_CLASSES[f.cls].name)+'-class · '+esc(f.era)+' · '+esc(f.src)+'</div>'+
+      '<div class="sub2">'+esc((SHIP_CLASSES[f.cls]||{name:f.cls}).name)+'-class · '+esc(f.era)+' · '+esc(f.src)+'</div>'+
       '<div style="margin-top:4px;">'+badge+'</div></div></div>';
   }).join("");
 }
@@ -10189,9 +10194,9 @@ function uiTributeExtractGo(si){
   save();tributeModal(si);render();
 }
 function renderMemorial(){
-  const offs=G.memorial.filter(m=>!m.kind||m.kind==="officer");
-  const ships=G.memorial.filter(m=>m.kind==="ship");
-  const sts=G.memorial.filter(m=>m.kind==="station");
+  const offs=(G.memorial||[]).filter(m=>!m.kind||m.kind==="officer");
+  const ships=(G.memorial||[]).filter(m=>m.kind==="ship");
+  const sts=(G.memorial||[]).filter(m=>m.kind==="station");
   const dsOf=m=>esc(((m.name||"")+" "+(m.cause||"")+" "+(m.sub||"")+" "+(m.rank||"")+" "+(m.species||"")).toLowerCase());
   const entry=(m,sub,sec,oi)=>'<div class="row" data-search="'+dsOf(m)+'" data-sec="'+sec+'" style="padding:6px;'+(oi>=0?'cursor:pointer;':'cursor:default;')+'"'+(oi>=0?' onclick="fallenModal('+oi+')"':"")+'>'+faceImg(m,"pfaceSm")+'<div class="grow"><div class="nm">† '+esc(m.name)+'</div>'+(sub?'<div class="sub2">'+esc(sub)+'</div>':"")+'<div class="sub2 dim">'+esc((m.lost==="decommissioned"?"Decommissioned":"Lost in service")+" — "+m.cause)+' · Stardate '+sdStr(m.sd)+'</div>'+(oi>=0?'<div style="margin-top:4px;">'+fallenBadge(m)+'</div>':"")+'</div></div>';
   const sentry=(m,si)=>'<div class="row" data-search="'+dsOf(m)+'" data-sec="lost" style="padding:6px;cursor:pointer;" onclick="tributeModal('+si+')">'+faceImg(m,"pfaceSm")+'<div class="grow"><div class="nm">† '+esc(m.name)+'</div><div class="sub2">'+esc(m.rank+" · "+m.species)+'</div><div class="sub2 dim">'+esc(m.cause)+' · '+esc(m.when)+'</div><div style="margin-top:4px;">'+tributeBadge(m)+'</div></div></div>';
@@ -10306,10 +10311,10 @@ function faceImg(o,cls){
   const init=o.name.split(" ").map(function(w){return w[0];}).join("").slice(0,2).toUpperCase();
   return '<div class="'+cls+' pfaceInit">'+init+'</div>';
 }
-function shipArtFor(s,big){if(s&&s.id&&typeof MUSEUM_ART!=="undefined"&&MUSEUM_ART[s.id])return '<img class="'+(big?"shipPicBig":"shipPic")+'" src="'+MUSEUM_ART[s.id]+'" alt="">';return shipPic(s?s.cls:"",big);}
+function shipArtFor(s,big){return shipPic(s?s.cls:"",big);}
 function shipPic(cls,big){
   const _icn=(typeof shipIconName==="function"&&typeof SHIP_ICON_META!=="undefined"&&typeof tacPlayerShape==="function")?shipIconName(tacPlayerShape(cls),cls):null;
-  if(_icn&&SHIP_ICON_META[_icn])return '<img class="'+(big?"shipPicBig":"shipPic")+' shipPicEAS" src="ships/icons/'+_icn+'.png" alt="">';
+  if(_icn&&SHIP_ICON_META[_icn]){var _nb=[""," nebB"," nebC"][Array.from(String(cls)).reduce(function(a,c){return a+c.charCodeAt(0);},0)%3];return '<img class="'+(big?"shipPicBig":"shipPic")+' shipPicEAS'+_nb+'" src="ships/icons/'+_icn+'.png" alt="">';}
   const src=(typeof SHIP_PICS!=="undefined"&&SHIP_PICS[cls])?SHIP_PICS[cls]:"";
   return src?'<img class="'+(big?"shipPicBig":"shipPic")+'" src="'+src+'" alt="">':"";
 }
@@ -11825,6 +11830,7 @@ function shipModal(id){
   const s=ship(id);if(!s)return;const c=shipClass(s),crew=crewOfShip(s.id);const isFl=flagshipId()===s.id;const isTv=trainingShipId()===s.id;
   const _eff=effShipCO(s),co=_eff.o,xo=_eff.acting?null:shipXO(s.id,co);
   let h='<h2>'+(isFl?'<span class="flagGlyph">'+CMDR_GLYPH+'</span>':"")+esc(shipNameG(s))+(s.status!=="museum"?'<span class="flagStar'+(isFl?" on":"")+'" onclick="uiSetFlagship(\''+s.id+'\')" title="'+(isFl?"Stand down flagship":"Set as flagship")+'">'+(isFl?"\u2605":"\u2606")+'</span>':"")+(isFl?' <span class="badge" style="background:var(--gold);color:#0b0b12;font-weight:bold;">FLAGSHIP</span>':"")+(isTv?' <span class="badge" style="background:var(--teal);color:#0b0b12;font-weight:bold;">TRAINING VESSEL</span>':"")+'</h2><div class="flavor">'+esc(s.registry)+' · '+c.name+'-class · '+shipStatusLabel(s)+'</div>'+shipArtFor(s,true);
+  if(s.status==="museum"&&MUSEUM_ART[s.id])h+='<div class="musPhoto"><img src="'+MUSEUM_ART[s.id]+'" alt="" loading="lazy"><div>Archive photograph \u00B7 Fleet Museum collection</div></div>';
   const _fa=(typeof flagAboardAdmiral==="function")?flagAboardAdmiral(s.id):null;
   if(_fa)h+='<div class="kv"><span class="k">Flag officer</span><span class="v">'+esc(fullName(_fa))+' embarked \u00b7 +15% battle power</span></div>';
   if(s.future)h+='<div class="kv"><span class="k">Future systems</span><span class="v">\u25F7 '+(s.futureEra||"far future")+' tech</span></div><div class="sub2 dim">Programmable-matter hull (drydock repairs 2\u00D7 faster) \u00B7 temporal shielding (+30% battle power) \u00B7 advanced propulsion.</div>';
@@ -14674,7 +14680,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.58</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.59</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
