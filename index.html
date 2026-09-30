@@ -541,6 +541,26 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
 .deckActions .btn{text-align:left;}
 .encOverlay{position:sticky;top:0;z-index:6;background:var(--panel2);border:2px solid var(--gold);border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 6px 24px rgba(0,0,0,.5);}
 .encOverlay h4{margin:0 0 6px;color:var(--gold);letter-spacing:1px;font-size:13px;text-transform:uppercase;}
+/* ---- tactical battle mini-game (v2.46) ---- */
+#tacRoot{position:fixed;inset:0;background:#020409;z-index:20000;display:none;flex-direction:column;}
+#tacRoot.open{display:flex;}
+#tacRoot.shake{animation:tacShake .32s;}
+@keyframes tacShake{0%,100%{transform:translate(0,0);}20%{transform:translate(-7px,4px);}40%{transform:translate(6px,-5px);}60%{transform:translate(-5px,-3px);}80%{transform:translate(4px,3px);}}
+.tacShipPic{width:46px;height:46px;object-fit:cover;border-radius:8px;border:1px solid #3a5a8a;vertical-align:middle;margin-right:8px;}
+#tacHead{padding:10px 12px 4px;}
+#tacTitle{font-size:15px;letter-spacing:1px;color:#ffd27a;margin-bottom:4px;}
+#tacTaunt{font-style:italic;color:#ff9a9a;font-size:13px;min-height:1.2em;}
+#tacAdvice{font-style:italic;color:#9fd8ff;font-size:13px;margin-top:2px;}
+#tacWrap{position:relative;flex:1;min-height:220px;border-top:2px solid var(--orange);border-bottom:2px solid var(--orange);}
+#tacCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;}
+#tacMsg{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);background:rgba(2,6,16,0.85);border:1px solid var(--orange);border-radius:8px;padding:6px 12px;font-size:13px;color:#ffd27a;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis;}
+#tacMsg.show{opacity:1;}
+#tacOrders{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 12px calc(12px + env(safe-area-inset-bottom));background:#05080f;}
+.tacBtn{background:#10203a;border:2px solid #2c5a8f;border-radius:10px;color:#dfeeff;font-size:14px;padding:12px 6px;min-height:56px;cursor:pointer;}
+.tacBtn:active{background:#1a3a66;}
+.tacBtn:disabled{opacity:.35;cursor:default;}
+.tacBtn.wide{grid-column:1/-1;min-height:48px;border-color:#5a4a8f;}
+.tacCd{display:block;font-size:11px;opacity:.7;}
 .redAlertFrame{border:3px solid var(--red);border-radius:12px;padding:14px;background:#1a0505;animation:deckPulse 1.1s infinite;margin-bottom:10px;}
 .redAlertFrame h3{color:#ff8080;margin:0 0 6px;letter-spacing:2px;}
 .opRow{display:flex;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;}
@@ -576,6 +596,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
     <button class="btn small teal" onclick="doAdvance(30)">+30 Days</button>
     <button class="btn small" id="hudToggle" onclick="toggleHUD()"><span class="chev">▾</span> Stats</button>
     <button class="btn small" id="muteBtn" onclick="toggleMute()" title="Sound on/off" style="padding:4px 8px;"></button>
+    <button class="btn small" id="vibBtn" onclick="toggleVib()" title="Vibration on/off" style="padding:4px 8px;"></button>
   </div>
   <div id="cmdSubBar"></div>
   <div id="shipQuadBar"></div>
@@ -583,6 +604,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
 </div>
 <main id="view"></main>
 <div id="modalRoot"><div id="modalShade" onclick="closeModal(true)"></div><div id="modalBox"></div></div>
+<div id="tacRoot"></div>
 <div id="sheetRoot"><div id="sheetShade" onclick="closeSheet()"></div><div id="sheetBox" role="dialog" aria-modal="true"></div></div>
 <div class="toast" id="toast"></div>
 <div id="splash">
@@ -4797,7 +4819,8 @@ function openModal(html){modalBack=null;$("modalBox").innerHTML=html;$("modalRoo
    guard and unwinds exactly one UI layer via goBack(); with nothing open the entry
    dies so the next BACK exits the app instead of trapping the user. */
 function hwLayerOpen(){
-  return $("modalRoot").classList.contains("open")
+  return ($("tacRoot")&&$("tacRoot").classList.contains("open"))
+    || $("modalRoot").classList.contains("open")
     || $("sheetRoot").classList.contains("open")
     || $("menuDrawer").classList.contains("open")
     || (typeof deckOpen==="function"&&deckOpen())
@@ -4969,7 +4992,9 @@ function renderSettings(){
     'Green Alert: warm white normal-operations lighting. Black Alert: dim navy, minimal emissions. Gray Mode: emergency strips only.</p></div>';
   h+=COMPLETION_TOGGLE_ROW;
   h+='<div class="kv"><span class="k">Random battles</span><span class="v"><button class="btn small'+(battlesOn()?" on":"")+'" onclick="uiToggleBattles()">'+(battlesOn()?"On":"Off")+'</button></span></div>'+
-    '<p class="dim">When on, any active ship posted in hostile territory — Borg space, the Dominion, the Neutral Zone — risks a random enemy encounter each day. You choose: engage or run.</p></div>';
+    '<p class="dim">When on, any active ship posted in hostile territory — Borg space, the Dominion, the Neutral Zone — risks a random enemy encounter each day. You choose: engage or run.</p>'+
+    '<div class="kv"><span class="k">Vibration</span><span class="v"><button class="btn small'+(vibOn()?" on":"")+'" onclick="toggleVib();render()">'+(vibOn()?"On":"Off")+'</button></span></div>'+
+    '<p class="dim">When on, your phone vibrates on hits and explosions during tactical battles.</p></div>';
   h+=aiSetupHtml();
   h+='<div class="card"><h3>Save Data</h3><div class="btnRow">'+
     '<button class="btn small ghost" onclick="uiSave()">Save now</button>'+
@@ -6207,6 +6232,15 @@ function sfx(name){
     }else if(name==="hail"){
       // incoming hail: three urgent beeps
       for(var hb=0;hb<3;hb++)tone("square",988,now+hb*0.16,0.11,0.12);
+    }else if(name==="explosion"){
+      // battle: deep blast + debris rumble
+      noise(now,0.9,0.7,"lowpass",1400,90,0.9);
+      tone("sine",55,now,0.8,0.5,30);
+      noise(now+0.12,0.5,0.5,"lowpass",700,60,1);
+    }else if(name==="shieldhit"){
+      // battle: shield impact shimmer
+      tone("triangle",340,now,0.22,0.4,120);
+      noise(now,0.16,0.22,"bandpass",1800,3400,1.6);
     }else if(name==="dock"){
       // docking clunk: low thud + short metallic burst
       tone("sine",90,now,0.3,0.6,40);
@@ -6334,7 +6368,8 @@ function battleHtml(s,e,z){
 }
 function battleButtons(s,e,z){
   const b=[
-    {t:"Engage the enemy",fn:function(){return resolveBattle(s.id,e,z,"engage");}},
+    {t:"Engage \u2014 tactical battle",fn:function(){openTacticalBattle(s.id,e,z);return null;}},
+    {t:"Delegate to tactical officer",fn:function(){return resolveBattle(s.id,e,z,"engage");}},
     {t:"Evasive maneuvers",fn:function(){return resolveBattle(s.id,e,z,"retreat");}}
   ];
   if(G.qmode)b.push({t:"Q: Snap them away",cls:"violet",fn:function(){return resolveBattle(s.id,e,z,"qsnap");}});
@@ -6410,6 +6445,594 @@ function resolveBattle(sid,e,z,choice){
   return done("The "+esc(e.n)+" pounds "+esc(s.name)+" mercilessly. Outgunned, she breaks off and limps away — <b>defeated</b>, with "+dmg+"% hull damage."+(died?" "+fullName(died)+" did not survive.":"")+" She will need yard time."+(e.nemesis?" <i>&ldquo;"+esc(nemesisTaunt(G.nemesis,s))+"&rdquo;</i>":""));
 }
 
+/* ================= TACTICAL BATTLE MINI-GAME (v2.46) ================= */
+/* Real-time top-down battle view. The player issues bridge orders; the crew's
+   stats (esp. the tactical officer's TAC) drive the numbers. Hooked into the
+   RED ALERT interrupt: "Engage" opens this view, "Delegate" keeps the old
+   instant auto-resolve, "Evasive" is unchanged. */
+let TAC=null;
+function vibOn(){try{return localStorage.getItem("stfc_vib")!=="0";}catch(e){return true;}}
+function toggleVib(){
+  try{
+    var m=!vibOn();
+    localStorage.setItem("stfc_vib",m?"1":"0");
+    paintVibBtn();
+    toast(m?"Vibration off.":"Vibration on.");
+    if(m)tacVibrate(40);
+  }catch(e){}
+}
+function paintVibBtn(){
+  var b=document.getElementById("vibBtn");if(!b)return;
+  var m=!vibOn();
+  b.innerHTML=m?"🚫":"📳";
+  b.classList.toggle("ghost",m);
+}
+function tacVibrate(p){try{if(vibOn()&&navigator.vibrate)navigator.vibrate(p);}catch(e){}}
+function tacFactionStyle(name){
+  const n=String(name||"").toLowerCase();
+  if(n.indexOf("borg")>=0)return{color:"#39d353",dark:"#0d3b1e",shape:"cube",label:"BORG"};
+  if(n.indexOf("warbird")>=0||n.indexOf("romulan")>=0||n.indexOf("t'")>=0)return{color:"#3fb950",dark:"#0f2f1a",shape:"wedge",label:"ROMULAN"};
+  if(n.indexOf("jem'hadar")>=0||n.indexOf("dominion")>=0||n.indexOf("founder")>=0)return{color:"#b083f0",dark:"#2c1a4d",shape:"wedge",label:"DOMINION"};
+  if(n.indexOf("cardassian")>=0||n.indexOf("galor")>=0||n.indexOf("keldon")>=0||n.indexOf("hideki")>=0)return{color:"#d8a657",dark:"#3d2c10",shape:"wedge",label:"CARDASSIAN"};
+  if(n.indexOf("breen")>=0)return{color:"#79c0ff",dark:"#12324d",shape:"wedge",label:"BREEN"};
+  return{color:"#ff6b6b",dark:"#4d1414",shape:"wedge",label:"RAIDER"};
+}
+function tacOfficer(sid){
+  try{
+    const c=crewOfShip(sid).filter(o=>o&&o.status==="active"&&!o.dead);
+    c.sort((a,b)=>(((b.stats&&b.stats.tac)||0)-((a.stats&&a.stats.tac)||0)));
+    return c[0]||null;
+  }catch(e){return null;}
+}
+const TAC_TARGETS=["hull","weapons","engines","shields"];
+const TAC_TARGET_LABEL={hull:"Hull",weapons:"Weapons",engines:"Engines",shields:"Shields"};
+const TAC_STANCES=["bal","wpn","shd","eng"];
+const TAC_STANCE_LABEL={bal:"Balanced",wpn:"Weapons",shd:"Shields",eng:"Engines"};
+
+function openTacticalBattle(sid,e,z,opts){
+  const s=ship(sid);if(!s)return;
+  const sim=!!(opts&&opts.sim);
+  tacClose(true);
+  const p0=battlePower(s);
+  const ratio=e.pow/Math.max(1,p0);
+  const off=tacOfficer(sid);
+  const root=document.getElementById("tacRoot");
+  root.innerHTML=
+    '<div id="tacHead"><div id="tacTitle">'+((typeof SHIP_PICS!=="undefined"&&SHIP_PICS[s.cls])?'<img class="tacShipPic" src="'+SHIP_PICS[s.cls]+'">':'')+(sim?"🕹️ HOLODECK SIMULATION — ":"⚔️ TACTICAL — ")+esc(s.name)+' <span class="dim">vs</span> <span style="color:var(--red)">'+esc(e.n)+'</span></div>'+
+    '<div id="tacTaunt"></div><div id="tacAdvice" style="display:none"></div></div>'+
+    '<div id="tacWrap"><canvas id="tacCanvas"></canvas><div id="tacMsg"></div></div>'+
+    '<div id="tacOrders">'+
+    '<button class="tacBtn" id="tacPhasers"></button>'+
+    '<button class="tacBtn" id="tacTorps"></button>'+
+    '<button class="tacBtn" id="tacEvasive"></button>'+
+    '<button class="tacBtn" id="tacTarget"></button>'+
+    '<button class="tacBtn" id="tacPower"></button>'+
+    '<button class="tacBtn" id="tacDisengage"></button>'+
+    '<button class="tacBtn wide" id="tacDelegate"'+(sim?' style="display:none"':'')+'></button>'+
+    '</div>';
+  root.classList.add("open");
+  const dmgF=1-Math.min(0.5,(s.damage||0)/200);
+  const pHull=Math.round((70+p0*0.45)*dmgF),pSh=Math.round((45+p0*0.32)*dmgF),pRegen=1.1+p0*0.004;
+  const eHull=Math.round(clamp(300*ratio,140,560)),eSh=Math.round(clamp(170*ratio,80,330));
+  TAC={
+    sid:sid,e:e,z:z,s:s,sim:sim,time:0,last:0,raf:0,over:false,outcome:null,shake:0,dgCd:0,
+    tacName:off?fullName(off):"Tactical",tacStat:(off&&off.stats)?(off.stats.tac||50):50,
+    dmgTaken:0,counselDone:false,dpr:1,W:300,H:300,stars:[],
+    player:{x:0,y:0,vx:0,vy:0,a:0,hull:pHull,maxHull:pHull,sh:pSh,maxSh:pSh,regen:pRegen,torps:6,
+      cd:{ph:0,torp:0,ev:0},evT:0,stance:"bal",target:"hull",alive:true,shFlash:0,hullFlash:0},
+    enemy:{x:0,y:0,vx:0,vy:0,a:0,hull:eHull,maxHull:eHull,sh:eSh,maxSh:eSh,regen:1.6,
+      cd:{ph:1.2},sys:{weapons:0,engines:0,shields:0},alive:true,shFlash:0,hullFlash:0,
+      style:tacFactionStyle(e.nemesis?e.nemTitle:e.n),dartT:0,dartCd:5,ratio:ratio},
+    shots:[],beams:[],parts:[]
+  };
+  tacFit();
+  const t=TAC;
+  t.player.x=t.W*0.28;t.player.y=t.H*0.62;t.player.a=-0.4;
+  t.enemy.x=t.W*0.74;t.enemy.y=t.H*0.36;t.enemy.a=Math.PI-0.4;
+  for(let i=0;i<90;i++)t.stars.push({x:Math.random()*t.W,y:Math.random()*t.H,r:Math.random()*1.4+0.3,tw:Math.random()*6.28});
+  document.getElementById("tacPhasers").addEventListener("click",tacOrderPhasers);
+  document.getElementById("tacTorps").addEventListener("click",tacOrderTorps);
+  document.getElementById("tacEvasive").addEventListener("click",tacOrderEvasive);
+  document.getElementById("tacTarget").addEventListener("click",tacCycleTarget);
+  document.getElementById("tacPower").addEventListener("click",tacCyclePower);
+  document.getElementById("tacDisengage").addEventListener("click",tacDisengage);
+  if(!sim)document.getElementById("tacDelegate").addEventListener("click",tacDelegate);
+  window.addEventListener("resize",tacFit);
+  try{sfx("klaxon");}catch(err){}
+  tacAiTaunt();
+  t.last=performance.now();
+  t.raf=requestAnimationFrame(tacLoop);
+}
+function tacClose(silent){
+  const t=TAC;TAC=null;
+  try{if(t&&t.raf)cancelAnimationFrame(t.raf);}catch(e){}
+  try{window.removeEventListener("resize",tacFit);}catch(e){}
+  const root=document.getElementById("tacRoot");
+  if(root){root.classList.remove("open");if(!silent)root.innerHTML="";}
+}
+function tacFit(){
+  const t=TAC;if(!t)return;
+  const cv=document.getElementById("tacCanvas");if(!cv)return;
+  const r=cv.getBoundingClientRect();
+  const dpr=Math.min(2,window.devicePixelRatio||1);
+  cv.width=Math.max(1,Math.round(r.width*dpr));
+  cv.height=Math.max(1,Math.round(r.height*dpr));
+  t.dpr=dpr;t.W=Math.max(1,r.width);t.H=Math.max(1,r.height);
+}
+function tacMsg(txt){
+  const el=document.getElementById("tacMsg");if(!el)return;
+  el.textContent=txt;el.classList.add("show");
+  clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove("show"),1800);
+}
+/* ---------- orders ---------- */
+function tacOrderPhasers(){
+  const t=TAC;if(!t||t.over||!t.player.alive||!t.enemy.alive)return;
+  const p=t.player;
+  if(p.cd.ph>0)return;
+  const dx=t.enemy.x-p.x,dy=t.enemy.y-p.y,d=Math.hypot(dx,dy);
+  if(d>480){tacMsg("Out of phaser range — closing.");return;}
+  p.cd.ph=1.6;
+  try{sfx("phaser");}catch(e){}
+  const acc=0.9*(p.evT>0?0.72:1);
+  const hit=Math.random()<acc;
+  const dmg=(3+t.tacStat*0.07)*(p.stance==="wpn"?1.3:1);
+  t.beams.push({x1:p.x,y1:p.y,x2:t.enemy.x,y2:t.enemy.y,life:0.14,max:0.14,col:"#ff9d45"});
+  if(hit)tacHitEnemy(dmg,{sys:p.target});
+  else tacBoom(t.enemy.x+(Math.random()-0.5)*30,t.enemy.y+(Math.random()-0.5)*30,3,"#5577aa");
+}
+function tacOrderTorps(){
+  const t=TAC;if(!t||t.over||!t.player.alive||!t.enemy.alive)return;
+  const p=t.player;
+  if(p.torps<=0){tacMsg("Torpedo tubes empty.");return;}
+  if(p.cd.torp>0)return;
+  p.torps--;p.cd.torp=9;
+  try{sfx("torpedo");}catch(e){}
+  const base=Math.atan2(t.enemy.y-p.y,t.enemy.x-p.x);
+  for(let i=-1;i<=1;i++){
+    const a=base+i*0.09;
+    t.shots.push({kind:"torp",foe:false,x:p.x,y:p.y,vx:Math.cos(a)*300,vy:Math.sin(a)*300,
+      dmg:(6+t.tacStat*0.10)*(p.stance==="wpn"?1.25:1),acc:0.95,life:2.4,sys:p.target});
+  }
+}
+function tacOrderEvasive(){
+  const t=TAC;if(!t||t.over||!t.player.alive)return;
+  const p=t.player;
+  if(p.evT>0||p.cd.ev>0)return;
+  p.evT=8;p.cd.ev=24;
+  try{sfx("warp");}catch(e){}
+  tacMsg("Evasive pattern delta!");
+}
+function tacCycleTarget(){
+  const t=TAC;if(!t||t.over)return;
+  const p=t.player;
+  p.target=TAC_TARGETS[(TAC_TARGETS.indexOf(p.target)+1)%TAC_TARGETS.length];
+  tacMsg("Targeting "+TAC_TARGET_LABEL[p.target]+".");
+}
+function tacCyclePower(){
+  const t=TAC;if(!t||t.over)return;
+  const p=t.player;
+  p.stance=TAC_STANCES[(TAC_STANCES.indexOf(p.stance)+1)%TAC_STANCES.length];
+  try{sfx("chirp");}catch(e){}
+  tacMsg("Power rerouted: "+TAC_STANCE_LABEL[p.stance]+".");
+}
+function tacDisengage(){
+  const t=TAC;if(!t||t.over||!t.player.alive)return;
+  if(t.dgCd>0){tacMsg("Helm still spooling the warp drive...");return;}
+  t.dgCd=15;
+  const s=ship(t.sid);
+  const ch=estEscapeOdds(s)/100;
+  if(Math.random()<ch){try{sfx("warp");}catch(e){}tacEnd("escaped");}
+  else{tacMsg("Escape failed — they cut us off!");t.enemy.cd.ph=Math.min(t.enemy.cd.ph,0.4);}
+}
+function tacDelegate(){
+  const t=TAC;if(!t||t.over)return;
+  const sid=t.sid,e=t.e,z=t.z;
+  tacClose();
+  const rep=resolveBattle(sid,e,z,"engage");
+  if(rep){interruptQueue.push(rep);pumpModals();}else{render();}
+}
+/* ---------- damage ---------- */
+function tacBoom(x,y,n,col){
+  const t=TAC;if(!t)return;
+  for(let i=0;i<n;i++){
+    const a=Math.random()*6.28,sp=30+Math.random()*90;
+    t.parts.push({x:x,y:y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:0.5+Math.random()*0.5,max:1,col:col||"#ffcf7a",size:1.5+Math.random()*2.5});
+  }
+}
+function tacShipBoom(p){
+  const t=TAC;if(!t)return;
+  tacBoom(p.x,p.y,46,"#ffd27a");tacBoom(p.x,p.y,30,"#ff8a5c");tacBoom(p.x,p.y,18,"#ffffff");
+  try{sfx("explosion");}catch(e){}
+}
+function tacHitEnemy(dmg,opts){
+  const t=TAC;if(!t||t.over)return;
+  const e=t.enemy;if(!e.alive)return;
+  let rem=dmg;
+  if(e.sh>0){const ab=Math.min(e.sh,rem);e.sh-=ab;rem-=ab;e.shFlash=0.5;try{sfx("shieldhit");}catch(err){}}
+  if(rem>0){e.hull-=rem;e.hullFlash=0.5;tacBoom(e.x,e.y,rem>14?12:6,"#ffb347");}
+  if(opts&&opts.sys&&opts.sys!=="hull")e.sys[opts.sys]=Math.min(1.2,(e.sys[opts.sys]||0)+dmg*0.012);
+  if(e.hull<=0){e.hull=0;e.alive=false;tacShipBoom(e);tacVibrate([100,60,100]);tacEnd("victory");}
+  else if(!t.counselDone&&(e.hull/e.maxHull<0.55))tacAiCounsel();
+}
+function tacHitPlayer(dmg){
+  const t=TAC;if(!t||t.over)return;
+  const p=t.player;if(!p.alive)return;
+  let rem=dmg;
+  if(p.sh>0){const ab=Math.min(p.sh,rem);p.sh-=ab;rem-=ab;p.shFlash=0.5;try{sfx("shieldhit");}catch(err){}}
+  if(rem>0){p.hull-=rem;p.hullFlash=0.5;}
+  t.dmgTaken+=dmg;
+  t.shake=Math.min(14,t.shake+5);
+  try{const _r=document.getElementById("tacRoot");if(_r){_r.classList.remove("shake");void _r.offsetWidth;_r.classList.add("shake");setTimeout(function(){_r.classList.remove("shake");},340);}}catch(_e){}
+  tacVibrate(60);
+  tacBoom(p.x,p.y,9,"#9fd8ff");
+  if(p.hull<=0){p.hull=0;p.alive=false;tacShipBoom(p);tacVibrate([120,60,120]);tacEnd("defeat");}
+  else if(!t.counselDone&&(p.hull/p.maxHull<0.45))tacAiCounsel();
+}
+/* ---------- main loop ---------- */
+function tacLoop(ts){
+  const t=TAC;if(!t)return;
+  const dt=Math.min(0.05,((ts-t.last)/1000)||0.016);
+  t.last=ts;t.time+=dt;
+  tacUpdate(dt);tacRender();tacPaintBtns();
+  t.raf=requestAnimationFrame(tacLoop);
+}
+function tacSteer(p,tx,ty,maxSp,turn,dt,faceTx,faceTy){
+  const dx=tx-p.x,dy=ty-p.y,d=Math.hypot(dx,dy)||1;
+  const sp=Math.min(maxSp,d*2.2);
+  p.vx+=(Math.cos(Math.atan2(dy,dx))*sp-p.vx)*Math.min(1,3*dt);
+  p.vy+=(Math.sin(Math.atan2(dy,dx))*sp-p.vy)*Math.min(1,3*dt);
+  p.x+=p.vx*dt;p.y+=p.vy*dt;
+  const want=Math.atan2(faceTy-p.y,faceTx-p.x);
+  let da=want-p.a;
+  while(da>Math.PI)da-=2*Math.PI;
+  while(da<-Math.PI)da+=2*Math.PI;
+  p.a+=clamp(da,-turn*dt,turn*dt);
+}
+function tacUpdate(dt){
+  const t=TAC;if(!t)return;
+  const p=t.player,e=t.enemy;
+  for(const k in p.cd)p.cd[k]=Math.max(0,p.cd[k]-dt);
+  p.evT=Math.max(0,p.evT-dt);
+  t.dgCd=Math.max(0,t.dgCd-dt);
+  t.shake=Math.max(0,t.shake-dt*22);
+  p.shFlash=Math.max(0,p.shFlash-dt);p.hullFlash=Math.max(0,p.hullFlash-dt);
+  e.shFlash=Math.max(0,e.shFlash-dt);e.hullFlash=Math.max(0,e.hullFlash-dt);
+  if(!t.over){
+    // shield regen
+    p.sh=Math.min(p.maxSh,p.sh+p.regen*(p.stance==="shd"?2:1)*dt);
+    if((e.sys.shields||0)<0.6)e.sh=Math.min(e.maxSh,e.sh+e.regen*dt);
+    // movement: circle each other
+    const R=225,ph=t.time*0.32;
+    tacSteer(p,e.x+Math.cos(ph)*R,e.y+Math.sin(ph)*R*0.72,
+      p.stance==="eng"?128:96,2.6,dt,e.x,e.y);
+    const eSpd=82*((e.sys.engines||0)>=0.6?0.55:1);
+    e.dartCd-=dt;
+    if(e.dartCd<=0){e.dartCd=6+Math.random()*5;e.dartT=1.1;}
+    e.dartT=Math.max(0,e.dartT-dt);
+    const er=205,eph=ph+Math.PI+0.5;
+    tacSteer(e,p.x+Math.cos(eph)*er+(e.dartT>0?70:0),p.y+Math.sin(eph)*er*0.72-(e.dartT>0?50:0),
+      eSpd*(e.dartT>0?1.9:1),2.2,dt,p.x,p.y);
+    // keep in bounds
+    for(const q of [p,e]){q.x=clamp(q.x,26,t.W-26);q.y=clamp(q.y,60,t.H-24);}
+    // enemy AI fire
+    e.cd.ph-=dt;
+    if(e.alive&&p.alive&&e.cd.ph<=0){
+      const d=Math.hypot(p.x-e.x,p.y-e.y);
+      if(d<440){
+        e.cd.ph=2.3;
+        const wpen=(e.sys.weapons||0)>=0.6;
+        let acc=0.78*(p.evT>0?0.45:1)*(p.stance==="eng"?0.85:1)*(wpen?0.85:1);
+        const dmg=clamp(11*e.ratio,5,26)*(wpen?0.7:1);
+        const col=e.style.color;
+        t.beams.push({x1:e.x,y1:e.y,x2:p.x,y2:p.y,life:0.14,max:0.14,col:col});
+        try{sfx("phaser");}catch(err){}
+        if(Math.random()<acc)tacHitPlayer(dmg);
+        else tacBoom(p.x+(Math.random()-0.5)*30,p.y+(Math.random()-0.5)*30,3,"#5577aa");
+      }else e.cd.ph=0.3;
+    }
+  }
+  // torpedoes & projectiles
+  for(let i=t.shots.length-1;i>=0;i--){
+    const s2=t.shots[i];
+    s2.x+=s2.vx*dt;s2.y+=s2.vy*dt;s2.life-=dt;
+    if(Math.random()<0.6)t.parts.push({x:s2.x,y:s2.y,vx:(Math.random()-0.5)*20,vy:(Math.random()-0.5)*20,life:0.3,max:0.3,col:s2.foe?"#ff6b6b":"#7fd4ff",size:1.6});
+    const tgt=s2.foe?p:e;
+    let dead=s2.life<=0||s2.x<-20||s2.x>t.W+20||s2.y<-20||s2.y>t.H+20;
+    if(!dead&&tgt.alive&&Math.hypot(tgt.x-s2.x,tgt.y-s2.y)<17){
+      dead=true;
+      if(Math.random()<s2.acc){if(s2.foe)tacHitPlayer(s2.dmg);else tacHitEnemy(s2.dmg,{sys:s2.sys});}
+      else tacBoom(s2.x,s2.y,4,"#8899bb");
+    }
+    if(dead)t.shots.splice(i,1);
+  }
+  for(let i=t.beams.length-1;i>=0;i--){t.beams[i].life-=dt;if(t.beams[i].life<=0)t.beams.splice(i,1);}
+  for(let i=t.parts.length-1;i>=0;i--){const q=t.parts[i];q.x+=q.vx*dt;q.y+=q.vy*dt;q.vx*=0.96;q.vy*=0.96;q.life-=dt;if(q.life<=0)t.parts.splice(i,1);}
+}
+/* ---------- render ---------- */
+function tacRender(){
+  const t=TAC;if(!t)return;
+  const cv=document.getElementById("tacCanvas");if(!cv)return;
+  const ctx=cv.getContext("2d");
+  ctx.setTransform(t.dpr,0,0,t.dpr,0,0);
+  // bg
+  const g=ctx.createLinearGradient(0,0,0,t.H);
+  g.addColorStop(0,"#040814");g.addColorStop(1,"#02040a");
+  ctx.fillStyle=g;ctx.fillRect(0,0,t.W,t.H);
+  // stars
+  for(const st of t.stars){
+    const tw=0.55+0.45*Math.sin(t.time*2+st.tw);
+    ctx.globalAlpha=tw;ctx.fillStyle="#cfe4ff";
+    ctx.fillRect(st.x,st.y,st.r,st.r);
+  }
+  ctx.globalAlpha=1;
+  ctx.save();
+  if(t.shake>0.2)ctx.translate((Math.random()-0.5)*t.shake,(Math.random()-0.5)*t.shake);
+  // torpedoes
+  for(const s2 of t.shots){
+    ctx.save();ctx.shadowBlur=8;ctx.shadowColor=s2.foe?"#ff6b6b":"#7fd4ff";
+    ctx.fillStyle=s2.foe?"#ff8080":"#bfe9ff";
+    ctx.beginPath();ctx.arc(s2.x,s2.y,3,0,6.29);ctx.fill();ctx.restore();
+  }
+  // beams
+  for(const b of t.beams){
+    ctx.save();ctx.globalAlpha=Math.max(0,b.life/b.max);
+    ctx.strokeStyle=b.col;ctx.lineWidth=2.5;ctx.shadowBlur=6;ctx.shadowColor=b.col;
+    ctx.beginPath();ctx.moveTo(b.x1,b.y1);ctx.lineTo(b.x2,b.y2);ctx.stroke();ctx.restore();
+  }
+  // particles
+  for(const q of t.parts){
+    ctx.globalAlpha=Math.max(0,q.life/q.max);ctx.fillStyle=q.col;
+    ctx.fillRect(q.x-q.size/2,q.y-q.size/2,q.size,q.size);
+  }
+  ctx.globalAlpha=1;
+  // ships
+  if(t.enemy.alive||t.enemy.hullFlash>0)tacDrawShip(ctx,t.enemy,false,t.enemy.style);
+  if(t.player.alive)tacDrawShip(ctx,t.player,true,null);
+  ctx.restore();
+  tacHUD(ctx,t);
+}
+function tacDrawShip(ctx,p,isPlayer,style){
+  ctx.save();ctx.translate(p.x,p.y);
+  const flash=p.hullFlash>0&&(Math.floor(p.hullFlash*14)%2===0);
+  if(!isPlayer&&style.shape==="cube"){
+    const s2=17;
+    ctx.rotate(0.5);
+    ctx.fillStyle=flash?"#ffffff":style.color;
+    ctx.fillRect(-s2/2,-s2/2,s2,s2);
+    ctx.strokeStyle="rgba(0,0,0,0.55)";ctx.lineWidth=1;
+    for(let i=-1;i<=1;i++){ctx.beginPath();ctx.moveTo(i*s2/3,-s2/2);ctx.lineTo(i*s2/3,s2/2);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(-s2/2,i*s2/3);ctx.lineTo(s2/2,i*s2/3);ctx.stroke();}
+  }else{
+    ctx.rotate(p.a);
+    if(isPlayer){
+      // engine glow
+      ctx.fillStyle="rgba(127,212,255,"+(0.5+0.3*Math.sin(performance.now()/90))+")";
+      ctx.beginPath();ctx.moveTo(-16,-9);ctx.lineTo(-23,0);ctx.lineTo(-16,9);ctx.closePath();ctx.fill();
+      // nacelles
+      ctx.fillStyle=flash?"#fff":"#7fd4ff";
+      ctx.fillRect(-4,-13,15,3.4);ctx.fillRect(-4,9.6,15,3.4);
+      // pylons
+      ctx.strokeStyle="#3f6fb5";ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(2,-8);ctx.lineTo(2,-11);ctx.moveTo(2,8);ctx.lineTo(2,11);ctx.stroke();
+      // saucer
+      ctx.fillStyle=flash?"#ffffff":"#9fc3e8";
+      ctx.beginPath();ctx.ellipse(0,0,11,7.5,0,0,6.29);ctx.fill();
+      ctx.strokeStyle="#3f6fb5";ctx.lineWidth=1.5;ctx.stroke();
+      ctx.fillStyle="#dfeeff";ctx.beginPath();ctx.arc(2,0,2.4,0,6.29);ctx.fill();
+    }else{
+      // enemy wedge
+      ctx.fillStyle="rgba(0,0,0,0.35)";
+      ctx.beginPath();ctx.moveTo(16,0);ctx.lineTo(-11,-10);ctx.lineTo(-5,0);ctx.lineTo(-11,10);ctx.closePath();ctx.fill();
+      ctx.fillStyle=flash?"#ffffff":style.color;
+      ctx.beginPath();ctx.moveTo(15,0);ctx.lineTo(-10,-9);ctx.lineTo(-4,0);ctx.lineTo(-10,9);ctx.closePath();ctx.fill();
+      ctx.strokeStyle=style.dark;ctx.lineWidth=1.5;ctx.stroke();
+      ctx.fillStyle="rgba(255,255,255,0.75)";ctx.beginPath();ctx.arc(4,0,1.8,0,6.29);ctx.fill();
+    }
+  }
+  ctx.restore();
+  // shield ring flash on recent hit
+  if(p.shFlash>0){
+    ctx.save();ctx.globalAlpha=Math.min(1,p.shFlash*2.2);
+    ctx.strokeStyle=isPlayer?"#7fd4ff":(style?style.color:"#ff6b6b");
+    ctx.lineWidth=2;ctx.shadowBlur=8;ctx.shadowColor=ctx.strokeStyle;
+    ctx.beginPath();ctx.arc(p.x,p.y,24,0,6.29);ctx.stroke();ctx.restore();
+  }
+}
+function tacBar(ctx,x,y,w,frac,col){
+  ctx.fillStyle="rgba(10,16,28,0.8)";ctx.fillRect(x,y,w,9);
+  ctx.fillStyle=col;ctx.fillRect(x+1,y+1,(w-2)*clamp(frac,0,1),7);
+  ctx.strokeStyle="#33507a";ctx.lineWidth=1;ctx.strokeRect(x+0.5,y+0.5,w-1,8);
+}
+function tacHUD(ctx,t){
+  const p=t.player,e=t.enemy;
+  ctx.font="10px monospace";ctx.textBaseline="top";
+  // player (top-left)
+  ctx.fillStyle="#9fd8ff";ctx.fillText("HULL",8,6);
+  tacBar(ctx,46,6,110,p.hull/p.maxHull,p.hull/p.maxHull>0.35?"#3fb950":"#ff6b6b");
+  ctx.fillStyle="#9fd8ff";ctx.fillText("SHD",8,20);
+  tacBar(ctx,46,20,110,p.sh/p.maxSh,"#58a6ff");
+  ctx.fillStyle="#8ea3c0";ctx.fillText("TORP ×"+p.torps+(p.evT>0?"  EVASIVE":""),8,34);
+  // enemy (top-right)
+  const ex=t.W-164;
+  ctx.fillStyle="#ff9a9a";ctx.fillText(e.style.label+" HULL",ex,6);
+  tacBar(ctx,ex,20,156,e.hull/e.maxHull,e.hull/e.maxHull>0.35?"#3fb950":"#ff6b6b");
+  ctx.fillStyle="#ff9a9a";ctx.fillText("SHD",ex,34);
+  tacBar(ctx,ex+30,34,126,e.sh/e.maxSh,"#58a6ff");
+  // subsystem damage pips
+  let sy=52;
+  ctx.fillStyle="#8ea3c0";ctx.fillText("FOE DMG:",ex,sy);
+  const sysTxt="WPN "+Math.round((e.sys.weapons||0)*100)+"%  ENG "+Math.round((e.sys.engines||0)*100)+"%  SHD "+Math.round((e.sys.shields||0)*100)+"%";
+  ctx.fillStyle="#c9d6ea";ctx.fillText(sysTxt,ex,sy+12);
+  if(t.sim){ctx.save();ctx.textAlign="center";ctx.fillStyle="rgba(159,216,255,0.55)";ctx.font="10px monospace";ctx.fillText("HOLODECK — SAFETIES ENGAGED",t.W/2,t.H-12);ctx.restore();}
+}
+/* ---------- buttons ---------- */
+function tacSetBtn(id,html,dis){
+  const b=document.getElementById(id);if(!b)return;
+  const k=html+(dis?"|d":"");
+  if(b._k===k)return;b._k=k;
+  b.innerHTML=html;b.disabled=!!dis;
+}
+function tacPaintBtns(){
+  const t=TAC;if(!t)return;
+  const p=t.player,dis=t.over||!p.alive;
+  const cdFmt=x=>x>0?'<span class="tacCd">'+x.toFixed(1)+"s</span>":"";
+  tacSetBtn("tacPhasers","🔥 Phasers"+cdFmt(p.cd.ph),dis||p.cd.ph>0||!t.enemy.alive);
+  tacSetBtn("tacTorps","💥 Torpedoes ×"+p.torps+cdFmt(p.cd.torp),dis||p.cd.torp>0||p.torps<=0||!t.enemy.alive);
+  tacSetBtn("tacEvasive",p.evT>0?("🌀 EVASIVE "+p.evT.toFixed(0)+"s"):("🌀 Evasive"+cdFmt(p.cd.ev)),dis||p.cd.ev>0||p.evT>0);
+  tacSetBtn("tacTarget","🎯 Target: "+TAC_TARGET_LABEL[p.target],dis||!t.enemy.alive);
+  tacSetBtn("tacPower","⚡ Power: "+TAC_STANCE_LABEL[p.stance],dis);
+  tacSetBtn("tacDisengage","🏃 Disengage"+(t.dgCd>0?cdFmt(t.dgCd):""),dis||t.dgCd>0);
+  tacSetBtn("tacDelegate","🖖 Delegate to "+esc(t.tacName)+" (auto-resolve)",dis);
+}
+/* ---------- end & aftermath ---------- */
+function tacEnd(outcome){
+  const t=TAC;if(!t||t.over)return;
+  t.over=true;t.outcome=outcome;
+  if(outcome==="victory"||outcome==="defeat"){try{sfx("explosion");}catch(e){}}
+  setTimeout(function(){tacFinish(outcome);},outcome==="escaped"||outcome==="delegate"?150:1500);
+}
+function tacFinish(outcome){
+  const t=TAC;
+  const sid=t?t.sid:null,e=t?t.e:null,z=t?t.z:null;
+  const info=t?{dmgTaken:t.dmgTaken,tacName:t.tacName}:{};
+  tacClose();
+  if(!sid)return;
+  const rep=t.sim?resolveTacticalSim(sid,e,z,outcome,info):resolveTactical(sid,e,z,outcome,info);
+  interruptQueue.push(rep);pumpModals();
+}
+function resolveTactical(sid,e,z,outcome,info){
+  const s=ship(sid);
+  const en=anArt(e.n)+" "+e.n;
+  const done=function(html,btns){save();return{title:(s?s.name+" — After-Action Report":"After-Action Report"),sub:z.terr+" · Stardate "+sdStr(G.stardate),html:"<p>"+html+"</p>",buttons:(btns||[]).concat([{t:"Continue"}])};};
+  if(!s)return done("The battle is over, but the ship is gone from the roster.");
+  let dmg=0;
+  if(outcome==="victory")dmg=Math.min(70,Math.round((info.dmgTaken||0)*0.85));
+  else if(outcome==="defeat")dmg=95;
+  else dmg=ri(3,12);
+  const crew=crewOfShip(s.id);
+  const applyDamage=function(d){
+    s.damage=Math.min(120,(s.damage||0)+d);
+    if(typeof shipCasualties==="function")shipCasualties(s,d,outcome==="escaped"?"evasive escape":"battle");
+    if(s.damage>=40&&s.status==="active")s.status="damaged";
+  };
+  if(outcome==="victory"){
+    s.batWon=(s.batWon||0)+1;
+    applyDamage(dmg);
+    const cr=ri(1500,6000)+Math.round(e.pow*20),dl=ri(40,160),pr=ri(10,30)+Math.round(e.pow/12);
+    if(s.damage>=100){
+      destroyShip(s,"destroyed in battle with "+e.n+" — "+z.terr);moraleAll(-10);
+      log("combat",s.name+" destroyed "+en+" in a tactical engagement in "+z.terr+", but was lost with all hands.");
+      return done("The "+esc(e.n)+" breaks apart under "+esc(s.name)+"&rsquo;s guns — <b>victory</b>. But the triumph is hollow: damage is catastrophic, and "+esc(s.name)+" is lost with most of her crew. Her name joins the Memorial.");
+    }
+    gainCR(cr);gainDL(dl);gainPres(pr);
+    log("combat",s.name+" defeated "+en+" in a tactical engagement in "+z.terr+". (+"+fmt(cr)+" CR, +"+fmt(dl)+" DL, +"+pr+" prestige)");
+    capLogAuto("Battle won",s.name+" defeated "+en+" in "+z.terr+".");
+    return done("The "+esc(e.n)+" breaks apart under "+esc(s.name)+"&rsquo;s guns. <b>Victory!</b> Salvage teams recover <b>"+fmt(cr)+" CR</b>, <b>"+fmt(dl)+" dilithium</b>, and Starfleet awards <b>"+pr+" prestige</b>."+(dmg?" "+esc(s.name)+" took "+dmg+"% hull damage.":""),e.nemesis?nemesisVictoryBtns(s):(nemesisOfferOk(z)?nemesisOfferBtn(s,e,z):null));
+  }
+  if(outcome==="escaped"){
+    applyDamage(dmg);
+    log("combat",s.name+" disengaged from "+en+" in "+z.terr+", taking "+dmg+"% hull damage during the escape.");
+    if(e.nemesis){const _nn=G.nemesis;_nn.grudge=Math.min(10,_nn.grudge+1);_nn.lastDay=G.day;_nn.lastSd=G.stardate;}
+    return done("Helm lays in a disengagement course and "+esc(s.name)+" warps out trailing plasma — but intact. The "+esc(e.n)+" does not pursue. <b>Escaped</b> with "+dmg+"% hull damage."+(e.nemesis?" <i>&ldquo;Coward! We will meet again.&rdquo;</i>":""));
+  }
+  applyDamage(dmg);
+  const hurt=crew.slice().sort(function(){return Math.random()-0.5;}).slice(0,ri(1,3));
+  hurt.forEach(function(o){o.health="injured";o.healDays=ri(15,40);});
+  if(s.damage>=100){
+    destroyShip(s,"destroyed in battle with "+e.n+" — "+z.terr);moraleAll(-12);
+    log("combat",s.name+" was destroyed by "+en+" in "+z.terr+".");
+    if(e.nemesis){const _nn=G.nemesis;_nn.active=false;_nn.resolved="triumphant";log("combat",_nn.title+" "+_nn.name+" watches your escape pods drift by — and lets them go. Their vengeance is complete. They will not trouble you again.");}
+    return done("It was never a fair fight. "+esc(s.name)+" is <b>destroyed</b> by the "+esc(e.n)+". Escape pods scatter into the dark. Her name joins the Memorial."+(e.nemesis?" Among the wreckage, a familiar voice on an open channel: &ldquo;It is done. We are finished, you and I.&rdquo;":""));
+  }
+  let died=null;
+  if(hurt.length&&Math.random()<0.2){died=pick(hurt);killOfficer(died,"killed in action aboard "+s.name+" — battle with "+e.n);}
+  moraleAll(-6);
+  log("combat",s.name+" was defeated by "+en+" in "+z.terr+" ("+dmg+"% hull damage"+(died?", "+fullName(died)+" killed":"")+") and limps away.");
+  if(e.nemesis){const _nn=G.nemesis;_nn.grudge=Math.min(10,_nn.grudge+1);_nn.lastDay=G.day;_nn.lastSd=G.stardate;log("combat",_nn.title+" "+_nn.name+" savors the victory. The grudge deepens.");}
+  return done("The "+esc(e.n)+" pounds "+esc(s.name)+" mercilessly. Outgunned and crippled, she breaks off and limps away — <b>defeated</b>, with "+dmg+"% hull damage."+(died?" "+fullName(died)+" did not survive.":"")+" She will need yard time."+(e.nemesis?" <i>&ldquo;"+esc(nemesisTaunt(G.nemesis,s))+"&rdquo;</i>":""));
+}
+/* ---------- AI: enemy taunt + tactical officer counsel (v2.46) ---------- */
+function tacAiTaunt(){
+  const t=TAC;if(!t)return;
+  const el=document.getElementById("tacTaunt");
+  const set=x=>{if(TAC===t&&el)el.innerHTML="&ldquo;"+esc(x)+"&rdquo;";};
+  set(t.e.line||"...sends no reply. Only weapons fire.");
+  if(typeof aiHasKey!=="function"||!aiHasKey())return;
+  const foe=t.e.nemesis?((t.e.nemTitle||"Commander")+" ("+t.e.n+")"):t.e.n;
+  const simNote=t.sim?"This is a holodeck training simulation. ":"";
+  try{
+    aiGenText(simNote+"You are the enemy commander in a Star Trek space battle. Write one short, menacing battlefield taunt (under 25 words) spoken by the commander of "+foe+" to the Starfleet ship "+t.s.name+". Match the faction's voice: Borg are cold and collective, Romulans arrogant and formal, Jem'Hadar fanatical, Cardassians smug, raiders crude. Plain prose, no stage directions, no quotation marks.",90).then(x=>{if(x)set(x);}).catch(()=>{});
+  }catch(e){}
+}
+function tacAiCounsel(){
+  const t=TAC;if(!t||t.counselDone)return;
+  t.counselDone=true;
+  const el=document.getElementById("tacAdvice");
+  const show=function(x){if(TAC===t&&el){el.innerHTML="&ldquo;"+esc(x)+"&rdquo; — "+esc(t.tacName);el.style.display="block";}};
+  if(typeof aiHasKey!=="function"||!aiHasKey()){
+    const e=t.enemy,p=t.player;
+    let c;
+    if(p.hull/p.maxHull<0.45)c="We're taking a pounding, Captain — recommend evasive action and full power to shields!";
+    else if(e.hull/e.maxHull<0.5)c="Their hull is buckling — concentrate all firepower and finish them!";
+    else if((e.sys.weapons||0)<0.6)c="Target their weapons, Captain — a toothless enemy is a beaten one.";
+    else c="Torpedo spread, full pattern — let's end this quickly.";
+    show(c);return;
+  }
+  try{
+    aiGenText("You are "+t.tacName+", tactical officer aboard the Starfleet ship "+t.s.name+", in the middle of a battle against "+t.e.n+". Give one urgent tactical suggestion, under 25 words, in Star Trek bridge vernacular. Plain prose, no stage directions, no quotation marks.",80).then(x=>{if(x)show(x);}).catch(()=>{});
+  }catch(e){}
+}
+
+
+/* ---------- holodeck combat program (v2.46): consequence-free training sims ---------- */
+function openHolodeckSim(){
+  let sid=null;
+  try{const fl=typeof flagshipId==="function"?flagshipId():null;const fs=fl&&ship(fl);if(fs&&(fs.status==="active"||fs.status==="damaged"))sid=fs.id;}catch(e){}
+  if(!sid){const a=G.ships.find(s=>s.status==="active");if(a)sid=a.id;}
+  if(!sid){toast("No active ship available for the simulation.");return;}
+  const s=ship(sid);
+  const p0=battlePower(s);
+  const pools=Object.keys(ENEMY_POOLS);
+  const foe=pick(ENEMY_POOLS[pick(pools)]);
+  const e={n:"Simulated "+foe.n,pow:Math.max(20,Math.round(p0*(0.9+Math.random()*0.3))),line:foe.line};
+  const z={terr:"Holodeck 3 — Starfleet Academy",blurb:"Safeties engaged. Nothing here can hurt you.",pool:null,danger:0};
+  openTacticalBattle(sid,e,z,{sim:true});
+}
+function applyHoloTraining(sid,won){
+  const res=[];
+  const crew=crewOfShip(sid).filter(o=>o&&o.status==="active"&&!o.dead);
+  if(!crew.length)return res;
+  const sorted=crew.slice().sort((a,b)=>(((b.stats&&b.stats.tac)||0)-((a.stats&&a.stats.tac)||0)));
+  const tac=sorted[0];
+  const grant=function(o,amt,why){
+    if(!o||(o.holoTrainCd||0)>G.day)return false;
+    if(!o.stats)return false;
+    const before=o.stats.tac||50;
+    o.stats.tac=Math.min(99,before+amt);
+    o.holoTrainCd=G.day+20;
+    res.push(esc(fullName(o))+" TAC "+before+" → "+o.stats.tac+(why?" ("+why+")":""));
+    return true;
+  };
+  grant(tac,won?2:1,"combat drill");
+  if(won){const others=sorted.slice(1);if(others.length)grant(pick(others),1,"bridge drill");}
+  if(res.length){try{log("combat","Holodeck combat drill ("+ship(sid).name+"): "+res.join("; ")+".");}catch(e){}}
+  return res;
+}
+function resolveTacticalSim(sid,e,z,outcome,info){
+  const s=ship(sid);
+  let html="";
+  if(outcome==="victory"){
+    const boosts=applyHoloTraining(sid,true);
+    html="The simulated "+esc(e.n.replace(/^Simulated /,""))+" breaks apart. <b>Simulation complete — victory.</b> The holodeck grid fades and the safeties click off."+(boosts.length?"<br>📈 Training review: "+boosts.join("; ")+".":"<br><span class=\"dim\">No training gains — the crew needs rest before the next evaluated drill (20 days).</span>");
+  }else if(outcome==="defeat"){
+    const boosts=applyHoloTraining(sid,false);
+    html="The simulation overwhelms "+esc(s? s.name:"your ship")+". <b>Simulated destruction.</b> The arch appears: &ldquo;Program complete. Better luck next time, Commander.&rdquo;"+(boosts.length?"<br>📈 Training review: "+boosts.join("; ")+".":"<br><span class=\"dim\">No training gains — the crew needs rest before the next evaluated drill (20 days).</span>");
+  }else{
+    html="Simulation terminated by the user. The holodeck resets to its empty grid.";
+  }
+  save();
+  return{title:"Holodeck — After-Action Review",sub:"Starfleet Academy · Stardate "+sdStr(G.stardate),html:"<p>"+html+"</p>",buttons:[{t:"Continue"}]};
+}
 /* ================= NEMESIS (v2.41) ================= */
 /* After a battle victory you may name the enemy commander your nemesis (and rename
    them — your choice). They escape, nurse the grudge, and ambush you in hostile
@@ -6765,6 +7388,7 @@ function setTab(t){
   window.scrollTo(0,0);}
 function navGo(t){closeSheet();closeModal();closeTabMenu();setTab(t);}
 function goBack(){
+  if($("tacRoot")&&$("tacRoot").classList.contains("open")){tacDisengage();return;}
   if(typeof deckOpen==="function"&&deckOpen()){deckGoBack();return;}
   if(typeof sdeckOpen==="function"&&sdeckOpen()){sdeckGoBack();return;}
   if($("sheetRoot").classList.contains("open")){closeSheet();return;}
@@ -10843,7 +11467,8 @@ function stationModal(id){
     h+='<div class="btnRow">'+(st.cadets
       ?'<button class="btn small ghost" disabled>Cadet class in training</button>'
       :'<button class="btn small teal" onclick="uiEnrollCadets(\''+st.id+'\')">Enroll cadet class (1,500 CR)</button>')+
-      '<button class="btn small peach" onclick="uiCreateCadet()">Create-A-Cadet (1,000 CR)</button></div>';
+      '<button class="btn small peach" onclick="uiCreateCadet()">Create-A-Cadet (1,000 CR)</button></div>'+
+    '<div class="btnRow"><button class="btn small violet" onclick="openHolodeckSim()">🕹️ Holodeck combat program</button></div><p class="dim">Run a simulated battle anytime — no risk to ship or crew. Victories sharpen your crew\'s tactical scores.</p>';
     if(st.cadets&&st.cadets.cruise){const _cc=ship(st.cadets.cruise.shipId);
       h+='<div class="kv"><span class="k">Training cruise</span><span class="v">'+esc(_cc?_cc.name:"?")+' — returns in '+st.cadets.cruise.daysLeft+'d</span></div>'+bar("CRUISE",7-st.cadets.cruise.daysLeft,7);}
     else if(st.cadets&&!st.cadets.cruised&&st.cadets.daysLeft>=10&&trainingShipId())
@@ -13523,6 +14148,7 @@ function deckBattleOrder(choice){
 window.onload=function(){
   try{splashInit();}catch(e){}
   try{paintMuteBtn();}catch(e){}
+  try{paintVibBtn();}catch(e){}
   const s=load();
   if(s){G=s;
     // forward-compat defaults
@@ -13558,7 +14184,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.45</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.46</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
 </body>
