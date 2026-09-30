@@ -3697,11 +3697,12 @@ function buildTick(){
   for(let i=G.builds.length-1;i>=0;i--){const b=G.builds[i];b.daysLeft-=_sb;
     if(b.daysLeft<=0){G.builds.splice(i,1);
       const _nid=uid("s");
-      G.ships.push({id:_nid,name:b.name,registry:b.registry,cls:b.cls,status:"active",daysLeft:0,damage:0,missionId:null,yardId:null,post:"sol",comp:SHIP_CLASSES[b.cls].comp,commSd:G.stardate,tours:1});
+      G.ships.push({id:_nid,name:b.name,registry:b.registry,cls:b.cls,status:"active",daysLeft:0,damage:0,missionId:null,yardId:null,post:"sol",comp:SHIP_CLASSES[b.cls].comp,commSd:G.stardate,tours:1,legacyOf:b.legacyOf||null});
       G.ledger.shipsBuilt++;gainPres(20);gainPres(5);sfx("success");
       queueCompletion({kind:"ship",id:_nid,name:b.name,sub:b.registry+" \u00b7 "+SHIP_CLASSES[b.cls].name+"-class · Christened (+5 prestige)",art:(typeof SHIP_PICS!=="undefined"&&SHIP_PICS[b.cls])?SHIP_PICS[b.cls]:""});
       log("build","Christening ceremony: "+b.name+" ("+b.registry+", "+SHIP_CLASSES[b.cls].name+"-class) is commissioned. A bottle of champagne is broken across her hull. (+5 prestige)");
-      capLogAuto("Ship commissioned",b.name+" ("+b.registry+", "+SHIP_CLASSES[b.cls].name+"-class) has joined the fleet.");}}
+      capLogAuto("Ship commissioned",b.name+" ("+b.registry+", "+SHIP_CLASSES[b.cls].name+"-class) has joined the fleet.");
+      if(b.legacyOf){const _ls0=ship(b.legacyOf);if(_ls0)log("build",b.name+" carries on the lineage of "+_ls0.name+" ("+_ls0.registry+"). Her crew can transfer aboard from the ship's popup.");}}}
   // station construction (max 2 concurrent)
   G.stations.forEach(st=>{if(st.status==="construction"){st.daysLeft-=_sb;
     if(st.daysLeft<=0){st.status="active";G.ledger.stationsBuilt++;gainPres(25);
@@ -7936,7 +7937,7 @@ function renderCommand(){
     '<b>4.</b> Fly ship missions from <b>Missions</b>. Success depends on ship stats, captain skill, crew, and morale.<br>'+
     '<b>5.</b> Crew fall in love, marry, and have children. Children grow up, join the Academy, and become officers — a generational fleet.<br>'+
     '<b>6.</b> Earn prestige from missions and events to unlock the Prometheus-class and rise to Fleet Admiral.<br>'+
-    '<b>7.</b> Damaged ships repair automatically at free shipyards. Injured crew heal — faster with a Medical Station.<br>'+    '<b>8.</b> Crews tire on long deployments — grant <b>shore leave</b> at a starbase. After a battle victory you may name a <b>nemesis</b>... if you dare. Every first contact is recorded in the <b>Species Codex</b>.</p>'+
+    '<b>7.</b> Damaged ships repair automatically at free shipyards. Injured crew heal — faster with a Medical Station.<br>'+    '<b>8.</b> Crews tire on long deployments — grant <b>shore leave</b> at a starbase. After a battle victory you may name a <b>nemesis</b>... if you dare. Every first contact is recorded in the <b>Species Codex</b>.<br><b>9.</b> Retire a ship to the Museum and <b>build a legacy ship</b> to carry on her name — when the successor commissions, one tap transfers her whole crew aboard.</p>'+
     '<div class="btnRow"><button class="btn small ghost" onclick="tutorialStart()">Replay the first-run tour</button></div></div>';
   let h=(G.qmode?renderQCard():"");
   if(cmdSub==="research")h+=cmdSubPills()+renderResearchCard();
@@ -8563,6 +8564,23 @@ function uiLegacyShip(id){
   legacyFrom=id;closeModal();setTab("build");
   toast("Choose a class for "+s.name+"'s successor.");
 }
+function uiTransferCrew(newId){ // v2.42: one-tap crew move from the legacy predecessor
+  const ns=ship(newId);if(!ns||!ns.legacyOf)return;
+  const os=ship(ns.legacyOf);
+  const crew=os?crewOfShip(os.id).slice():[];
+  if(!crew.length){ns.legacyOfferDone=true;save();render();toast("No crew aboard "+(os?os.name:"her predecessor")+" to transfer.");return;}
+  let n=0;
+  crew.forEach(o=>{
+    const roles=(o.roles||[]).slice();
+    if(!roles.length){o.post={t:"ship",id:newId};o.shuttle=null;awardAccolade(o,"Reassigned to "+ns.name);n++;return;}
+    roles.forEach(bid=>setBilletCore("ship",newId,bid,o.id,true));
+    n++;
+  });
+  ns.legacyOfferDone=true;
+  log("personnel","Crew transfer: "+n+" officers from "+os.name+" ("+os.registry+") took up their posts aboard "+ns.name+" ("+ns.registry+") — the lineage continues.");
+  capLogAuto("Crew transferred",n+" officers from "+os.name+" took their posts aboard "+ns.name+".");
+  save();toast("Crew transferred — "+n+" officers aboard "+ns.name+".");render();shipModal(newId);
+}
 function uiBuildShip(cls){
   const c=SHIP_CLASSES[cls],u=shipUnlocked(cls),yards=freeYards();
   if(!u.ok||!yards.length||G.credits<c.cr||G.dilithium<c.dl)return;
@@ -8580,7 +8598,8 @@ function uiBuildShipGo(cls,yardId){
   const reg=$("bnReg").value.trim()||"NCC-"+ri(74000,89999);
   gainCR(-c.cr);gainDL(-c.dl);
   const days=Math.ceil(c.days*buildTimeMod());
-  G.builds.push({id:uid("b"),kind:"ship",cls,name,registry:reg,daysLeft:days,total:days,yardId});
+  const _lf=legacyFrom; // v2.42 lineage: offer crew transfer when commissioned
+  G.builds.push({id:uid("b"),kind:"ship",cls,name,registry:reg,daysLeft:days,total:days,yardId,legacyOf:_lf||null});
   log("build","Keel laid: "+name+" ("+reg+", "+c.name+"-class) at "+(station(yardId)||{name:"?"}).name+". ETA "+days+" days.");
   legacyFrom=null;closeModal();save();render();toast("Construction started.");
 }
@@ -9587,11 +9606,12 @@ function fitScore(o,bid){
   const st=BILLET_STAT[bid]||"cmd";
   return (o.stats&&o.stats[st]?o.stats[st]:0)+(o.rank||0)*3;
 }
-function setBilletCore(kind,id,bid,oid){
+function setBilletCore(kind,id,bid,oid,quiet){ // v2.42 quiet: bulk crew transfer
+  const _lg=quiet?function(){}:log;
   const tgt=kind==="ship"?ship(id):station(id);if(!tgt)return false;
   const holder=billetHolderAt(kind,id,bid);
   if(!oid){
-    if(holder){holder.roles=(holder.roles||[]).filter(r=>r!==bid);log("personnel",fullName(holder)+" relieved of "+billetLabel(bid)+" duties ("+tgt.name+").");save();}
+    if(holder){holder.roles=(holder.roles||[]).filter(r=>r!==bid);_lg("personnel",fullName(holder)+" relieved of "+billetLabel(bid)+" duties ("+tgt.name+").");save();}
     if(bid==="co")successionCheck(kind,id); // v2.11: XO steps up
     return true;
   }
@@ -9609,14 +9629,14 @@ function setBilletCore(kind,id,bid,oid){
     if(p&&o.rel.stage!=="interested"){
       const together=o.post.t===p.post.t&&o.post.id===p.post.id;
       const wasTogether=(oldPost===(p.post.t+(p.post.id||"")));
-      if(together&&!wasTogether){o.morale=clamp(o.morale+8,0,100);p.morale=clamp(p.morale+8,0,100);log("romance",o.name+" transferred to be with "+p.name+". Reunited at last.");}
-      else if(!together&&wasTogether){o.morale=clamp(o.morale-8,0,100);p.morale=clamp(p.morale-8,0,100);log("romance",o.name+" was transferred away from "+p.name+". Distance makes the heart ache.");}
+      if(together&&!wasTogether){o.morale=clamp(o.morale+8,0,100);p.morale=clamp(p.morale+8,0,100);_lg("romance",o.name+" transferred to be with "+p.name+". Reunited at last.");}
+      else if(!together&&wasTogether){o.morale=clamp(o.morale-8,0,100);p.morale=clamp(p.morale-8,0,100);_lg("romance",o.name+" was transferred away from "+p.name+". Distance makes the heart ache.");}
     }
-    log("personnel",fullName(o)+" reassigned to "+tgt.name+".");
+    _lg("personnel",fullName(o)+" reassigned to "+tgt.name+".");
   }
-  if(holder&&holder.id!==o.id){holder.roles=(holder.roles||[]).filter(r=>r!==bid);log("personnel",fullName(holder)+" relieved of "+billetLabel(bid)+" duties ("+tgt.name+").");}
+  if(holder&&holder.id!==o.id){holder.roles=(holder.roles||[]).filter(r=>r!==bid);_lg("personnel",fullName(holder)+" relieved of "+billetLabel(bid)+" duties ("+tgt.name+").");}
   if(!Array.isArray(o.roles))o.roles=[];
-  if(o.roles.indexOf(bid)<0){o.roles.push(bid);log("personnel",fullName(o)+" assigned as "+billetLabel(bid)+" ("+tgt.name+").");}
+  if(o.roles.indexOf(bid)<0){o.roles.push(bid);_lg("personnel",fullName(o)+" assigned as "+billetLabel(bid)+" ("+tgt.name+").");}
   // v2.11 succession: a real CO ends acting command; losing your CO triggers it
   if(bid==="co"){if(oid)tgt.actingCO=null;else successionCheck(kind,id);}
   if(_hadCo&&(_oldKind==="ship"||_oldKind==="station")&&(_oldKind!==kind||_oldId!==id))successionCheck(_oldKind,_oldId);
@@ -10712,6 +10732,10 @@ function shipModal(id){
   _ops+='<button class="btn small peach" onclick="uiShoreLeave(\'ship\',\''+s.id+'\')">Shore leave (500 CR)</button>';
   if(_canFly&&hasStation("gate"))_ops+='<button class="btn small violet" onclick="uiGateTransit(\''+s.id+'\')">Slipstream transit</button>';
   if(_canFly&&wormDir(s))_ops+='<button class="btn small violet" onclick="uiWormholeTransit(\''+s.id+'\')">Traverse wormhole</button>';
+  if((s.status==="active"||s.status==="damaged")&&!s.mothballed&&s.legacyOf&&!s.legacyOfferDone){ // v2.42 one-tap crew transfer
+    const _ls2=ship(s.legacyOf),_ln=_ls2?crewOfShip(_ls2.id).length:0;
+    if(_ls2&&_ln)_ops+='<button class="btn small teal" onclick="uiTransferCrew(\''+s.id+'\')">Transfer crew · '+_ln+'</button>';
+  }
   if(_ops)h+='<div class="shipSecLbl">Operations</div><div class="opsGrid">'+_ops+'</div>';
   let _st="";
   if(s.status==="active"||s.status==="damaged"){
@@ -13450,7 +13474,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.41</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.42</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
