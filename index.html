@@ -9778,8 +9778,9 @@ function postOptions(cur){
   return gr.map(g=>'<optgroup label="'+g[0]+'">'+g[1].map(k=>'<option value="'+k+'"'+(k===cur?" selected":"")+'>'+POST_LABELS[k]+'</option>').join("")+"</optgroup>").join("");
 }
 /* Ship docking (v2.10): only stations in DOCK_DEFS offer berths. */
-function dockOptions(cur){
-  const elig=G.stations.filter(st=>st.status==="active"&&!st.mothballed&&DOCK_DEFS[st.type]);
+function dockOptions(s){
+  const here=s.post||"sol",cur=s.dock||"";
+  const elig=G.stations.filter(st=>st.status==="active"&&!st.mothballed&&DOCK_DEFS[st.type]&&((st.post||"sol")===here||st.id===cur));
   return '<option value="">— Undocked —</option>'+elig.map(st=>'<option value="'+st.id+'"'+(st.id===cur?" selected":"")+'>'+esc(st.name)+' ('+STATION_DEFS[st.type].name+')</option>').join("");
 }
 function canDock(s){return s&&(s.status==="active"||s.status==="damaged")&&!s.transit&&!s.mothballed;}
@@ -9791,6 +9792,7 @@ function setShipDock(id,v){
     if(!canDock(s)){toast("Ship is not available to dock.");return;}
     const st=station(v);
     if(!st||st.status!=="active"||st.mothballed||!DOCK_DEFS[st.type]){toast("That station has no docking facilities.");return;}
+    if((st.post||"sol")!==(s.post||"sol")){toast("Too far to dock — "+st.name+" is not in this sector. Set course there first.");return;}
     s.dock=st.id;
     log("command",s.name+" docked at "+st.name+". "+DOCK_DEFS[st.type].blurb);
   }
@@ -10423,7 +10425,7 @@ function shipModal(id){
       h+='<div class="kv"><span class="k">Posting</span><span class="v">'+esc(POST_LABELS[s.post||"sol"]||"Deep Space")+'</span></div>';
     }
     if(canDock(s)){
-      h+='<div class="kv"><span class="k">Docked at</span><span class="v">'+sheetPick('Dock at station',dockOptions(s.dock||""),(function(_sid){return function(v){setShipDock(_sid,v);};})(s.id))+'</span></div>';
+      h+='<div class="kv"><span class="k">Docked at</span><span class="v">'+sheetPick('Dock at station',dockOptions(s),(function(_sid){return function(v){setShipDock(_sid,v);};})(s.id))+'</span></div>';
       if(s.dock){const _dst=station(s.dock);
         if(_dst&&DOCK_DEFS[_dst.type])h+='<p class="dim">Docked at '+esc(_dst.name)+' — '+esc(DOCK_DEFS[_dst.type].blurb)+' Undock to resume operations.</p>';
         if(_dst&&_dst.type==="academy"){
@@ -10431,7 +10433,7 @@ function shipModal(id){
           h+='<div class="btnRow"><button class="btn small teal" onclick="uiSetTrainingShip(\''+s.id+'\')">'+(_tv?"Relieve as training vessel":"Designate as Academy training vessel")+'</button></div>';
           h+='<p class="dim">'+(_tv?"She is the Academy training vessel — cadet classes graduate an extra ensign while she serves.":"Designate her as the Academy training vessel: cadet classes graduate an extra ensign while she serves.")+'</p>';
         }}
-      else h+='<p class="dim">Starbase, shipyard, medical stations, and the Academy offer docking. Research arrays, embassies, Starfleet Command, and gates do not.</p>';
+      else h+='<p class="dim">Only stations in this sector offer docking — starbases, shipyards, medical stations, and the Academy. Research arrays, embassies, Starfleet Command, and gates do not.</p>';
     }
     if(!s.dock&&HOSTILE_ZONES[s.post||"sol"])h+='<p class="dim" style="color:var(--red)">Hostile territory ('+esc(HOSTILE_ZONES[s.post||"sol"].terr)+') — random RED ALERT battles can strike a ship posted here.</p>';
   }
@@ -13183,6 +13185,8 @@ window.onload=function(){
     if(!G.memorial)G.memorial=[];if(!G.shipOps)G.shipOps=[];if(typeof G.dlIncome!=="number")G.dlIncome=0;if(typeof G.day!=="number")G.day=0;
     if(!G.commander)G.commander={name:"",gender:"m",species:"human",portrait:0};if(G.commander.portrait==null)G.commander.portrait=0;
     G.ships.forEach(s=>{if(!s.post)s.post="sol";});
+    // v2.40: docking is same-sector only — release berths at out-of-sector stations
+    G.ships.forEach(s=>{if(s.dock){const _st=station(s.dock);if(_st&&((_st.post||"sol")!==(s.post||"sol"))){s.dock=null;if(!G.log)G.log=[];log("command",s.name+" released from "+_st.name+" — docking is now limited to stations in the same sector.");}}});
     G.officers.forEach(o=>{if(!Array.isArray(o.roles))o.roles=o.role?[o.role]:[];delete o.role;});
   } else {
     newGameState();save();
@@ -13208,7 +13212,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.39</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.40</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
