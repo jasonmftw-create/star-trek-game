@@ -6629,6 +6629,29 @@ function shipParts(shape){
   (def.s||[]).forEach(function(a){if(a[2])out.push({d:a[0],role:a[1],mode:"stroke",w:a[2]});});
   _shipPartsCache[shape]=out;return out;
 }
+/* ---- actual ship artwork (Jason's reference images, 2026-09-30): top-down
+   photo cutouts in ships/icons/. One source of truth for battle + map icons.
+   SHIP_PATHS vectors remain the fallback while an image loads (or fails);
+   enemy-only shapes (cube/sphere/galor/crescent/wedge) stay vector. ---- */
+const SHIP_ICON_META={academy:[309,128],akira:[145,134],ark:[320,54],bop:[320,218],constellation:[320,155],constitution:[320,199],crossfield:[320,120],defiant:[79,58],detach32:[320,152],excelsior:[251,129],fed:[222,84],forge:[320,132],galaxy:[320,238],galaxyx:[320,238],intrepid:[231,147],ktinga:[230,166],mercy:[320,142],odyssey:[320,140],prometheus:[268,110],relay:[320,222],ring:[320,320],sovereign:[320,117],universe:[320,265],warbird:[320,187],wells:[320,168]};
+const SHIP_ICON_CLASS={constitution:"constitution",constitution32:"constitution",prometheus:"prometheus",excelsior:"excelsior",universe:"universe"};
+const SHIP_IMGS={};
+function shipIconName(shape,cls){
+  const c=String(cls||"").toLowerCase();
+  if(SHIP_ICON_CLASS[c])return SHIP_ICON_CLASS[c];
+  return SHIP_ICON_META[shape]?shape:null;
+}
+function shipImgFor(shape,cls){
+  const n=shipIconName(shape,cls);if(!n)return null;
+  let im=SHIP_IMGS[n];
+  if(!im){im=new Image();im.src="ships/icons/"+n+".png";SHIP_IMGS[n]=im;}
+  return (im.complete&&im.naturalWidth>0)?im:null;
+}
+function shipIconAspect(shape,cls){
+  const n=shipIconName(shape,cls);if(!n)return 0;
+  const m=SHIP_ICON_META[n];return m[0]/m[1];
+}
+const DS9_IMG=new Image();DS9_IMG.src="ships/icons/ds9.png";
 function tacSteerTo(t,cx,cy){
   const cv=document.getElementById("tacCanvas");if(!cv||!t||!t.steer)return;
   const r=cv.getBoundingClientRect();
@@ -6689,6 +6712,7 @@ function openTacticalBattle(sid,e,z,opts){
   t.player.x=t.W*0.28;t.player.y=t.H*0.62;t.player.a=-0.4;
   t.enemy.x=t.W*0.74;t.enemy.y=t.H*0.36;t.enemy.a=Math.PI-0.4;
   t.player.shape=tacPlayerShape(t.s.cls);
+  t.player.cls=t.s.cls;
   t.enemy.shape=t.enemy.style.shape;
   t.steer={x:t.player.x,y:t.player.y,t:-99};
   for(let i=0;i<90;i++)t.stars.push({x:Math.random()*t.W,y:Math.random()*t.H,r:Math.random()*1.4+0.3,tw:Math.random()*6.28});
@@ -6996,6 +7020,19 @@ function tacDrawShip(ctx,p,isPlayer,style){
     ctx.beginPath();ctx.arc(0,0,11,0,6.29);ctx.stroke();ctx.shadowBlur=0;
   }else{
     ctx.rotate(p.a);
+    const _sim=shipImgFor(shape,p.cls);
+    if(_sim){
+      // actual ship artwork; vector silhouette is the fallback while loading
+      const _asp=shipIconAspect(shape,p.cls),_w=46,_h=_w/_asp;
+      if(isPlayer){
+        ctx.fillStyle="rgba(127,212,255,"+(0.5+0.3*Math.sin(performance.now()/90))+")";
+        ctx.beginPath();ctx.moveTo(-_w/2+2,-6);ctx.lineTo(-_w/2-8,0);ctx.lineTo(-_w/2+2,6);ctx.closePath();ctx.fill();
+      }
+      if(flash)ctx.filter="brightness(2.4) saturate(0.35)";
+      ctx.drawImage(_sim,-_w/2,-_h/2,_w,_h);
+      ctx.filter="none";
+      ctx.restore();return;
+    }
     if(isPlayer){
       // engine glow
       ctx.fillStyle="rgba(127,212,255,"+(0.5+0.3*Math.sin(performance.now()/90))+")";
@@ -11314,8 +11351,11 @@ beta:[["typhon","TYPHON EXPANSE",308,80,66,56,"#b565ff",341,72]],
 gamma:[],
 delta:[["thevoid","THE VOID",150,100,140,110,"#000000",220,92],["chaotic","CHAOTIC SPACE",60,250,90,66,"#e07a5f",105,242]]
 };
-function mapShipSVG(shp){
-  // galaxy-map icon: renders the same SHIP_PATHS silhouettes as tactical battles
+function mapShipSVG(shp,cls){
+  // galaxy-map icon: same artwork as tactical battles (photo cutout, vector fallback)
+  const _in=shipIconName(shp,cls);
+  if(_in){const _m=SHIP_ICON_META[_in],_h=(52*_m[1]/_m[0]);
+    return '<image href="ships/icons/'+_in+'.png" x="-26" y="'+(-_h/2).toFixed(1)+'" width="52" height="'+_h.toFixed(1)+'"/>';}
   const MC={H:"#ffb703",N:"#ffe3a3",D:"#8a5f00",L:"#fff8dd"};
   const parts=shipParts(shp);
   if(!parts)return '<ellipse cx="0" cy="0" rx="11" ry="7.5" fill="#ffb703"/>';
@@ -11331,7 +11371,7 @@ function mapShipIcon(s,x,yt,destXY){
   // ship marker for the galaxy maps: class silhouette, nose toward destination when en route
   let deg=-90;
   if(destXY)deg=(Math.atan2(destXY[1]-yt,destXY[0]-x)*180/Math.PI).toFixed(1);
-  return '<g transform="translate('+x+' '+yt+') rotate('+deg+') scale(0.42)">'+mapShipSVG(tacPlayerShape(s.cls))+'</g>';
+  return '<g transform="translate('+x+' '+yt+') rotate('+deg+') scale(0.42)">'+mapShipSVG(tacPlayerShape(s.cls),s.cls)+'</g>';
 }
 function renderQuadrant(q){
   const R=rng(20260928+q.charCodeAt(0));
@@ -11344,7 +11384,7 @@ function renderQuadrant(q){
   QPOIS[q].forEach(function(p){
     pm+="<g onclick=\""+mapPoiClick(p[0])+"\" style=\"cursor:pointer\">"
       +"<circle cx=\""+p[1]+"\" cy=\""+p[2]+"\" r=\"9\" fill=\"none\" stroke=\""+p[3]+"\" stroke-width=\"1\" opacity=\".55\"/>"
-      +"<circle cx=\""+p[1]+"\" cy=\""+p[2]+"\" r=\"4.5\" fill=\""+p[3]+"\"/>"
+      +(p[0]==="ds9"?'<image href="ships/icons/ds9.png" x="'+(p[1]-11)+'" y="'+(p[2]-11)+'" width="22" height="22"/>':"<circle cx=\""+p[1]+"\" cy=\""+p[2]+"\" r=\"4.5\" fill=\""+p[3]+"\"/>")
       +"<g class=\"mapLblG\" data-mx=\""+p[1]+"\" data-my=\""+p[2]+"\" data-dx=\""+(p[5]==null?12:p[5])+"\" data-dy=\""+(p[6]==null?4:p[6])+"\"\"><text x=\"0\" y=\"0\" class=\"mapLbl\">"+p[4]+"</text></g></g>";
   });
   let wh="";
@@ -11394,7 +11434,7 @@ function renderQuadrant(q){
     const rr=rng(hashStr("qstn"+s.id)),a=rr()*Math.PI*2,d=14+rr()*22;
     const x=(spc[0]+Math.cos(a)*d).toFixed(1),y=(spc[1]+Math.sin(a)*d*0.75).toFixed(1);
     const nm2=esc(s.name.length>18?s.name.slice(0,17)+"\u2026":s.name);
-    stnLayer+="<g onclick=\"stationModal('"+s.id+"')\" style=\"cursor:pointer\"><rect x=\""+(x-4.5)+"\" y=\""+(y-4.5)+"\" width=\"9\" height=\"9\" fill=\"none\" stroke=\"#4cc9f0\" stroke-width=\"2\"/>"
+    stnLayer+="<g onclick=\"stationModal('"+s.id+"')\" style=\"cursor:pointer\"><rect x=\""+(x-4.5)+"\" y=\""+(y-4.5)+"\" width=\"9\" height=\"9\" fill=\"none\" stroke=\"#4cc9f0\" stroke-width=\"2\"/><image href=\"ships/icons/ds9.png\" x=\""+(x-11)+"\" y=\""+(y-11)+"\" width=\"22\" height=\"22\"/>"
       +"<g class=\"mapLblG\" data-mx=\""+x+"\" data-my=\""+y+"\" data-dx=\"8\" data-dy=\"3\"><text x=\"0\" y=\"0\" class=\"mapShipLbl\">"+nm2+"</text></g>"
       +"<title>"+esc(s.name)+"</title></g>";
   });
@@ -11434,7 +11474,7 @@ const TERR=[
   pois.forEach(p=>{
     pm+="<g onclick=\""+mapPoiClick(p[0])+"\" style=\"cursor:pointer\">"
       +"<circle cx=\""+p[1]+"\" cy=\""+p[2]+"\" r=\"9\" fill=\"none\" stroke=\""+p[3]+"\" stroke-width=\"1\" opacity=\".55\"/>"
-      +"<circle cx=\""+p[1]+"\" cy=\""+p[2]+"\" r=\"4.5\" fill=\""+p[3]+"\"/>"
+      +(p[0]==="ds9"?'<image href="ships/icons/ds9.png" x="'+(p[1]-11)+'" y="'+(p[2]-11)+'" width="22" height="22"/>':"<circle cx=\""+p[1]+"\" cy=\""+p[2]+"\" r=\"4.5\" fill=\""+p[3]+"\"/>")
       +"<g class=\"mapLblG\" data-mx=\""+p[1]+"\" data-my=\""+p[2]+"\" data-dx=\""+(p[5]==null?12:p[5])+"\" data-dy=\""+(p[6]==null?4:p[6])+"\"\"><text x=\"0\" y=\"0\" class=\"mapLbl\">"+p[4]+"</text></g></g>";
   });
   let wh="";
@@ -11473,7 +11513,7 @@ const TERR=[
     const rr=rng(hashStr("stn"+s.id)),a=rr()*Math.PI*2,d=30+rr()*44;
     const x=(spc[0]+Math.cos(a)*d).toFixed(1),y=(spc[1]+Math.sin(a)*d*0.75).toFixed(1);
     const nm2=esc(s.name.length>18?s.name.slice(0,17)+"\u2026":s.name);
-    stnLayer+="<g onclick=\"stationModal('"+s.id+"')\" style=\"cursor:pointer\"><rect x=\""+(x-4.5)+"\" y=\""+(y-4.5)+"\" width=\"9\" height=\"9\" fill=\"none\" stroke=\"#4cc9f0\" stroke-width=\"2\"/>"
+    stnLayer+="<g onclick=\"stationModal('"+s.id+"')\" style=\"cursor:pointer\"><rect x=\""+(x-4.5)+"\" y=\""+(y-4.5)+"\" width=\"9\" height=\"9\" fill=\"none\" stroke=\"#4cc9f0\" stroke-width=\"2\"/><image href=\"ships/icons/ds9.png\" x=\""+(x-11)+"\" y=\""+(y-11)+"\" width=\"22\" height=\"22\"/>"
       +"<g class=\"mapLblG\" data-mx=\""+x+"\" data-my=\""+y+"\" data-dx=\"8\" data-dy=\"3\"><text x=\"0\" y=\"0\" class=\"mapShipLbl\">"+nm2+"</text></g>"
       +"<title>"+esc(s.name)+"</title></g>";
   });
@@ -14598,7 +14638,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.50</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.51</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
 </body>
