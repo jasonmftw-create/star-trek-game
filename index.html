@@ -9803,6 +9803,10 @@ function shipModal(id){
     }
     if(_uc)h+='<p class="dim" style="color:var(--red)">Undercrewed: battle performance reduced until the complement is restored.</p>';
   }
+  if(typeof shipNpcs==="function"&&typeof npcLabel==="function"){
+    const _snpcs=shipNpcs(s);
+    if(_snpcs.length)h+='<h4>Ship\u2019s Company ('+_snpcs.length+' named)</h4><div class="dim">'+_snpcs.map(n=>esc(npcLabel(n))+" \u00b7 "+esc(n.d)).join("<br>")+'</div>';
+  }
   h+=crewSectionsHTML(crew,co,xo,"/"+c.slots,"No essential personnel assigned. Visit Personnel to assign officers.",_eff.acting&&co?co.id:null);
   const shs=shuttlesOfShip(s.id);
   h+='<h4>Shuttle Bay ('+shs.length+')</h4>';
@@ -9845,6 +9849,10 @@ function stationModal(id){
   if(typeof stCrewN==="function"){
     const _scc=stCompMax(st),_scn=stCrewN(st);
     h+='<div class="kv"><span class="k">Crew</span><span class="v">'+_scn+' / '+_scc+'</span></div>';
+  }
+  if(typeof stNpcs==="function"&&typeof npcLabel==="function"){
+    const _tnpcs=stNpcs(st);
+    if(_tnpcs.length)h+='<h4>Station Personnel ('+_tnpcs.length+' named)</h4><div class="dim">'+_tnpcs.map(n=>esc(npcLabel(n))+" \u00b7 "+esc(n.d)).join("<br>")+'</div>';
   }
   h+=crewSectionsHTML(crew,co,xo,"","No essential personnel assigned.",_seff.acting&&co?co.id:null);
   const shs=shuttlesOfStation(st.id);
@@ -12415,7 +12423,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.24</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.25</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
