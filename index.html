@@ -5164,15 +5164,53 @@ function opCrisisBeat(op,win){
 }
 const NPC_ROOM_DEPT={bridge:"Command",ready:"Command",lounge:null,transporter:"Operations",sickbay:"Medical",science:"Science",mess:null,holodeck:null,quarters:null,engineering:"Engineering",shuttle:"Operations",brig:"Security"};
 const NPC_STROOM_DEPT={ops:"Command",promenade:null,docking:"Operations",security:"Security",sickbay:"Medical",science:"Science",cargo:"Operations",reactor:"Engineering",replimat:null,holosuites:null,transporter:"Operations",habitat:null,brig:"Security"};
+function deckNpcRooms(s){
+  // Every NPC appears in exactly one room at a time. Most are on duty in their
+  // department's room; each shift a few are off duty, drifting between the
+  // social rooms, so the ship feels alive without anyone being in two places.
+  // (dy trails the hashed string so the hash actually changes each day —
+  //  Java-style hashCode barely moves when only leading chars change, and the
+  //  old shift counter stepped by 4, which is invisible mod 4.)
+  const dy=G.day;
+  if(DECK&&DECK.npcMap&&DECK.npcMap.ship===s.id&&DECK.npcMap.dy===dy)return DECK.npcMap.map;
+  const all=shipNpcs(s),ids=DECK_ROOMS.map(r=>r.id),map={};
+  ids.forEach(id=>map[id]=[]);
+  const social=ids.filter(id=>!NPC_ROOM_DEPT[id]);
+  let si=0;
+  all.forEach(n=>{
+    let rid=null;
+    if((hashStr(n.n+"#"+dy)%4)!==0){
+      rid=Object.keys(NPC_ROOM_DEPT).find(k=>NPC_ROOM_DEPT[k]===n.d&&ids.indexOf(k)>=0);
+    }
+    if(!rid){rid=social[(hashStr(n.n)+dy+si)%social.length];si++;}
+    map[rid].push(n);
+  });
+  if(DECK)DECK.npcMap={ship:s.id,dy:dy,map:map};
+  return map;
+}
 function deckNpcsFor(s,rid){
-  const want=NPC_ROOM_DEPT[rid],all=shipNpcs(s);
-  const pool=want?all.filter(n=>n.d===want):all;
-  return (pool.length?pool:all).slice(0,4);
+  return (deckNpcRooms(s)[rid]||[]).slice(0,4);
+}
+function sdeckNpcRooms(st){
+  const dy=G.day;
+  if(SDECK&&SDECK.npcMap&&SDECK.npcMap.st===st.id&&SDECK.npcMap.dy===dy)return SDECK.npcMap.map;
+  const all=stNpcs(st),ids=STATION_ROOMS.map(r=>r.id),map={};
+  ids.forEach(id=>map[id]=[]);
+  const social=ids.filter(id=>!NPC_STROOM_DEPT[id]);
+  let si=0;
+  all.forEach(n=>{
+    let rid=null;
+    if((hashStr(n.n+"#"+dy)%4)!==0){
+      rid=Object.keys(NPC_STROOM_DEPT).find(k=>NPC_STROOM_DEPT[k]===n.d&&ids.indexOf(k)>=0);
+    }
+    if(!rid){rid=social[(hashStr(n.n)+dy+si)%social.length];si++;}
+    map[rid].push(n);
+  });
+  if(SDECK)SDECK.npcMap={st:st.id,dy:dy,map:map};
+  return map;
 }
 function sdeckNpcsFor(st,rid){
-  const want=NPC_STROOM_DEPT[rid],all=stNpcs(st);
-  const pool=want?all.filter(n=>n.d===want):all;
-  return (pool.length?pool:all).slice(0,4);
+  return (sdeckNpcRooms(st)[rid]||[]).slice(0,4);
 }
 function npcAmbient(s){
   const npcs=shipNpcs(s);if(!npcs.length||Math.random()>0.35)return "";
@@ -12534,7 +12572,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.26</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.27</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
