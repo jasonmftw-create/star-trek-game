@@ -5137,6 +5137,31 @@ function stNpcs(st){
   return st.npcs;
 }
 function npcLabel(n){return n.r+" "+n.n;}
+function npcBeatNames(npcs,n){
+  if(!npcs||!npcs.length)return [];
+  return npcs.slice().sort(function(){return Math.random()-0.5;}).slice(0,Math.max(1,n||2)).map(npcLabel);
+}
+function opCrisisIntro(op){
+  if(!op||!op.npcs||!op.npcs.length||op.stage!==0)return "";
+  return '<p class="dim"><i>'+esc(pick([
+    op.npcs[0]+" raises the alarm \u2014 whatever this is, it started on their watch.",
+    "The first report comes from "+op.npcs[0]+", breathless on the comm.",
+    op.npcs[0]+" is already on the scene, waving the response team in."
+  ]))+'</i></p>';
+}
+function opCrisisBeat(op,win){
+  if(!op||!op.npcs||!op.npcs.length||Math.random()>0.6)return "";
+  const _nb=pick(op.npcs);
+  return '<p class="dim"><i>'+esc(win?pick([
+    _nb+" lets out a whoop over the open comm.",
+    _nb+" is already writing it up for the log.",
+    "Someone \u2014 sounds like "+_nb+" \u2014 starts a slow clap on the deck below."
+  ]):pick([
+    _nb+" takes the worst of it and is carried to sickbay.",
+    "You hear "+_nb+" calling for a medic, voice tight.",
+    _nb+" is going to feel that in the morning."
+  ]))+'</i></p>';
+}
 const NPC_ROOM_DEPT={bridge:"Command",ready:"Command",lounge:null,transporter:"Operations",sickbay:"Medical",science:"Science",mess:null,holodeck:null,quarters:null,engineering:"Engineering",shuttle:"Operations",brig:"Security"};
 const NPC_STROOM_DEPT={ops:"Command",promenade:null,docking:"Operations",security:"Security",sickbay:"Medical",science:"Science",cargo:"Operations",reactor:"Engineering",replimat:null,holosuites:null,transporter:"Operations",habitat:null,brig:"Security"};
 function deckNpcsFor(s,rid){
@@ -7474,14 +7499,31 @@ function uiAwayStart(){
   const sits=AWAY_SITS.slice().sort(()=>Math.random()-0.5).slice(0,3)
     .map(s=>({t:s.t,opts:s.opts.map(o=>({t:o.t,stat:o.stat,dc:o.dc+info.dc,win:o.win,lose:o.lose}))}));
   AWAY.dest=dest;AWAY.sits=sits;AWAY.stage=0;AWAY.wins=0;AWAY.terr=terr;
+  AWAY.npcs=[];AWAY.npcSrc=null;
+  var _dm=String(dest||"").match(/^(ship|station):(.*)$/);
+  if(_dm){
+    var _asrc=_dm[1]==="ship"?ship(_dm[2]):station(_dm[2]);
+    var _aroster=_asrc?((_dm[1]==="ship"&&(typeof shipNpcs==="function"))?shipNpcs(_asrc):((typeof stNpcs==="function")?stNpcs(_asrc):[])):[];
+    if(_aroster.length>=2){AWAY.npcs=_aroster.slice().sort(function(){return Math.random()-0.5;}).slice(0,2);AWAY.npcSrc={t:_dm[1],id:_dm[2]};}
+  }
   awayStage();
 }
 function awayStage(){
   const s=AWAY.sits[AWAY.stage];
-  const teamNames=AWAY.team.map(id=>{const o=officer(id);return o?o.name.split(" ")[0]:"?";}).join(", ");
+  const teamNames=AWAY.team.map(id=>{const o=officer(id);return o?o.name.split(" ")[0]:"?";}).join(", ")+((AWAY.npcs&&AWAY.npcs.length)?" + "+AWAY.npcs.map(npcLabel).join(", "):"");
+  let _nbHtml="";
+  if(AWAY.npcs&&AWAY.npcs.length&&Math.random()<0.55){
+    const _n1=npcLabel(AWAY.npcs[0]),_n2=AWAY.npcs[1]?npcLabel(AWAY.npcs[1]):null;
+    _nbHtml='<p class="dim"><i>'+esc(pick([
+      _n1+" has the perimeter, tricorder up.",
+      _n1+" keeps glancing at the sky like it might fall.",
+      _n2?_n1+" and "+_n2+" are on point, trying to look bored and failing.":_n1+" is on point, trying to look bored and failing.",
+      _n1+" mutters a reminder to log the away rotation — someone has to."
+    ]))+'</i></p>';
+  }
   const info=AWAY_TERR_INFO[AWAY.terr];
   openModal('<h2>Away Mission &mdash; '+esc(destLabel(AWAY.dest))+'</h2><div class="flavor">Stage '+(AWAY.stage+1)+' of 3 &middot; Team: '+esc(teamNames)+'</div>'+
-    '<div class="flavor" data-hint="'+esc(info.blurb)+'">'+esc(info.label)+'</div><p>'+s.t+'</p>'+
+    '<div class="flavor" data-hint="'+esc(info.blurb)+'">'+esc(info.label)+'</div><p>'+s.t+'</p>'+_nbHtml+
     s.opts.map((op,i)=>'<div style="margin:6px 0;"><button class="btn violet" style="width:100%;text-align:left;" onclick="awayChoose('+i+')">'+esc(op.t)+'</button></div>').join(""));
 }
 function awayChoose(i){
@@ -7504,7 +7546,17 @@ function awayResolve(){
   else if(w===2){outcome="Success";pres=Math.round(50*info.presMult)+(info.presBonus||0);mor=4;detail="Objectives achieved. The team beams back tired, dirty, and grinning.";}
   else if(w===1){outcome="Partial Success";pres=Math.round(25*info.presMult)+(info.presBonus||0);mor=1;detail="Some objectives met. The debrief will be spirited.";}
   else{outcome="Failure";pres=Math.round(5*info.presMult)+(info.presBonus||0);mor=-4;detail="It went badly. The team is beamed out under less-than-ideal circumstances.";
-    if(team.length&&Math.random()<info.inj){const o=pick(team);o.health="injured";o.healDays=ri(10,25);detail+=" "+esc(o.name.split(" ")[0])+" was injured and is in sickbay.";}}
+    if(team.length&&Math.random()<info.inj){const o=pick(team);o.health="injured";o.healDays=ri(10,25);detail+=" "+esc(o.name.split(" ")[0])+" was injured and is in sickbay.";}
+    if(AWAY.npcs&&AWAY.npcs.length&&AWAY.npcSrc&&Math.random()<0.6){
+      const _nsrc=AWAY.npcSrc.t==="ship"?ship(AWAY.npcSrc.id):station(AWAY.npcSrc.id);
+      const _nroster=_nsrc?((AWAY.npcSrc.t==="ship"&&typeof shipNpcs==="function")?shipNpcs(_nsrc):((typeof stNpcs==="function")?stNpcs(_nsrc):[])):[];
+      const _dead=pick(AWAY.npcs),_dlbl=npcLabel(_dead);
+      const _dix=_nroster.indexOf(_dead);if(_dix>=0)_nroster.splice(_dix,1);
+      detail+=" "+_dlbl+" didn't make it back.";
+      log("mission",_dlbl+" was killed on the away mission to "+destLabel(AWAY.dest)+".");
+    }else if(AWAY.npcs&&AWAY.npcs.length&&Math.random()<0.5){
+      detail+=" "+npcLabel(pick(AWAY.npcs))+" took a glancing hit and will be telling the story for months.";
+    }}
   if(w>=2)sfx("success");else if(w===0)sfx("fail");
   gainPres(pres);
   team.forEach(o=>{o.morale=clamp(o.morale+mor,0,100);o.missions.t++;if(w>=2)o.missions.s++;awardAccolade(o,"Away mission: "+destLabel(AWAY.dest)+" \u2014 "+outcome);});
@@ -10703,7 +10755,7 @@ function deckPlanHtml(s){
     const rooms=DECK_ROOMS.filter(r=>deckOfRoom(s,r)===d);
     if(!rooms.length)continue;
     h+='<div class="deckBand"><div class="dNum">DECK '+d+'</div><div class="deckRooms">'+
-      rooms.map(r=>'<button class="roomPill" onclick="deckGotoRoom(\''+r.id+'\')">'+esc(r.name)+'<span class="cnt">'+map[r.id].length+'</span></button>').join("")+
+      rooms.map(function(r){let _rnp="";if(typeof deckNpcsFor==="function"){const _dn=deckNpcsFor(s,r.id);if(_dn.length){_rnp='<span style="display:block;font-size:10px;opacity:.65;">'+esc(_dn.slice(0,2).map(function(x){return x.n.split(" ").slice(-1)[0];}).join(", ")+(_dn.length>2?" +"+(_dn.length-2):""))+'</span>';}}return '<button class="roomPill" onclick="deckGotoRoom(\''+r.id+'\')">'+esc(r.name)+'<span class="cnt">'+map[r.id].length+'</span>'+_rnp+'</button>';}).join("")+
       '</div></div>';
   }
   return h;
@@ -11008,6 +11060,20 @@ function deckMakeEncounter(){
         {t:"Log it and move on",fn:"deckEncDismiss"}
       ]};
   }
+  { // an NPC crosses your path
+    const _npcs=(typeof shipNpcs==="function")?shipNpcs(s):[];
+    if(_npcs.length&&Math.random()<0.4){
+      const _n=pick(_npcs),_lbl=npcLabel(_n);
+      const _doing={Command:"carrying orders fresh off the bridge",Operations:"juggling three PADDs",Security:"walking the patrol route",Engineering:"with plasma coolant on their cuffs",Medical:"humming on the way to a shift",Science:"muttering about sensor ghosts"}[_n.d]||"on the way somewhere";
+      return {kind:"npc",npc:_lbl,
+        title:"Shipboard life",
+        text:"You pass "+_lbl+" in the corridor, "+_doing+". They straighten at the sight of you.",
+        opts:[
+          {t:"Ask how the shift is going",fn:"deckEncNpcChat"},
+          {t:"Nod and move on",fn:"deckEncDismiss"}
+        ]};
+    }
+  }
   // gossip / flavor
   return {kind:"flavor",
     title:"Shipboard life",
@@ -11030,6 +11096,19 @@ function deckEncHtml(s,enc){
     enc.opts.map(op=>'<button class="btn small" onclick="'+op.fn+'()">'+esc(op.t)+'</button>').join("")+'</div></div>';
 }
 function deckEncDismiss(){if(DECK)DECK.enc=null;renderDeck();}
+function deckEncNpcChat(){
+  const enc=DECK&&DECK.enc;if(DECK)DECK.enc=null;
+  const _lbl=(enc&&enc.npc)||"A crew member";
+  const _ttl=(typeof aiAddrTitle==="function")?aiAddrTitle():"Admiral";
+  const txt=pick([
+    "\"All good, "+_ttl+". Well \u2014 good enough that I'd rather be here than anywhere else.\"",
+    "\"Quiet shift, "+_ttl+". Which, out here, is its own kind of news.\"",
+    "\"Can't complain, "+_ttl+" \u2014 and on this ship, that's saying something.\"",
+    "\"Just holding it together, "+_ttl+". The way we always do.\""
+  ]);
+  log("personnel","Corridor chat aboard "+deckShip().name+": "+_lbl+".");
+  save();openModal('<h2>Shipboard life</h2><p><i>'+_lbl+"</i> \u2014 "+txt+'</p><div class="btnRow"><button class="btn" onclick="closeModal();renderDeck()">Continue</button></div>');
+}
 function deckEncChatJoin(){
   const enc=DECK&&DECK.enc;DECK.enc=null;
   const a=officer(enc.a),b=officer(enc.b);
@@ -11077,7 +11156,7 @@ function deckOpAvailable(s,tpl){
 function deckStartOp(s,tplId){
   const def=SHIP_OP_DEFS[tplId];if(!def||!deckOpAvailable(s,tplId))return;
   sfx("klaxon");
-  shipOps().push({key:uid("op_"),shipId:s.id,tpl:tplId,stage:0,wins:0,done:false});
+  shipOps().push({key:uid("op_"),shipId:s.id,tpl:tplId,stage:0,wins:0,done:false,npcs:(typeof npcBeatNames==="function"&&typeof shipNpcs==="function")?npcBeatNames(shipNpcs(s),2):[]});
   save();renderDeck();
   setTimeout(function(){deckOpStage();},350);
 }
@@ -11118,7 +11197,7 @@ function deckOpStage(){
   const def=SHIP_OP_DEFS[op.tpl],st=def.stages[op.stage];
   if(!st){deckOpResolve(s,op,def);return;}
   DECK.screen="op";
-  const txt=typeof st.t==="function"?st.t(s,op):st.t;
+  const txt=opCrisisIntro(op)+(typeof st.t==="function"?st.t(s,op):st.t);
   let h='<div class="deckTop"><button class="btn small ghost" onclick="deckGoBack()" style="padding:6px 10px;">&#8592;</button>'+
     '<div class="dName">'+esc(def.name)+' <span class="dReg">Stage '+(op.stage+1)+' of '+def.stages.length+'</span></div>'+deckAlertLabel(s)+
     '<button class="btn small ghost" onclick="deckExit()">Leave</button></div>';
@@ -11134,7 +11213,7 @@ function deckOpChoose(i){
   const best=deckOpBest(s,opt.stat||"cmd");
   const roll=best.v+ri(1,100),win=roll>=(opt.dc||120);
   if(win)op.wins++;
-  const txt=(win?opt.win:opt.lose)||"";
+  const txt=((win?opt.win:opt.lose)||"")+opCrisisBeat(op,win);
   const oname=best.o?esc(best.o.name.split(" ")[0]):"The crew";
   let h='<div class="deckTop"><div class="dName">'+(win?"Objective secured":"Setback")+'</div>'+deckAlertLabel(s)+
     '<button class="btn small ghost" onclick="deckExit()">Leave</button></div>';
@@ -11173,6 +11252,7 @@ function deckOpResolve(s,op,def){
   else if(w>=n-1){outcome="Resolved";pres=70;mor=4;detail="The crisis is over. The ship hums on, and the crew walks a little taller.";}
   else if(w>=1){outcome="Contained";pres=35;mor=1;detail="It\'s handled — mostly. The debrief will be spirited, and the repair crews are already at work.";}
   else{outcome="Costly";pres=10;mor=-5;detail="The crisis passed, but it took its toll. Sickbay is busy and the mood is somber.";const _cd=ri(5,15);s.damage=Math.min(120,(s.damage||0)+_cd);if(typeof shipCasualties==="function")shipCasualties(s,_cd,"crisis");if(s.damage>=40&&s.status==="active")s.status="damaged";}
+  if(op.npcs&&op.npcs.length){const _nd=pick(op.npcs);detail+=" "+(w>=n-1?pick([_nd+" buys the first round in the mess hall.",_nd+" is already telling the story like it happened to someone braver."]):pick(["In sickbay, "+_nd+" is already joking about it.","You make a note to commend "+_nd+" \u2014 they held it together."]));}
   gainPres(pres);
   crewOfShip(s.id).forEach(o=>{o.morale=clamp(o.morale+mor,0,100);o.missions.t++;if(w>=n-1)o.missions.s++;});
   const b=deckOpBest(s,"cmd");
@@ -11619,7 +11699,7 @@ function sdeckPlanHtml(st){
     const rooms=sdeckRooms(st).filter(r=>sdeckSectionOf(st,r)===d);
     if(!rooms.length)continue;
     h+='<div class="deckBand"><div class="dNum">SEC '+d+'</div><div class="deckRooms">'+
-      rooms.map(r=>'<button class="roomPill" onclick="sdeckGotoRoom(\''+r.id+'\')">'+esc(r.name)+'<span class="cnt">'+map[r.id].length+'</span></button>').join("")+
+      rooms.map(function(r){let _rnp="";if(typeof sdeckNpcsFor==="function"){const _dn=sdeckNpcsFor(st,r.id);if(_dn.length){_rnp='<span style="display:block;font-size:10px;opacity:.65;">'+esc(_dn.slice(0,2).map(function(x){return x.n.split(" ").slice(-1)[0];}).join(", ")+(_dn.length>2?" +"+(_dn.length-2):""))+'</span>';}}return '<button class="roomPill" onclick="sdeckGotoRoom(\''+r.id+'\')">'+esc(r.name)+'<span class="cnt">'+map[r.id].length+'</span>'+_rnp+'</button>';}).join("")+
       '</div></div>';
   }
   return h;
@@ -11949,10 +12029,26 @@ function sdeckMakeEncounter(){
       "Someone has decorated their habitat door with mission patches from five postings. A whole career in stickers.",
       "A freighter captain argues cheerfully with the docking authority about berth fees. It is clearly a beloved ritual."
     ];
+  { // an NPC crosses your path
+    const _npcs=(typeof stNpcs==="function")?stNpcs(st):[];
+    if(_npcs.length&&Math.random()<0.4){
+      const _n=pick(_npcs),_lbl=npcLabel(_n);
+      const _doing={Command:"carrying orders from ops",Operations:"juggling three PADDs",Security:"walking the patrol route",Engineering:"with plasma coolant on their cuffs",Medical:"humming on the way to a shift",Science:"muttering about sensor ghosts"}[_n.d]||"on the way somewhere";
+      const _where=st.type==="sfcommand"?"concourse":st.type==="academy"?"quad":"promenade";
+      return {kind:"npc",npc:_lbl,
+        title:st.type==="sfcommand"?"Command life":st.type==="academy"?"Academy life":"Station life",
+        text:"You pass "+_lbl+" on the "+_where+", "+_doing+". They straighten at the sight of you.",
+        opts:[
+          {t:"Ask how the shift is going",fn:"sdeckEncNpcChat"},
+          {t:"Nod and move on",fn:"sdeckEncDismiss"}
+        ]};
+    }
+  }
   return {kind:"flavor",
     title:st.type==="sfcommand"?"Command life":st.type==="academy"?"Academy life":"Station life",
     text:pick(flv),
     opts:[{t:"Continue",fn:"sdeckEncDismiss"}]};
+
 }
 function sdeckEncHtml(st,enc){
   const o=id=>officer(id);
@@ -11963,6 +12059,20 @@ function sdeckEncHtml(st,enc){
     enc.opts.map(op=>'<button class="btn small" onclick="'+op.fn+'()">'+esc(op.t)+'</button>').join("")+'</div></div>';
 }
 function sdeckEncDismiss(){if(SDECK)SDECK.enc=null;sdeckRender();}
+function sdeckEncNpcChat(){
+  const enc=SDECK&&SDECK.enc;if(SDECK)SDECK.enc=null;
+  const _lbl=(enc&&enc.npc)||"A crew member";
+  const _ttl=(typeof aiAddrTitle==="function")?aiAddrTitle():"Admiral";
+  const _st=sdeckStation();
+  const txt=pick([
+    "\"All good, "+_ttl+". Well \u2014 good enough that I'd rather be here than anywhere else.\"",
+    "\"Quiet shift, "+_ttl+". Which, out here, is its own kind of news.\"",
+    "\"Can't complain, "+_ttl+" \u2014 and on this station, that's saying something.\"",
+    "\"Just holding it together, "+_ttl+". The way we always do.\""
+  ]);
+  log("personnel","Corridor chat aboard "+(_st?_st.name:"the station")+": "+_lbl+".");
+  save();openModal('<h2>Station life</h2><p><i>'+_lbl+"</i> \u2014 "+txt+'</p><div class="btnRow"><button class="btn" onclick="closeModal();sdeckRender()">Continue</button></div>');
+}
 function sdeckEncChatJoin(){
   const enc=SDECK&&SDECK.enc;SDECK.enc=null;
   const a=officer(enc.a),b=officer(enc.b);
@@ -12010,7 +12120,7 @@ function sdeckOpAvailable(st,tpl){
 function sdeckStartOp(st,tplId){
   const def=sdeckOpDefs(st)[tplId];if(!def||!sdeckOpAvailable(st,tplId))return;
   sfx("klaxon");
-  stationOps().push({key:uid("sop_"),stId:st.id,tpl:tplId,stage:0,wins:0,done:false});
+  stationOps().push({key:uid("sop_"),stId:st.id,tpl:tplId,stage:0,wins:0,done:false,npcs:(typeof npcBeatNames==="function"&&typeof stNpcs==="function")?npcBeatNames(stNpcs(st),2):[]});
   save();sdeckRender();
   setTimeout(function(){sdeckOpStage();},350);
 }
@@ -12051,7 +12161,7 @@ function sdeckOpStage(){
   const def=sdeckOpDefs(st)[op.tpl],s=def.stages[op.stage];
   if(!s){sdeckOpResolve(st,op,def);return;}
   SDECK.screen="op";
-  const txt=typeof s.t==="function"?s.t(st,op):s.t;
+  const txt=opCrisisIntro(op)+(typeof s.t==="function"?s.t(st,op):s.t);
   let h='<div class="deckTop"><button class="btn small ghost" onclick="sdeckGoBack()" style="padding:6px 10px;">&#8592;</button>'+
     '<div class="dName">'+esc(def.name)+' <span class="dReg">Stage '+(op.stage+1)+' of '+def.stages.length+'</span></div>'+sdeckAlertLabel(st)+
     '<button class="btn small ghost" onclick="sdeckExit()">Leave</button></div>';
@@ -12067,7 +12177,7 @@ function sdeckOpChoose(i){
   const best=sdeckOpBest(st,opt.stat||"cmd");
   const roll=best.v+ri(1,100),win=roll>=(opt.dc||120);
   if(win)op.wins++;
-  const txt=(win?opt.win:opt.lose)||"";
+  const txt=((win?opt.win:opt.lose)||"")+opCrisisBeat(op,win);
   const oname=best.o?esc(best.o.name.split(" ")[0]):"The crew";
   let h='<div class="deckTop"><div class="dName">'+(win?"Objective secured":"Setback")+'</div>'+sdeckAlertLabel(st)+
     '<button class="btn small ghost" onclick="sdeckExit()">Leave</button></div>';
@@ -12108,6 +12218,7 @@ function sdeckOpResolve(st,op,def){
   else{outcome="Costly";pres=10;mor=-5;repCost=ri(2000,6000);detail="The crisis passed, but it took its toll. Emergency repairs are eating the budget and the mood is somber.";}
   gainPres(pres);
   if(repCost)gainCR(-repCost);
+  if(op.npcs&&op.npcs.length){const _nd=pick(op.npcs);detail+=" "+(w>=n-1?pick([_nd+" buys the first round on the promenade.",_nd+" is already telling the story like it happened to someone braver."]):pick(["In the infirmary, "+_nd+" is already joking about it.","You make a note to commend "+_nd+" \u2014 they held it together."]));}
   crewOfStation(st.id).forEach(o=>{o.morale=clamp(o.morale+mor,0,100);o.missions.t++;if(w>=n-1)o.missions.s++;});
   const b=sdeckOpBest(st,"cmd");
   if(b.o&&w>=n-1)awardAccolade(b.o,"Station operation: "+def.name+" — "+outcome);
@@ -12423,7 +12534,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.25</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.26</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
