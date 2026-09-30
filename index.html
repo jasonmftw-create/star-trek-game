@@ -7730,7 +7730,7 @@ function qScrapShip(id){
   crewOfShip(s.id).forEach(function(o){o.post={t:"pool"};o.roles=[];o.shuttle=null;});
   G.shuttles=(G.shuttles||[]).filter(function(x){return !(x.host==="ship"&&x.hid===s.id);});
   G.ships=G.ships.filter(function(x){return x.id!==s.id;});
-  G.memorial.unshift({kind:"ship",name:nm,sub:SHIP_CLASSES[s.cls].name+"-class · "+(s.registry||""),lost:"scrapped",cause:"Dismantled by Q on a whim",sd:G.stardate});
+  G.memorial.unshift({kind:"ship",cls:s.cls,registry:s.registry||"",name:nm,sub:SHIP_CLASSES[s.cls].name+"-class · "+(s.registry||""),lost:"scrapped",cause:"Dismantled by Q on a whim",sd:G.stardate});
   log("system","Q dismantles the "+nm+" on a whim. Her crew is reassigned; her name joins the Memorial.");
   closeModal();save();render();toast("Q: \"It was cluttering up the sector.\"");
 }
@@ -9823,7 +9823,7 @@ function destroyShip(s,cause,allHands,soulsOv){
   crew.forEach(o=>{o.shuttle=null;if(allHands||Math.random()<0.7)killOfficer(o,(allHands?"Went down with "+s.name+" — ":"Lost with "+s.name+" — ")+cause);else{o.post={t:"pool"};o.roles=[];o.health="injured";o.healDays=ri(10,30);}});
   G.shuttles=G.shuttles.filter(x=>!(x.host==="ship"&&x.hid===s.id));
   G.ships=G.ships.filter(x=>x.id!==s.id);
-  G.memorial.unshift({kind:"ship",name:s.name,sub:SHIP_CLASSES[s.cls].name+"-class · "+s.registry,lost:"destroyed",cause:cause,sd:G.stardate});
+  G.memorial.unshift({kind:"ship",cls:s.cls,registry:s.registry||"",name:s.name,sub:SHIP_CLASSES[s.cls].name+"-class · "+s.registry,lost:"destroyed",cause:cause,sd:G.stardate});
   G.ledger.lost++;
   const _souls=(typeof soulsOv==="number")?soulsOv:((typeof shipCrewN==="function")?shipCrewN(s):0);
   log("combat","† "+s.name+" ("+s.registry+") destroyed — "+cause+". "+(_souls>0?_souls+(_souls===1?" soul":" souls")+" lost with her. ":"")+"Her name is added to the Memorial.");
@@ -9854,7 +9854,7 @@ function uiDecommissionGo(kind,id){
     G.shuttles.forEach(x=>{if(x.host==="ship"&&x.hid===s.id&&x.status==="docked"&&tgt){x.host="station";x.hid=tgt.id;}});
     G.shuttles=G.shuttles.filter(x=>!(x.host==="ship"&&x.hid===s.id));
     G.ships.splice(i,1);
-    G.memorial.unshift({kind:"ship",name:s.name,sub:SHIP_CLASSES[s.cls].name+"-class · "+s.registry,lost:"decommissioned",cause:"Honorably decommissioned after years of service",sd:G.stardate});
+    G.memorial.unshift({kind:"ship",cls:s.cls,registry:s.registry||"",name:s.name,sub:SHIP_CLASSES[s.cls].name+"-class · "+s.registry,lost:"decommissioned",cause:"Honorably decommissioned after years of service",sd:G.stardate});
     log("system",s.name+" ("+s.registry+") has been decommissioned. Her name joins the Memorial.");
   }else{
     const i=G.stations.findIndex(x=>x.id===id);if(i<0)return;const st=G.stations[i];
@@ -10042,8 +10042,12 @@ function futureShipRows(sec){
       :G.tempCd>0?'<span class="badge warn">Array recharging — '+G.tempCd+'d</span>'
       :'<span class="badge">Temporal extraction available</span>';
     const ds=esc((f.name+" "+f.cls+" "+f.era+" "+f.src).toLowerCase());
-    return '<div class="row" data-search="'+ds+'" data-sec="'+sec+'" style="padding:6px;cursor:pointer;" onclick="futureShipModal('+i+')">'+shipPic(f.cls)+
-      '<div class="grow"><div class="nm">\u25F7 '+esc(f.name)+'<div class="rnkline">'+esc(f.reg||"registry unrecorded")+'</div></div>'+
+    const key="fut-"+f.id,detOpen=shipCardOpen.has(key);
+    return '<div class="card shipCard" data-search="'+ds+'" data-sec="'+sec+'" onclick="futureShipModal('+i+')" style="cursor:pointer;">'+
+      '<div class="shipMedia">'+shipPic(f.cls,true)+'</div>'+
+      '<div class="shipCardNm"><span class="shipCardNmTxt">◷ '+esc(f.name)+' <span class="reg">'+esc(f.reg||"registry unrecorded")+'</span></span>'+
+      '<button class="shipDetBtn" id="shipDetBtn-'+key+'" onclick="toggleShipDet(\''+key+'\',event)">'+(detOpen?'Details ▴':'Details ▾')+'</button></div>'+
+      '<div class="shipDet'+(detOpen?' open':'')+'" id="shipDet-'+key+'" onclick="event.stopPropagation()">'+
       '<div class="sub2">'+esc((SHIP_CLASSES[f.cls]||{name:f.cls}).name)+'-class · '+esc(f.era)+' · '+esc(f.src)+'</div>'+
       '<div style="margin-top:4px;">'+badge+'</div></div></div>';
   }).join("");
@@ -10224,6 +10228,36 @@ function uiTributeExtractGo(si){
   }
   save();tributeModal(si);render();
 }
+function memShipClsKey(m){
+  if(m.cls&&SHIP_CLASSES[m.cls])return m.cls;
+  if(m.sub){const cn=m.sub.split("·")[0].replace(/-class\s*$/,"").trim();for(const k in SHIP_CLASSES)if(SHIP_CLASSES[k].name===cn)return k;}
+  return "";
+}
+function memShipCard(m){
+  const cls=memShipClsKey(m);
+  const reg=m.registry||((m.sub||"").split("·")[1]||"").trim();
+  const key="ms-"+((m.name||"")+(m.sd||"")).replace(/[^a-zA-Z0-9]/g,""),detOpen=shipCardOpen.has(key);
+  const ds=esc(((m.name||"")+" "+(m.cause||"")+" "+(m.sub||"")).toLowerCase());
+  return '<div class="card shipCard" data-search="'+ds+'" data-sec="ship">'+
+    (cls?'<div class="shipMedia">'+shipPic(cls,true)+'</div>':"")+
+    '<div class="shipCardNm"><span class="shipCardNmTxt">† '+esc(m.name)+(reg?' <span class="reg">'+esc(reg)+'</span>':"")+'</span>'+
+    '<button class="shipDetBtn" id="shipDetBtn-'+key+'" onclick="toggleShipDet(\''+key+'\',event)">'+(detOpen?'Details ▴':'Details ▾')+'</button></div>'+
+    '<div class="shipDet'+(detOpen?' open':'')+'" id="shipDet-'+key+'">'+
+    (m.sub?'<div class="sub2">'+esc(m.sub)+'</div>':"")+
+    '<div class="sub2 dim">'+esc((m.lost==="decommissioned"?"Decommissioned":"Lost in service")+" — "+(m.cause||""))+' · Stardate '+sdStr(m.sd)+'</div>'+
+    '</div></div>';
+}
+function histShipCard(v,i){
+  const key="hist-"+i,detOpen=shipCardOpen.has(key);
+  const ds=esc((v.name+" "+(v.reg||"")+" "+v.cls+" "+v.fate).toLowerCase());
+  return '<div class="card shipCard" data-search="'+ds+'" data-sec="hist">'+
+    '<div class="shipMedia">'+shipPic(v.art,true)+'</div>'+
+    '<div class="shipCardNm"><span class="shipCardNmTxt">'+esc(v.name)+(v.reg?' <span class="reg">'+esc(v.reg)+'</span>':"")+'</span>'+
+    '<button class="shipDetBtn" id="shipDetBtn-'+key+'" onclick="toggleShipDet(\''+key+'\',event)">'+(detOpen?'Details ▴':'Details ▾')+'</button></div>'+
+    '<div class="shipDet'+(detOpen?' open':'')+'" id="shipDet-'+key+'">'+
+    '<div class="sub2">'+esc(v.cls)+'</div><div class="sub2 dim">'+esc(v.fate)+'</div>'+
+    '</div></div>';
+}
 function renderMemorial(){
   const offs=(G.memorial||[]).filter(m=>!m.kind||m.kind==="officer");
   const ships=(G.memorial||[]).filter(m=>m.kind==="ship");
@@ -10231,33 +10265,38 @@ function renderMemorial(){
   const dsOf=m=>esc(((m.name||"")+" "+(m.cause||"")+" "+(m.sub||"")+" "+(m.rank||"")+" "+(m.species||"")).toLowerCase());
   const entry=(m,sub,sec,oi)=>'<div class="row" data-search="'+dsOf(m)+'" data-sec="'+sec+'" style="padding:6px;'+(oi>=0?'cursor:pointer;':'cursor:default;')+'"'+(oi>=0?' onclick="fallenModal('+oi+')"':"")+'>'+faceImg(m,"pfaceSm")+'<div class="grow"><div class="nm">† '+esc(m.name)+'</div>'+(sub?'<div class="sub2">'+esc(sub)+'</div>':"")+'<div class="sub2 dim">'+esc((m.lost==="decommissioned"?"Decommissioned":"Lost in service")+" — "+m.cause)+' · Stardate '+sdStr(m.sd)+'</div>'+(oi>=0?'<div style="margin-top:4px;">'+fallenBadge(m)+'</div>':"")+'</div></div>';
   const sentry=(m,si)=>'<div class="row" data-search="'+dsOf(m)+'" data-sec="lost" style="padding:6px;cursor:pointer;" onclick="tributeModal('+si+')">'+faceImg(m,"pfaceSm")+'<div class="grow"><div class="nm">† '+esc(m.name)+'</div><div class="sub2">'+esc(m.rank+" · "+m.species)+'</div><div class="sub2 dim">'+esc(m.cause)+' · '+esc(m.when)+'</div><div style="margin-top:4px;">'+tributeBadge(m)+'</div></div></div>';
-
+  if(lostShow==="SHIPS")lostShow="all";
   let h='<div class="card"><h3>Memorial</h3><p class="dim">"They are gone, but their light travels on." — In honored memory of all who served.</p>'+
-    '<label>Search</label><input type="search" placeholder="Search the memorial…" oninput="liveSearch(this,\'memList\')"></div><div id="memList">';
-  const LOST_SHOWS=[["all","All"],["TOS","TOS"],["ENT","ENT"],["SNW","SNW"],["DISCO","Discovery"],["SFA","Academy"],["PRO","Prodigy"],["SHIPS","Ships"]];
-  const lostPills='<div class="cmdsubseg" style="margin:8px 0;">'+LOST_SHOWS.map(s=>'<button class="btn small'+(lostShow===s[0]?" on":"")+'" onclick="lostShow=\''+s[0]+'\';render()">'+s[1]+'</button>').join("")+'</div>';
-  const isShips=lostShow==="SHIPS";
-  const lostList=isShips?[]:MEMORIAL_LOST.map((l,i)=>({l:l,i:i})).filter(o=>lostShow==="all"||o.l.show===lostShow);
-  const showFallen=lostShow==="all";
-  const fallenRows=(!isShips&&showFallen)?MEMORIAL_STATIC.map(sentry).join("")+offs.map((m,i)=>entry(m,m.rank+" · "+m.species,"lost",i)).join(""):"";
-  const lostTitle=isShips?("◷ Future Vessels ("+FUTURE_SHIPS.length+")"):(showFallen?"◷ Lost in Time ("+(offs.length+MEMORIAL_STATIC.length+MEMORIAL_LOST.length)+")":"◷ Lost in Time — "+LOST_SHOWS.filter(s=>s[0]===lostShow)[0][1]+" ("+lostList.length+" of "+MEMORIAL_LOST.length+")");
-  portraitTabForce=true;
-  h+='<div class="card" data-seccard="lost"><h3>'+lostTitle+'</h3><p class="dim">'+(isShips?"Starships adrift ahead of their time — the 32nd century, the 29th, the 26th, and one possible tomorrow. Temporal Mechanics can pull a hull backward into 2378. A recovered ship serves as a normal fleet vessel, future systems intact.":"Gone, but their light travels on — whether fallen in the line of duty or lost to the currents of time. Tap a name for their service record, then <b>Temporal Extraction</b> — 250 prestige + 100 dilithium, 85% odds, 45-day array cooldown.")+'</p>'+lostPills+(isShips?futureShipRows("lost"):fallenRows+lostList.map(o=>lostEntry(o.l,o.i,"lost")).join(""))+'</div>';
-  portraitTabForce=false;
-  if(!isShips)h+=futureShipCard();
-  h+='<div class="card" data-seccard="ship"><h3>Lost Ships ('+ships.length+')</h3>'+(ships.map(m=>entry(m,m.sub,"ship")).join("")||'<p class="dim">Every hull accounted for.</p>')+'</div>';
-  h+='<div class="card" data-seccard="stn"><h3>Lost Stations ('+sts.length+')</h3>'+(sts.map(m=>entry(m,m.sub,"stn")).join("")||'<p class="dim">Every station accounted for.</p>')+'</div>';
-  h+='<div class="card" data-seccard="hist"><h3>Historical Ships &amp; Stations ('+(HISTORICAL_SHIPS.length+HISTORICAL_STATIONS.length)+')</h3><p class="dim">Gone before your command began — but not forgotten.</p><h4>Historical Ships</h4>'+HISTORICAL_SHIPS.map(v=>histEntry(v,"hist")).join("")+'<h4>Historical Stations</h4>'+HISTORICAL_STATIONS.map(v=>histEntry(v,"hist")).join("")+'</div>';
+    '<label>Search</label><input type="search" placeholder="Search the memorial…" oninput="liveSearch(this,\'memList\')"></div>'+
+    '<div class="cmdsubseg" style="margin:0 0 10px;">'+
+    '<button class="btn small'+(memTab==="personnel"?" on":"")+'" onclick="memTab=\'personnel\';render()">Personnel</button>'+
+    '<button class="btn small'+(memTab==="ships"?" on":"")+'" onclick="memTab=\'ships\';render()">Ships</button></div><div id="memList">';
+  if(memTab==="ships"){
+    h+=futureShipCard();
+    h+='<div class="card" data-seccard="ship"><h3>Lost Ships ('+ships.length+')</h3>'+(ships.map(m=>memShipCard(m)).join("")||'<p class="dim">Every hull accounted for.</p>')+'</div>';
+    h+='<div class="card" data-seccard="stn"><h3>Lost Stations ('+sts.length+')</h3>'+(sts.map(m=>entry(m,m.sub,"stn")).join("")||'<p class="dim">Every station accounted for.</p>')+'</div>';
+    h+='<div class="card" data-seccard="hist"><h3>Historical Ships &amp; Stations ('+(HISTORICAL_SHIPS.length+HISTORICAL_STATIONS.length)+')</h3><p class="dim">Gone before your command began — but not forgotten.</p><h4>Historical Ships</h4>'+HISTORICAL_SHIPS.map((v,hi)=>histShipCard(v,hi)).join("")+'<h4>Historical Stations</h4>'+HISTORICAL_STATIONS.map(v=>histEntry(v,"hist")).join("")+'</div>';
+  }else{
+    const LOST_SHOWS=[["all","All"],["TOS","TOS"],["ENT","ENT"],["SNW","SNW"],["DISCO","Discovery"],["SFA","Academy"],["PRO","Prodigy"]];
+    const lostPills='<div class="cmdsubseg" style="margin:8px 0;">'+LOST_SHOWS.map(s=>'<button class="btn small'+(lostShow===s[0]?" on":"")+'" onclick="lostShow=\''+s[0]+'\';render()">'+s[1]+'</button>').join("")+'</div>';
+    const lostList=MEMORIAL_LOST.map((l,i)=>({l:l,i:i})).filter(o=>lostShow==="all"||o.l.show===lostShow);
+    const showFallen=lostShow==="all";
+    const fallenRows=showFallen?MEMORIAL_STATIC.map(sentry).join("")+offs.map((m,i)=>entry(m,m.rank+" · "+m.species,"lost",i)).join(""):"";
+    const lostTitle=showFallen?("◷ Lost in Time ("+(offs.length+MEMORIAL_STATIC.length+MEMORIAL_LOST.length)+")"):("◷ Lost in Time — "+LOST_SHOWS.filter(s=>s[0]===lostShow)[0][1]+" ("+lostList.length+" of "+MEMORIAL_LOST.length+")");
+    portraitTabForce=true;
+    h+='<div class="card" data-seccard="lost"><h3>'+lostTitle+'</h3><p class="dim">Gone, but their light travels on — whether fallen in the line of duty or lost to the currents of time. Tap a name for their service record, then <b>Temporal Extraction</b> — 250 prestige + 100 dilithium, 85% odds, 45-day array cooldown.</p>'+lostPills+fallenRows+lostList.map(o=>lostEntry(o.l,o.i,"lost")).join("")+'</div>';
+    portraitTabForce=false;
+  }
   h+='</div><div id="memListNoRes" style="display:none;"><div class="card"><p class="dim">No matching entries in the memorial.</p></div></div>';
   return h;
 }
-
 /* ---------- LOG tab ---------- */
 let logFilter="all";
 let cmdSub="status";
 let shipQuad="all";
 let stationQuad="all";
 let lostShow="all";
+let memTab="personnel";
 let legacyFrom=null;
 let portraitTabForce=false;
 /* ================= CAPTAIN'S LOG ================= */
@@ -14711,7 +14750,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.64</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.65</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
