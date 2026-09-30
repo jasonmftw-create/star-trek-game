@@ -5171,7 +5171,7 @@ function sdeckNpcReact(st,rid){
   const npcs=sdeckNpcsFor(st,rid);if(!npcs.length)return;
   const seq=++sdeckReactSeq;
   const state="Station status: routine operations, "+aliveShiftName()+" shift, crew "+stCrewN(st)+"/"+stCompMax(st)+".";
-  aiGenText(npcReactPrompt("aboard "+st.name,sdeckRoomDef(rid).name,npcs,state),90).then(t=>{
+  aiGenText(npcReactPrompt("aboard "+st.name,sdeckRoomDef(st,rid).name,npcs,state),90).then(t=>{
     if(!t||seq!==sdeckReactSeq||!SDECK||SDECK.room!==rid||SDECK.stId!==st.id)return;
     const box=document.getElementById("deckRoot"),sp=box&&box.querySelector(".npcReact");
     if(sp)sp.textContent=t;
@@ -11248,22 +11248,135 @@ const STATION_ROOMS=[
    "A deputy stands post, alert despite the stillness.",
    "The cells are empty. Long may it continue."]}
 ];
-function sdeckRoomDef(id){return STATION_ROOMS.find(r=>r.id===id)||STATION_ROOMS[0];}
-function sdeckCount(st){const d=STATION_DEFS[(st&&st.type)||""]||{};return clamp(4+Math.round((d.comp||400)/700),4,9);}
-function sdeckSectionOf(st,room){const n=sdeckCount(st);return 1+Math.round(room.frac*(n-1));}
-
-/* station -> on-screen era for interior set photos (stations are Starfleet facilities) */
-function sdeckEra(st){return (st&&st.id==="ds9")?"ds9":"tng";}
-function sdeckEraName(st){return DECK_ERA_NAMES[sdeckEra(st)]||"Starfleet";}
-function sdeckRoomImg(st,rid){
-  const era=sdeckEra(st);
-  return '<img class="deckRoomImg" src="interiors/'+era+'/'+rid+'.jpg" alt="'+sdeckEraName(st)+' '+rid+' as seen on screen" loading="lazy" onerror="this.style.display=\'none\'">'+
-    '<div class="deckCap">'+sdeckEraName(st)+' · as seen on screen</div>';
-}
-
-/* ---- where is everyone? ---- */
-function sdeckRoomFor(o){
-  const R=o.roles||[],D=o.dept,has=x=>R.indexOf(x)>=0;
+/* ---- bespoke interiors: Starfleet Command (HQ) & Starfleet Academy (v2.17) ---- */
+const STATION_ROOM_SETS={
+sfcommand:{commons:"mess",sleep:"mess",rooms:[
+ {id:"ops",name:"Flag Operations Center",img:"ops",frac:0.03,
+  blurb:"The nerve center of Starfleet itself. The master board tracks every ship, every station, every operation in the quadrant — the whole fleet, one room.",
+  lines:["The master board glows with a thousand icons. Somewhere out there, every single one of them is someone's whole world.",
+   "A flag aide updates fleet dispositions in real time, calm as still water.",
+   "On the big board, your own sector pulses quietly. Command looks good on it."]},
+ {id:"boardroom",name:"Admiralty Boardroom",img:"lounge",frac:0.14,
+  blurb:"A long table, high windows over San Francisco Bay, and the weight of every decision Starfleet has ever made. This is where admirals decide.",
+  lines:["The chairs around the great table are empty now, but the room still feels argued-in.",
+   "Sunlight off the Bay catches the Federation seal on the far wall.",
+   "A yeoman straightens the chairs with ceremonial precision. The next session could change the quadrant."]},
+ {id:"cinc",name:"Office of the Commander-in-Chief",img:"ready",frac:0.24,
+  blurb:"The top office in Starfleet. Spartan, sunlit, and quieter than you'd expect for the room where it all lands.",
+  lines:["The desk is impossibly tidy. Power, it turns out, files things.",
+   "A model of an old Constitution-class sits on the shelf — every C-in-C keeps one.",
+   "Through the windows: the Bay, the fog, and the whole weight of the fleet."]},
+ {id:"plans",name:"Strategic Planning",img:"science",frac:0.36,
+  blurb:"Stellar cartography at the grand-strategy scale. Officers here don't plan battles — they plan decades.",
+  lines:["A holo-map of the sector turns slowly, layered with projections twenty years deep.",
+   "Two captains are arguing about supply lines. It has been going on since breakfast.",
+   "Every icon on the map is a decision someone will have to defend."]},
+ {id:"diplo",name:"Diplomatic Wing",img:"promenade",frac:0.48,
+  blurb:"Ambassadors, attaches, and translators. Half the quadrant's peace treaties were argued into existence in these corridors.",
+  lines:["A Tellarite ambassador is holding forth at volume. This is, reportedly, him being diplomatic.",
+   "Translators murmur in a dozen languages outside the conference suites.",
+   "The reception hall is set for tonight's function. Someone is polishing the peace process."]},
+ {id:"security",name:"Starfleet Security Command",img:"security",frac:0.60,
+  blurb:"The quietest loud room at HQ. Incident boards, threat assessments, and people who know things they will never tell you.",
+  lines:["The threat board is mostly green. The officers here watch the amber ones like hawks.",
+   "An analyst replays gate footage at eight times speed, missing nothing.",
+   "The incident map of the whole Federation blooms with tiny flags, most of them harmless."]},
+ {id:"relay",name:"Subspace Relay Control",img:"engineering",frac:0.70,
+  blurb:"Every order Starfleet sends goes through here. The relay floor hums with the actual voice of command.",
+  lines:["The relay columns pulse with encoded starlight — ten thousand messages a minute.",
+   "A technician walks the floor with a scanner, listening to the grid like a heartbeat.",
+   "Priority traffic from the frontier scrolls past, each line someone's urgent day."]},
+ {id:"mess",name:"Flag Officers' Mess",img:"mess",frac:0.82,
+  blurb:"White tablecloths and quiet conversation. The food is excellent; the gossip is better.",
+  lines:["Two admirals are dissecting the latest fleet exercise over coffee. The coffee is winning.",
+   "A captain fresh from the frontier is holding court — the room is hanging on every word.",
+   "The lunch crowd is a low, contented hum of people who run the galaxy."]},
+ {id:"transporter",name:"Transporter Terminal",img:"transporter",frac:0.93,
+  blurb:"The pad hums at standby. Dignitaries, admirals, and couriers materialize here daily — zero margin for error.",
+  lines:["The transporter chief runs the daily diagnostic with ritual precision.",
+   "An admiral's party materializes in a shimmer, already mid-briefing.",
+   "The pattern buffer board glows a reassuring green."]}
+]},
+academy:{commons:"mess",sleep:"quarters",rooms:[
+ {id:"lecture",name:"Lecture Hall",img:"science",frac:0.03,
+  blurb:"Tiered seats, a holo-lectern, and two hundred cadets trying very hard to look awake.",
+  lines:["The astrophysics lecture is running long. The back rows are surviving on coffee and spite.",
+   "A professor paces before a star chart, making stellar evolution sound like gossip.",
+   "Note-taking styluses scratch in unison. Somewhere, someone is definitely doodling a starship."]},
+ {id:"sims",name:"Flight Simulators",img:"holodeck",frac:0.13,
+  blurb:"Cockpit pods in endless rows. Every cadet washes out here a dozen times before they ever touch a real helm.",
+  lines:["A pod hisses open and a cadet stumbles out, pale. The Kobayashi scenario got another one.",
+   "Instructors watch the telemetry wall like hawks, clipboards ready.",
+   "From one pod: triumphant whooping. Someone just nailed the Corbomite maneuver."]},
+ {id:"quarters",name:"Cadet Dormitories",img:"quarters",frac:0.24,
+  blurb:"Bunks, footlockers, and four cadets to a room learning the fine art of coexistence.",
+  lines:["Muffled laughter leaks from behind one door. Lights-out was twenty minutes ago.",
+   "A corridor of bunks, each one a small private universe of photos and textbooks.",
+   "Someone is quizzing their roommate on the Prime Directive. The roommate is losing."]},
+ {id:"library",name:"Library & Archives",img:"lounge",frac:0.35,
+  blurb:"Every log, every chart, every after-action report in Starfleet history. The quietest building on campus.",
+  lines:["A cadet is three hours deep into Archer's logs, taking notes like it's scripture.",
+   "The archives hum with the weight of two centuries of starships.",
+   "Dust motes drift in the reading-room light. Nobody shushes anyone; nobody needs to."]},
+ {id:"mess",name:"Cadet Mess Hall",img:"mess",frac:0.46,
+  blurb:"A thousand cadets, one menu, infinite opinions about it. The loudest room at the Academy.",
+  lines:["The dinner rush is a beautiful, noisy chaos of trays and war stories.",
+   "A table of first-years is hanging on every word of a fourth-year's frontier tale.",
+   "Someone is reenacting a simulator run with bread rolls. The instructors pretend not to see."]},
+ {id:"gym",name:"Combat Training Center",img:"engineering",frac:0.57,
+  blurb:"Phaser ranges, sparring mats, and zero-g gyms. Sweat now, survival later.",
+  lines:["The phaser range crackles in steady rhythm. Bullseyes get rarer as arms get tireder.",
+   "Two cadets circle on the sparring mat while the class calls the moves.",
+   "An instructor times laps with a stopwatch and a complete lack of mercy."]},
+ {id:"sickbay",name:"Academy Infirmary",img:"sickbay",frac:0.68,
+  blurb:"Biobeds and hyposprays, mostly treating training injuries and exam-week exhaustion.",
+  lines:["A cadet with a sprained ankle from the obstacle course is getting the lecture and the treatment.",
+   "The triage board is blessedly short today.",
+   "A nurse recalibrates a biobed with the tenderness of a musician tuning an instrument."]},
+ {id:"cmdoffice",name:"Commandant's Office",img:"ready",frac:0.78,
+  blurb:"The superintendent's office. Every cadet's career passes through this room eventually — most of them nervously.",
+  lines:["The desk is clear except for a single PADD: someone's future, awaiting a signature.",
+   "Models of every Enterprise share the shelf. Tradition is heavy here.",
+   "Through the windows: the grounds, the Bay, and four thousand cadets being shaped."]},
+ {id:"grounds",name:"Recreation Terrace",img:"promenade",frac:0.87,
+  blurb:"Open terraces above the gardens. Cadets come here to think, to breathe, and to not talk about exams.",
+  lines:["Boothby's roses are in bloom. Even fourth-years slow down for them.",
+   "A cadet sits alone with a PADD, watching the fog roll over the Bay.",
+   "Laughter drifts up from the gardens — someone's daredevil flight through the trees ended in the pond. Again."]},
+ {id:"transporter",name:"Transporter Terminal",img:"transporter",frac:0.95,
+  blurb:"Six pads and a chief who has beamed ten thousand cadets. Zero margin for error.",
+  lines:["A class of first-years materializes, wide-eyed, duffels in hand.",
+   "The transporter chief runs the daily diagnostic with ritual precision.",
+   "The pattern buffer board glows a reassuring green."]}
+]}
+};
+function sdeckRooms(st){const t=st&&STATION_ROOM_SETS[st.type];return t?t.rooms:STATION_ROOMS;}
+function sdeckRoomSet(st){return (st&&STATION_ROOM_SETS[st.type])||null;}
+function sdeckCommons(st){const t=sdeckRoomSet(st);return t?t.commons:"promenade";}
+function sdeckSleepRoom(st){const t=sdeckRoomSet(st);return t?t.sleep:"quarters";}
+function sdeckRoomDef(st,id){const R=sdeckRooms(st);return R.find(r=>r.id===id)||R[0];}
+function sdeckRoomFor(st,o){
+  const R=o.roles||[],D=o.dept,has=x=>R.indexOf(x)>=0,t=st&&st.type;
+  if(t==="sfcommand"){
+    if(has("co")||has("xo"))return "ops";
+    if((o.rank||0)>=7)return "boardroom"; /* any admiral grade gathers in the boardroom */
+    if(has("ops")||has("tac")||has("conn"))return "ops";
+    if(D==="Security"||has("sec"))return "security";
+    if(D==="Science"||has("sci"))return "plans";
+    if(D==="Engineering"||has("eng"))return "relay";
+    if(has("chef")||has("bart"))return "mess";
+    return null;
+  }
+  if(t==="academy"){
+    if(has("co")||has("xo"))return "cmdoffice";
+    if(D==="Science"||has("sci"))return "lecture";
+    if(D==="Medical"||has("med")||has("doc")||has("nurse")||has("coun"))return "sickbay";
+    if(D==="Security"||has("sec")||has("tac"))return "gym";
+    if(D==="Engineering"||has("eng"))return "sims";
+    if(has("ops")||has("conn"))return "sims";
+    if(has("chef")||has("bart"))return "mess";
+    return null;
+  }
   if(has("co")||has("xo"))return "ops";
   if(has("ops")||has("tac")||has("conn"))return "ops";
   if(D==="Engineering"||has("eng"))return "reactor";
@@ -11273,17 +11386,33 @@ function sdeckRoomFor(o){
   if(has("chef")||has("bart"))return "mess";
   return null;
 }
+
+function sdeckCount(st){const d=STATION_DEFS[(st&&st.type)||""]||{};return clamp(4+Math.round((d.comp||400)/700),4,9);}
+function sdeckSectionOf(st,room){const n=sdeckCount(st);return 1+Math.round(room.frac*(n-1));}
+
+/* station -> on-screen era for interior set photos (stations are Starfleet facilities) */
+function sdeckEra(st){return (st&&st.id==="ds9")?"ds9":"tng";}
+function sdeckEraName(st){return DECK_ERA_NAMES[sdeckEra(st)]||"Starfleet";}
+function sdeckRoomImg(st,rid){
+  const era=sdeckEra(st),def=sdeckRoomDef(st,rid),img=(def&&def.img)||rid;
+  return '<img class="deckRoomImg" src="interiors/'+era+'/'+img+'.jpg" alt="'+sdeckEraName(st)+' '+esc(def?def.name:rid)+' as seen on screen" loading="lazy" onerror="this.style.display=\'none\'">'+
+    '<div class="deckCap">'+sdeckEraName(st)+' · as seen on screen</div>';
+}
+
+/* ---- where is everyone? ---- */
+/* sdeckRoomFor moved: st-aware version lives with STATION_ROOM_SETS (v2.17) */
 function sdeckRoomMap(st){
-  const crew=crewOfStation(st.id),map={};STATION_ROOMS.forEach(r=>map[r.id]=[]);
+  const crew=crewOfStation(st.id),map={};sdeckRooms(st).forEach(r=>map[r.id]=[]);
   const placed={};
-  crew.forEach(o=>{const rid=sdeckRoomFor(o);if(rid){map[rid].push(o);placed[o.id]=1;}});
+  crew.forEach(o=>{const rid=sdeckRoomFor(st,o);if(rid){map[rid].push(o);placed[o.id]=1;}});
   const rest=crew.filter(o=>!placed[o.id]);
-  rest.forEach(o=>{if(o.rel){const p=officer(o.rel.partner||o.rel);if(p&&!placed[p.id]&&p.post.t==="station"&&p.post.id===st.id){map.quarters.push(o);map.quarters.push(p);placed[o.id]=placed[p.id]=1;}}});
+  rest.forEach(o=>{if(o.rel){const p=officer(o.rel.partner||o.rel);if(p&&!placed[p.id]&&p.post.t==="station"&&p.post.id===st.id){const slp0=sdeckSleepRoom(st);map[slp0].push(o);map[slp0].push(p);placed[o.id]=placed[p.id]=1;}}});
   const ssh=aliveShift();
   rest.forEach(o=>{if(placed[o.id])return;
-    if(ssh===2){map.quarters.push(o);} /* gamma: the station sleeps */
-    else if(ssh===1){const h=hashStr(o.id+":"+G.day)%3;map[h===2?"quarters":"promenade"].push(o);}
-    else{const h=hashStr(o.id+":"+G.day)%2;map[h?"promenade":"quarters"].push(o);}
+    const cmn=sdeckCommons(st),slp=sdeckSleepRoom(st);
+    if(ssh===2){map[slp].push(o);} /* gamma: the station sleeps */
+    else if(ssh===1){const h=hashStr(o.id+":"+G.day)%3;map[h===2?slp:cmn].push(o);}
+    else{const h=hashStr(o.id+":"+G.day)%2;map[h?cmn:slp].push(o);}
     placed[o.id]=1;});
   Object.keys(map).forEach(k=>map[k].sort((a,b)=>b.rank-a.rank));
   return map;
@@ -11358,7 +11487,7 @@ function sdeckPlanHtml(st){
   h+='<div class="deckBtnRow"><button class="btn small violet" onclick="SDECK.screen=\'ops\';sdeckRender()">Station operations'+(active?' <b style="color:var(--gold)">●</b>':"")+'</button></div>';
   h+='<div class="deckSec">Section plan — tap a room to enter</div>';
   for(let d=1;d<=n;d++){
-    const rooms=STATION_ROOMS.filter(r=>sdeckSectionOf(st,r)===d);
+    const rooms=sdeckRooms(st).filter(r=>sdeckSectionOf(st,r)===d);
     if(!rooms.length)continue;
     h+='<div class="deckBand"><div class="dNum">SEC '+d+'</div><div class="deckRooms">'+
       rooms.map(r=>'<button class="roomPill" onclick="sdeckGotoRoom(\''+r.id+'\')">'+esc(r.name)+'<span class="cnt">'+map[r.id].length+'</span></button>').join("")+
@@ -11375,7 +11504,7 @@ function sdeckGotoRoom(rid){
   sdeckRender();
 }
 function sdeckRoomHtml(st,rid){
-  const def=sdeckRoomDef(rid),map=SDECK.roomMap||sdeckRoomMap(st);
+  const def=sdeckRoomDef(st,rid),map=SDECK.roomMap||sdeckRoomMap(st);
   const occ=map[rid]||[];
   const line=def.lines[hashStr(rid+":"+G.day)%def.lines.length];
   let h="";
@@ -11389,6 +11518,7 @@ function sdeckRoomHtml(st,rid){
   h+=aliveArcVignette(st,rid,true);
   if(rid==="promenade")h+='<div class="aliveTick">Community board: '+esc(aliveBoard(st))+'</div>';
   if(rid==="quarters"){const mm=aliveStQuarters(st);if(mm.length)h+='<div class="aliveTick">In these corridors: '+esc(mm.join("; "))+'.</div>';}
+  if(rid==="boardroom"){const fl=(typeof crew!=="undefined"?crew:[]).filter(o=>(o.rank||0)>=7);if(fl.length)h+='<div class="aliveTick">Flag officers present: '+esc(fl.map(o=>o.name).join("; "))+'.</div>';}
   if(occ.length){
     h+='<div class="deckSec" style="margin-top:6px;">Present ('+occ.length+')</div><div class="occGrid">'+
       occ.slice(0,8).map(o=>'<div class="occChip" onclick="officerModal(\''+o.id+'\')">'+faceImg(o,"pface")+
@@ -11452,7 +11582,7 @@ function sdeckRoomActions(st,rid,occ){
     else h+='<p class="dim">The grid is humming in perfect tune.</p>';
   }else if(rid==="mess"){
     if(dailyOk("meal"))h+=btn("Share a meal with the crew","sdeckMeal()","small teal");
-    else h+='<p class="dim">You ate with the crew today. The replimat regulars have adopted you.</p>';
+    else h+='<p class="dim">You ate with the crew today. '+(st.type==="sfcommand"?"The flag mess regulars":st.type==="academy"?"The cadet mess regulars":"The replimat regulars")+' have adopted you.</p>';
   }else if(rid==="holodeck"){
     h+=btn("Book a holosuite program","sdeckHolo()");
   }else if(rid==="transporter"){
@@ -11474,7 +11604,7 @@ function sdeckBrief(){
     '<div class="kv"><span class="k">Average morale</span><span class="v">'+Math.round(sdeckCrewAvgMor(st))+'%</span></div>'+
     '<div class="kv"><span class="k">Under medical care</span><span class="v">'+hurt+'</span></div>'+
     '<div class="kv"><span class="k">Docked shuttlecraft</span><span class="v">'+shs.length+'</span></div>'+
-    '<div class="kv"><span class="k">Active crisis</span><span class="v">'+(op?esc(STATION_OP_DEFS[op.tpl].name):"None")+'</span></div>'+
+    '<div class="kv"><span class="k">Active crisis</span><span class="v">'+(op?esc(sdeckOpDefs(st)[op.tpl].name):"None")+'</span></div>'+
     '<p class="dim">The duty officer delivers it all without looking up from the ops table. Impressive.</p>'+
     '<div class="btnRow"><button class="btn" onclick="closeModal();sdeckRender()">Continue</button></div>');
 }
@@ -11516,7 +11646,18 @@ function sdeckExpedite(){
 }
 function sdeckSecLogs(){
   if(!sdeckOpen())return;
-  const g=pick([
+  const st=sdeckStation(),tp=st&&st.type;
+  const g=pick(tp==="sfcommand"?[
+   "0230: Unauthorized access attempt on the boardroom annex. It was a sleepwalking yeoman. Again.",
+   "A diplomat's aide reported a stolen shipment of self-sealing stem bolts. The bolts were later found. They had sealed themselves inside a crate.",
+   "Relay floor cameras caught a farewell kiss that violated three separate fraternization memos and zero actual regulations.",
+   "Someone keeps reprogramming the atrium's ambient music to Klingon opera. Security has decided to allow it.",
+   "A lost Vulcan child was returned to their parents after an epic 40-minute search of the diplomatic wing. The child rated the adventure 'fascinating'."]:tp==="academy"?[
+   "0230: Unauthorized access attempt on the simulator control room. It was a sleepwalking cadet. Again.",
+   "A cadet reported a stolen shipment of self-sealing stem bolts from the training stores. The bolts were later found. They had sealed themselves inside a crate.",
+   "Dorm cameras caught a farewell kiss that violated three separate fraternization memos and zero actual regulations.",
+   "Someone keeps reprogramming the lecture hall's ambient music to Klingon opera. Security has decided to allow it.",
+   "A lost first-year was returned to their squadron after an epic 40-minute search. The cadet rated the adventure 'okay'."]:[
    "0230: Unauthorized access attempt on cargo bay 4. It was a sleepwalking ensign. Again.",
    "A promenade merchant reported a stolen shipment of self-sealing stem bolts. The bolts were later found. They had sealed themselves inside a crate.",
    "Docking ring cameras caught a farewell kiss that violated three separate fraternization memos and zero actual regulations.",
@@ -11529,7 +11670,7 @@ function sdeckSecDrill(){
   st["sdeckD_secdrill"]=G.day;
   crewOfStation(st.id).forEach(o=>{o.morale=clamp((o.morale||70)+2,0,100);o.loyal=clamp((o.loyal||70)+1,0,100);});
   log("station","Security drill aboard "+st.name+". (+2 morale, +1 loyalty)");
-  save();openModal('<h2>Security Drill</h2><p>Lockdown drill, promenade to docking ring. The deputies sweep their sectors in textbook time, and the civilians mostly remember not to panic. Mostly.</p><p class="dim">+2 morale, +1 loyalty station-wide.</p><div class="btnRow"><button class="btn" onclick="closeModal();sdeckRender()">Continue</button></div>');
+  save();openModal('<h2>Security Drill</h2><p>Lockdown drill, "+(st.type==="sfcommand"?"boardroom to relay floor":st.type==="academy"?"dorms to simulators":"promenade to docking ring")+". The deputies sweep their sectors in textbook time, and the civilians mostly remember not to panic. Mostly.</p><p class="dim">+2 morale, +1 loyalty station-wide.</p><div class="btnRow"><button class="btn" onclick="closeModal();sdeckRender()">Continue</button></div>');
 }
 function sdeckTend(){
   const st=sdeckStation();if(!st||!sdeckOpen())return;
@@ -11590,7 +11731,7 @@ function sdeckMeal(){
   st["sdeckD_meal"]=G.day;
   crewOfStation(st.id).forEach(o=>{o.morale=clamp((o.morale||70)+2,0,100);});
   log("station","Shared a meal with the crew of "+st.name+". (+2 morale)");
-  save();openModal('<h2>Meal with the Crew</h2><p>You take a tray and sit with whoever has room at their table. The conversation ranges from docking gossip to warp theory, and nobody lets you pay for dessert.</p><p class="dim">+2 morale station-wide.</p><div class="btnRow"><button class="btn" onclick="closeModal();sdeckRender()">Continue</button></div>');
+  save();openModal('<h2>Meal with the Crew</h2><p>You take a tray and sit with whoever has room at their table. The conversation ranges from "+(st.type==="sfcommand"?"fleet gossip to grand strategy":st.type==="academy"?"simulator scores to warp theory":"docking gossip to warp theory")+", and nobody lets you pay for dessert.</p><p class="dim">+2 morale station-wide.</p><div class="btnRow"><button class="btn" onclick="closeModal();sdeckRender()">Continue</button></div>');
 }
 function sdeckHolo(){
   if(!sdeckOpen())return;
@@ -11640,11 +11781,11 @@ function sdeckMakeEncounter(){
     const pair=sdeckCoupleAboard(st);
     if(pair)return {kind:"couple",a:pair[0].id,b:pair[1].id,
       title:"Station romance",
-      text:"In a quiet corner of the promenade, "+pair[0].name.split(" ")[0]+" and "+pair[1].name.split(" ")[0]+" are stealing a moment — foreheads together, laughing softly. They haven't noticed you.",
+      text:"In a quiet corner of "+(st.type==="sfcommand"?"the diplomatic wing":st.type==="academy"?"the gardens":"the promenade")+", "+pair[0].name.split(" ")[0]+" and "+pair[1].name.split(" ")[0]+" are stealing a moment — foreheads together, laughing softly. They haven't noticed you.",
       opts:[{t:"Smile and move along",fn:"sdeckEncCouple"}]};
   }
   if(r<0.72){
-    const seeds=[["s_intruder","A deputy swears they saw someone near the docking ring who isn't on the station manifest."],["s_entity","The promenade lights flicker in a pattern — almost like a signal. The hairs on your neck stand up."],["s_stowaway","A cargo bay inventory is off by exactly one meal's worth of rations. Someone is eating who shouldn't be here."]];
+    const seeds=st.type==="sfcommand"?[["hq_leak","A flag aide whispers that tomorrow's news carries fleet movements nobody outside this building should know."],["hq_uninvited","The boardroom security panel blinked amber during the closed session. Someone was in the archive."],["hq_relay","The relay floor chief is staring at a traffic graph like it personally offended them. Duplicate whispers on Command's own bands."]]:st.type==="academy"?[["ac_sabotage","A flight instructor is white-faced by the simulator pods. Three cadets in a row hit spins that don't exist in the curriculum."],["ac_honor","Fourteen identical perfect scores on the astrophysics final — including the misprinted question. The professors are quietly furious."],["ac_exchange","The Klingon exchange cadet was found in the restricted archives after hours. The embassy is already calling."]]:[["s_intruder","A deputy swears they saw someone near the docking ring who isn't on the station manifest."],["s_entity","The promenade lights flicker in a pattern — almost like a signal. The hairs on your neck stand up."],["s_stowaway","A cargo bay inventory is off by exactly one meal's worth of rations. Someone is eating who shouldn't be here."]];
     const sd=pick(seeds);
     if(sdeckOpAvailable(st,sd[0]))return {kind:"seed",tpl:sd[0],
       title:"Something isn't right",
@@ -11654,9 +11795,23 @@ function sdeckMakeEncounter(){
         {t:"Log it and move on",fn:"sdeckEncDismiss"}
       ]};
   }
-  return {kind:"flavor",
-    title:"Station life",
-    text:pick([
+  const flv=st.type==="sfcommand"?[
+      "A courier jogs past with a sealed dispatch case, late for a briefing that started five minutes ago.",
+      "Through the tall windows: San Francisco Bay, fog burning off, a shuttle lifting for orbit.",
+      "Two flag aides stride past in perfect step, arguing amiably about fleet logistics.",
+      "A yeoman wheels a cart of PADDs toward the boardroom. The fate of sectors, on a cart.",
+      "The chime of the hour echoes through the atrium. Somewhere, an admiral is already late.",
+      "An ambassador's entourage sweeps through the diplomatic wing, robes and sashes and purpose.",
+      "A gardener tends the roses by the entrance. Even Starfleet Command has to look the part."
+    ]:st.type==="academy"?[
+      "A squadron of cadets jogs past in formation, calling cadence. The fourth-years make it look easy. It isn't.",
+      "Through the windows: the Bay, the fog, and a training shuttle doing touch-and-goes.",
+      "Two first-years race a PADD down the terrace on a makeshift track. The betting pool is fierce.",
+      "The Academy's cat — every campus has one, unofficially — darts between your ankles and vanishes into the gardens.",
+      "A choir of cadets is rehearsing in an empty lecture hall. They're... getting better.",
+      "Someone has decorated their dorm door with mission patches from five postings. A whole career in stickers.",
+      "A professor strides past trailing a comet-tail of cadets, mid-lecture, unstoppable."
+    ]:[
       "A docking crew jogs past at double time, laughing about something. The station feels alive today.",
       "Through a viewport: a starship easing away from its berth, running lights blinking. Someone has stopped just to watch it go.",
       "Two deputies race a PADD down the promenade on a makeshift track. The betting pool is fierce.",
@@ -11664,7 +11819,10 @@ function sdeckMakeEncounter(){
       "A choir of off-duty crew is rehearsing in an empty cargo bay. They're... getting better.",
       "Someone has decorated their habitat door with mission patches from five postings. A whole career in stickers.",
       "A freighter captain argues cheerfully with the docking authority about berth fees. It is clearly a beloved ritual."
-    ]),
+    ];
+  return {kind:"flavor",
+    title:st.type==="sfcommand"?"Command life":st.type==="academy"?"Academy life":"Station life",
+    text:pick(flv),
     opts:[{t:"Continue",fn:"sdeckEncDismiss"}]};
 }
 function sdeckEncHtml(st,enc){
@@ -11718,10 +11876,10 @@ function stationOps(){if(!G.stationOps)G.stationOps=[];return G.stationOps;}
 function sdeckOpAvailable(st,tpl){
   if((G.stationOps||[]).some(m=>m.stId===st.id&&!m.done))return false;
   const last=(st.opCd||{})[tpl]||-9999;
-  return (G.day-last)>=(STATION_OP_DEFS[tpl].cd||60);
+  return (G.day-last)>=(((sdeckOpDefs(st)[tpl]||{}).cd)||60);
 }
 function sdeckStartOp(st,tplId){
-  const def=STATION_OP_DEFS[tplId];if(!def||!sdeckOpAvailable(st,tplId))return;
+  const def=sdeckOpDefs(st)[tplId];if(!def||!sdeckOpAvailable(st,tplId))return;
   sfx("klaxon");
   stationOps().push({key:uid("sop_"),stId:st.id,tpl:tplId,stage:0,wins:0,done:false});
   save();sdeckRender();
@@ -11729,7 +11887,7 @@ function sdeckStartOp(st,tplId){
 }
 function sdeckActiveOp(st){return (G.stationOps||[]).find(m=>m.stId===st.id&&!m.done)||null;}
 function sdeckOpCdLeft(st,tplId){
-  const def=STATION_OP_DEFS[tplId],last=((st.opCd||{})[tplId]||-9999);
+  const def=sdeckOpDefs(st)[tplId],last=((st.opCd||{})[tplId]||-9999);
   return Math.max(0,(def.cd||60)-(G.day-last));
 }
 function sdeckOpsHtml(st){
@@ -11737,13 +11895,13 @@ function sdeckOpsHtml(st){
   let h='<div class="deckSec">Station operations</div>';
   h+='<div class="sceneCard"><div class="flavor">Crises that begin and end inside these walls — the bottle episodes. One operation at a time per station.</div>';
   if(op){
-    const def=STATION_OP_DEFS[op.tpl];
+    const def=sdeckOpDefs(st)[op.tpl];
     h+='<div class="opRow"><div class="grow"><div class="nm" style="color:var(--red)">ACTIVE: '+esc(def.name)+'</div><div class="sub2">Stage '+(op.stage+1)+' of '+def.stages.length+' · '+op.wins+' objective'+(op.wins===1?"":"s")+' secured</div></div>'+
       '<button class="btn small violet" onclick="sdeckOpStage()">Continue</button></div>';
   }else{
     h+='<div class="deckSec" style="margin-top:4px;">Available operations</div>';
-    Object.keys(STATION_OP_DEFS).forEach(tid=>{
-      const def=STATION_OP_DEFS[tid],left=sdeckOpCdLeft(st,tid);
+    Object.keys(sdeckOpDefs(st)).forEach(tid=>{
+      const def=sdeckOpDefs(st)[tid],left=sdeckOpCdLeft(st,tid);
       h+='<div class="opRow"><div class="grow"><div class="nm">'+esc(def.name)+'</div><div class="sub2">'+esc(def.blurb)+'</div></div>'+
         (left>0?'<span class="dim" style="font-size:12px;">'+left+'d</span>':'<button class="btn small violet" onclick="sdeckStartOp(station(\''+st.id+'\'),\''+tid+'\')">Begin</button>')+'</div>';
     });
@@ -11761,7 +11919,7 @@ function sdeckOpBest(st,stat){
 function sdeckOpStage(){
   const st=sdeckStation();if(!st)return;
   const op=sdeckActiveOp(st);if(!op){sdeckRender();return;}
-  const def=STATION_OP_DEFS[op.tpl],s=def.stages[op.stage];
+  const def=sdeckOpDefs(st)[op.tpl],s=def.stages[op.stage];
   if(!s){sdeckOpResolve(st,op,def);return;}
   SDECK.screen="op";
   const txt=typeof s.t==="function"?s.t(st,op):s.t;
@@ -11776,7 +11934,7 @@ function sdeckOpStage(){
 function sdeckOpChoose(i){
   const st=sdeckStation();if(!st)return;
   const op=sdeckActiveOp(st);if(!op)return;
-  const def=STATION_OP_DEFS[op.tpl],s=def.stages[op.stage],opt=s.opts[i];
+  const def=sdeckOpDefs(st)[op.tpl],s=def.stages[op.stage],opt=s.opts[i];
   const best=sdeckOpBest(st,opt.stat||"cmd");
   const roll=best.v+ri(1,100),win=roll>=(opt.dc||120);
   if(win)op.wins++;
@@ -11807,7 +11965,7 @@ function sdeckOpFx(st,op,fx,win){
 function sdeckOpNext(){
   const st=sdeckStation();if(!st)return;
   const op=sdeckActiveOp(st);if(!op){sdeckRender();return;}
-  const def=STATION_OP_DEFS[op.tpl];
+  const def=sdeckOpDefs(st)[op.tpl];
   if(op.stage>=def.stages.length)sdeckOpResolve(st,op,def);else sdeckOpStage();
 }
 function sdeckOpResolve(st,op,def){
@@ -11949,6 +12107,125 @@ s_whispers:{name:"Whispers in the Dark",cd:75,blurb:"Grumbling on the habitat ri
    ]}
  ]}
 };
+/* ---- bespoke bottle episodes: Starfleet Command & Starfleet Academy (v2.17) ---- */
+function sdeckOpDefs(st){
+  if(st&&st.type==="sfcommand")return HQ_OP_DEFS;
+  if(st&&st.type==="academy")return ACADEMY_OP_DEFS;
+  return STATION_OP_DEFS;
+}
+const HQ_OP_DEFS={
+hq_leak:{name:"The Leak",cd:60,blurb:"Classified fleet deployment orders are in the civilian press — verbatim.",
+ stages:[
+  {t:"A civilian news service is quoting next quarter's fleet deployments — ship names, sectors, dates. Verbatim. Someone inside these walls talked, and the press is having the week of its life.",
+   opts:[
+    {t:"Lock down the building and audit access logs",stat:"tac",dc:130,win:"{o} seals the building and tears through the access logs. The leak's path narrows: a briefing file copied at 0300 from a terminal that should have been dark.",lose:"The lockdown snarls HQ for a day and catches nothing. The press smells fear and doubles down.",fx:{morale:-2,onLose:{morale:-3}}},
+    {t:"Feed the press a correction laced with disinformation",stat:"dip",dc:125,win:"A carefully worded 'correction' goes out — true enough to be believed, wrong enough to poison the leak. The real deployments stay real; the published ones quietly don't.",lose:"The disinformation is spotted by a sharp-eyed editor. Now there are two stories.",fx:{onLose:{morale:-2,pres:-5}}}
+   ]},
+  {t:"The audit trail ends at a junior aide in Strategic Planning — brilliant, overworked, and suddenly very wealthy. They haven't run. They're sitting at their desk, waiting.",
+   opts:[
+    {t:"Confront them directly, alone",stat:"dip",dc:120,win:"You close the door and just ask why. The answer pours out: debts, a sick parent, a broker who found them first. They weep. You make the call anyway.",lose:"They lawyer up through the JAG office before you finish the first question.",fx:{morale:2,onLose:{morale:-2}}},
+    {t:"Arrest them at their desk, by the book",stat:"cmd",dc:115,win:"Security takes them quietly at shift change. By the book, by the numbers, no scene. The building exhales.",lose:"The arrest happens in front of the whole planning floor. Trust in the building cracks audibly.",fx:{morale:-3,onLose:{morale:-4}}}
+   ]},
+  {t:"The broker is still out there, and the aide's testimony points at a press syndicate with deeper pockets than any news service should have. This didn't start with one aide.",
+   opts:[
+    {t:"Hand the whole case to Starfleet Security Command",stat:"tac",dc:130,win:"Security Command takes the thread and pulls. Three weeks later the syndicate's funding traces to a foreign intelligence cutout. The leak is plugged at the source.",lose:"The case file sits in a queue. Bureaucracy, it turns out, leaks too.",fx:{pres:25,accolade:"The Leak — plugged at the source",onLose:{morale:-2}}},
+    {t:"Go public first: own the story",stat:"dip",dc:135,win:"You brief the press yourself — the leak, the arrest, the reforms. The story becomes Starfleet's integrity, not its failure. Recruitment ticks up.",lose:"The briefing raises more questions than it answers. The vultures circle.",fx:{pres:15,morale:3,onLose:{morale:-3,pres:-5}}}
+   ]}
+ ]},
+hq_uninvited:{name:"Uninvited",cd:60,blurb:"Someone unauthorized is inside the secure wing during a closed admiralty session.",
+ stages:[
+  {t:"Mid-session, the boardroom's security panel blinks amber: a life sign in the secure archive — a room that should be empty, behind two locked doors, during a closed session of the admiralty.",
+   opts:[
+    {t:"Quietly seal the wing and send security",stat:"tac",dc:120,win:"No alarms, no panic. The wing seals silently and security moves like water. Whoever it is, they're not leaving.",lose:"The seal trips a fire alert and the whole session evacuates. The admirals are furious. The intruder is gone.",fx:{onLose:{morale:-3}}},
+    {t:"Keep the session going and watch them",stat:"cmd",dc:125,win:"You let the session run and watch the archive feed. The intruder photographs nothing, touches nothing — just looks. Fascinating. And terrifying.",lose:"While you watch, they find what they came for. You never even see their face.",fx:{onLose:{morale:-2}}}
+   ]},
+  {t:"Security has them: a civilian archivist with forty years of service and a forged after-hours authorization. They claim they were 'correcting the record' — and the correction is about a battle Starfleet officially never fought.",
+   opts:[
+    {t:"Hear the correction out",stat:"dip",dc:115,win:"You listen. The 'correction' is a crew manifest from a classified action, thirty years buried. The archivist just wanted the dead named. You understand completely — and you still can't let it stand.",lose:"The story is compelling and completely unverifiable. A beautiful, dangerous fiction.",fx:{morale:2,onLose:{morale:-2}}},
+    {t:"Charge them with breaching a secure facility",stat:"cmd",dc:110,win:"The charge is clean and the sentence is light — the tribunal sees the forty years of service. The record stays sealed. Everyone sleeps badly.",lose:"The tribunal makes an example of them. The archives staff go cold for a month.",fx:{morale:-3,onLose:{morale:-4}}}
+   ]},
+  {t:"The manifest names a ship lost with all hands in a sector Starfleet charts as empty. If it's real, the charts are lying — and charts don't lie by accident.",
+   opts:[
+    {t:"Quietly task Strategic Planning to re-survey the sector",stat:"sci",dc:135,win:"The survey runs dark — no announcements, no fanfare. Six weeks later the data comes back: a debris field, old but unmistakable, exactly where the manifest said. The charts get a quiet correction. So does history.",lose:"The survey finds nothing but empty space and awkward questions about why it was ordered.",fx:{pres:20,accolade:"Uninvited — the lost ship found",onLose:{morale:-2}}},
+    {t:"Bury it deeper and protect the archivist",stat:"cmd",dc:120,win:"You seal the manifest yourself and see the archivist's sentence commuted to time served. Some truths are load-bearing; you carry this one so the Federation doesn't have to.",lose:"The deeper burial leaks anyway. Now it's a cover-up, and it's yours.",fx:{morale:-2,onLose:{morale:-5,pres:-10}}}
+   ]}
+ ]},
+hq_relay:{name:"The Relay Ghost",cd:60,blurb:"Someone is listening to Starfleet Command's own subspace traffic.",
+ stages:[
+  {t:"The relay floor flags an anomaly: a whisper of duplicate traffic, perfectly timed, riding Starfleet Command's own subspace bands. Someone is listening — from inside the system.",
+   opts:[
+    {t:"Trace the tap without tipping them off",stat:"sci",dc:135,win:"{o} maps the duplicates hop by hop, never touching the tap itself. It ends at a maintenance conduit two floors below the relay — and a device installed during the last refit, by someone with a work order.",lose:"The trace trips the tap's failsafe. It burns out with a whisper of ozone, taking its secrets with it.",fx:{onLose:{morale:-2}}},
+    {t:"Flood the relay with noise and watch who complains",stat:"tac",dc:120,win:"White noise drowns the band for exactly eleven minutes. Three terminals across the building light up with 'signal degradation' tickets — filed a little too fast, by people a little too senior.",lose:"The noise flood disrupts a live diplomatic negotiation. The ambassador is not amused. Nobody is amused.",fx:{morale:-3,onLose:{morale:-4}}}
+   ]},
+  {t:"The work order is real — signed, sealed, and filed by a contractor who died six months before the signature date. The ghost in the relay has been patient.",
+   opts:[
+    {t:"Pull every work order the contractor ever touched",stat:"eng",dc:125,win:"{o} tears through five years of maintenance records. Three more devices surface — in the diplomatic wing, the boardroom annex, and a Jefferies tube nobody admits exists. The ghost was thorough.",lose:"The records are clean. Too clean. Someone sanitized them ahead of you.",fx:{onLose:{morale:-2}}},
+    {t:"Feed the tap fabricated fleet movements",stat:"dip",dc:130,win:"Counterintelligence writes a beautiful fiction: a task force that doesn't exist, sailing for a sector that doesn't matter. Whoever's listening bites — and foreign deployments shift within the week, revealing the listener.",lose:"The fiction has a flaw and the listener spots it. Now they know you know.",fx:{pres:15,onLose:{morale:-3}}}
+   ]},
+  {t:"The listener is unmasked: a 'cultural attache' at a neutral embassy with a transmitter in their luggage and diplomatic immunity in their pocket.",
+   opts:[
+    {t:"Expel them quietly through diplomatic channels",stat:"dip",dc:130,win:"A quiet word, a recalled attache, a transmitter in an evidence bag. No headlines, no incident — just a gap in their intelligence picture shaped exactly like you.",lose:"The expulsion leaks. The embassy cries provocation and the story runs for a week.",fx:{pres:20,accolade:"The Relay Ghost — unmasked",onLose:{pres:-5,morale:-2}}},
+    {t:"Turn the tap into a pipeline of your own",stat:"cmd",dc:140,win:"You let the attache keep listening — to exactly what you want them to hear. Six months of curated truth, and their masters start making your mistakes for you.",lose:"They discover the turn within a month. The embarrassment is mutual and total.",fx:{pres:25,onLose:{morale:-4,pres:-10}}}
+   ]}
+ ]}
+};
+const ACADEMY_OP_DEFS={
+ac_sabotage:{name:"Sabotage in the Simulators",cd:60,blurb:"The flight simulators are lying to cadets — and the lies are getting dangerous.",
+ stages:[
+  {t:"Three simulator pods in a row have thrown cadets into unrecoverable spins — scenarios that don't exist in any training program. The telemetry doesn't match the curriculum. Someone rewrote the sims.",
+   opts:[
+    {t:"Ground the pods and tear down the code",stat:"eng",dc:130,win:"{o} pulls the pods offline and diffs the scenario code line by line. The sabotage is elegant: three changed parameters, buried in a routine patch, signed off by an instructor's stolen credentials.",lose:"The teardown takes the whole simulator wing offline for a week. The cadets fall behind and the instructors fall apart.",fx:{morale:-2,onLose:{morale:-4}}},
+    {t:"Run a pod yourself and feel what the cadets felt",stat:"cmd",dc:115,win:"You climb into the rigged pod and fly the killer scenario. At the third impossible spin you see it — the exact moment the physics lie. You walk out pale, furious, and certain.",lose:"The scenario nearly blacks you out. The cadets are impressed. The doctor is not.",fx:{morale:3,onLose:{morale:-2}}}
+   ]},
+  {t:"The stolen credentials belong to a flight instructor with a spotless record — who was planetside when they were used. Someone wore their identity like a uniform.",
+   opts:[
+    {t:"Interview every cadet who flew the rigged scenarios",stat:"dip",dc:120,win:"You talk to all of them, one by one, and a pattern surfaces: a fourth-year who kept asking oddly specific questions about simulator architecture. Brilliant. Bitter. About to wash out.",lose:"The cadets close ranks. Nobody saw anything, nobody knows anything, and the silence is its own answer.",fx:{onLose:{morale:-2}}},
+    {t:"Set a trap: announce the pods are fixed",stat:"tac",dc:125,win:"The announcement goes out. That night, security catches the fourth-year at a maintenance terminal, mid-sabotage, with a manifesto about 'unworthy pilots' on their PADD.",lose:"The trap catches nothing but a janitor and a very confused night instructor.",fx:{onLose:{morale:-2}}}
+   ]},
+  {t:"The cadet confesses through tears: a sibling died in a training accident years ago, blamed on pilot error. The sabotage was meant to prove the sims — and Starfleet — can't be trusted with lives.",
+   opts:[
+    {t:"Expel them, but get them help first",stat:"med",dc:115,win:"The expulsion is formal and the counseling is real. They leave the Academy, but they don't leave broken — and the review board finally re-examines the sibling's accident.",lose:"The process is correct and cold. The cadet leaves hating Starfleet slightly more than before.",fx:{morale:2,accolade:"Sabotage in the Simulators — resolved with mercy",onLose:{morale:-3}}},
+    {t:"Give them one last flight — a real one",stat:"cmd",dc:135,win:"You take them up in a trainer yourself and let them fly the scenario for real. They nail it. On the ground, they finally believe the accident wasn't the machine's fault — and neither is their grief.",lose:"The flight terrifies them. Some wounds don't close at altitude.",fx:{pres:15,morale:4,onLose:{morale:-3}}}
+   ]}
+ ]},
+ac_honor:{name:"The Honor Code",cd:60,blurb:"A cheating ring on the astrophysics final — and the Academy's honor code is on trial with it.",
+ stages:[
+  {t:"The astrophysics final came back too perfect — fourteen identical perfect scores, including answers to a question that was misprinted. Somebody had the key. Somebody sold it.",
+   opts:[
+    {t:"Quietly re-examine the fourteen papers",stat:"sci",dc:120,win:"{o} grades the papers blind and finds the fingerprint: identical wrong reasoning on the misprint, corrected identically. Fourteen cadets, one source.",lose:"The re-examination is inconclusive. Perfect papers, perfectly deniable.",fx:{onLose:{morale:-1}}},
+    {t:"Address the whole class about honor",stat:"dip",dc:110,win:"You speak to the assembled class — no accusations, just the weight of the uniform they're asking to wear. By evening, three cadets have come forward on their own.",lose:"The speech is met with four hundred perfectly innocent faces.",fx:{onLose:{morale:-2}}}
+   ]},
+  {t:"The key came from a teaching assistant — a former cadet who washed out and stayed on as staff, selling exam keys to pay debts. The fourteen buyers range from desperate to cynical.",
+   opts:[
+    {t:"Offer amnesty for confessions before the board convenes",stat:"dip",dc:125,win:"The amnesty window opens. Eleven cadets walk through it, honor bruised but intact. The Academy has never been prouder of a punishment.",lose:"Two confess. The rest lawyer up through their families. It gets ugly.",fx:{morale:3,onLose:{morale:-3}}},
+    {t:"Make an example: expel the ringleaders publicly",stat:"cmd",dc:115,win:"The expulsions are swift, public, and final. Applications don't dip — they rise. The galaxy, it turns out, respects a line.",lose:"The public expulsions become a media circus. 'Academy in crisis,' the headlines scream.",fx:{pres:10,onLose:{pres:-5,morale:-2}}}
+   ]},
+  {t:"The teaching assistant's debts trace to a gambling ring operating out of a civilian bar near campus — one that has been harvesting desperate cadets for years.",
+   opts:[
+    {t:"Raid the bar with campus security",stat:"tac",dc:130,win:"The raid is clean. The ring's ledgers name a dozen more compromised cadets across three classes — all quietly helped, all quietly watched. The bar never reopens.",lose:"The raid tips off the operators. The ledgers burn before security gets through the door.",fx:{pres:15,accolade:"The Honor Code — the ring broken",onLose:{morale:-2}}},
+    {t:"Turn the assistant and work up the chain",stat:"dip",dc:130,win:"The assistant wears a wire for a month. The chain leads past the bar to a loan syndicate with hooks in half the district. Starfleet Security takes it from there.",lose:"The wire is discovered. The assistant disappears for three days and comes back terrified and silent.",fx:{pres:20,onLose:{morale:-4}}}
+   ]}
+ ]},
+ac_exchange:{name:"The Exchange",cd:60,blurb:"A Klingon exchange cadet is accused of spying — and the truth is more complicated.",
+ stages:[
+  {t:"A Klingon exchange cadet — the first in a decade — has been caught in the restricted archives after hours. Security calls it spying. The cadet calls it curiosity. The Klingon embassy calls it an insult.",
+   opts:[
+    {t:"Interview the cadet yourself, with honor",stat:"dip",dc:125,win:"You meet them as a warrior, not a suspect. The story comes out: they were looking for their grandmother's service record — a Klingon officer who served with Starfleet in the Dominion War and was never properly honored.",lose:"The cadet gives you nothing but proverbs and silence. The embassy's patience thins.",fx:{onLose:{morale:-2}}},
+    {t:"Restrict them to quarters pending review",stat:"cmd",dc:110,win:"The restriction is respectful and the review is fast. Nobody can accuse the Academy of favoritism — or of a cover-up.",lose:"The quarters restriction hits the news as 'Academy jails Klingon cadet.' The embassy erupts.",fx:{morale:-2,onLose:{pres:-5,morale:-3}}}
+   ]},
+  {t:"The archive logs show the cadet wasn't copying weapons data — they were reading personnel files. And someone else accessed the same files an hour later, from a staff terminal, and copied everything.",
+   opts:[
+    {t:"Find the staff terminal's user",stat:"sci",dc:130,win:"{o} traces the session through three proxies to a civilian contractor in records — selling personnel files to anyone with latinum. The cadet was never the thief; they were the cover.",lose:"The trail dissolves into encrypted relays. Whoever it was, they're good.",fx:{onLose:{morale:-2}}},
+    {t:"Ask the cadet to help catch the real thief",stat:"dip",dc:120,win:"You show the cadet the logs and ask for help. Their honor demands it. Together you set the trap — and the contractor walks into it, PADD full of stolen files.",lose:"The cadet refuses to inform on anyone, even a thief. Honor is a wall you can't argue past.",fx:{morale:2,onLose:{morale:-2}}}
+   ]},
+  {t:"The grandmother's record is real — and remarkable. A Klingon liaison who held a relay station alone for six hours so a Starfleet convoy could escape. No commendation was ever filed. The cadet came to the Academy to finish her story.",
+   opts:[
+    {t:"Posthumously commend her, with full ceremony",stat:"dip",dc:120,win:"The ceremony fills the parade ground — Klingon and Starfleet officers standing together. The cadet weeps openly, which among Klingons is the highest praise. The exchange program's applications triple.",lose:"The commendation stalls in committee. Bureaucracy dishonors the dead slowly.",fx:{pres:25,morale:5,accolade:"The Exchange — honor restored",onLose:{morale:-3}}},
+    {t:"Name the new archive reading room for her",stat:"cmd",dc:110,win:"A plaque, a room, and a permanent reminder that honor doesn't check species. Cadets will read under her name for a century.",lose:"The naming is approved and immediately forgotten by everyone but the cadet. Small honors, quietly kept.",fx:{pres:10,morale:2}}
+   ]}
+ ]}
+};
+
 /* ---- end STATION INTERIOR (v2.5) ---- */
 
 /* ---- bridge command: RED ALERT while you\'re aboard ---- */
@@ -12017,7 +12294,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.16</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.17</div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){location.reload();}});});});}</script>
 </body>
