@@ -3656,6 +3656,10 @@ function migrateSave(g){
   if(g.research){if(g.research.done)for(const _k in _CLSMAP)if(g.research.done[_k]){g.research.done[_CLSMAP[_k]]=true;delete g.research.done[_k];}if(g.research.active&&_CLSMAP[g.research.active.key])g.research.active.key=_CLSMAP[g.research.active.key];}
   (g.stations||[]).forEach(st=>{if(st.comp==null)st.comp=STATION_DEFS[st.type]?STATION_DEFS[st.type].comp:100;});
   (g.ships||[]).forEach(s=>{if(s.crewOrder===undefined)s.crewOrder=null;if(s.orderCd==null)s.orderCd=0;}); // v4.1 crew-life orders
+  (g.ships||[]).forEach(s=>{if(s.refitT==null)s.refitT=0;if(s.refitTo==null)s.refitTo=0;if(s.patrol==null)s.patrol=false;}); // v4.2 refit tiers + auto-patrol
+  (g.stations||[]).forEach(st=>{if(st.upg==null)st.upg=0;}); // v4.2 station upgrades
+  if(g.sproj==null)g.sproj=[];if(g.sprojDone==null)g.sprojDone={}; // v4.2 sector projects
+  if(g.corridorInc==null)g.corridorInc=0;if(g.habitatInc==null)g.habitatInc=0;if(g.snetCd==null)g.snetCd=0;if(g.summitHall==null)g.summitHall=false; // v4.2
   (g.stations||[]).forEach(st=>{if(st.crewOrder===undefined)st.crewOrder=null;if(st.orderCd==null)st.orderCd=0;});
   if(!(g.stations||[]).some(st=>st.id==="ds9")){
     g.stations.push({id:"ds9",name:"Deep Space 9",type:"starbase",status:"active",daysLeft:0,post:"bajor",comp:STATION_DEFS.starbase.comp});
@@ -3838,7 +3842,7 @@ function uiStartRepair(sid){
       return w.name+" ("+(b?"building "+b.name+", "+b.daysLeft+"d left":r?"repairing "+r.name+", "+r.daysLeft+"d left":"busy")+")";}).join("; ");
     toast("No shipyard free"+(busy?" — "+busy:"")+(s.status==="damaged"?". Repairs will start automatically when a yard frees up.":". Try again when a yard frees up."));return;
   }
-  s.status="repair";s.yardId=y[0].id;s.daysLeft=Math.ceil(s.damage/12);
+  s.status="repair";s.yardId=y[0].id;s.daysLeft=Math.ceil(s.damage/(12*(1+0.25*stUpg("shipyard")))); // v4.2 yard upgrades speed repairs
   log("build",s.name+" has entered "+y[0].name+" for repairs ("+s.daysLeft+" days).");shipHistPush(s,"Entered "+y[0].name+" for repairs ("+s.daysLeft+" days).");
   sfx("dock");save();shipModal(sid);render();
 }
@@ -3862,7 +3866,7 @@ function doAdvance(n){
 function tickDay(){
   G.day++; G.stardate+=1.0; // TNG scale: 1000 units per year
   if(G.tempCd>0)G.tempCd--;
-  economyTick(); buildTick(); researchTick(); refitTick(); missionTick(); transitTick(); ambientTick();
+  economyTick(); buildTick(); researchTick(); refitTick(); missionTick(); transitTick(); ambientTick(); patrolTick(); sprojTick();
   if(typeof admiraltyTick==="function")admiraltyTick(); // v2.13: admiral projects upkeep + payoffs
   healTick(); dockedTick(); fatigueTick(); ageTick(); romanceTick(); familyTick(); crewTick();
   randomEventTick(); scriptedTick(); rankCheckTick(); battleTick(); codexTick(); socialTick(); arcTick(); holoTick(); holidayTick(); ordersTick();
@@ -4059,6 +4063,186 @@ function ordersTick(){
     postings.forEach(ordApply);
   }catch(e){/* crew-life orders must never break the day loop */}
 }
+
+/* ================= v4.2 ECONOMY THAT BITES BACK ================= */
+const STATION_UPG_COSTS=[{cr:75000,dl:200},{cr:175000,dl:450},{cr:350000,dl:800}];
+const STATION_UPG_BLURB={
+  starbase:["+75 CR/day station income","also +1 prestige/day","+1 prestige/day and a sector shield: border incidents fizzle half the time"],
+  shipyard:["drydock repairs 25% faster","drydock 50% faster and +4%/day dockside repair","drydock 75% faster and +8%/day dockside repair"],
+  medical:["wounded heal +2 days/day","morale +1/day aboard","wounded heal +4/day and morale +2/day"],
+  research:["science mission rewards +10%","science mission rewards +20%","science mission rewards +30%"],
+  embassy:["+1 prestige/day","+2 prestige/day","+3 prestige/day and cultural exchanges land +2 standing per tier"],
+  gate:["slipstream −25 dilithium per jump","slipstream −50 per jump","slipstream −75 per jump (floor 25)"],
+  academy:["cadet classes +1 graduate","+2 graduates and enrollment −500 CR"," +3 graduates and enrollment −1,000 CR"],
+  sfcommand:["requisitions +1,000 CR and +40 DL","requisitions +2,000 CR and +80 DL","requisitions +3,000 CR, +120 DL and +4 prestige"]
+};
+function stUpg(type){let n=0;(G.stations||[]).forEach(st=>{if(st.type===type&&st.status==="active"&&!st.mothballed)n+=(st.upg||0);});return n;}
+function starbaseShield(){return (G.stations||[]).some(st=>st.type==="starbase"&&st.status==="active"&&!st.mothballed&&(st.upg||0)>=3);}
+function gateCostDL(){return Math.max(25,100-25*stUpg("gate"));} // v4.2: gate upgrades cheapen slipstream
+function stUpgHTML(st){
+  const t=st.upg||0;
+  let h='<h4>Station Upgrades (Tier '+t+'/3)</h4>';
+  for(let i=0;i<t;i++)h+='<div class="sub2" style="color:var(--teal)">Tier '+(i+1)+' — '+esc(STATION_UPG_BLURB[st.type][i]||"operational bonus")+'</div>';
+  if(t<3){const c=STATION_UPG_COSTS[t];
+    h+='<div class="btnRow"><button class="btn small teal" onclick="uiStationUpgrade(\''+st.id+'\')">Upgrade to Tier '+(t+1)+' ('+fmt(c.cr)+' CR, '+c.dl+' DL)</button></div><p class="dim">Next: '+esc(STATION_UPG_BLURB[st.type][t]||"operational bonus")+'</p>';
+  }else h+='<p class="dim">Fully upgraded.</p>';
+  return h;
+}
+function uiStationUpgrade(id){
+  const st=station(id);if(!st||st.status!=="active")return;
+  const t=st.upg||0;if(t>=3){toast("Already at max tier.");return;}
+  const c=STATION_UPG_COSTS[t];
+  if(G.credits<c.cr){toast("Not enough credits ("+fmt(c.cr)+" CR needed).");return;}
+  if(G.dilithium<c.dl){toast("Not enough dilithium ("+c.dl+" DL needed).");return;}
+  gainCR(-c.cr);gainDL(-c.dl);st.upg=t+1;
+  log("build",st.name+" upgraded to Tier "+(t+1)+": "+(STATION_UPG_BLURB[st.type][t]||"operational bonus")+". (−"+fmt(c.cr)+" CR, −"+c.dl+" DL)");
+  save();stationModal(id);render();toast(st.name+" — Tier "+(t+1)+" upgrade complete.");
+}
+/* ----- v4.2 refit tiers ----- */
+const REFIT_TIERS=[
+  {name:"Systems Refit",cr:60000,dl:300,days:10},
+  {name:"Propulsion Refit",cr:150000,dl:600,days:16},
+  {name:"Tactical Refit",cr:300000,dl:1000,days:24}
+];
+function refitShipBonus(s){return (s.refitT||0)*8;} // mission stat points
+function refitPowerMult(s){return 1+0.08*(s.refitT||0);}
+function refitTierHTML(s){
+  const t=s.refitT||0;
+  let h='<h4>Refits (Tier '+t+'/3)</h4>';
+  if(t>0)h+='<div class="sub2" style="color:var(--teal)">'+REFIT_TIERS.slice(0,t).map(x=>esc(x.name)).join(" · ")+' — +'+refitShipBonus(s)+' mission stat, +'+Math.round((refitPowerMult(s)-1)*100)+'% battle power</div>';
+  if(t<3){const nx=REFIT_TIERS[t];
+    if(s.status==="refit")h+='<div class="sub2">'+esc(nx.name)+' underway — '+s.daysLeft+'d left.</div>';
+    else h+='<div class="btnRow"><button class="btn small teal" onclick="uiStartRefit(\''+s.id+'\')">Begin '+esc(nx.name)+' ('+fmt(nx.cr)+' CR, '+nx.dl+' DL, '+nx.days+'d)</button></div><p class="dim">Ship unavailable during refit. Each tier: +8 mission stat, +8% battle power.</p>';
+  }else h+='<p class="dim">Fully refitted.</p>';
+  return h;
+}
+function uiStartRefit(id){
+  const s=ship(id);if(!s)return;
+  const t=s.refitT||0;if(t>=3){toast("Already fully refitted.");return;}
+  if(s.status!=="active"||s.missionId||s.transit||s.dock){toast("The ship must be active and free to begin a refit.");return;}
+  const nx=REFIT_TIERS[t];
+  if(G.credits<nx.cr){toast("Not enough credits ("+fmt(nx.cr)+" CR needed).");return;}
+  if(G.dilithium<nx.dl){toast("Not enough dilithium ("+nx.dl+" DL needed).");return;}
+  gainCR(-nx.cr);gainDL(-nx.dl);
+  s.status="refit";s.daysLeft=nx.days;s.refitTo=t+1;s.yardId=null;
+  clearAmbient(s);
+  log("build",s.name+" begins "+nx.name+" — Tier "+(t+1)+" refit ("+nx.days+" days). (−"+fmt(nx.cr)+" CR, −"+nx.dl+" DL)");
+  save();shipModal(id);render();toast(s.name+" — "+nx.name+" begun.");
+}
+/* ----- v4.2 sector projects ----- */
+const SECTOR_PROJS=[
+  {key:"sensornet",name:"Sensor Net — Neutral Zone Border",cr:60000,days:10,blurb:"Early-warning pickets along the Neutral Zone. Border incidents strike half as often for 120 days."},
+  {key:"corridor",name:"Trade Corridor — Sol to Bajor",cr:120000,days:14,blurb:"Beaconed trade lanes and waystations. +250 CR/day, permanently."},
+  {key:"gardens",name:"Memorial Gardens — Deep Space 9",cr:40000,days:8,blurb:"A living memorial on the Promenade level. +15 prestige, +3 morale fleet-wide."},
+  {key:"habitat",name:"Habitat Ring — McKinley Station",cr:200000,days:20,blurb:"Civilian habitat expansion. +150 CR/day and +10 prestige, permanently."},
+  {key:"sumhall",name:"Diplomatic Summit Hall — Starfleet Command",cr:90000,days:12,blurb:"A proper hall for summits. All Codex species +5 standing; future summits cost 1,000 CR less and land +10 standing."}
+];
+function sprojTick(){
+  if((G.sproj||[]).length===0)return;
+  for(let i=G.sproj.length-1;i>=0;i--){
+    const p=G.sproj[i];p.daysLeft--;
+    if(p.daysLeft<=0){G.sproj.splice(i,1);sprojComplete(p);}
+  }
+}
+function uiFundSproj(key){
+  const def=SECTOR_PROJS.find(x=>x.key===key);if(!def)return;
+  if((G.sprojDone||{})[key]){toast("Already completed.");return;}
+  if((G.sproj||[]).some(p=>p.key===key)){toast("Already underway.");return;}
+  if((G.sproj||[]).length>=2){toast("Two sector projects are already underway.");return;}
+  if(G.credits<def.cr){toast("Not enough credits ("+fmt(def.cr)+" CR needed).");return;}
+  gainCR(-def.cr);
+  G.sproj=G.sproj||[]; // fresh games predate the field until migrateSave runs
+  G.sproj.push({key:key,daysLeft:def.days,total:def.days});
+  log("build","Sector project funded: "+def.name+" ("+def.days+" days). (−"+fmt(def.cr)+" CR)");
+  save();render();toast("Sector project funded: "+def.name+".");
+}
+function sprojComplete(p){
+  const def=SECTOR_PROJS.find(x=>x.key===p.key);if(!def)return;
+  G.sprojDone=G.sprojDone||{};G.sprojDone[p.key]=1;
+  let payoff="";
+  if(p.key==="sensornet"){G.snetCd=120;payoff="Border incidents strike half as often for 120 days.";}
+  else if(p.key==="corridor"){G.corridorInc=(G.corridorInc||0)+250;payoff="+250 CR/day trade income.";}
+  else if(p.key==="gardens"){gainPres(15);moraleAll(3);payoff="+15 prestige, +3 morale fleet-wide.";}
+  else if(p.key==="habitat"){G.habitatInc=(G.habitatInc||0)+150;gainPres(10);payoff="+150 CR/day and +10 prestige.";}
+  else if(p.key==="sumhall"){G.summitHall=true;Object.keys(G.codex||{}).forEach(function(n){const cx=G.codex[n];cx.standing=clamp(cx.standing+5,-100,100);});payoff="All Codex species +5 standing; future summits cheaper and warmer.";}
+  log("build","Sector project complete: "+def.name+". "+payoff);
+  queueCompletion({kind:"sproj",id:p.key,name:def.name,sub:"Sector project complete",art:""});
+  toast("Sector project complete: "+def.name+".");
+}
+function sprojCardHTML(){
+  const act=G.sproj||[];
+  let h='<div class="card"><h3>Sector Projects</h3><p class="dim">Fleet-scale works, funded from your treasury. Up to two at a time.</p>';
+  act.forEach(function(p){
+    const def=SECTOR_PROJS.find(x=>x.key===p.key);if(!def)return;
+    h+='<div class="kv"><span class="k">'+esc(def.name)+'</span><span class="v">'+p.daysLeft+'d left</span></div><div class="prog"><i style="width:'+Math.round((1-p.daysLeft/p.total)*100)+'%"></i></div>';
+  });
+  SECTOR_PROJS.forEach(function(def){
+    if((G.sprojDone||{})[def.key]){h+='<div class="sub2" style="color:var(--teal)">'+esc(def.name)+' — complete</div>';return;}
+    if(act.some(p=>p.key===def.key))return;
+    h+='<div class="row" style="padding:6px;"><div class="grow"><div class="nm">'+esc(def.name)+'</div><div class="sub2">'+esc(def.blurb)+'</div></div><button class="btn small teal" onclick="uiFundSproj(\''+def.key+'\')">'+fmt(def.cr)+' CR</button></div>';
+  });
+  return h+'</div>';
+}
+/* ----- v4.2 diplomatic gifts ----- */
+function giftCost(cx){
+  const host=Math.max(0,0-cx.standing);
+  const mult=(cx.disp==="warlike"||cx.disp==="xenophobic")?1.5:1;
+  return {cr:Math.round((3000+host*100)*mult),dl:Math.round(100+host)};
+}
+function giftCardHTML(cx){
+  const c=giftCost(cx),cd=cx.giftCd||0;
+  return '<div class="btnRow" style="margin-top:6px"><button class="btn small gold" onclick="uiCodexGift(\''+cx.name.replace(/'/g,"\\'")+'\')">Diplomatic gift ('+fmt(c.cr)+' CR, '+c.dl+' DL'+(cd>0?' · '+cd+'d':"")+')</button></div>';
+}
+function uiCodexGift(name){
+  const cx=(G.codex||{})[name];if(!cx)return;
+  if((cx.giftCd||0)>0){toast("Too soon — the "+name+" need "+cx.giftCd+"d before another gift.");return;}
+  const c=giftCost(cx);
+  if(G.credits<c.cr){toast("Not enough credits ("+fmt(c.cr)+" CR needed).");return;}
+  if(G.dilithium<c.dl){toast("Not enough dilithium ("+c.dl+" DL needed).");return;}
+  gainCR(-c.cr);gainDL(-c.dl);cx.giftCd=30;
+  const bump=(cx.disp==="peaceful"||cx.disp==="curious")?12:8;
+  cx.standing=clamp(cx.standing+bump,-100,100);cx.lastOutcome="gift";cx.lastSd=G.stardate;
+  log("event","A diplomatic gift is dispatched to the "+name+" — dilithium, art, and a very good bottle of Saurian brandy. Relations warm (+"+bump+" standing). (−"+fmt(c.cr)+" CR, −"+c.dl+" DL)");
+  if(Math.random()<0.20){
+    const r=pick(["cr","dl","pres"]);
+    if(r==="cr"){gainCR(5000);log("event","The "+name+" send a return gift: trade goods worth 5,000 CR. Generosity, it turns out, compounds.");}
+    else if(r==="dl"){gainDL(200);log("event","The "+name+" send a return gift: 200 units of refined dilithium.");}
+    else{gainPres(8);log("event","The "+name+" praise your generosity at the sector council. (+8 prestige)");}
+  }
+  save();render();toast("Gift accepted — the "+name+" are pleased (+"+bump+" standing).");
+}
+/* ----- v4.2 idle-fleet auto-patrol ----- */
+function patrolOn(){try{const v=localStorage.getItem("stfc_patrol");return v==="1";}catch(e){return false;}}
+function uiTogglePatrol(){try{localStorage.setItem("stfc_patrol",patrolOn()?"0":"1");}catch(e){}render();toast("Auto-patrol "+(patrolOn()?"enabled — idle patrol-flagged ships will cruise on their own.":"disabled."));}
+function uiToggleShipPatrol(id){
+  const s=ship(id);if(!s)return;
+  s.patrol=!s.patrol;
+  if(!s.patrol)clearAmbient(s);
+  log("command",s.name+(s.patrol?" assigned to routine auto-patrol.":" stood down from auto-patrol."));
+  save();shipModal(id);render();
+}
+function patrolTick(){
+  if(!patrolOn())return;
+  const posts=Object.keys(POST_LABELS);
+  (G.ships||[]).forEach(function(s){
+    if(!s||!s.patrol||s.status!=="active"||s.mothballed||s.missionId||s.transit||s.dock||s.cruise||s.routeFor||s.abandoned||s.ambient)return;
+    const dests=posts.filter(function(p){return p!==(s.post||"sol");});
+    if(!dests.length)return;
+    s.ambient={dest:pick(dests),daysLeft:ri(2,6),dwell:0,patrol:true};
+  });
+}
+function patrolArrive(s,from){
+  gainCR(150);
+  if(Math.random()<0.12){
+    const dmg=ri(5,18);
+    s.damage=Math.min(100,(s.damage||0)+dmg);
+    log("combat",s.name+" tangled with raiders on patrol near "+(POST_LABELS[s.post]||s.post)+" — a sharp skirmish, "+dmg+"% hull damage. (+150 CR patrol stipend)");
+    if((s.damage||0)>=100){destroyShip(s,"destroyed by raiders while on patrol");return false;}
+  }else if(Math.random()<0.25){
+    log("command",s.name+" completes a quiet patrol circuit from "+(POST_LABELS[from]||from)+" to "+(POST_LABELS[s.post]||s.post)+" — all clear. (+150 CR)");
+  }
+  return true;
+}
 function economyTick(){
   (function(){try{ // v4.0 trade pacts: +85 CR/day per ship on a pact route (max 2 ships per pact)
     const bySpecies={};
@@ -4067,12 +4251,14 @@ function economyTick(){
   }catch(e){}})();
   let income=ECONO.baseIncome+ECONO.starbaseIncome*activeStations("starbase").length
     +ECONO.otherIncome*(activeStations("shipyard").length+activeStations("medical").length+activeStations("research").length+activeStations("embassy").length+activeStations("gate").length
-    +activeStations("academy").length+activeStations("sfcommand").length);
+    +activeStations("academy").length+activeStations("sfcommand").length)
+    +75*stUpg("starbase")+(G.corridorInc||0)+(G.habitatInc||0); // v4.2: station upgrades + sector projects pay out
   let upkeep=0;
   G.ships.forEach(s=>{if(s.status!=="museum"&&!s.mothballed)upkeep+=Math.round(SHIP_CLASSES[s.cls].upkeep*ECONO.upkeepMult);});
   G.stations.forEach(st=>{if(st.status==="active"&&!st.mothballed)upkeep+=STATION_DEFS[st.type].upkeep;});
   G.credits+=income-upkeep;
-  gainPres(2*activeStations("starbase").length+3*activeStations("embassy").length+2*G.ships.filter(s=>s.status==="active"&&s.cls==="ambassador"&&!s.transit&&s.post&&s.post!=="sol"&&["alpha","beta","gamma","delta"].indexOf(s.post)<0).length);
+  let _sbPres=0;(G.stations||[]).forEach(st=>{if(st.type==="starbase"&&st.status==="active"&&!st.mothballed&&(st.upg||0)>=2)_sbPres+=(st.upg||0)-1;}); // v4.2: starbase prestige from tier 2+
+  gainPres(2*activeStations("starbase").length+3*activeStations("embassy").length+_sbPres+stUpg("embassy")+2*G.ships.filter(s=>s.status==="active"&&s.cls==="ambassador"&&!s.transit&&s.post&&s.post!=="sol"&&["alpha","beta","gamma","delta"].indexOf(s.post)<0).length);
   G.dilithium+=(G.dlIncome||0);
   // Starfleet Academy cadet classes + Starfleet Command requisition cooldown
   G.stations.forEach(st=>{
@@ -4137,15 +4323,21 @@ function buildTick(){
   });
   // auto-start repairs for damaged ships when a yard is free
   G.ships.forEach(s=>{if(s.status==="damaged"){const y=freeYards();
-    if(y.length){s.status="repair";s.yardId=y[0].id;s.daysLeft=Math.ceil(s.damage/12);
+    if(y.length){s.status="repair";s.yardId=y[0].id;s.daysLeft=Math.ceil(s.damage/(12*(1+0.25*stUpg("shipyard")))); // v4.2 yard upgrades speed repairs
       log("build",s.name+" has entered "+y[0].name+" for repairs ("+s.daysLeft+" days).");shipHistPush(s,"Entered "+y[0].name+" for repairs ("+s.daysLeft+" days).");}}});
 }
 function refitTick(){
   G.ships.forEach(s=>{
   const forgeTender=G.ships.some(x=>x.status==="active"&&x.cls==="challenger"&&!x.transit);
     if(s.status==="refit"){s.daysLeft--;if(s.daysLeft<=0){s.status="active";s.yardId=null;
-      log("system",s.name+" has completed refit and is ready for duty.");shipHistPush(s,"Refit complete \u2014 returned to active duty.");
-      queueCompletion({kind:"refit",id:s.id,name:s.name,sub:"Refit complete \u2014 ready for duty",art:compArtFor(s.cls)});}}
+      if(s.refitTo){ // v4.2: named refit tiers
+        s.refitT=s.refitTo;const _rn=REFIT_TIERS[s.refitTo-1].name;s.refitTo=0;
+        log("system",s.name+" has completed "+_rn+" (Tier "+s.refitT+") — battle power and mission performance improved.");
+        shipHistPush(s,_rn+" complete — Tier "+s.refitT+" refit.");
+        queueCompletion({kind:"refit",id:s.id,name:s.name,sub:_rn+" complete — Tier "+s.refitT,art:compArtFor(s.cls)});
+      }else{
+        log("system",s.name+" has completed refit and is ready for duty.");shipHistPush(s,"Refit complete \u2014 returned to active duty.");
+        queueCompletion({kind:"refit",id:s.id,name:s.name,sub:"Refit complete \u2014 ready for duty",art:compArtFor(s.cls)});}}}
     if(s.status==="repair"){s.daysLeft--;if(forgeTender)s.daysLeft--;if(s.daysLeft<=0){s.status="active";s.damage=0;s.yardId=null;
       log("system",s.name+" repairs complete. All decks operational.");shipHistPush(s,"Repairs complete \u2014 all decks operational.");
       queueCompletion({kind:"repair",id:s.id,name:s.name,sub:"All decks operational",art:compArtFor(s.cls)});}}
@@ -4516,7 +4708,7 @@ function renderCodex(){
       '<div class="sub2">'+esc(cx.trait)+', '+esc(cx.disp)+' · '+cx.encounters+' encounter'+(cx.encounters===1?"":"s")+' · last contact stardate '+sdStr(cx.lastSd)+'</div></div>'+
       '<span class="badge" style="background:'+lb[1]+';color:#fff;font-weight:700">'+lb[0]+'</span></div>'+
       '<div class="statBar" style="margin-top:6px"><i style="width:'+pct+'%;background:'+lb[1]+'"></i></div>'+
-      '<div class="sub2" style="margin-top:4px">Standing '+cx.standing+' · last outcome: '+esc(cx.lastOutcome||"—")+'</div>'+pactCardHTML(cx)+summitCardHTML(cx)+'</div>';
+      '<div class="sub2" style="margin-top:4px">Standing '+cx.standing+' · last outcome: '+esc(cx.lastOutcome||"—")+'</div>'+pactCardHTML(cx)+summitCardHTML(cx)+giftCardHTML(cx)+'</div>';
   });
   return h;
 }
@@ -4534,9 +4726,9 @@ function uiCodexExchange(name){
   const cx=(G.codex||{})[name];if(!cx)return;
   if((cx.exCd||0)>0){toast("Too soon — the "+name+" need "+cx.exCd+"d before another exchange.");return;}
   if(G.credits<1200){toast("Not enough credits (1,200 CR needed).");return;}
-  gainCR(-1200);cx.exCd=45;cx.standing=clamp(cx.standing+6,-100,100);cx.lastOutcome="exchange";cx.lastSd=G.stardate;
-  log("event","Cultural exchange with the "+name+": artists, engineers, and one very confused chef swap places for a season. Standing improves. (−1,200 CR)");
-  save();render();toast("Cultural exchange with the "+name+" begins (+6 standing).");
+  gainCR(-1200);cx.exCd=45;const _exB=6+2*stUpg("embassy");cx.standing=clamp(cx.standing+_exB,-100,100);cx.lastOutcome="exchange";cx.lastSd=G.stardate; // v4.2 embassy upgrades
+  log("event","Cultural exchange with the "+name+": artists, engineers, and one very confused chef swap places for a season. Standing improves (+ "+_exB+"). (−1,200 CR)");
+  save();render();toast("Cultural exchange with the "+name+" begins (+"+_exB+" standing).");
 }
 function uiSurveyGrant(){
   if(G.credits<4000){toast("Not enough credits (4,000 CR needed).");return;}
@@ -4569,15 +4761,17 @@ function uiSummit(name){
   if(cx.standing<-25){toast("The "+name+" refuse to meet — relations are "+codexStandingLabel(cx.standing)[0].toLowerCase()+".");return;}
   const host=G.stations.find(function(s){return s.status==="active"&&(s.type==="starbase"||s.type==="sfcommand");});
   if(!host){toast("Summits need an active starbase or Starfleet Command to host.");return;}
-  if(G.credits<3000){toast("Not enough credits (3,000 CR needed).");return;}
-  gainCR(-3000);
+  const _sc=G.summitHall?2000:3000; // v4.2 summit hall project: cheaper summits
+  if(G.credits<_sc){toast("Not enough credits ("+fmt(_sc)+" CR needed).");return;}
+  gainCR(-_sc);
   cx.summit={daysLeft:5,host:host.name};cx.summitCd=30;
-  log("event","Diplomatic summit convened with the "+name+" aboard "+host.name+" — five days of talks. (−3,000 CR)");
+  log("event","Diplomatic summit convened with the "+name+" aboard "+host.name+" — five days of talks. (−"+fmt(_sc)+" CR)");
   save();render();toast("Summit with the "+name+" begins.");
 }
 function summitResolve(cx){
   const breakthrough=Math.random()<0.3;
-  const dSt=breakthrough?25:12,pr=breakthrough?15:8;
+  let dSt=breakthrough?25:12;const pr=breakthrough?15:8;
+  if(G.summitHall)dSt+=10; // v4.2 summit hall project: warmer summits
   cx.standing=clamp(cx.standing+dSt,-100,100);
   cx.lastOutcome="summit";cx.lastSd=G.stardate;cx.encounters++;
   gainPres(pr);
@@ -4648,12 +4842,17 @@ function codexTick(){
   keys.forEach(function(k){const cx=G.codex[k]; // v2.43 summits tick daily
     if(cx.summitCd>0)cx.summitCd--;
     if(cx.exCd>0)cx.exCd--;
+    if(cx.giftCd>0)cx.giftCd--; // v4.2 diplomatic gifts: 30-day cooldown
     codexDrift(cx);
     if(cx.pact&&(G.day||0)-(cx.lastPactBump||0)>=20){cx.lastPactBump=G.day||0;if(cx.standing<100)cx.standing=clamp(cx.standing+1,-100,100);}
     if(cx.arc){cx.arc.daysLeft--;if(cx.arc.daysLeft<=0){const st=cx.arc.stage;cx.arc=null;codexArcBeat(cx,st);}}
     else if((cx.incidents||0)>=3&&(G.day||0)-(cx.lastIncidentDay||0)<=150){cx.incidents=0;codexArcBeat(cx,1);}
     if(cx.summit){cx.summit.daysLeft--;if(cx.summit.daysLeft<=0){cx.summit=null;summitResolve(cx);}}});
-  if(!keys.length||Math.random()>0.02)return;
+  if(G.snetCd>0)G.snetCd--; // v4.2 sensor net project decays
+  let _ip=0.02; // v4.2: sensor net + tier-3 starbase shields halve incident pressure
+  if(G.snetCd>0)_ip*=0.5;
+  if(starbaseShield()&&Math.random()<0.5)_ip*=0.5;
+  if(!keys.length||Math.random()>_ip)return;
   const cx=G.codex[pick(keys)];
   if(cx.standing>=25)codexFriendly(cx);
   else if(cx.standing<=-25)codexHostile(cx);
@@ -4877,7 +5076,7 @@ function resolveMission(m){
   const t=MISSION_DECK.find(x=>x.id===m.tIdx); const s=ship(m.shipId);
   if(!s){return;}
   const cls=SHIP_CLASSES[s.cls];
-  let shipStat=t.shipStat==="hull"?cls.hull:cls[t.shipStat];
+  let shipStat=t.shipStat==="hull"?cls.hull:cls[t.shipStat]+refitShipBonus(s); // v4.2 refit tiers boost missions
   if(s.cls==="prometheus"&&t.type==="Combat Patrol")shipStat+=20;
   if(s.cls==="raven"&&(t.type==="Exploration"||t.type==="Science"))shipStat+=20;
   const crew=crewOfShip(s.id);
@@ -4891,7 +5090,7 @@ function resolveMission(m){
   chance=clamp(chance+socialMissionMod(crew),5,98);
   const roll=rnd(0,100);
   let outcome,cr=t.cr,dl=t.dl,pres=t.pres,detail="";
-  if(t.type==="Science"&&hasStation("research"))cr=Math.round(cr*1.25);
+  if(t.type==="Science"&&hasStation("research"))cr=Math.round(cr*(1.25+0.10*stUpg("research"))); // v4.2 research upgrades
   if(t.type==="Diplomacy"&&hasStation("embassy"))cr=Math.round(cr*1.25);
   if(s.cls==="centaur"&&(t.type==="Supply"||t.type==="Combat Patrol"))cr=Math.round(cr*1.25);
   if(s.cls==="curry"&&t.type==="Rescue"){cr=Math.round(cr*1.3);pres+=10;}
@@ -5020,15 +5219,16 @@ function dockedTick(){
       crewOfShip(s.id).forEach(function(o){if(o.morale<100)o.morale=Math.min(100,o.morale+1);});
       if(s.leave===0)log("command",s.name+" returns from shore leave — rested and ready for duty.");
     }
-    const d=DOCK_DEFS[st.type],max=shipCompMax(s),cur=shipCrewN(s);
+    const d=DOCK_DEFS[st.type],max=shipCompMax(s),cur=shipCrewN(s),_ut=st.upg||0; // v4.2 station upgrades
+    const _rep=d.rep+4*_ut,_heal=d.heal+2*_ut,_mor=d.morale+1*_ut;
     if(d.crew>0&&cur<max)s.crew=Math.min(max,cur+Math.max(2,Math.round((max-cur)*d.crew)));
-    if(d.rep>0&&(s.damage||0)>0){s.damage=Math.max(0,(s.damage||0)-d.rep*(s.future?2:1));
+    if(_rep>0&&(s.damage||0)>0){s.damage=Math.max(0,(s.damage||0)-_rep*(s.future?2:1));
       if(s.damage===0&&s.status==="damaged"){s.status="active";
         log("build",s.name+" has completed drydock repairs at "+st.name+" and is ready for duty.");}}
-    if(d.heal>0||d.morale>0)crewOfShip(s.id).forEach(function(o){
-      if(d.heal>0&&o.health==="injured"){o.healDays-=d.heal;
+    if(_heal>0||_mor>0)crewOfShip(s.id).forEach(function(o){
+      if(_heal>0&&o.health==="injured"){o.healDays-=_heal;
         if(o.healDays<=0){o.health="healthy";o.healDays=0;log("personnel",fullName(o)+" has been cleared for duty.");}}
-      if(d.morale>0&&o.morale<100)o.morale=Math.min(100,o.morale+d.morale);
+      if(_mor>0&&o.morale<100)o.morale=Math.min(100,o.morale+_mor);
     });
   });
 }
@@ -5487,8 +5687,10 @@ function ambientTick(){
       s.ambient.daysLeft--;
       if(s.ambient.daysLeft<=0){
         const from=s.post||"sol";s.post=s.ambient.dest;
-        if(Math.random()<0.10)log("command",s.name+" arrives at "+(POST_LABELS[s.post]||s.post)+" on routine patrol out of "+(POST_LABELS[from]||from)+" — the sector feels watched over.");
-        s.ambient={dest:s.post,daysLeft:0,dwell:ri(2,5)};
+        const _wasPatrol=s.ambient.patrol; // v4.2 auto-patrol
+        if(_wasPatrol){if(!patrolArrive(s,from)){s.ambient=null;return;}}
+        else if(Math.random()<0.10)log("command",s.name+" arrives at "+(POST_LABELS[s.post]||s.post)+" on routine patrol out of "+(POST_LABELS[from]||from)+" — the sector feels watched over.");
+        s.ambient={dest:s.post,daysLeft:0,dwell:ri(2,5),patrol:_wasPatrol||undefined};
       }
     }
   });
@@ -5515,6 +5717,7 @@ function renderSettings(){
     'Red Alert: pulsing red bridge lighting, flashing red screens. Yellow Alert: steady amber glow. Blue Alert: electric blue, silent running.<br>'+
     'Green Alert: warm white normal-operations lighting. Black Alert: dim navy, minimal emissions. Gray Mode: emergency strips only.</p></div>';
   h+=COMPLETION_TOGGLE_ROW;
+  h+='<div class="kv"><span class="k">Auto-patrol</span><span class="v"><button class="btn small'+(patrolOn()?" on":"")+'" onclick="uiTogglePatrol()">'+(patrolOn()?"On":"Off")+'</button></span></div><p class="dim">When on, ships you flag for patrol (ship card) cruise the sector on their own: +150 CR per circuit, small skirmish risk. Any order you give overrides instantly.</p>'; // v4.2
   h+='<div class="kv"><span class="k">Random battles</span><span class="v"><button class="btn small'+(battlesOn()?" on":"")+'" onclick="uiToggleBattles()">'+(battlesOn()?"On":"Off")+'</button></span></div>'+
     '<p class="dim">When on, any active ship posted in hostile territory — Borg space, the Dominion, the Neutral Zone — risks a random enemy encounter each day. You choose: engage or run.</p>'+
     '<div class="kv"><span class="k">Vibration</span><span class="v"><button class="btn small'+(vibOn()?" on":"")+'" onclick="toggleVib();render()">'+(vibOn()?"On":"Off")+'</button></span></div>'+
@@ -6876,6 +7079,7 @@ const HOSTILE_ZONES={
 function battlePower(s){
   const c=SHIP_CLASSES[s.cls];if(!c)return 50;
   let p=Math.max(10,Math.round(c.hull+c.tac*1.25+30-(s.damage||0)*0.6));
+  if((s.refitT||0)>0)p=Math.round(p*(1+0.08*s.refitT)); // v4.2 refit tiers: +8% battle power each
   if(typeof shipUndercrewed==="function"&&shipUndercrewed(s))p=Math.round(p*0.85);
   if(s.post&&typeof sectorCommander==="function"&&sectorCommander(s.post))p=Math.round(p*1.2); // v2.13 sector command
   if(typeof flagAboardAdmiral==="function"&&flagAboardAdmiral(s.id))p=Math.round(p*1.15); // v2.13 flag aboard
@@ -9396,7 +9600,8 @@ function renderCommander(){
 /* ---------- COMMAND tab ---------- */
 function dailyIncome(){
   const inc=1500+300*activeStations("starbase").length
-    +150*(activeStations("shipyard").length+activeStations("medical").length+activeStations("research").length);
+    +150*(activeStations("shipyard").length+activeStations("medical").length+activeStations("research").length)
+    +75*stUpg("starbase")+(G.corridorInc||0)+(G.habitatInc||0); // v4.2
   let up=0;
   G.ships.forEach(s=>{up+=SHIP_CLASSES[s.cls].upkeep;});
   G.stations.forEach(st=>{if(st.status==="active")up+=STATION_DEFS[st.type].upkeep;});
@@ -9650,7 +9855,7 @@ function renderCommand(){
   if(cmdSub==="research")h+=cmdSubPills()+renderResearchCard();
   else if(cmdSub==="inst")h+=cmdSubPills()+cmdrInstitutions();
   else if(cmdSub==="rec")h+=cmdSubPills()+recCard;
-  else h+=renderNeedsAttention()+cmdrCard+cmdSubPills()+sectorCard+nemesisCard()+opsCard;
+  else h+=renderNeedsAttention()+cmdrCard+cmdSubPills()+sectorCard+nemesisCard()+opsCard+sprojCardHTML(); // v4.2 sector projects
   return h;
 }
 
@@ -9871,7 +10076,7 @@ function renderPersonnel(){
 let _mShip=null;
 function missionOdds(s,t){
   const cls=SHIP_CLASSES[s.cls];
-  let shipStat=t.shipStat==="hull"?cls.hull:cls[t.shipStat];
+  let shipStat=t.shipStat==="hull"?cls.hull:cls[t.shipStat]+refitShipBonus(s); // v4.2 refit tiers boost missions
   if(s.cls==="prometheus"&&t.type==="Combat Patrol")shipStat+=20;
   const crew=crewOfShip(s.id);
   const officers=crew.slice().sort((a,b)=>b.rank-a.rank);
@@ -12247,8 +12452,8 @@ function planTravel(s,origin,dest){
       label:"Quantum slipstream drive · "+fmtLy(dist)+" · "+sd+"d"});
   }
   if(hasStation("gate"))
-    opts.push({via:"gate",days:GATE_DAYS,dl:GATE_COST_DL,
-      label:"Transwarp jump gate · "+GATE_DAYS+"d · -"+GATE_COST_DL+" dilithium"});
+    opts.push({via:"gate",days:GATE_DAYS,dl:gateCostDL(),
+      label:"Transwarp jump gate · "+GATE_DAYS+"d · -"+gateCostDL()+" dilithium"});
   if(wormRouteOk(origin,dest))
     opts.push({via:"wormhole",days:WORM_DAYS,dl:WORM_COST_DL,
       label:"Bajoran wormhole (via DS9) · "+WORM_DAYS+"d · -"+WORM_COST_DL+" dilithium"});
@@ -12301,7 +12506,7 @@ function uiGateTransit(id){
   if(!hasStation("gate")){toast("No slipstream gate operational.");return;}
   openModal('<h2>Slipstream transit</h2><div class="flavor">'+esc(s.name)+' \u00b7 '+esc(s.registry)+'</div>'+
     '<p class="dim">The gate hurls '+esc(s.name)+' across the galaxy through quantum slipstream. The ship is unavailable for '+GATE_DAYS+' days.</p>'+
-    '<div class="kv"><span class="k">Cost</span><span class="v">'+GATE_COST_DL+' dilithium</span></div>'+
+    '<div class="kv"><span class="k">Cost</span><span class="v">'+gateCostDL()+' dilithium</span></div>'+
     '<label>Destination</label>'+sheetPickDeferred('gateDest','Destination',postOptions(s.post||"sol"))+
     '<div class="btnRow"><button class="btn violet" onclick="doGateTransit(\''+s.id+'\')">Engage slipstream</button>'+
     '<button class="btn ghost" onclick="closeModal()">Cancel</button></div>');
@@ -12310,8 +12515,8 @@ function doGateTransit(id){
   const s=ship(id);if(!s||s.transit||s.status!=="active")return;
   const dest=$("gateDest")?$("gateDest").value:"sol";
   if(!POST_COORDS[dest]||dest===(s.post||"sol")){toast("Pick a different destination.");return;}
-  if(G.dilithium<GATE_COST_DL){toast("Not enough dilithium.");return;}
-  G.dilithium-=GATE_COST_DL;
+  if(G.dilithium<gateCostDL()){toast("Not enough dilithium.");return;}
+  G.dilithium-=gateCostDL();
   s.transit={daysLeft:GATE_DAYS,total:GATE_DAYS,dest:dest,via:"gate"};
   log("command",s.name+" entered the slipstream gate \u2014 bound for "+POST_LABELS[dest]+" ("+GATE_DAYS+" days).");
   save();closeModal();shipModal(id);render();
@@ -12884,6 +13089,8 @@ function shipModal(id){
   if(s.status==="repair"){const _ry=station(s.yardId),_rtot=Math.max(1,Math.ceil(s.damage/12));
     h+='<div class="kv"><span class="k">In repair</span><span class="v">'+esc(_ry?_ry.name:"Shipyard")+' — '+s.daysLeft+'d left</span></div><div class="prog"><i style="width:'+Math.round((1-s.daysLeft/_rtot)*100)+'%"></i></div>';}
   if(c.special)h+='<p class="dim">'+esc(c.special)+'</p>';
+  h+=refitTierHTML(s); // v4.2 refit tiers
+  if(s.status==="active"&&!s.missionId&&!s.transit&&!s.dock&&!s.mothballed)h+='<div class="kv"><span class="k">Auto-patrol</span><span class="v"><button class="btn small'+(s.patrol?" on":"")+'" onclick="uiToggleShipPatrol(\''+s.id+'\')">'+(s.patrol?"On":"Off")+'</button></span></div><p class="dim">When idle, she flies routine patrol legs on her own (+150 CR per circuit, small skirmish risk). Enable the fleet toggle in Settings first — any order you give overrides instantly.</p>';
   if(typeof shipCrewN==="function"){
     const _cc=shipCompMax(s),_cn=shipCrewN(s),_uc=shipUndercrewed(s);
     h+='<div class="kv"><span class="k">Crew</span><span class="v">'+_cn+' / '+_cc+(_uc?' <span class="badge" style="background:var(--red);color:#fff;font-weight:bold;">UNDERCREWED</span>':"")+'</span></div>';
@@ -12976,7 +13183,7 @@ function stationModal(id){
   }
   if(st.type==="sfcommand"&&st.status==="active"){
     h+='<div class="kv"><span class="k">Requisition</span><span class="v">'+(st.reqCd>0?"Ready in "+st.reqCd+"d":"Available now")+'</span></div>';
-    h+='<div class="btnRow"><button class="btn small teal" onclick="uiRequestRequisition(\'"+st.id+"\')"'+(st.reqCd>0?" disabled":"")+'>'+(st.reqCd>0?"Requisition pending":"Request requisition (+2,500 CR, +120 DL, +8 prestige)")+'</button></div>';
+    {const _rqt=st.upg||0;h+='<div class="btnRow"><button class="btn small teal" onclick="uiRequestRequisition(\'"+st.id+"\')"'+(st.reqCd>0?" disabled":"")+'>'+(st.reqCd>0?"Requisition pending":"Request requisition (+"+fmt(2500+1000*_rqt)+" CR, +"+(120+40*_rqt)+" DL, +"+(8+(_rqt>=3?4:0))+" prestige)")+'</button></div>';}
     // v2.13 Admiralty board
     const _adms=(typeof admirals==="function")?admirals():[];
     h+='<h4>Admiralty ('+_adms.length+')</h4>';
@@ -13009,6 +13216,7 @@ function stationModal(id){
       });
     }else h+='<p class="dim">No ships docked. Open any ship and choose a berth under "Docked at".</p>';
   }
+if(st.status==="active")h+=stUpgHTML(st); // v4.2 station upgrades
 h+='<div class="btnRow"><button class="btn small teal" onclick="uiCrewAssign(\'station\',\''+st.id+'\')">Assign crew</button><button class="btn small" onclick="uiBuildShuttle(\'station\',\''+st.id+'\')">Build shuttlecraft</button></div>';
   h+='<div class="btnRow"><button class="btn small peach" onclick="uiShoreLeave(\'station\',\''+st.id+'\')">Shore leave (500 CR)</button>'+
     (st.status==="construction"?'<button class="btn small danger" onclick="uiCancelBuild(\'station\',\''+st.id+'\')">Cancel build</button>':"")+
@@ -13180,7 +13388,7 @@ function cadetName(){
   return [name,pool[1],g];
 }
 function graduateCadets(st){
-  const tv=trainingShipId(),cruised=!!(st.cadets&&st.cadets.cruised),n=ri(2,3)+(tv?1:0),names=[]; // v2.43 cruise bonus
+  const tv=trainingShipId(),cruised=!!(st.cadets&&st.cadets.cruised),n=ri(2,3)+(tv?1:0)+(st.upg||0),names=[]; // v2.43 cruise bonus; v4.2 academy tiers add graduates
   for(let i=0;i<n;i++){
     const cn=cadetName();
     const _lo=cruised?45:40,_hi=cruised?75:70;
@@ -13373,10 +13581,11 @@ function cacEnroll(){
 function uiEnrollCadets(id){
   const st=station(id);if(!st||st.type!=="academy"||st.status!=="active")return;
   if(st.cadets){toast("A cadet class is already in training.");return;}
-  if(G.credits<1500){toast("Not enough credits (1,500 CR needed).");return;}
-  gainCR(-1500);
+  const _ec=Math.max(500,1500-500*(st.upg||0)); // v4.2: academy upgrades cheapen enrollment
+  if(G.credits<_ec){toast("Not enough credits ("+fmt(_ec)+" CR needed).");return;}
+  gainCR(-_ec);
   st.cadets={daysLeft:40,total:40};
-  log("crew","A new cadet class enrolled at Starfleet Academy (graduates in 40 days).");
+  log("crew","A new cadet class enrolled at Starfleet Academy (graduates in 40 days). (−"+fmt(_ec)+" CR)");
   save();stationModal(id);renderAll();
 }
 function uiCadetCruise(id){ // v2.43: cadet class training cruise aboard the training vessel
@@ -13400,19 +13609,21 @@ function uiClaimRequisition(){
   const st=G.stations.find(x=>x.type==="sfcommand"&&x.status==="active");
   if(!st||(st.reqCd||0)>0){toast("No requisition ready right now — Starfleet Command needs more time.");return;}
   st.reqCd=25;
-  gainCR(2500);gainDL(120);gainPres(8);
-  log("build","Starfleet Command approved your requisition: +2,500 CR, +120 DL, +8 prestige.");
+  const _rt=st.upg||0; // v4.2: Starfleet Command upgrades sweeten requisitions
+  gainCR(2500+1000*_rt);gainDL(120+40*_rt);gainPres(8+(_rt>=3?4:0));
+  log("build","Starfleet Command approved your requisition: +"+fmt(2500+1000*_rt)+" CR, +"+(120+40*_rt)+" DL, +"+(8+(_rt>=3?4:0))+" prestige.");
   save();render();
-  toast("Requisition approved: +2,500 CR, +120 DL, +8 prestige.");
+  toast("Requisition approved: +"+fmt(2500+1000*_rt)+" CR, +"+(120+40*_rt)+" DL.");
 }
 function uiRequestRequisition(id){
   const st=station(id);if(!st||st.type!=="sfcommand"||st.status!=="active")return;
   if(st.reqCd>0){toast("Requisition denied — Starfleet Command needs "+st.reqCd+" more days.");return;}
   st.reqCd=25;
-  gainCR(2500);gainDL(120);gainPres(8);
-  log("build","Starfleet Command approved your requisition: +2,500 CR, +120 DL, +8 prestige.");
+  const _rt=st.upg||0; // v4.2: Starfleet Command upgrades sweeten requisitions
+  gainCR(2500+1000*_rt);gainDL(120+40*_rt);gainPres(8+(_rt>=3?4:0));
+  log("build","Starfleet Command approved your requisition: +"+fmt(2500+1000*_rt)+" CR, +"+(120+40*_rt)+" DL, +"+(8+(_rt>=3?4:0))+" prestige.");
   save();stationModal(id);render();
-  toast("Requisition approved: +2,500 CR, +120 DL, +8 prestige.");
+  toast("Requisition approved: +"+fmt(2500+1000*_rt)+" CR, +"+(120+40*_rt)+" DL.");
 }
 function uiShoreLeave(kind,id){
   if(G.credits<500){toast("Not enough credits.");return;}
@@ -15697,7 +15908,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v4.1</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v4.2</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
