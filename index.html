@@ -315,6 +315,7 @@ body{touch-action:pan-y;}
 .pfaceInit{display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;color:var(--peach);background:var(--panel2);}
 .shipPic{width:84px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--orange);flex:none;background:#000;}
 .shipPicBig{width:100%;max-height:190px;object-fit:cover;border-radius:10px;border:2px solid var(--orange);margin-bottom:8px;background:#000;display:block;}
+.shipPicBig.stnBig{object-fit:contain;max-height:300px;background:#05080f url(ships/nebula-a.jpg) center/cover no-repeat;padding:12px;}
 .shipPicEAS{object-fit:contain;background:#05080f url(ships/nebula-a.jpg) center/cover no-repeat;box-sizing:border-box;padding:4px;}
 .shipPicEAS.nebB{background-image:url(ships/nebula-b.jpg);}
 .shipPicEAS.nebC{background-image:url(ships/nebula-c.jpg);}
@@ -9233,16 +9234,16 @@ function museumCard(s){
 function renderStations(){
   let rows="";
   G.stations.forEach(st=>{
-    if(st.type==="academy")return;
+    if(st.type==="academy"||st.type==="sfcommand")return;
     if(stationQuad!=="all"&&postQuadOf(st)!==stationQuad)return;
     const d=STATION_DEFS[st.type],crew=crewOfStation(st.id);
-    rows+='<div class="row" onclick="stationModal(\''+st.id+'\')" style="cursor:pointer;">'+stationPic(stationArtKey(st))+
-      '<div class="grow"><div class="nm">'+esc(st.name)+'</div>'+
-      '<div class="sub2">'+d.name+' · '+(st.status==="active"?"Operational":"Under construction — "+st.daysLeft+"d")+' · Crew '+crew.length+'</div>'+
+    rows+='<div class="card" onclick="stationModal(\''+st.id+'\')" style="cursor:pointer;">'+stationPic(stationArtKey(st),true)+
+      '<div class="nm">'+esc(st.name)+'</div>'+
+      '<div class="sub2">'+d.name+' \u00b7 '+(st.status==="active"?"Operational":"Under construction \u2014 "+st.daysLeft+"d")+' \u00b7 Crew '+crew.length+'</div>'+
       (st.status==="construction"?'<div class="prog"><i style="width:'+Math.round((1-st.daysLeft/d.days)*100)+'%"></i></div>':"")+
-      '</div></div>';
+      '</div>';
   });
-  return rows?'<div class="card fleetList">'+rows+'</div>':'<div class="card"><p class="dim">'+(stationQuad==="all"?"No stations.":"No stations in this quadrant.")+'</p></div>';
+  return rows?rows:'<div class="card"><p class="dim">'+(stationQuad==="all"?"No stations.":"No stations in this quadrant.")+'</p></div>';
 }
 /* ---------- PERSONNEL tab ---------- */
 let persFilter="all";
@@ -10499,7 +10500,7 @@ const STATION_ART_IDS={ds9:"ds9",utopia:"utopia",douglas:"starbase",sb80:"starba
 function stationArtKey(st){return (st&&STATION_ART_IDS[st.id])||(st&&st.type);}
 function stationPic(type,big){
   const src=(typeof STATION_PICS!=="undefined"&&STATION_PICS[type])?STATION_PICS[type]:"";
-  return src?'<img class="'+(big?"shipPicBig":"shipPic")+'" src="'+src+'" alt="">':"";
+  return src?'<img class="'+(big?"shipPicBig stnBig":"shipPic")+'" src="'+src+'" alt="">':"";
 }
 /* Map station markers: the old blue-square indicator stands alone for most stations;
    only Deep Space 9 and Empok Nor get the DS9 image, and Earth Spacedock gets Jason's
@@ -14855,7 +14856,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.84</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.85</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
