@@ -397,6 +397,12 @@ body{touch-action:pan-y;}
 .oasg.here{color:#7ee2a8;}
 .oasg.else{color:#ffc46b;}
 .oasg.pool{color:#9aa3b2;font-style:italic;}
+.tlRow{display:flex;gap:8px;padding:5px 2px;border-bottom:1px solid rgba(255,255,255,.05);font-size:12px;}
+.tlSd{color:var(--dim);white-space:nowrap;min-width:76px;}
+.tlTx{line-height:1.35;}
+.kvGrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0;}
+.posRow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 2px;border-bottom:1px solid rgba(255,255,255,.05);font-size:13px;}
+.compShipIco{width:64px;height:40px;object-fit:contain;flex:none;}
 .txtIn{flex:1;background:#000;border:1px solid var(--orange);color:var(--peach);border-radius:8px;padding:9px;font-size:16px;min-width:0;}
 .badge{display:inline-block;font-size:13px;font-weight:700;padding:3px 10px;border-radius:10px;
   background:var(--panel2);color:var(--teal);border:1px solid var(--line);margin:1px 2px 1px 0;}
@@ -3369,6 +3375,16 @@ function MK(arr){
 const CANON_NAMES=new Set(CANON_CREW.map(function(r){return r[0];}));
 function retireAge(o){if(o.traits&&o.traits.indexOf("Living Legend")>=0)return 9999;if(CANON_NAMES.has(o.name))return 9999;return o.species==="Vulcan"?180:70;}
 function reviveCanonRetired(g){(g.officers||[]).forEach(function(o){if(o.retired&&o.status!=="inactive"&&CANON_NAMES.has(o.name))o.retired=false;});}
+function svcPush(o,t,shipKey){if(!o)return;if(!o.svc)o.svc=[];o.svc.push({d:G.day,sd:G.stardate,t:t,ship:shipKey||null});if(o.svc.length>240)o.svc.splice(0,o.svc.length-240);}
+function shipHistPush(s,t){if(!s)return;if(!s.hist)s.hist=[];s.hist.push({d:G.day,sd:G.stardate,t:t});if(s.hist.length>240)s.hist.splice(0,s.hist.length-240);}
+function postKeyOf(o){return (o&&o.post&&(o.post.t==="ship"||o.post.t==="station"))?o.post.t+":"+(o.post.id||""):null;}
+function ensureRecords(g){
+  (g.officers||[]).forEach(function(o){if(o.svc)return;o.svc=[];
+    let t;if(o.dead)t="Service record (archive begins)";else if(o.post&&o.post.t==="pool")t="Unassigned \u2014 awaiting posting";else if(o.post&&(o.post.t==="ship"||o.post.t==="station"||o.post.t==="hq"))t="Posted \u2014 "+postName(o.post)+((o.roles&&o.roles.length)?" \u00b7 "+o.roles.map(billetLabel).join(", "):"");else t="Service record (archive begins)";
+    o.svc.push({d:g.day||0,sd:g.stardate,t:t,ship:postKeyOf(o)});});
+  (g.ships||[]).forEach(function(s){if(s.hist)return;s.hist=[{d:g.day||0,sd:g.stardate,t:s.status==="museum"?"Fleet Museum exhibit (archive begins)":s.mothballed?"Mothballed (archive begins)":"In service (archive begins)"}];});
+  (g.stations||[]).forEach(function(s){if(s.hist)return;s.hist=[{d:g.day||0,sd:g.stardate,t:"In service (archive begins)"}];});
+}
 
 const MUSEUM_SEED=[
   {id:"mus-enta",name:"USS Enterprise",registry:"NCC-1701-A",cls:"constitution",status:"museum",daysLeft:0,damage:0,missionId:null,yardId:null,post:"sol",musSd:54973.4,tours:1,msn:0,msnWon:0,batWon:0,commTxt:"Commissioned 2286 · Decommissioned 2293 after the Khitomer Accords",blurb:"Kirk's Enterprise. Seven years, two final frontiers, one Khitomer — the crown jewel of the Fleet Museum."},
@@ -3484,6 +3500,7 @@ function newGameState(){
   log("personnel","Fleet record: Captain Benjamin Sisko has returned from the Celestial Temple (2378) and resumed active duty.");
   log("build","USS Titan (Luna-class) is 60% constructed at Utopia Planitia, awaiting a commanding officer.");
   log("build","Daystrom Research Array is under construction — 15 days to activation.");
+  ensureRecords(G0);
   return G0;
 }
 
@@ -3622,6 +3639,7 @@ function migrateSave(g){
       g.officers.push(MK(def));
   });
   reviveCanonRetired(g); // canon legends no longer auto-retire at 70 (Picard case)
+  ensureRecords(g); // service-record archives (Computer page)
   // v1.1: orientation defaults + canon relationship audit (Paris/Torres marriage, Miral Paris, etc.)
   (g.officers||[]).forEach(o=>{if(!o.orient)o.orient=CANON_ORIENT[o.name]||randOrient();});
   // v1.5: make sure Miral Paris is on the roster as a child (seedCanonBonds skips the
@@ -3712,7 +3730,7 @@ function uiStartRepair(sid){
     toast("No shipyard free"+(busy?" — "+busy:"")+(s.status==="damaged"?". Repairs will start automatically when a yard frees up.":". Try again when a yard frees up."));return;
   }
   s.status="repair";s.yardId=y[0].id;s.daysLeft=Math.ceil(s.damage/12);
-  log("build",s.name+" has entered "+y[0].name+" for repairs ("+s.daysLeft+" days).");
+  log("build",s.name+" has entered "+y[0].name+" for repairs ("+s.daysLeft+" days).");shipHistPush(s,"Entered "+y[0].name+" for repairs ("+s.daysLeft+" days).");
   sfx("dock");save();shipModal(sid);render();
 }
 
@@ -3779,7 +3797,7 @@ function economyTick(){
     if(o.gradDays<=0){o.stage="adult";o.rankLabel=null;o.timeInGrade=0;
       if(!o.accolades)o.accolades=[];
       o.accolades.push({n:"Graduated Starfleet Academy",d:String(sdYear(G.stardate))});
-      log("crew","Cadet "+o.name+" graduates Starfleet Academy and is commissioned as Ensign.");
+      log("crew","Cadet "+o.name+" graduates Starfleet Academy and is commissioned as Ensign.");svcPush(o,"Commissioned as Ensign",null);
       toast("Cadet "+o.name+" graduated — commissioned as Ensign.");}
   });
 }
@@ -3794,6 +3812,7 @@ function buildTick(){
       queueCompletion({kind:"ship",id:_nid,name:b.name,sub:b.registry+" \u00b7 "+SHIP_CLASSES[b.cls].name+"-class · Christened (+5 prestige)",art:compArtFor(b.cls)});
       log("build","Christening ceremony: "+b.name+" ("+b.registry+", "+SHIP_CLASSES[b.cls].name+"-class) is commissioned. A bottle of champagne is broken across her hull. (+5 prestige)");
       capLogAuto("Ship commissioned",b.name+" ("+b.registry+", "+SHIP_CLASSES[b.cls].name+"-class) has joined the fleet.");
+      shipHistPush(b,"Commissioned \u2014 "+SHIP_CLASSES[b.cls].name+"-class, joined the fleet.");
       if(b.legacyOf){const _ls0=ship(b.legacyOf);if(_ls0)log("build",b.name+" carries on the lineage of "+_ls0.name+" ("+_ls0.registry+"). Her crew can transfer aboard from the ship's popup.");}}}
   // station construction (max 2 concurrent)
   G.stations.forEach(st=>{if(st.status==="construction"){st.daysLeft-=_sb;
@@ -3813,16 +3832,16 @@ function buildTick(){
   // auto-start repairs for damaged ships when a yard is free
   G.ships.forEach(s=>{if(s.status==="damaged"){const y=freeYards();
     if(y.length){s.status="repair";s.yardId=y[0].id;s.daysLeft=Math.ceil(s.damage/12);
-      log("build",s.name+" has entered "+y[0].name+" for repairs ("+s.daysLeft+" days).");}}});
+      log("build",s.name+" has entered "+y[0].name+" for repairs ("+s.daysLeft+" days).");shipHistPush(s,"Entered "+y[0].name+" for repairs ("+s.daysLeft+" days).");}}});
 }
 function refitTick(){
   G.ships.forEach(s=>{
   const forgeTender=G.ships.some(x=>x.status==="active"&&x.cls==="challenger"&&!x.transit);
     if(s.status==="refit"){s.daysLeft--;if(s.daysLeft<=0){s.status="active";s.yardId=null;
-      log("system",s.name+" has completed refit and is ready for duty.");
+      log("system",s.name+" has completed refit and is ready for duty.");shipHistPush(s,"Refit complete \u2014 returned to active duty.");
       queueCompletion({kind:"refit",id:s.id,name:s.name,sub:"Refit complete \u2014 ready for duty",art:compArtFor(s.cls)});}}
     if(s.status==="repair"){s.daysLeft--;if(forgeTender)s.daysLeft--;if(s.daysLeft<=0){s.status="active";s.damage=0;s.yardId=null;
-      log("system",s.name+" repairs complete. All decks operational.");
+      log("system",s.name+" repairs complete. All decks operational.");shipHistPush(s,"Repairs complete \u2014 all decks operational.");
       queueCompletion({kind:"repair",id:s.id,name:s.name,sub:"All decks operational",art:compArtFor(s.cls)});}}
   });
 }
@@ -4318,7 +4337,7 @@ function socialTick(){
     if(o.status!=="active"||o.dead||o.retired||o.stage!=="adult")return;
     if(o.loyal<30)o.morale=clamp(o.morale-1,0,100);
     if(o.loyal<=15&&Math.random()<0.02){
-      o.retired=true;o.status="inactive";o.roles=[];o.post={t:"gone"};o.shuttle=null;
+      svcPush(o,"Resigned their commission \u2014 left Starfleet",postKeyOf(o));o.retired=true;o.status="inactive";o.roles=[];o.post={t:"gone"};o.shuttle=null;
       if(o.rel){const p=officer(o.rel.partner);if(p)p.rel=null;o.rel=null;}
       log("personnel",fullName(o)+" has resigned their commission and left Starfleet. Morale across the fleet dips.");
       moraleAll(-3);
@@ -4428,6 +4447,7 @@ function meetReqResolve(how){
   renderMeeting(resp,[{t:"End meeting",fn:"meetFinish('done')"}]);
 }
 function doTransferCore(o,np){
+  const _ot=o.post.t,_oi=o.post.id;
   const oldPost=o.post.t+(o.post.id||"");
   o.post=np;o.shuttle=null;
   if(oldPost!==(np.t+(np.id||""))){o.roles=[];awardAccolade(o,"Reassigned to "+postName(np));}
@@ -4441,6 +4461,7 @@ function doTransferCore(o,np){
       log("romance",o.name+" was transferred away from "+p.name+". Distance makes the heart ache.");}
   }
   log("personnel",fullName(o)+" reassigned to "+postName(np)+".");
+  if(oldPost!==(np.t+(np.id||""))){if(_ot==="ship"||_ot==="station")svcPush(o,"Departed "+postName({t:_ot,id:_oi})+" \u2014 transferred to "+postName(np),_ot+":"+_oi);svcPush(o,"Transferred to "+postName(np),postKeyOf(o));}
 }
 
 /* ---------- mission resolution ---------- */
@@ -4609,12 +4630,12 @@ function ageTick(){
     if(o.stage==="child"&&o.age>=18){o.stage="cadet";o.post={t:"pool"};
       log("family",o.name+" has entered Starfleet Academy as a cadet.");}
     else if(o.stage==="cadet"&&o.age>=22){o.stage="adult";o.rank=0;o.dept=pick(DEPTS);o.timeInGrade=0;
-      log("family","Cadet "+o.name+" graduates Starfleet Academy and is commissioned as Ensign.");}
+      log("family","Cadet "+o.name+" graduates Starfleet Academy and is commissioned as Ensign.");svcPush(o,"Commissioned as Ensign",null);}
     else if(o.stage==="adult"&&o.age>=retireAge(o)&&!o.retired){
       const _rk=o.post.t,_ri=o.post.id,_rc=(o.roles||[]).includes("co"); // v2.11 succession
       o.retired=true;breakBond(o);o.post={t:"pool"};
       if(_rc&&(_rk==="ship"||_rk==="station"))successionCheck(_rk,_ri);
-      log("personnel",fullName(o)+" has retired with full honors after a distinguished career. Fair winds, "+o.name+".");}
+      log("personnel",fullName(o)+" has retired with full honors after a distinguished career. Fair winds, "+o.name+".");svcPush(o,"Retired with full honors",null);}
     else if(o.stage==="adult"&&o.age>retireAge(o)+5&&Math.random()<(o.age-retireAge(o)-5)*0.0005){
       killOfficer(o,"passed away peacefully at age "+Math.floor(o.age));}
   });
@@ -4627,7 +4648,7 @@ function breakBond(o){
 function killOfficer(o,cause){
   if(o.dead)return;
   const _pk=o.post.t,_pid=o.post.id,_wasCo=(o.roles||[]).includes("co"); // v2.11 succession
-  o.dead=true;breakBond(o);o.post={t:"gone"};o.health="healthy";o.shuttle=null;
+  svcPush(o,"Died in service \u2014 "+cause,postKeyOf(o));o.dead=true;breakBond(o);o.post={t:"gone"};o.health="healthy";o.shuttle=null;
   const _me={kind:"officer",name:o.name,rank:rankName(o),species:o.species,cause,sd:G.stardate,
     def:[o.name,o.species,o.gender,o.age,o.rank,o.dept,[o.stats.cmd,o.stats.sci,o.stats.eng,o.stats.med,o.stats.dip,o.stats.tac],(o.traits||[]).slice(),"pool",o.rankLabel||null,o.stage||"adult"]};
   G.memorial.unshift(_me);
@@ -7840,7 +7861,7 @@ function qSnap(){
     const cr=ri(5000,50000);gainCR(cr);
     msg="Q materializes a small moon made of solid latinum and deeds it to you. +"+fmt(cr)+" CR. Starfleet Accounting faints.";
   }else if(r<0.42&&alive.length){
-    const o=pick(alive);o.rank=Math.min(RANKS.length-1,o.rank+1);o.rankLabel=null;o.timeInGrade=0;o.morale=100;
+    const o=pick(alive);o.rank=Math.min(RANKS.length-1,o.rank+1);o.rankLabel=null;o.timeInGrade=0;o.morale=100;svcPush(o,"Promoted to "+RANKS[o.rank]+" (field promotion)",postKeyOf(o));
     awardAccolade(o,"Promoted by Q");
     msg="Q points at "+esc(o.name)+" and declares them "+esc(RANKS[o.rank])+". Starfleet Command decides not to argue with a god.";
   }else if(r<0.60){
@@ -7933,6 +7954,7 @@ const ICONS={
   memorial:'<svg viewBox="0 0 24 24"><path d="M12 2.5l2.8 6 6.5.7-4.8 4.4 1.3 6.4L12 16.8 6.2 20l1.3-6.4L2.7 9.2l6.5-.7z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
   settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3.4"/><path d="M12 2.6v3.2M12 18.2v3.2M2.6 12h3.2M18.2 12h3.2M5.3 5.3l2.3 2.3M16.4 16.4l2.3 2.3M18.7 5.3l-2.3 2.3M7.6 16.4l-2.3 2.3" stroke-linecap="round"/></svg>',
   codex:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z" stroke-linejoin="round"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20" stroke-linejoin="round"/><circle cx="12" cy="10.5" r="2.6"/></svg>'
+  ,computer:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M9 20h6M12 16v4"/></svg>'
 };
 const MEET_SCENE="ships/meet-scene.jpg";
 const MEET_CD=5;
@@ -8714,7 +8736,7 @@ function meetFinish(how){
   toast(how==="done"?"Meeting concluded.":"Dismissed.");
 }
 function openTabMenu(){
-  const tabs=[["personnel",ICONS.crew,"Essential Personnel"],["missions",ICONS.missions,"Missions"],["build",ICONS.build,"Build"],["log",ICONS.log,"Log"],["caplog",ICONS.caplog,"Captain's Log"],["arcs",ICONS.arcs,"Story Arcs"],["codex",ICONS.codex,"Species Codex"],["memorial",ICONS.memorial,"Temporal Anomalies"],["settings",ICONS.settings,"Settings"]];
+  const tabs=[["personnel",ICONS.crew,"Essential Personnel"],["missions",ICONS.missions,"Missions"],["build",ICONS.build,"Build"],["log",ICONS.log,"Log"],["caplog",ICONS.caplog,"Captain's Log"],["computer",ICONS.computer,"Computer"],["arcs",ICONS.arcs,"Story Arcs"],["codex",ICONS.codex,"Species Codex"],["memorial",ICONS.memorial,"Temporal Anomalies"],["settings",ICONS.settings,"Settings"]];
   let h='';
   tabs.forEach(function(t){
     h+='<button class="menuItem'+(currentTab===t[0]?" sel":"")+'" onclick="navGo(\''+t[0]+'\')"><span class="bIco">'+t[1]+'</span><span>'+t[2]+'</span></button>';
@@ -8748,6 +8770,7 @@ function render(){renderHUD();
   else if(currentTab==="build")v.innerHTML=renderBuild();
   else if(currentTab==="log")v.innerHTML=renderLog();
   else if(currentTab==="caplog")v.innerHTML=renderCaptainLog();
+  else if(currentTab==="computer")v.innerHTML=renderComputer();
   else if(currentTab==="arcs")v.innerHTML=renderArcs();
   else if(currentTab==="codex")v.innerHTML=renderCodex();
   else if(currentTab==="memorial")v.innerHTML=renderMemorial();
@@ -9927,6 +9950,7 @@ function uiDecommissionGo(kind,id){
     G.shuttles=G.shuttles.filter(x=>!(x.host==="ship"&&x.hid===s.id));
     G.ships.splice(i,1);
     G.memorial.unshift({kind:"ship",cls:s.cls,registry:s.registry||"",name:s.name,sub:SHIP_CLASSES[s.cls].name+"-class · "+s.registry,lost:"decommissioned",cause:"Honorably decommissioned after years of service",sd:G.stardate});
+    shipHistPush(s,"Decommissioned \u2014 struck from active service.");
     log("system",s.name+" ("+s.registry+") has been decommissioned. Her name joins the Memorial.");
   }else{
     const i=G.stations.findIndex(x=>x.id===id);if(i<0)return;const st=G.stations[i];
@@ -9954,7 +9978,7 @@ function uiMothball(id){
 function uiMothballGo(id){
   const s=ship(id);if(!s||s.status==="museum")return;
   if(s.status==="mission"||s.status==="repair")return;
-  s.status="museum";s.musSd=G.stardate;
+  s.status="museum";s.musSd=G.stardate;shipHistPush(s,"Transferred to the Fleet Museum.");
   log("system",s.name+" ("+s.registry+") has been mothballed to the Fleet Museum. Her legacy is preserved.");
   capLogAuto("Ship mothballed",s.name+" ("+s.registry+", "+SHIP_CLASSES[s.cls].name+"-class) retired to the Fleet Museum after "+(s.msn||0)+" missions.");
   closeModal();save();render();toast(s.name+" joins the Fleet Museum.");
@@ -9963,7 +9987,7 @@ function uiRecommission(id){
   const s=ship(id);if(!s||s.status!=="museum")return;
   s.status="active";s.tours=(s.tours||1)+1;
   log("system",s.name+" ("+s.registry+") has been returned to active duty from the Fleet Museum — service tour "+s.tours+".");
-  capLogAuto("Ship recommissioned",s.name+" returns to active duty from the Fleet Museum.");
+  capLogAuto("Ship recommissioned",s.name+" returns to active duty from the Fleet Museum.");shipHistPush(s,"Recommissioned to active duty from the Fleet Museum.");
   closeModal();save();render();toast(s.name+" is back on active duty.");
 }
 
@@ -10467,6 +10491,7 @@ let stationQuad="all";
 let lostShow="all";
 let memTab="personnel";
 let buildPage="ships";
+let compTab="ships",compShip=null,compOff=null,compStn=null;
 let legacyFrom=null;
 let portraitTabForce=false;
 /* ================= CAPTAIN'S LOG ================= */
@@ -10722,6 +10747,7 @@ function uiPromote(oid){
   gainPres(-cost);o.rank++;o.timeInGrade=0;o.morale=clamp(o.morale+10,0,100);o.promRec=false;
   sfx("promote");
   awardAccolade(o,"Promoted to "+RANKS[o.rank]);
+  svcPush(o,"Promoted to "+RANKS[o.rank],postKeyOf(o));
   log("personnel","PROMOTED: "+fullName(o)+" — congratulations from the sector command.");
   if(o.rank===9){ // v2.13: flag rank reports to Starfleet Command
     const _ok=o.post.t,_oid=o.post.id,_hadCo=(o.roles||[]).includes("co");
@@ -11003,7 +11029,7 @@ function setBilletCore(kind,id,bid,oid,quiet){ // v2.42 quiet: bulk crew transfe
   const tgt=kind==="ship"?ship(id):station(id);if(!tgt)return false;
   const holder=billetHolderAt(kind,id,bid);
   if(!oid){
-    if(holder){holder.roles=(holder.roles||[]).filter(r=>r!==bid);_lg("personnel",fullName(holder)+" relieved of "+billetLabel(bid)+" duties ("+tgt.name+").");save();}
+    if(holder){holder.roles=(holder.roles||[]).filter(r=>r!==bid);_lg("personnel",fullName(holder)+" relieved of "+billetLabel(bid)+" duties ("+tgt.name+").");svcPush(holder,"Relieved of "+billetLabel(bid)+" duties \u2014 "+tgt.name,kind+":"+id);save();}
     if(bid==="co")successionCheck(kind,id); // v2.11: XO steps up
     return true;
   }
@@ -11015,6 +11041,7 @@ function setBilletCore(kind,id,bid,oid,quiet){ // v2.42 quiet: bulk crew transfe
   }
   const oldPost=o.post.t+(o.post.id||"");
   if(o.post.t!==kind||o.post.id!==id){
+    if(_oldKind==="ship"||_oldKind==="station")svcPush(o,"Departed "+postName({t:_oldKind,id:_oldId})+" \u2014 transferred to "+tgt.name,_oldKind+":"+_oldId);
     o.post={t:kind,id:id};o.shuttle=null;
     if(oldPost!==(kind+id)){o.roles=[];awardAccolade(o,"Reassigned to "+tgt.name);}
     const p=o.rel?officer(o.rel.partner):null;
@@ -11026,9 +11053,9 @@ function setBilletCore(kind,id,bid,oid,quiet){ // v2.42 quiet: bulk crew transfe
     }
     _lg("personnel",fullName(o)+" reassigned to "+tgt.name+".");
   }
-  if(holder&&holder.id!==o.id){holder.roles=(holder.roles||[]).filter(r=>r!==bid);_lg("personnel",fullName(holder)+" relieved of "+billetLabel(bid)+" duties ("+tgt.name+").");}
+  if(holder&&holder.id!==o.id){holder.roles=(holder.roles||[]).filter(r=>r!==bid);_lg("personnel",fullName(holder)+" relieved of "+billetLabel(bid)+" duties ("+tgt.name+").");svcPush(holder,"Relieved of "+billetLabel(bid)+" duties \u2014 "+tgt.name,kind+":"+id);}
   if(!Array.isArray(o.roles))o.roles=[];
-  if(o.roles.indexOf(bid)<0){o.roles.push(bid);_lg("personnel",fullName(o)+" assigned as "+billetLabel(bid)+" ("+tgt.name+").");}
+  if(o.roles.indexOf(bid)<0){o.roles.push(bid);_lg("personnel",fullName(o)+" assigned as "+billetLabel(bid)+" ("+tgt.name+").");svcPush(o,"Assigned "+billetLabel(bid)+" \u2014 "+tgt.name,kind+":"+id);}
   // v2.11 succession: a real CO ends acting command; losing your CO triggers it
   if(bid==="co"){if(oid)tgt.actingCO=null;else successionCheck(kind,id);}
   if(_hadCo&&(_oldKind==="ship"||_oldKind==="station")&&(_oldKind!==kind||_oldId!==id))successionCheck(_oldKind,_oldId);
@@ -11117,6 +11144,150 @@ function uiBilletOfficers(kind,id,bid){
   modalBack=function(){uiCrewAssign(kind,id);};
 }
 
+
+
+/* ================= COMPUTER (records archive) ================= */
+function compGo(t){compTab=t;compShip=null;compOff=null;compStn=null;render();}
+function compOpenShip(id){compShip=id;compOff=null;render();window.scrollTo(0,0);}
+function compOpenStn(id){compStn=id;compOff=null;render();window.scrollTo(0,0);}
+function compOpenOff(id){compOff=id;render();window.scrollTo(0,0);}
+function compBack(){compShip=null;compOff=null;compStn=null;render();}
+function compTlRow(e,who){return '<div class="tlRow"><span class="tlSd">'+(e.sd!=null?("SD "+Number(e.sd).toFixed(1)):"\u2014")+'</span><span class="tlTx">'+(who?('<b>'+esc(who)+'</b> \u2014 '):'')+esc(e.t)+'</span></div>';}
+function compTimeline(ownHist,key){
+  const ev=[];
+  (ownHist||[]).forEach(function(e){ev.push({d:e.d,sd:e.sd,t:e.t,who:""});});
+  G.officers.forEach(function(o){(o.svc||[]).forEach(function(e){if(e.ship===key)ev.push({d:e.d,sd:e.sd,t:e.t,who:o.name});});});
+  ev.sort(function(a,b){return b.d-a.d;});
+  if(!ev.length)return '<p class="dim">No records yet \u2014 history accrues as officers are assigned and ships serve.</p>';
+  return ev.slice(0,90).map(function(e){return compTlRow(e,e.who);}).join("");
+}
+function compBillets(kind,id){
+  let h='<h3>Positions</h3>';
+  BILLETS.forEach(function(b){
+    const holder=billetHolderAt(kind,id,b[0]);
+    h+='<div class="posRow"><span>'+b[1]+'</span>'+(holder?('<button class="btn small ghost" onclick="compOpenOff(\''+holder.id+'\')">'+esc(holder.name)+'</button>'):'<span class="dim">\u2014 vacant \u2014</span>')+'</div>';
+  });
+  return h;
+}
+function compCrewList(crew){
+  if(!crew.length)return '<p class="dim">No crew posted.</p>';
+  let h='<div class="offGrid">';
+  crew.forEach(function(o){
+    const rl=(o.roles&&o.roles.length)?o.roles.map(billetLabel).join(", "):(o.dept||"Crew");
+    h+='<div class="offCell" onclick="compOpenOff(\''+o.id+'\')">'+faceImg(o,"pfaceSm")+'<div class="grow"><div class="onm">'+esc(o.name)+'</div><div class="osub">'+esc(rankName(o))+' \u00b7 '+esc(o.dept||"")+'</div><div class="oasg here">'+esc(rl)+'</div></div></div>';
+  });
+  return h+'</div>';
+}
+function compShipDossier(s){
+  const cls=SHIP_CLASSES[s.cls]||{};
+  const crew=crewOfShip(s.id);
+  const art=compArtFor(s.cls);
+  let h='<div class="btnRow"><button class="btn small ghost" onclick="compBack()">\u2039 All ships</button><button class="btn small teal" onclick="shipModal(\''+s.id+'\')">Open ship</button></div>';
+  h+='<h2 style="margin:2px 0;">'+esc(s.name)+'</h2><div class="flavor">'+esc(s.registry||"")+' \u00b7 '+(cls.name||s.cls)+'-class starship</div>';
+  if(art)h+='<div class="shipMedia stnMedia" style="margin:8px 0;"><img src="'+art+'" alt=""></div>';
+  const commissioned=(s.hist&&s.hist.length)?s.hist[0]:null;
+  h+='<div class="kvGrid">'
+    +'<div class="kv"><span class="k">Status</span><span class="v">'+esc(shipStatusLabel(s))+'</span></div>'
+    +'<div class="kv"><span class="k">Location</span><span class="v">'+esc(POST_LABELS[s.post]||s.post||"\u2014")+'</span></div>'
+    +'<div class="kv"><span class="k">Hull / TAC / SCI</span><span class="v">'+(cls.hull||"\u2014")+' / '+(cls.tac||"\u2014")+' / '+(cls.sci||"\u2014")+'</span></div>'
+    +'<div class="kv"><span class="k">Speed</span><span class="v">'+(cls.speed||"\u2014")+'</span></div>'
+    +'<div class="kv"><span class="k">Damage</span><span class="v">'+(s.damage||0)+'%</span></div>'
+    +'<div class="kv"><span class="k">Crew aboard</span><span class="v">'+crew.length+'</span></div>'
+    +(commissioned?'<div class="kv"><span class="k">In service</span><span class="v">'+Math.max(0,G.day-(commissioned.d||0))+' days</span></div>':'')
+    +'</div>';
+  h+=compBillets("ship",s.id);
+  h+='<h3>Crew ('+crew.length+')</h3>'+compCrewList(crew);
+  h+='<h3>Service &amp; position history</h3>'+compTimeline(s.hist,"ship:"+s.id);
+  return h;
+}
+function compShipList(){
+  let h='<input type="search" placeholder="Search ships\u2026" oninput="liveSearch(this,\'compShipList\')">';
+  h+='<div id="compShipList"><div class="offGrid" style="grid-template-columns:1fr;">';
+  const list=G.ships.slice().sort(function(a,b){return a.name.localeCompare(b.name);});
+  list.forEach(function(s){
+    const cls=SHIP_CLASSES[s.cls]||{};
+    const crewN=crewOfShip(s.id).length;
+    h+='<div class="offCell" data-search="'+esc((s.name+" "+(cls.name||"")+" "+(s.registry||"")).toLowerCase())+'" data-sec="s" onclick="compOpenShip(\''+s.id+'\')"><img class="compShipIco" src="'+compArtFor(s.cls)+'" alt=""><div class="grow"><div class="onm">'+esc(s.name)+'</div><div class="osub">'+(cls.name||s.cls)+'-class \u00b7 '+esc(s.registry||"")+'</div><div class="oasg '+(s.status==="museum"?"pool":"else")+'">'+esc(shipStatusLabel(s))+' \u00b7 Crew '+crewN+'</div></div></div>';
+  });
+  return h+'</div></div>';
+}
+function compStnDossier(st){
+  const def=STATION_DEFS[st.type]||{};
+  const crew=crewOfStation(st.id);
+  let h='<div class="btnRow"><button class="btn small ghost" onclick="compBack()">\u2039 All stations</button><button class="btn small teal" onclick="stationModal(\''+st.id+'\')">Open station</button></div>';
+  h+='<h2 style="margin:2px 0;">'+esc(st.name)+'</h2><div class="flavor">'+esc(def.name||st.type)+'</div>';
+  h+='<div class="shipMedia stnMedia" style="margin:8px 0;">'+stationPic(st.type,true)+'</div>';
+  h+='<div class="kvGrid">'
+    +'<div class="kv"><span class="k">Status</span><span class="v">'+(st.status==="construction"?("Under construction \u2014 "+(st.daysLeft||0)+"d"):st.mothballed?"Mothballed":"Active")+'</span></div>'
+    +'<div class="kv"><span class="k">Location</span><span class="v">'+esc(POST_LABELS[st.post]||st.post||"\u2014")+'</span></div>'
+    +'<div class="kv"><span class="k">Crew aboard</span><span class="v">'+crew.length+'</span></div>'
+    +'</div>';
+  h+=compBillets("station",st.id);
+  h+='<h3>Crew ('+crew.length+')</h3>'+compCrewList(crew);
+  h+='<h3>Service &amp; position history</h3>'+compTimeline(st.hist,"station:"+st.id);
+  return h;
+}
+function compStnList(){
+  let h='<div class="offGrid" style="grid-template-columns:1fr;">';
+  const list=G.stations.slice().sort(function(a,b){return a.name.localeCompare(b.name);});
+  list.forEach(function(st){
+    const def=STATION_DEFS[st.type]||{};
+    h+='<div class="offCell" onclick="compOpenStn(\''+st.id+'\')"><div class="grow"><div class="onm">'+esc(st.name)+'</div><div class="osub">'+esc(def.name||st.type)+' \u00b7 '+esc(POST_LABELS[st.post]||st.post||"")+'</div><div class="oasg else">Crew '+crewOfStation(st.id).length+'</div></div></div>';
+  });
+  return h+'</div>';
+}
+function compOffList(){
+  let h='<input type="search" placeholder="Search officers\u2026" oninput="liveSearch(this,\'compOffList\')">';
+  h+='<div id="compOffList"><div class="offGrid">';
+  const list=G.officers.filter(function(o){return !o.dead&&o.stage!=="child";}).slice().sort(function(a,b){return (b.rank-a.rank)||a.name.localeCompare(b.name);});
+  list.forEach(function(o){
+    const pl=o.post?postName(o.post):"\u2014";
+    const rl=(o.roles&&o.roles.length)?" \u00b7 "+o.roles.map(billetLabel).join(", "):"";
+    const asg=o.retired?'<div class="oasg pool">Retired</div>':(o.post&&o.post.t!=="pool"?'<div class="oasg else">\uD83D\uDE80 '+esc(pl)+esc(rl)+'</div>':'<div class="oasg pool">Unassigned</div>');
+    h+='<div class="offCell" data-search="'+esc((o.name+" "+pl).toLowerCase())+'" data-sec="o" onclick="compOpenOff(\''+o.id+'\')">'+faceImg(o,"pfaceSm")+'<div class="grow"><div class="onm">'+esc(o.name)+'</div><div class="osub">'+esc(rankName(o))+' \u00b7 '+esc(o.dept||"")+' \u00b7 '+esc(o.species||"")+'</div>'+asg+'</div></div>';
+  });
+  return h+'</div></div>';
+}
+function compOffRecord(o){
+  let h='<div class="btnRow"><button class="btn small ghost" onclick="compBack()">\u2039 All personnel</button><button class="btn small teal" onclick="officerModal(\''+o.id+'\')">Full personnel file</button></div>';
+  h+='<div style="display:flex;gap:10px;align-items:center;">'+faceImg(o,"pfaceBig")+'<div><h2 style="margin:2px 0;">'+esc(o.name)+'</h2><div class="flavor">'+esc(rankName(o))+' \u00b7 '+esc(o.dept||"")+' \u00b7 '+esc(o.species||"")+', age '+Math.floor(o.age||0)+'</div></div></div>';
+  const pl=o.post?postName(o.post):"\u2014";
+  const rl=(o.roles&&o.roles.length)?o.roles.map(billetLabel).join(", "):"\u2014";
+  h+='<div class="kvGrid">'
+    +'<div class="kv"><span class="k">Posting</span><span class="v">'+(o.retired?"Retired":esc(pl))+'</span></div>'
+    +'<div class="kv"><span class="k">Position</span><span class="v">'+esc(rl)+'</span></div>'
+    +'<div class="kv"><span class="k">Loyalty</span><span class="v">'+(o.loyal!=null?Math.round(o.loyal):"\u2014")+'</span></div>'
+    +'<div class="kv"><span class="k">Morale</span><span class="v">'+(o.morale!=null?Math.round(o.morale):"\u2014")+'</span></div>'
+    +'<div class="kv"><span class="k">Time in grade</span><span class="v">'+Math.floor(o.timeInGrade||0)+' days</span></div>'
+    +'<div class="kv"><span class="k">Status</span><span class="v">'+(o.dead?"Deceased":o.retired?"Retired":o.stage==="cadet"?"Cadet":o.stage==="civilian"?"Civilian":"Active duty")+'</span></div>'
+    +'</div>';
+  if(o.stats)h+='<h3>Service ratings</h3><div class="kvGrid">'
+    +'<div class="kv"><span class="k">Command</span><span class="v">'+o.stats.cmd+'</span></div>'
+    +'<div class="kv"><span class="k">Science</span><span class="v">'+o.stats.sci+'</span></div>'
+    +'<div class="kv"><span class="k">Engineering</span><span class="v">'+o.stats.eng+'</span></div>'
+    +'<div class="kv"><span class="k">Medical</span><span class="v">'+o.stats.med+'</span></div>'
+    +'<div class="kv"><span class="k">Diplomacy</span><span class="v">'+o.stats.dip+'</span></div>'
+    +'<div class="kv"><span class="k">Tactical</span><span class="v">'+o.stats.tac+'</span></div></div>';
+  if(o.traits&&o.traits.length)h+='<h3>Traits</h3><p>'+o.traits.map(function(t){return '<span class="chip">'+esc(t)+'</span>';}).join(" ")+'</p>';
+  if(o.rel&&o.rel.partner){const p=officer(o.rel.partner);if(p)h+='<h3>Family</h3><p class="dim">'+(o.rel.stage==="married"?"Married to ":"Partner: ")+'<b>'+esc(p.name)+'</b></p>';}
+  if(o.accolades&&o.accolades.length)h+='<h3>Commendations</h3><p>'+o.accolades.map(function(a){return '<span class="chip">'+esc(a.n)+(a.d?" ("+esc(a.d)+")":"")+'</span>';}).join(" ")+'</p>';
+  h+='<h3>Service record</h3>';
+  const svc=(o.svc||[]).slice().sort(function(a,b){return b.d-a.d;});
+  h+=svc.length?svc.map(function(e){return compTlRow(e,"");}).join(""):'<p class="dim">No records yet.</p>';
+  return h;
+}
+function renderComputer(){
+  let h='<h2>Computer</h2><div class="flavor">Starfleet records archive \u2014 ships, stations, and the officers who serve on them. Position histories accrue as assignments change.</div>';
+  h+='<div class="btnRow">'
+    +'<button class="btn small'+(compTab==="ships"?" on":"")+'" onclick="compGo(\'ships\')">Ships</button>'
+    +'<button class="btn small'+(compTab==="personnel"?" on":"")+'" onclick="compGo(\'personnel\')">Personnel</button>'
+    +'<button class="btn small'+(compTab==="stations"?" on":"")+'" onclick="compGo(\'stations\')">Stations</button></div>';
+  if(compOff){const o=officer(compOff);if(o){h+=compOffRecord(o);return h;}compOff=null;}
+  if(compTab==="ships"){const s=compShip?ship(compShip):null;h+=s?compShipDossier(s):compShipList();}
+  else if(compTab==="stations"){const st=compStn?station(compStn):null;h+=st?compStnDossier(st):compStnList();}
+  else h+=compOffList();
+  return h;
+}
 
 /* ---------- ship & station modals ---------- */
 
@@ -11953,14 +12124,14 @@ async function uiAbandonShipGo(id){
   const nm=s.name,co=effShipCO(s).o;
   closeModal();
   const ev=evacuateShipCrew(s);
-  s.mothballed=true;s.abandoned=true;s.actingCO=null;
+  s.mothballed=true;s.abandoned=true;s.actingCO=null;shipHistPush(s,"Mothballed \u2014 placed in reserve.");
   log("command",nm+" has been abandoned on your orders. "+(ev.berthed?"Her crew was evacuated to "+ev.berthed+".":"Her crew took to escape pods and were recovered by Starfleet.")+" She drifts, dark and empty.");
   save();render();
   coOrderShow(co,nm,"abandonShip");
 }
 function uiReclaimShip(id){
   const s=ship(id);if(!s||!s.abandoned)return;
-  s.mothballed=false;s.abandoned=false;
+  s.mothballed=false;s.abandoned=false;shipHistPush(s,"Returned to service from mothballs.");
   log("command","A prize crew has reboarded "+s.name+". She is under way again — undercrewed and in need of replacements.");
   save();shipModal(id);render();toast("Ship reclaimed.");
 }
@@ -14931,7 +15102,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.93</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.94</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
