@@ -571,7 +571,9 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
 #tacCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;}
 #tacMsg{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);background:rgba(2,6,16,0.85);border:1px solid var(--orange);border-radius:8px;padding:6px 12px;font-size:13px;color:#ffd27a;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis;}
 #tacMsg.show{opacity:1;}
-#tacOrders{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 12px calc(12px + env(safe-area-inset-bottom));background:#05080f;}
+#tacOrders{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);grid-template-areas:"target phasers" "power phasers" "evasive torps" "disengage torps" "delegate delegate";gap:8px;padding:10px 12px calc(12px + env(safe-area-inset-bottom));background:#05080f;}
+#tacPhasers{grid-area:phasers;}#tacTorps{grid-area:torps;}#tacTarget{grid-area:target;}#tacPower{grid-area:power;}#tacEvasive{grid-area:evasive;}#tacDisengage{grid-area:disengage;}#tacDelegate{grid-area:delegate;}
+.tacBtn.fire{min-height:104px;font-size:16px;border-color:#b35c2e;background:linear-gradient(180deg,#3a1c08,#1d0f06);}
 .tacBtn{background:#10203a;border:2px solid #2c5a8f;border-radius:10px;color:#dfeeff;font-size:14px;padding:12px 6px;min-height:56px;cursor:pointer;}
 .tacBtn:active{background:#1a3a66;}
 .tacBtn:disabled{opacity:.35;cursor:default;}
@@ -803,7 +805,7 @@ const SHIP_CLASSES={
               special:"Transport and relief ship. +30% credits and +10 prestige on Rescue missions."},
 
   crossfield32:{name:"Crossfield (32nd refit)",cr:0,dl:0,days:0,hull:120,tac:85,sci:130,speed:9.9,slots:14,upkeep:160,comp:150,futureOnly:1},
-  intrepid32:  {name:"Intrepid (32nd)",cr:0,dl:0,days:0,hull:110,tac:95,sci:110,speed:10.5,slots:12,upkeep:150,comp:160,futureOnly:1},
+  intrepid32:  {name:"Janeway",cr:0,dl:0,days:0,hull:110,tac:95,sci:110,speed:10.5,slots:12,upkeep:150,comp:160,futureOnly:1},
   eisenberg:   {name:"Eisenberg",cr:0,dl:0,days:0,hull:140,tac:110,sci:80,speed:10.2,slots:16,upkeep:180,comp:400,futureOnly:1},
   credence:    {name:"Credence",cr:0,dl:0,days:0,hull:150,tac:90,sci:70,speed:9.8,slots:14,upkeep:150,comp:300,futureOnly:1},
   mars32:      {name:"Mars (32nd)",cr:0,dl:0,days:0,hull:100,tac:100,sci:90,speed:10.3,slots:10,upkeep:140,comp:200,futureOnly:1},
@@ -6654,8 +6656,8 @@ function shipParts(shape){
    photo cutouts in ships/icons/. One source of truth for battle + map icons.
    SHIP_PATHS vectors remain the fallback while an image loads (or fails);
    enemy-only shapes (cube/sphere/galor/crescent/wedge) stay vector. ---- */
-const SHIP_ICON_META={academy:[1202,144],akira:[446,89],ambassador:[532,138],angelou:[1060,113],bop:[116,64],california:[541,151],centaur:[216,41],challenger:[396,120],constellation:[317,95],constitution:[288,71],constitution32:[705,114],courage:[571,554],credence:[804,169],crescent:[655,179],crossfield32:[382,37],curry:[232,35],defiant:[126,30],dresselhaus:[334,128],eisenberg:[611,204],excelsior:[460,74],fed:[222,84],friendship:[601,27],galaxy:[649,148],galor:[487,84],intrepid:[350,74],intrepid32:[233,45],ktinga:[220,66],luna:[456,89],mars32:[213,57],merian:[394,65],miranda:[193,54],nebula:[445,140],norway:[360,58],nova:[186,41],nx:[231,41],odyssey:[1065,159],olympic:[326,123],parliament:[585,109],prometheus:[420,71],protostar:[145,31],raven:[96,23],rombop:[137,49],saber:[229,63],sagan:[546,134],saturn:[526,42],sovereign:[691,88],steamrunner:[361,65],"universe-side":[1280,221],warbird:[276,82],wells:[200,39]};
-const SHIP_ICON_CLASS={nova:"nova",intrepid:"intrepid",defiant:"defiant",akira:"akira",nebula:"nebula",galaxy:"galaxy",sovereign:"sovereign",prometheus:"prometheus",luna:"luna",california:"california",olympic:"olympic",constitution:"constitution",nx:"nx",brel:"bop",constellation:"constellation",excelsior:"excelsior",ktinga:"ktinga",rombop:"rombop",saber:"saber",steamrunner:"steamrunner",norway:"norway",parliament:"parliament",sagan:"sagan",odyssey:"odyssey",protostar:"protostar",raven:"raven",ambassador:"ambassador",challenger:"challenger",centaur:"centaur",miranda:"miranda",curry:"curry",crossfield32:"crossfield32",intrepid32:"intrepid32",eisenberg:"eisenberg",credence:"credence",mars32:"mars32",angelou:"angelou",courage:"courage",saturn:"saturn",athena:"academy",constitution32:"constitution32",merian:"merian",friendship:"friendship",wells:"wells",universe:"universe-side",dresselhaus:"dresselhaus",warbird:"warbird",bop:"bop",crescent:"crescent",galor:"galor"};
+const SHIP_ICON_META={academy:[1202,144],akira:[446,89],ambassador:[532,138],angelou:[1060,113],bop:[116,64],california:[541,151],centaur:[216,41],challenger:[396,120],constellation:[317,95],constitution:[288,71],constitution32:[705,114],courage:[571,554],credence:[804,169],crescent:[655,179],crossfield32:[382,37],curry:[232,35],"defiant-side":[1280,214],dresselhaus:[334,128],eisenberg:[611,204],excelsior:[460,74],fed:[222,84],friendship:[601,27],galaxy:[649,148],galor:[487,84],intrepid:[350,74],janeway:[1280,228],ktinga:[220,66],luna:[456,89],mars32:[213,57],merian:[394,65],miranda:[193,54],nebula:[445,140],norway:[360,58],"nova-side":[1280,254],nx:[231,41],odyssey:[1065,159],olympic:[326,123],parliament:[585,109],prometheus:[420,71],protostar:[145,31],raven:[96,23],rombop:[137,49],saber:[229,63],sagan:[546,134],saturn:[526,42],sovereign:[691,88],steamrunner:[361,65],"universe-side":[1280,221],warbird:[276,82],"wells-relativity":[1280,289]};
+const SHIP_ICON_CLASS={nova:"nova-side",intrepid:"intrepid",defiant:"defiant-side",akira:"akira",nebula:"nebula",galaxy:"galaxy",sovereign:"sovereign",prometheus:"prometheus",luna:"luna",california:"california",olympic:"olympic",constitution:"constitution",nx:"nx",brel:"bop",constellation:"constellation",excelsior:"excelsior",ktinga:"ktinga",rombop:"rombop",saber:"saber",steamrunner:"steamrunner",norway:"norway",parliament:"parliament",sagan:"sagan",odyssey:"odyssey",protostar:"protostar",raven:"raven",ambassador:"ambassador",challenger:"challenger",centaur:"centaur",miranda:"miranda",curry:"curry",crossfield32:"crossfield32",intrepid32:"janeway",eisenberg:"eisenberg",credence:"credence",mars32:"mars32",angelou:"angelou",courage:"courage",saturn:"saturn",athena:"academy",constitution32:"constitution32",merian:"merian",friendship:"friendship",wells:"wells-relativity",universe:"universe-side",dresselhaus:"dresselhaus",warbird:"warbird",bop:"bop",crescent:"crescent",galor:"galor"};
 const EAS_ICONS={"akira":1,"ambassador":1,"angelou":1,"bop":1,"california":1,"centaur":1,"challenger":1,"constellation":1,"constitution":1,"constitution32":1,"courage":1,"credence":1,"crescent":1,"crossfield32":1,"curry":1,"defiant":1,"dresselhaus":1,"eisenberg":1,"excelsior":1,"friendship":1,"galaxy":1,"galor":1,"intrepid":1,"intrepid32":1,"ktinga":1,"luna":1,"mars32":1,"merian":1,"miranda":1,"nebula":1,"norway":1,"nova":1,"nx":1,"odyssey":1,"olympic":1,"parliament":1,"prometheus":1,"protostar":1,"raven":1,"rombop":1,"saber":1,"sagan":1,"saturn":1,"sovereign":1,"steamrunner":1,"warbird":1,"wells":1};
 const SHIP_IMGS={};
 function shipIconName(shape,cls){
@@ -6678,7 +6680,7 @@ function shipIconAspect(shape,cls){
    Odyssey/Enterprise-J reads big without swallowing the screen. One scale
    shared by battle sprites and map icons. Lengths are canonical where known,
    role estimates for game-original classes. */
-const SHIP_ICON_LEN={academy:650,akira:440,ambassador:526,angelou:2109,bop:110,california:535,centaur:210,challenger:390,constellation:310,constitution:305,constitution32:1400,courage:1142,credence:1600,crescent:650,crossfield32:751,curry:272,defiant:120,dresselhaus:655,eisenberg:1212,excelsior:467,fed:360,friendship:1189,galaxy:643,galor:481,intrepid:344,intrepid32:453,ktinga:214,luna:453,mars32:415,merian:777,miranda:243,nebula:440,norway:355,nova:180,nx:225,odyssey:1060,olympic:320,parliament:580,prometheus:414,protostar:139,raven:90,rombop:131,saber:223,sagan:541,saturn:1042,sovereign:685,steamrunner:356,"universe-side":3200,warbird:1353,wells:193};
+const SHIP_ICON_LEN={academy:650,akira:440,ambassador:526,angelou:2109,bop:110,california:535,centaur:210,challenger:390,constellation:310,constitution:305,constitution32:1400,courage:1142,credence:1600,crescent:650,crossfield32:751,curry:272,"defiant-side":120,dresselhaus:655,eisenberg:1212,excelsior:467,fed:360,friendship:1189,galaxy:643,galor:481,intrepid:344,janeway:453,ktinga:214,luna:453,mars32:415,merian:777,miranda:243,nebula:440,norway:355,"nova-side":180,nx:225,odyssey:1060,olympic:320,parliament:580,prometheus:414,protostar:139,raven:90,rombop:131,saber:223,sagan:541,saturn:1042,sovereign:685,steamrunner:356,"universe-side":3200,warbird:1353,"wells-relativity":193};
 function shipIconScale(shape,cls){
   const n=shipIconName(shape,cls);if(!n)return 1;
   const L=SHIP_ICON_LEN[n]||500;
@@ -6688,8 +6690,8 @@ const DS9_IMG=new Image();DS9_IMG.src="ships/icons/ds9.png";
 function tacSteerTo(t,cx,cy){
   const cv=document.getElementById("tacCanvas");if(!cv||!t||!t.steer)return;
   const r=cv.getBoundingClientRect();
-  t.steer.x=clamp(cx-r.left,20,t.W-20);
-  t.steer.y=clamp(cy-r.top,64,t.H-20);
+  t.steer.x=clamp(cx-r.left,t.W*0.54,t.W-18);
+  t.steer.y=clamp(cy-r.top,58,t.H-18);
   t.steer.t=t.time;
 }
 function tacOfficer(sid){
@@ -6717,8 +6719,8 @@ function openTacticalBattle(sid,e,z,opts){
     '<div id="tacTaunt"></div><div id="tacAdvice" style="display:none"></div></div>'+
     '<div id="tacWrap"><canvas id="tacCanvas"></canvas><div id="tacMsg"></div></div>'+
     '<div id="tacOrders">'+
-    '<button class="tacBtn" id="tacPhasers"></button>'+
-    '<button class="tacBtn" id="tacTorps"></button>'+
+    '<button class="tacBtn fire" id="tacPhasers"></button>'+
+    '<button class="tacBtn fire" id="tacTorps"></button>'+
     '<button class="tacBtn" id="tacEvasive"></button>'+
     '<button class="tacBtn" id="tacTarget"></button>'+
     '<button class="tacBtn" id="tacPower"></button>'+
@@ -6742,8 +6744,8 @@ function openTacticalBattle(sid,e,z,opts){
   };
   tacFit();
   const t=TAC;
-  t.player.x=t.W*0.28;t.player.y=t.H*0.62;t.player.a=-0.4;
-  t.enemy.x=t.W*0.74;t.enemy.y=t.H*0.36;t.enemy.a=Math.PI-0.4;
+  t.player.x=t.W*0.72;t.player.y=t.H*0.58;t.player.a=Math.PI;t.player.face=-1;
+  t.enemy.x=t.W*0.28;t.enemy.y=t.H*0.42;t.enemy.a=0;t.enemy.face=1;
   t.player.shape=tacPlayerShape(t.s.cls);
   t.player.cls=t.s.cls;
   t.enemy.shape=t.enemy.style.shape;
@@ -6763,7 +6765,7 @@ function openTacticalBattle(sid,e,z,opts){
   window.addEventListener("resize",tacFit);
   try{sfx("klaxon");}catch(err){}
   tacAiTaunt();
-  setTimeout(function(){if(TAC===t&&!t.over)tacMsg("Drag the viewscreen to steer your ship.");},1400);
+  setTimeout(function(){if(TAC===t&&!t.over)tacMsg("Drag with your right thumb to move \u2014 you fire forward, to the left.");},1400);
   t.last=performance.now();
   t.raf=requestAnimationFrame(tacLoop);
 }
@@ -6782,6 +6784,7 @@ function tacFit(){
   cv.width=Math.max(1,Math.round(r.width*dpr));
   cv.height=Math.max(1,Math.round(r.height*dpr));
   t.dpr=dpr;t.W=Math.max(1,r.width);t.H=Math.max(1,r.height);
+  if(t.player&&t.enemy){t.player.x=clamp(t.player.x,t.W*0.54,t.W-24);t.player.y=clamp(t.player.y,58,t.H-24);t.enemy.x=clamp(t.enemy.x,24,t.W*0.46);t.enemy.y=clamp(t.enemy.y,58,t.H-24);if(t.steer){t.steer.x=clamp(t.steer.x,t.W*0.54,t.W-24);t.steer.y=clamp(t.steer.y,58,t.H-24);}}
 }
 function tacMsg(txt){
   const el=document.getElementById("tacMsg");if(!el)return;
@@ -6789,18 +6792,26 @@ function tacMsg(txt){
   clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove("show"),1800);
 }
 /* ---------- orders ---------- */
+function tacShipW(p,isPlayer){
+  if(!p)return isPlayer?68:62;
+  if(p.shape==="cube")return 38;
+  if(p.shape==="sphere")return 28;
+  return (isPlayer?68:62)*shipIconScale(p.shape,p.cls);
+}
 function tacOrderPhasers(){
   const t=TAC;if(!t||t.over||!t.player.alive||!t.enemy.alive)return;
   const p=t.player;
   if(p.cd.ph>0)return;
   const dx=t.enemy.x-p.x,dy=t.enemy.y-p.y,d=Math.hypot(dx,dy);
-  if(d>480){tacMsg("Out of phaser range — closing.");return;}
+  if(t.enemy.x>=p.x-8){tacMsg("Target is not in the forward arc.");return;}
+  if(Math.abs(t.enemy.y-p.y)>Math.max(90,(p.x-t.enemy.x)*0.9)){tacMsg("Outside the forward firing arc \u2014 line her up.");return;}
+  if(d>760){tacMsg("Out of phaser range \u2014 closing.");return;}
   p.cd.ph=1.6;
   try{sfx("phaser");}catch(e){}
   const acc=0.9*(p.evT>0?0.72:1);
   const hit=Math.random()<acc;
   const dmg=(3+t.tacStat*0.07)*(p.stance==="wpn"?1.3:1);
-  t.beams.push({x1:p.x,y1:p.y,x2:t.enemy.x,y2:t.enemy.y,life:0.14,max:0.14,col:"#ff9d45"});
+  t.beams.push({x1:p.x-tacShipW(p,true)/2+3,y1:p.y,x2:t.enemy.x+tacShipW(t.enemy,false)/2-3,y2:t.enemy.y,life:0.14,max:0.14,col:"#ff9d45"});
   if(hit)tacHitEnemy(dmg,{sys:p.target});
   else tacBoom(t.enemy.x+(Math.random()-0.5)*30,t.enemy.y+(Math.random()-0.5)*30,3,"#5577aa");
 }
@@ -6811,10 +6822,10 @@ function tacOrderTorps(){
   if(p.cd.torp>0)return;
   p.torps--;p.cd.torp=9;
   try{sfx("torpedo");}catch(e){}
-  const base=Math.atan2(t.enemy.y-p.y,t.enemy.x-p.x);
+  const base=Math.PI;
   for(let i=-1;i<=1;i++){
-    const a=base+i*0.09;
-    t.shots.push({kind:"torp",foe:false,x:p.x,y:p.y,vx:Math.cos(a)*300,vy:Math.sin(a)*300,
+    const a=base+i*0.055;
+    t.shots.push({kind:"torp",foe:false,x:p.x-tacShipW(p,true)/2,y:p.y+i*4,vx:Math.cos(a)*330,vy:Math.sin(a)*330,
       dmg:(6+t.tacStat*0.10)*(p.stance==="wpn"?1.25:1),acc:0.95,life:2.4,sys:p.target});
   }
 }
@@ -6925,31 +6936,32 @@ function tacUpdate(dt){
     // shield regen
     p.sh=Math.min(p.maxSh,p.sh+p.regen*(p.stance==="shd"?2:1)*dt);
     if((e.sys.shields||0)<0.6)e.sh=Math.min(e.maxSh,e.sh+e.regen*dt);
-    // movement: you fly the ship — drag the viewscreen to steer; the foe circles you
-    const ph=t.time*0.32;
-    let tx=t.steer.x,ty=t.steer.y;
-    if(p.evT>0){tx+=Math.cos(t.time*7)*52;ty+=Math.sin(t.time*9)*52;}
-    tacSteer(p,tx,ty,p.stance==="eng"?150:118,3.4,dt,e.x,e.y);
-    const eSpd=82*((e.sys.engines||0)>=0.6?0.55:1);
+    // movement: side-view duel — you hold the right flank and face left; the foe holds the left and faces right
+    let tx=clamp(t.steer.x,t.W*0.54,t.W-24),ty=clamp(t.steer.y,58,t.H-24);
+    if(p.evT>0){tx+=Math.cos(t.time*7)*38;ty+=Math.sin(t.time*9)*52;}
+    tacSteer(p,tx,ty,p.stance==="eng"?165:132,0,dt,p.x-10,p.y);p.a=Math.PI;p.face=-1;
+    const eSpd=88*((e.sys.engines||0)>=0.6?0.55:1);
     e.dartCd-=dt;
     if(e.dartCd<=0){e.dartCd=6+Math.random()*5;e.dartT=1.1;}
     e.dartT=Math.max(0,e.dartT-dt);
-    const er=205,eph=ph+Math.PI+0.5;
-    tacSteer(e,p.x+Math.cos(eph)*er+(e.dartT>0?70:0),p.y+Math.sin(eph)*er*0.72-(e.dartT>0?50:0),
-      eSpd*(e.dartT>0?1.9:1),2.2,dt,p.x,p.y);
-    // keep in bounds
-    for(const q of [p,e]){q.x=clamp(q.x,26,t.W-26);q.y=clamp(q.y,60,t.H-24);}
+    const lane=Math.sin(t.time*0.55)*Math.min(58,t.H*0.13);
+    const etx=clamp(p.x-(245+Math.sin(t.time*0.35)*28),54,t.W*0.46);
+    const ety=clamp(p.y+lane+(e.dartT>0?-52:0),58,t.H-24);
+    tacSteer(e,etx,ety,eSpd*(e.dartT>0?1.55:1),0,dt,e.x+10,e.y);e.a=0;e.face=1;
+    // keep each ship in its own half of the viewscreen
+    p.x=clamp(p.x,t.W*0.54,t.W-24);p.y=clamp(p.y,58,t.H-24);
+    e.x=clamp(e.x,24,t.W*0.46);e.y=clamp(e.y,58,t.H-24);
     // enemy AI fire
     e.cd.ph-=dt;
     if(e.alive&&p.alive&&e.cd.ph<=0){
       const d=Math.hypot(p.x-e.x,p.y-e.y);
-      if(d<440){
+      if(p.x>e.x+20&&Math.abs(p.y-e.y)<=Math.max(95,(p.x-e.x)*0.95)&&d<760){
         e.cd.ph=2.3;
         const wpen=(e.sys.weapons||0)>=0.6;
         let acc=0.78*(p.evT>0?0.45:1)*(p.stance==="eng"?0.85:1)*(wpen?0.85:1);
         const dmg=clamp(11*e.ratio,5,26)*(wpen?0.7:1);
         const col=e.style.color;
-        t.beams.push({x1:e.x,y1:e.y,x2:p.x,y2:p.y,life:0.14,max:0.14,col:col});
+        t.beams.push({x1:e.x+tacShipW(e,false)/2-3,y1:e.y,x2:p.x-tacShipW(p,true)/2+3,y2:p.y,life:0.14,max:0.14,col:col});
         try{sfx("phaser");}catch(err){}
         if(Math.random()<acc)tacHitPlayer(dmg);
         else tacBoom(p.x+(Math.random()-0.5)*30,p.y+(Math.random()-0.5)*30,3,"#5577aa");
@@ -6992,6 +7004,8 @@ function tacRender(){
   ctx.globalAlpha=1;
   ctx.save();
   if(t.shake>0.2)ctx.translate((Math.random()-0.5)*t.shake,(Math.random()-0.5)*t.shake);
+  ctx.save();ctx.globalAlpha=0.16;ctx.strokeStyle="#58a6ff";ctx.lineWidth=1;ctx.setLineDash([3,9]);
+  ctx.beginPath();ctx.moveTo(t.W/2,54);ctx.lineTo(t.W/2,t.H-16);ctx.stroke();ctx.restore();
   // torpedoes
   for(const s2 of t.shots){
     ctx.save();ctx.shadowBlur=8;ctx.shadowColor=s2.foe?"#ff6b6b":"#7fd4ff";
@@ -7054,14 +7068,14 @@ function tacDrawShip(ctx,p,isPlayer,style){
   }else{
     const _sim=shipImgFor(shape,p.cls);
     if(_sim){
-      // actual EAS side-profile artwork: flies upright, mirrors to face its heading
-      ctx.rotate(Math.max(-0.18,Math.min(0.18,Math.sin(p.a)*0.18)));
-      if(Math.cos(p.a)<0)ctx.scale(-1,1);
-      const _asp=shipIconAspect(shape,p.cls),_w=(isPlayer?54:48)*shipIconScale(shape,p.cls),_h=_w/_asp;
-      if(isPlayer){
-        ctx.fillStyle="rgba(127,212,255,"+(0.5+0.3*Math.sin(performance.now()/90))+")";
-        ctx.beginPath();ctx.moveTo(-_w/2+2,-6);ctx.lineTo(-_w/2-8,0);ctx.lineTo(-_w/2+2,6);ctx.closePath();ctx.fill();
-      }
+      // actual side-profile artwork: source profiles face left; you keep that facing, the foe mirrors to face right
+      const _face=isPlayer?-1:1;
+      const _asp=shipIconAspect(shape,p.cls),_w=tacShipW(p,isPlayer),_h=_w/_asp;
+      ctx.rotate(_face*clamp((p.vy||0)*0.0012,-0.14,0.14));
+      const _rear=-_face*_w/2,_glow=isPlayer?"127,212,255":(style&&style.glowRgb?style.glowRgb:"255,120,120");
+      ctx.fillStyle="rgba("+_glow+","+(0.45+0.25*Math.sin(performance.now()/90))+")";
+      ctx.beginPath();ctx.moveTo(_rear,-6);ctx.lineTo(_rear-_face*9,0);ctx.lineTo(_rear,6);ctx.closePath();ctx.fill();
+      if(_face>0)ctx.scale(-1,1);
       if(flash)ctx.filter="brightness(2.4) saturate(0.35)";
       ctx.drawImage(_sim,-_w/2,-_h/2,_w,_h);
       ctx.filter="none";
@@ -7311,14 +7325,15 @@ function tacBar(ctx,x,y,w,frac,col){
 function tacHUD(ctx,t){
   const p=t.player,e=t.enemy;
   ctx.font="10px monospace";ctx.textBaseline="top";
-  // player (top-left)
-  ctx.fillStyle="#9fd8ff";ctx.fillText("HULL",8,6);
-  tacBar(ctx,46,6,110,p.hull/p.maxHull,p.hull/p.maxHull>0.35?"#3fb950":"#ff6b6b");
-  ctx.fillStyle="#9fd8ff";ctx.fillText("SHD",8,20);
-  tacBar(ctx,46,20,110,p.sh/p.maxSh,"#58a6ff");
-  ctx.fillStyle="#8ea3c0";ctx.fillText("TORP ×"+p.torps+(p.evT>0?"  EVASIVE":""),8,34);
-  // enemy (top-right)
-  const ex=t.W-164;
+  // player (top-right, over your right-hand flank)
+  const px=Math.max(176,t.W-164);
+  ctx.fillStyle="#9fd8ff";ctx.fillText("HULL",px,6);
+  tacBar(ctx,px+38,6,118,p.hull/p.maxHull,p.hull/p.maxHull>0.35?"#3fb950":"#ff6b6b");
+  ctx.fillStyle="#9fd8ff";ctx.fillText("SHD",px,20);
+  tacBar(ctx,px+38,20,118,p.sh/p.maxSh,"#58a6ff");
+  ctx.fillStyle="#8ea3c0";ctx.fillText("TORP ×"+p.torps+(p.evT>0?"  EVASIVE":""),px,34);
+  // enemy (top-left)
+  const ex=8;
   ctx.fillStyle="#ff9a9a";ctx.fillText(e.style.label+" HULL",ex,6);
   tacBar(ctx,ex,20,156,e.hull/e.maxHull,e.hull/e.maxHull>0.35?"#3fb950":"#ff6b6b");
   ctx.fillStyle="#ff9a9a";ctx.fillText("SHD",ex,34);
@@ -10018,7 +10033,7 @@ const TEMP_SHIP_COST_PRES=400,TEMP_SHIP_COST_DIL=200;
 function shipNameG(s){return (s&&s.future?"\u25F7 ":"")+((s&&s.name)||"");}
 const FUTURE_SHIPS=[
  {id:"discovery-a",name:"USS Discovery",reg:"NCC-1031-A",cls:"crossfield32",era:"32nd century",when:"3189",src:"Star Trek: Discovery",blurb:"The Crossfield-class science vessel that jumped 930 years forward — refit with detached nacelles, programmable matter, and a spore drive Starfleet still doesn't fully understand."},
- {id:"voyager-j",name:"USS Voyager",reg:"NCC-74656-J",cls:"intrepid32",era:"32nd century",when:"3190",src:"Star Trek: Discovery",blurb:"Tenth of the name. Saru reported her working the DMA crisis alongside the Enterprise — the Intrepid lineage, a millennium on."},
+ {id:"voyager-j",name:"USS Voyager",reg:"NCC-74656-J",cls:"intrepid32",era:"32nd century",when:"3190",src:"Star Trek: Discovery",blurb:"Tenth of the name. Saru reported her working the DMA crisis alongside the Enterprise — Janeway-class, the Intrepid lineage a millennium on."},
  {id:"nog",name:"USS Nog",reg:"NCC-325070",cls:"eisenberg",era:"32nd century",when:"3189",src:"Star Trek: Discovery",blurb:"Eisenberg-class, named for the first Ferengi in Starfleet. Aron Eisenberg's legacy, gliding past Discovery at Federation HQ."},
  {id:"credence",name:"USS Credence",reg:"NCC-2604",cls:"credence",era:"32nd century",when:"3190",src:"Star Trek: Discovery",blurb:"Credence-class workhorse — broad saucer with an open cutout, twin detached nacelles. She was hauling dilithium on a goodwill run when J'Vini struck in 3190."},
  {id:"leguin",name:"USS Le Guin",reg:"NCC-325060",cls:"mars32",era:"32nd century",when:"3189",src:"Star Trek: Discovery",blurb:"Mars-class, under Captain Bandra. Named for Ursula K. Le Guin."},
@@ -14753,7 +14768,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.68</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.69</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
