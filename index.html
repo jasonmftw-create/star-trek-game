@@ -890,7 +890,7 @@ function renderResearchCard(){
   }else{
     h+='<div class="kv"><span class="k">Design bureau</span><span class="v">Idle</span></div>';
   }
-  ["saber","steamrunner","norway","parliament","sagan","odyssey","protostar"].forEach(k=>{
+  Object.keys(RESEARCH_DEFS).forEach(k=>{
     const d=RESEARCH_DEFS[k];
     if(R.done[k]){h+='<div class="row">'+shipPic(k)+'<div class="grow"><div class="nm">'+d.name+'-class <span class="badge good">UNLOCKED</span></div><div class="sub2">'+esc(d.blurb)+'</div></div></div>';return;}
     if(R.active&&R.active.key===k)return;
@@ -15102,7 +15102,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.95</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.96</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
