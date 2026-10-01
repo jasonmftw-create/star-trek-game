@@ -761,8 +761,8 @@ const TRAIT_COMPLEMENT={ // pairs that spark chemistry
 const SHIP_PICS={"crossfield32":"ships/crossfield32.jpg","intrepid32":"ships/intrepid32.jpg","eisenberg":"ships/eisenberg.jpg","credence":"ships/credence.jpg","mars32":"ships/mars32.jpg","angelou":"ships/angelou.jpg","courage":"ships/courage.jpg","saturn":"ships/saturn.jpg","athena":"ships/athena.jpg","constitution32":"ships/constitution32.jpg","merian":"ships/merian.jpg","friendship":"ships/friendship.jpg","wells":"ships/wells.jpg","universe":"ships/universe.jpg","galaxyx":"ships/galaxyx.jpg","nova":"ships/class/nova_1a9c91.jpg","intrepid":"ships/class/intrepid_f81640.jpg","defiant":"ships/class/defiant_e35c1f.jpg","akira":"ships/class/akira_96eea1.jpg","nebula":"ships/class/nebula_2852de.jpg","galaxy":"ships/class/galaxy_e03239.jpg","sovereign":"ships/class/sovereign_e81038.jpg","prometheus":"ships/class/prometheus_e4f006.jpg","luna":"ships/class/luna_ba8a48.jpg","california":"ships/class/california_c66988.jpg","saber":"ships/class/saber_2bde79.jpg","steamrunner":"ships/class/steamrunner_ef6ba2.jpg","norway":"ships/class/norway_e6e685.jpg","parliament":"ships/class/parliament_556124.jpg","vesta":"ships/class/vesta_285c65.jpg","odyssey":"ships/class/odyssey_22fc78.jpg","nx":"ships/class/nx_97893f.jpg","constitution":"ships/class/constitution_448b62.jpg","excelsior":"ships/class/excelsior_3e8a5f.jpg","ambassador":"ships/class/ambassador_1a4b20.jpg","miranda":"ships/class/miranda_1ee187.jpg","oberth":"ships/class/oberth_5d43f1.jpg","constellation":"ships/class/constellation_b05449.jpg",
 mercy:"ships/class/mercy_bf2ff2.jpg",harbinger:"ships/class/harbinger_7b52da.jpg",ark:"ships/class/ark_0d8b93.jpg",forge:"ships/class/forge_228410.jpg",shepherd:"ships/class/shepherd_ee03b2.jpg",relay:"ships/class/relay_31747c.jpg",tempest:"ships/class/tempest_6ad853.jpg",protostar:"ships/class/protostar_d8f724.jpg"};
 const MUSEUM_ART={"mus-enta":"ships/museum/mus_enta_c11ddd.jpg","mus-bounty":"ships/museum/mus_bounty_75a00f.jpg","mus-newjersey":"ships/museum/mus_newjersey_acff7a.jpg","mus-nx01":"ships/museum/mus_nx01_021bb1.jpg","mus-entd":"ships/museum/mus_entd_137a0e.jpg","mus-stargazer":"ships/museum/mus_stargazer_0843f5.jpg","mus-excelsior":"ships/museum/mus_excelsior_490d1a.jpg","mus-kronos1":"ships/museum/mus_kronos1_c64adb.jpg","mus-rombop":"ships/museum/mus_rombop_651e26.jpg"};
-const STATION_PICS={"starbase":"ships/station/deepstation_stn.png","shipyard":"ships/station/shipyard_stn.png","medical":"ships/station/medical_stn.png","research":"ships/station/research_7412df.jpg","ds9":"ships/station/ds9_stn.png","academy":"ships/station/academy_d5a9c7.jpg","sfcommand":"ships/station/sfcommand_19916f.jpg","douglas":"ships/station/douglas_3b16dc.jpg","sb80":"ships/station/sb80_4fdeae.jpg","sb25":"ships/station/sb25_6aae5c.jpg","jupiter":"ships/station/jupiter_stn.png","spacedock":"ships/station/spacedock_stn.png","mckinley":"ships/station/mckinley_stn.png","sb375":"ships/station/sb375_f071eb.jpg","sb74":"ships/station/sb74_fe3703.jpg","empoknor":"ships/station/empoknor_045f8f.jpg","utopia":"ships/station/utopia_stn.png","caretaker":"ships/station/caretaker_array.jpg","regula":"ships/station/regula.jpg","epsilon9":"ships/station/epsilon9.jpg",
-embassy:"ships/station/embassy_38232e.jpg",
+const STATION_PICS={"starbase":"ships/station/deepstation_stn.png","shipyard":"ships/station/shipyard_stn.png","medical":"ships/station/medical_stn.png","research":"ships/station/research_stn.png","ds9":"ships/station/ds9_stn.png","academy":"ships/station/academy_d5a9c7.jpg","sfcommand":"ships/station/sfcommand_19916f.jpg","douglas":"ships/station/douglas_3b16dc.jpg","sb80":"ships/station/sb80_4fdeae.jpg","sb25":"ships/station/sb25_6aae5c.jpg","jupiter":"ships/station/jupiter_stn.png","spacedock":"ships/station/spacedock_stn.png","mckinley":"ships/station/mckinley_stn.png","sb375":"ships/station/sb375_f071eb.jpg","sb74":"ships/station/sb74_fe3703.jpg","empoknor":"ships/station/empoknor_045f8f.jpg","utopia":"ships/station/utopia_stn.png","caretaker":"ships/station/caretaker_array.jpg","regula":"ships/station/regula.jpg","epsilon9":"ships/station/epsilon9.jpg",
+embassy:"ships/station/embassy_stn.png",
 gate:"ships/station/gate_stn.png",daystrom:"ships/station/daystrom_stn.png",ds92:"ships/station/ds92_stn.png",k7:"ships/station/k7_stn.png"};
 const SHIP_CLASSES={
   nova:      {name:"Nova",      cr:8000,  dl:200,  days:30,  hull:60,  tac:30,  sci:85, speed:8.0, slots:8,  upkeep:40, comp:80},
@@ -797,6 +797,7 @@ const SHIP_CLASSES={
   crossfield:{name:"Crossfield",cr:12000, dl:400,  days:60,  hull:70,  tac:60,  sci:85, speed:9.4, slots:12, upkeep:70,  comp:300, lock:"research:crossfield",special:"Displacement-activated spore hub drive"},
   oberth:{name:"Oberth",cr:1500, dl:60,   days:25,  hull:25,  tac:15,  sci:45, speed:7.5, slots:6,  upkeep:18,  comp:90,  lock:"research:oberth",special:"Planetary survey platform: science missions pay out 10% more"},
   constitution3:{name:"Constitution III",cr:14000, dl:350,  days:65,  hull:95,  tac:85,  sci:70, speed:9.6, slots:16, upkeep:95,  comp:400, lock:"research:constitution3",special:"Neo-Constitution lineage: exploration missions pay out 10% more"},
+  lamarr:    {name:"Lamarr",    cr:18000, dl:550,  days:60,  hull:100, tac:60,  sci:125,speed:9.8, slots:14, upkeep:110, comp:450, lock:"research:lamarr",special:"Science spearhead: a dagger-hulled survey ship built around its sensor dome."},
   mercy:     {name:"Mercy",     cr:13500, dl:420,  days:40,  hull:110, tac:30,  sci:110,speed:8.8, slots:14, upkeep:65,  comp:250, lock:"research:mercy",special:"Hospital ship. Each active Mercy-class adds +1/day to fleet-wide crew healing (stacks with Medical Station)."},
   survivor:  {name:"Survivor",  cr:42000, dl:1300, days:170, hull:145, tac:110, sci:80, speed:11.5,slots:26, upkeep:230, comp:1600,lock:"research:survivor",special:"Dreadnought of last resort. Built for galaxy-ending crises: civilian shelters, vast hangars, enough firepower to hold a sector alone — and the fastest ship in existence."},
   odyssey:   {name:"Odyssey",   cr:32000, dl:1000, days:130, hull:120, tac:90,  sci:90, speed:9.5, slots:22, upkeep:160, comp:1200,lock:"research:odyssey"},
@@ -841,6 +842,7 @@ const RESEARCH_DEFS={
   crossfield:{name:"Crossfield",cr:5000,dl:180,days:40,blurb:"Long-retired testbed class resurrected from the archives — spinning saucer section and all."},
   oberth:{name:"Oberth",cr:2000,dl:90,days:25,blurb:"The venerable little science ship, still mapping nebulae after a century in service."},
   constitution3:{name:"Constitution III",cr:7000,dl:260,days:50,blurb:"Neo-Constitution design study: the classic silhouette rebuilt for deep-space exploration."},
+  lamarr:{name:"Lamarr",cr:8000,dl:350,days:60,blurb:"Experimental science spearhead: a sleek survey ship built around a next-generation sensor dome."},
   mercy:{name:"Mercy",cr:6000,dl:300,days:45,blurb:"Purpose-built hospital ship: a flying infirmary with surgical bays, recovery wards and quarantine pods, built to keep fleet crews alive."},
   survivor:{name:"Survivor",cr:16000,dl:520,days:100,blurb:"Dreadnought of last resort: a floating fortress for galaxy-ending crises, provisioned to shelter civilians and hold a sector alone."},
   odyssey:{name:"Odyssey",cr:12000,dl:350,days:80,blurb:"Dreadnought-scale explorer flagship. Nothing projects Federation presence like an Odyssey on the horizon."},
@@ -3573,7 +3575,7 @@ function migrateSave(g){
       });
       g.officers=(g.officers||[]).filter(function(x){return !goneIds[x.id];});
       g.memorial=(g.memorial||[]).filter(function(m){return !(m&&ERA_REVERT.indexOf(m.name)>=0&&m.cause&&(m.cause.indexOf("Lost to time")===0||m.cause.indexOf("Lost to history")===0));});
-      log("personnel","Era correction: "+gone.map(function(o){return o.name;}).join(", ")+" returned to their own times — find them under Temporal Anomalies in the Memorial tab.");
+      log("personnel","Era correction: "+gone.map(function(o){return o.name;}).join(", ")+" returned to their own times — find them under Temporal Anomalies.");
     }
   }catch(err){}
   // 2379-correctness: personnel from eras long past are listed as lost to time
@@ -6536,7 +6538,7 @@ function tacPlayerShape(cls){
   if(c==="survivor")return"odyssey";
   if(c==="sovereign"||c==="prometheus"||c==="excelsior"||c==="constitution"||c==="constitution32"||c==="challenger")return"sovereign";
   if(c==="defiant"||c==="saber"||c==="centaur"||c==="raven")return"defiant";
-  if(c==="intrepid"||c==="luna"||c==="sagan"||c==="norway"||c==="protostar"||c==="credence")return"intrepid";
+  if(c==="intrepid"||c==="luna"||c==="sagan"||c==="norway"||c==="protostar"||c==="credence"||c==="lamarr")return"intrepid";
   if(c==="constellation")return"constellation";
   if(c==="olympic"||c==="curry")return"mercy";
   if(c==="crossfield32"||c==="friendship")return"crossfield";
@@ -6675,8 +6677,8 @@ function shipParts(shape){
    photo cutouts in ships/icons/. One source of truth for battle + map icons.
    SHIP_PATHS vectors remain the fallback while an image loads (or fails);
    enemy-only shapes (cube/sphere/galor/crescent/wedge) stay vector. ---- */
-const SHIP_ICON_META={academy:[1202,144],akira:[446,89],ambassador:[532,138],angelou:[1060,113],bop:[116,64],california:[541,151],centaur:[216,41],challenger:[396,120],constellation:[317,95],constitution:[288,71],constitution32:[705,114],courage:[571,554],credence:[804,169],crescent:[655,179],crossfield32:[382,37],curry:[232,35],"defiant-right":[1280,214],dresselhaus:[334,128],eisenberg:[611,204],excelsior:[460,74],fed:[222,84],friendship:[601,27],galaxy:[649,148],galor:[487,84],intrepid:[350,74],"intrepid-right":[1280,249],"janeway-right":[1280,228],ktinga:[220,66],luna:[456,89],"luna-right":[1280,237],mars32:[213,57],merian:[394,65],miranda:[193,54],nebula:[445,140],norway:[360,58],"nova-right":[1280,257],"nx-side":[1280,205],"nx-refit":[1280,326],odyssey:[1065,159],olympic:[326,123],"mercy-right":[1280,380],"survivor-right":[1280,288],parliament:[585,109],prometheus:[420,71],protostar:[145,31],"protostar-right":[1247,238],raven:[96,23],rombop:[137,49],saber:[229,63],sagan:[546,134],"vesta-right":[1280,176],"pathfinder-right":[1280,200],"dauntless-right":[1280,225],"crossfield-right":[1280,124],"oberth-right":[1280,399],"constitution3-right":[1280,214],saturn:[526,42],sovereign:[691,88],steamrunner:[361,65],"universe-side":[1280,221],warbird:[276,82],"wells-right":[1280,289]};
-const SHIP_ICON_CLASS={nova:"nova-right",intrepid:"intrepid-right",defiant:"defiant-right",akira:"akira",nebula:"nebula",galaxy:"galaxy",sovereign:"sovereign",prometheus:"prometheus",luna:"luna-right",california:"california",olympic:"olympic",mercy:"mercy-right",survivor:"survivor-right",constitution:"constitution",nx:"nx-side",nxrefit:"nx-refit",brel:"bop",constellation:"constellation",excelsior:"excelsior",ktinga:"ktinga",rombop:"rombop",saber:"saber",steamrunner:"steamrunner",norway:"norway",parliament:"parliament",sagan:"sagan",vesta:"vesta-right",pathfinder:"pathfinder-right",dauntless:"dauntless-right",crossfield:"crossfield-right",oberth:"oberth-right",constitution3:"constitution3-right",odyssey:"odyssey",protostar:"protostar-right",raven:"raven",ambassador:"ambassador",challenger:"challenger",centaur:"centaur",miranda:"miranda",curry:"curry",crossfield32:"crossfield32",intrepid32:"janeway-right",eisenberg:"eisenberg",credence:"credence",mars32:"mars32",angelou:"angelou",courage:"courage",saturn:"saturn",athena:"academy",constitution32:"constitution32",merian:"merian",friendship:"friendship",wells:"wells-right",universe:"universe-side",dresselhaus:"dresselhaus",warbird:"warbird",bop:"bop",crescent:"crescent",galor:"galor"};
+const SHIP_ICON_META={academy:[1202,144],akira:[446,89],ambassador:[532,138],angelou:[1060,113],bop:[116,64],california:[541,151],centaur:[216,41],challenger:[396,120],constellation:[317,95],constitution:[288,71],constitution32:[705,114],courage:[571,554],credence:[804,169],crescent:[655,179],crossfield32:[382,37],curry:[232,35],"defiant-right":[1280,214],dresselhaus:[334,128],eisenberg:[611,204],excelsior:[460,74],fed:[222,84],friendship:[601,27],galaxy:[649,148],galor:[487,84],intrepid:[350,74],"intrepid-right":[1280,249],"janeway-right":[1280,228],ktinga:[220,66],luna:[456,89],"luna-right":[1280,237],mars32:[213,57],merian:[394,65],miranda:[193,54],nebula:[445,140],norway:[360,58],"nova-right":[1280,257],"nx-side":[1280,205],"nx-refit":[1280,326],odyssey:[1065,159],olympic:[326,123],"mercy-right":[1280,380],"survivor-right":[1280,288],"lamarr-right":[827,126],parliament:[585,109],prometheus:[420,71],protostar:[145,31],"protostar-right":[1247,238],raven:[96,23],rombop:[137,49],saber:[229,63],sagan:[546,134],"vesta-right":[1280,176],"pathfinder-right":[1280,200],"dauntless-right":[1280,225],"crossfield-right":[1280,124],"oberth-right":[1280,399],"constitution3-right":[1280,214],saturn:[526,42],sovereign:[691,88],steamrunner:[361,65],"universe-side":[1280,221],warbird:[276,82],"wells-right":[1280,289]};
+const SHIP_ICON_CLASS={nova:"nova-right",intrepid:"intrepid-right",defiant:"defiant-right",akira:"akira",nebula:"nebula",galaxy:"galaxy",sovereign:"sovereign",prometheus:"prometheus",luna:"luna-right",california:"california",olympic:"olympic",mercy:"mercy-right",survivor:"survivor-right",lamarr:"lamarr-right",constitution:"constitution",nx:"nx-side",nxrefit:"nx-refit",brel:"bop",constellation:"constellation",excelsior:"excelsior",ktinga:"ktinga",rombop:"rombop",saber:"saber",steamrunner:"steamrunner",norway:"norway",parliament:"parliament",sagan:"sagan",vesta:"vesta-right",pathfinder:"pathfinder-right",dauntless:"dauntless-right",crossfield:"crossfield-right",oberth:"oberth-right",constitution3:"constitution3-right",odyssey:"odyssey",protostar:"protostar-right",raven:"raven",ambassador:"ambassador",challenger:"challenger",centaur:"centaur",miranda:"miranda",curry:"curry",crossfield32:"crossfield32",intrepid32:"janeway-right",eisenberg:"eisenberg",credence:"credence",mars32:"mars32",angelou:"angelou",courage:"courage",saturn:"saturn",athena:"academy",constitution32:"constitution32",merian:"merian",friendship:"friendship",wells:"wells-right",universe:"universe-side",dresselhaus:"dresselhaus",warbird:"warbird",bop:"bop",crescent:"crescent",galor:"galor"};
 const EAS_ICONS={"akira":1,"ambassador":1,"angelou":1,"bop":1,"california":1,"centaur":1,"challenger":1,"constellation":1,"constitution":1,"constitution32":1,"courage":1,"credence":1,"crescent":1,"crossfield32":1,"curry":1,"defiant":1,"dresselhaus":1,"eisenberg":1,"excelsior":1,"friendship":1,"galaxy":1,"galor":1,"intrepid":1,"intrepid32":1,"ktinga":1,"luna":1,"mars32":1,"merian":1,"miranda":1,"nebula":1,"norway":1,"nova":1,"nx":1,"odyssey":1,"olympic":1,"parliament":1,"prometheus":1,"protostar":1,"raven":1,"rombop":1,"saber":1,"sagan":1,"saturn":1,"sovereign":1,"steamrunner":1,"warbird":1,"wells":1};
 const SHIP_IMGS={};
 function shipIconName(shape,cls){
@@ -8703,7 +8705,7 @@ function meetFinish(how){
   toast(how==="done"?"Meeting concluded.":"Dismissed.");
 }
 function openTabMenu(){
-  const tabs=[["personnel",ICONS.crew,"Essential Personnel"],["missions",ICONS.missions,"Missions"],["build",ICONS.build,"Build"],["log",ICONS.log,"Log"],["caplog",ICONS.caplog,"Captain's Log"],["arcs",ICONS.arcs,"Story Arcs"],["codex",ICONS.codex,"Species Codex"],["memorial",ICONS.memorial,"Memorial"],["settings",ICONS.settings,"Settings"]];
+  const tabs=[["personnel",ICONS.crew,"Essential Personnel"],["missions",ICONS.missions,"Missions"],["build",ICONS.build,"Build"],["log",ICONS.log,"Log"],["caplog",ICONS.caplog,"Captain's Log"],["arcs",ICONS.arcs,"Story Arcs"],["codex",ICONS.codex,"Species Codex"],["memorial",ICONS.memorial,"Temporal Anomalies"],["settings",ICONS.settings,"Settings"]];
   let h='';
   tabs.forEach(function(t){
     h+='<button class="menuItem'+(currentTab===t[0]?" sel":"")+'" onclick="navGo(\''+t[0]+'\')"><span class="bIco">'+t[1]+'</span><span>'+t[2]+'</span></button>';
@@ -10389,6 +10391,30 @@ function histShipCard(v,i){
     '<div class="sub2">'+esc(v.cls)+'</div><div class="sub2 dim">'+esc(v.fate)+'</div>'+
     '</div></div>';
 }
+function memStnCard(m){
+  const tk=Object.keys(STATION_DEFS).find(k=>STATION_DEFS[k].name===m.sub)||"deepstation";
+  const key="mstn-"+((m.name||"")+(m.sd||"")).replace(/[^a-zA-Z0-9]/g,""),detOpen=stnCardOpen.has(key);
+  const ds=esc(((m.name||"")+" "+(m.cause||"")+" "+(m.sub||"")).toLowerCase());
+  return '<div class="card shipCard" data-search="'+ds+'" data-sec="stn">'+
+    '<div class="shipMedia stnMedia">'+stationPic(tk,true)+'</div>'+
+    '<div class="shipCardNm"><span class="shipCardNmTxt">\u2020 '+esc(m.name)+'</span>'+
+    '<button class="shipDetBtn" id="stnDetBtn-'+key+'" onclick="toggleStnDet(\''+key+'\',event)">'+(detOpen?'Details \u25b4':'Details \u25be')+'</button></div>'+
+    '<div class="shipDet'+(detOpen?' open':'')+'" id="stnDet-'+key+'">'+
+    (m.sub?'<div class="sub2">'+esc(m.sub)+'</div>':"")+
+    '<div class="sub2 dim">'+esc((m.lost==="decommissioned"?"Decommissioned":"Lost in service")+" \u2014 "+(m.cause||""))+' \u00b7 Stardate '+sdStr(m.sd)+'</div>'+
+    '</div></div>';
+}
+function histStnCard(v,i){
+  const key="histstn-"+i,detOpen=stnCardOpen.has(key);
+  const ds=esc((v.name+" "+(v.reg||"")+" "+v.cls+" "+v.fate).toLowerCase());
+  return '<div class="card shipCard" data-search="'+ds+'" data-sec="histstn">'+
+    '<div class="shipMedia stnMedia">'+stationPic(v.art,true)+'</div>'+
+    '<div class="shipCardNm"><span class="shipCardNmTxt">'+esc(v.name)+(v.reg?' <span class="reg">'+esc(v.reg)+'</span>':"")+'</span>'+
+    '<button class="shipDetBtn" id="stnDetBtn-'+key+'" onclick="toggleStnDet(\''+key+'\',event)">'+(detOpen?'Details \u25b4':'Details \u25be')+'</button></div>'+
+    '<div class="shipDet'+(detOpen?' open':'')+'" id="stnDet-'+key+'">'+
+    '<div class="sub2">'+esc(v.cls)+'</div><div class="sub2 dim">'+esc(v.fate)+'</div>'+
+    '</div></div>';
+}
 function renderMemorial(){
   const offs=(G.memorial||[]).filter(m=>!m.kind||m.kind==="officer");
   const ships=(G.memorial||[]).filter(m=>m.kind==="ship");
@@ -10408,8 +10434,8 @@ function renderMemorial(){
     h+='<div class="card" data-seccard="ship"><h3>Lost Ships ('+ships.length+')</h3>'+(ships.map(m=>memShipCard(m)).join("")||'<p class="dim">Every hull accounted for.</p>')+'</div>';
     h+='<div class="card" data-seccard="hist"><h3>Historical Ships ('+HISTORICAL_SHIPS.length+')</h3><p class="dim">Gone before your command began — but not forgotten.</p>'+HISTORICAL_SHIPS.map((v,hi)=>histShipCard(v,hi)).join("")+'</div>';
   }else if(memTab==="stations"){
-    h+='<div class="card" data-seccard="stn"><h3>Lost Stations ('+sts.length+')</h3>'+(sts.map(m=>entry(m,m.sub,"stn")).join("")||'<p class="dim">Every station accounted for.</p>')+'</div>';
-    h+='<div class="card" data-seccard="histstn"><h3>Historical Stations ('+HISTORICAL_STATIONS.length+')</h3><p class="dim">Gone before your command began — but not forgotten.</p>'+HISTORICAL_STATIONS.map(v=>histEntry(v,"histstn")).join("")+'</div>';
+    h+='<div class="card" data-seccard="stn"><h3>Lost Stations ('+sts.length+')</h3>'+(sts.map(m=>memStnCard(m)).join("")||'<p class="dim">Every station accounted for.</p>')+'</div>';
+    h+='<div class="card" data-seccard="histstn"><h3>Historical Stations ('+HISTORICAL_STATIONS.length+')</h3><p class="dim">Gone before your command began — but not forgotten.</p>'+HISTORICAL_STATIONS.map((v,i)=>histStnCard(v,i)).join("")+'</div>';
   }else{
     const LOST_SHOWS=[["all","All"],["TOS","TOS"],["ENT","ENT"],["SNW","SNW"],["DISCO","Discovery"],["SFA","Academy"],["PRO","Prodigy"]];
     const lostPills='<div class="cmdsubseg" style="margin:8px 0;">'+LOST_SHOWS.map(s=>'<button class="btn small'+(lostShow===s[0]?" on":"")+'" onclick="lostShow=\''+s[0]+'\';render()">'+s[1]+'</button>').join("")+'</div>';
@@ -12667,7 +12693,7 @@ const TUT_STEPS=[
   {t:"Ships, stations, people",
    b:"<b>SHIPS</b> and <b>STATIONS</b> below list your fleet — tap any of them for its popup: <b>Enter</b> to walk the decks, launch away missions and ship missions, dock for repairs.<br><br><b>MENU</b> holds Personnel, Missions, Build, Log, Memorial and more. Your officers are people: talk to them, meet them, award them."},
   {t:"The full manual awaits",
-   b:"Fallen officers are not always gone — the <b>◷ Memorial</b> tab can pull them back from moments before death.<br><br>That is the tour. The <b>Captain's Manual</b> (COMMAND &rarr; Records) holds the complete 7-step guide whenever you want it.<br><br>Good hunting, Commander. <i>Qapla'!</i>"}
+   b:"Fallen officers are not always gone — the <b>◷ Temporal Anomalies</b> tab can pull them back from moments before death.<br><br>That is the tour. The <b>Captain's Manual</b> (COMMAND &rarr; Records) holds the complete 7-step guide whenever you want it.<br><br>Good hunting, Commander. <i>Qapla'!</i>"}
 ];
 let TUT={i:0};
 function tutHtml(){
@@ -14885,7 +14911,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.87</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.88</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
