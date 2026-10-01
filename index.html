@@ -12067,7 +12067,7 @@ function shipModal(id){
   const _fa=(typeof flagAboardAdmiral==="function")?flagAboardAdmiral(s.id):null;
   if(_fa)h+='<div class="kv"><span class="k">Flag officer</span><span class="v">'+esc(fullName(_fa))+' embarked \u00b7 +15% battle power</span></div>';
   if(s.future)h+='<div class="kv"><span class="k">Future systems</span><span class="v">\u25F7 '+(s.futureEra||"far future")+' tech</span></div><div class="sub2 dim">Programmable-matter hull (drydock repairs 2\u00D7 faster) \u00B7 temporal shielding (+30% battle power) \u00B7 advanced propulsion.</div>';
-  if((s.status==="active"||s.status==="damaged")&&!s.mothballed)h+='<div class="shipHero"><button class="btn heroGold" onclick="deckEnter(\''+s.id+'\')">Enter ship</button></div>';
+  if((s.status==="active"||s.status==="damaged"||s.status==="refit"||s.status==="repair")&&!s.mothballed)h+='<div class="shipHero"><button class="btn heroGold" onclick="deckEnter(\''+s.id+'\')">Enter ship</button></div>';
   if(s.transit){
     h+='<div class="kv"><span class="k">Transit</span><span class="v">'+viaName(s.transit.via)+' → '+esc(POST_LABELS[s.transit.dest]||"?")+' ('+s.transit.daysLeft+'d)</span></div>'+
        '<div class="prog"><i style="width:'+Math.round((1-s.transit.daysLeft/s.transit.total)*100)+'%"></i></div>'+
@@ -13063,7 +13063,7 @@ function deckAlert(s){
 function deckAlertLabel(s){const a=deckAlert(s);return a==="red"?'<span class="deckCond red">RED ALERT</span>':a==="yellow"?'<span class="deckCond yellow">YELLOW ALERT</span>':'<span class="deckCond green">ALL SYSTEMS NOMINAL</span>';}
 
 /* ---- enter / exit / back ---- */
-function deckCanEnter(s){return s&&(s.status==="active"||s.status==="damaged")&&!s.mothballed&&s.status!=="museum";}
+function deckCanEnter(s){return s&&(s.status==="active"||s.status==="damaged"||s.status==="refit"||s.status==="repair")&&!s.mothballed&&s.status!=="museum";}
 function deckEnter(sid){
   const s=ship(sid);if(!s||!deckCanEnter(s))return;
   closeModal();closeSheet();
@@ -14913,7 +14913,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.89</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.90</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
