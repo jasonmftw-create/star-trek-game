@@ -12444,7 +12444,7 @@ function uiCreateCadet(){
   openModal(cacHTML());
 }
 function cacRefresh(){$("modalBox").innerHTML=cacHTML();}
-function cacSet(k,v){cacDraft[k]=v;if(k==="species"||k==="gender")cacDraft.portrait=0;if(k==="species"&&!cacDraft.nameTouched)cacRandomName();cacRefresh();}
+function cacSet(k,v){cacDraft[k]=v;if(k==="species"||k==="gender")cacDraft.portrait=0;if(k==="species"&&!cacDraft.nameTouched)cacRandomName();if(k==="species"&&cacDraft.step===0)cacDraft.step=1;cacRefresh();}
 function cacAge(dl){cacDraft.age=clamp(cacDraft.age+dl,18,24);cacRefresh();}
 function cacNameEdit(v){cacDraft.name=v;cacDraft.nameTouched=true;}
 function cacBack(){cacDraft.step--;cacRefresh();}
@@ -12483,6 +12483,7 @@ function cacStepIdentity(){
     '<div class="cmdrOpt'+(d.species===sp[0]?" sel":"")+'" onclick="cacSet(\'species\',\''+sp[0]+'\')">'+
     '<img src="'+crewPoolUrls(sp[0]+"-"+d.gender)[0]+'" alt="">'+
     '<div class="cmdrLbl">'+sp[1]+'</div></div>').join("")+'</div>';
+  h+='<div class="sub2" style="margin-top:6px;">Tap a species above to browse all 50 portraits for it.</div>';
   h+='<h3>Age</h3><div class="btnRow"><button class="btn small ghost" onclick="cacAge(-1)">−</button>'+
     '<div class="nm" style="min-width:60px;text-align:center;">'+d.age+'</div>'+
     '<button class="btn small ghost" onclick="cacAge(1)">+</button></div>';
@@ -14913,7 +14914,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.90</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.91</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
