@@ -324,6 +324,7 @@ body{touch-action:pan-y;}
 .musPhoto div{font-size:9px;letter-spacing:.14em;color:#8fa3c8;padding:5px 8px;text-transform:uppercase;}
 .shipPicBig.shipPicEAS{padding:18px 14px;max-height:240px;}
 .shipMedia{height:88px;border:2px solid var(--orange);border-radius:10px;overflow:hidden;margin-bottom:8px;background:#05080f;}
+.shipMedia.stnMedia{height:200px;}
 .shipMedia img{width:100%;height:100%;max-height:none;border:none;border-radius:0;margin-bottom:0;display:block;}
 .shipMedia .shipPicEAS{padding:6px 10px;}
 .shipCardNm{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;}
@@ -9162,6 +9163,15 @@ function toggleShipDet(id,ev){
   if(open)shipCardOpen.add(id);else shipCardOpen.delete(id);
   if(b)b.textContent=open?'Details ▴':'Details ▾';
 }
+const stnCardOpen=new Set();
+function toggleStnDet(id,ev){
+  if(ev)ev.stopPropagation();
+  const el=document.getElementById('stnDet-'+id),b=document.getElementById('stnDetBtn-'+id);
+  if(!el)return;
+  const open=el.classList.toggle('open');
+  if(open)stnCardOpen.add(id);else stnCardOpen.delete(id);
+  if(b)b.textContent=open?'Details ▴':'Details ▾';
+}
 function renderShips(){
   let rows="",mus="";
   const flId=flagshipId();
@@ -9237,11 +9247,15 @@ function renderStations(){
     if(st.type==="academy"||st.type==="sfcommand")return;
     if(stationQuad!=="all"&&postQuadOf(st)!==stationQuad)return;
     const d=STATION_DEFS[st.type],crew=crewOfStation(st.id);
-    rows+='<div class="card" onclick="stationModal(\''+st.id+'\')" style="cursor:pointer;">'+stationPic(stationArtKey(st),true)+
-      '<div class="nm">'+esc(st.name)+'</div>'+
-      '<div class="sub2">'+d.name+' \u00b7 '+(st.status==="active"?"Operational":"Under construction \u2014 "+st.daysLeft+"d")+' \u00b7 Crew '+crew.length+'</div>'+
+    const detOpen=stnCardOpen.has(st.id);
+    rows+='<div class="card shipCard" onclick="stationModal(\''+st.id+'\')" style="cursor:pointer;">'+
+      '<div class="shipMedia stnMedia">'+stationPic(stationArtKey(st),true)+'</div>'+
+      '<div class="shipCardNm"><span class="shipCardNmTxt">'+esc(st.name)+'</span>'+
+      '<button class="shipDetBtn" id="stnDetBtn-'+st.id+'" onclick="toggleStnDet(\''+st.id+'\',event)">'+(detOpen?'Details ▴':'Details ▾')+'</button></div>'+
+      '<div class="shipDet'+(detOpen?' open':'')+'" id="stnDet-'+st.id+'" onclick="event.stopPropagation()">'+
+      '<div class="sub2">'+d.name+' · '+(st.status==="active"?"Operational":"Under construction — "+st.daysLeft+"d")+' · Crew '+crew.length+'</div>'+
       (st.status==="construction"?'<div class="prog"><i style="width:'+Math.round((1-st.daysLeft/d.days)*100)+'%"></i></div>':"")+
-      '</div>';
+      '</div></div>';
   });
   return rows?rows:'<div class="card"><p class="dim">'+(stationQuad==="all"?"No stations.":"No stations in this quadrant.")+'</p></div>';
 }
@@ -14856,7 +14870,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.85</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.86</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
