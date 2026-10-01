@@ -3812,8 +3812,8 @@ function buildTick(){
       queueCompletion({kind:"ship",id:_nid,name:b.name,sub:b.registry+" \u00b7 "+SHIP_CLASSES[b.cls].name+"-class · Christened (+5 prestige)",art:compArtFor(b.cls)});
       log("build","Christening ceremony: "+b.name+" ("+b.registry+", "+SHIP_CLASSES[b.cls].name+"-class) is commissioned. A bottle of champagne is broken across her hull. (+5 prestige)");
       capLogAuto("Ship commissioned",b.name+" ("+b.registry+", "+SHIP_CLASSES[b.cls].name+"-class) has joined the fleet.");
-      shipHistPush(b,"Commissioned \u2014 "+SHIP_CLASSES[b.cls].name+"-class, joined the fleet.");
-      if(b.legacyOf){const _ls0=ship(b.legacyOf);if(_ls0)log("build",b.name+" carries on the lineage of "+_ls0.name+" ("+_ls0.registry+"). Her crew can transfer aboard from the ship's popup.");}}}
+      shipHistPush(ship(_nid),"Commissioned \u2014 "+SHIP_CLASSES[b.cls].name+"-class, joined the fleet.");
+      if(b.legacyOf){const _ls0=ship(b.legacyOf);if(_ls0){log("build",b.name+" carries on the lineage of "+_ls0.name+" ("+_ls0.registry+").");const _tn=transferCrewCore(_nid);if(_tn)toast(_tn+" officers transferred aboard "+b.name+" from "+_ls0.name+" \u2014 the lineage continues.");const _ns=ship(_nid);if(_ns)_ns.legacyOfferDone=true;}}}}
   // station construction (max 2 concurrent)
   G.stations.forEach(st=>{if(st.status==="construction"){st.daysLeft-=_sb;
     if(st.daysLeft<=0){st.status="active";G.ledger.stationsBuilt++;gainPres(25);
@@ -9152,7 +9152,7 @@ function renderCommand(){
     '<b>4.</b> Fly ship missions from <b>Missions</b>. Success depends on ship stats, captain skill, crew, and morale.<br>'+
     '<b>5.</b> Crew fall in love, marry, and have children. Children grow up, join the Academy, and become officers — a generational fleet.<br>'+
     '<b>6.</b> Earn prestige from missions and events to unlock the Prometheus-class and rise to Fleet Admiral.<br>'+
-    '<b>7.</b> Damaged ships repair automatically at free shipyards. Injured crew heal — faster with a Medical Station.<br>'+    '<b>8.</b> Crews tire on long deployments — grant <b>shore leave</b> at a starbase. After a battle victory you may name a <b>nemesis</b>... if you dare. Every first contact is recorded in the <b>Species Codex</b>.<br><b>9.</b> Retire a ship to the Museum and <b>build a legacy ship</b> to carry on her name — when the successor commissions, one tap transfers her whole crew aboard.<br><b>10.</b> Send a cadet class on a <b>training cruise</b> aboard the Academy training vessel — they graduate sharper. Host <b>summits</b> with Codex species at a starbase to turn rivals into friends.</p>'+
+    '<b>7.</b> Damaged ships repair automatically at free shipyards. Injured crew heal — faster with a Medical Station.<br>'+    '<b>8.</b> Crews tire on long deployments — grant <b>shore leave</b> at a starbase. After a battle victory you may name a <b>nemesis</b>... if you dare. Every first contact is recorded in the <b>Species Codex</b>.<br><b>9.</b> Retire a ship to the Museum and <b>build a legacy ship</b> to carry on her name — when the successor commissions, her crew transfers aboard automatically when the successor commissions.<br><b>10.</b> Send a cadet class on a <b>training cruise</b> aboard the Academy training vessel — they graduate sharper. Host <b>summits</b> with Codex species at a starbase to turn rivals into friends.</p>'+
     '<div class="btnRow"><button class="btn small ghost" onclick="tutorialStart()">Replay the first-run tour</button></div></div>';
   let h=(G.qmode?renderQCard():"");
   if(cmdSub==="research")h+=cmdSubPills()+renderResearchCard();
@@ -9826,22 +9826,27 @@ function uiLegacyShip(id){
   legacyFrom=id;buildPage="ships";closeModal();setTab("build");
   toast("Choose a class for "+s.name+"'s successor.");
 }
-function uiTransferCrew(newId){ // v2.42: one-tap crew move from the legacy predecessor
-  const ns=ship(newId);if(!ns||!ns.legacyOf)return;
-  const os=ship(ns.legacyOf);
-  const crew=os?crewOfShip(os.id).slice():[];
-  if(!crew.length){ns.legacyOfferDone=true;save();render();toast("No crew aboard "+(os?os.name:"her predecessor")+" to transfer.");return;}
-  let n=0;
-  crew.forEach(o=>{
+function transferCrewCore(newId){ // v2.97: move a legacy predecessor's crew aboard; returns count
+  const ns=ship(newId);if(!ns||!ns.legacyOf)return 0;
+  const os=ship(ns.legacyOf);if(!os)return 0;
+  const crew=crewOfShip(os.id).slice();let n=0;
+  crew.forEach(function(o){
     const roles=(o.roles||[]).slice();
-    if(!roles.length){o.post={t:"ship",id:newId};o.shuttle=null;awardAccolade(o,"Reassigned to "+ns.name);n++;return;}
-    roles.forEach(bid=>setBilletCore("ship",newId,bid,o.id,true));
+    if(!roles.length){o.post={t:"ship",id:ns.id};o.shuttle=null;svcPush(o,"Transferred to "+ns.name+" (legacy successor of "+os.name+")",postKeyOf(o));awardAccolade(o,"Reassigned to "+ns.name);n++;return;}
+    roles.forEach(function(bid){setBilletCore("ship",ns.id,bid,o.id,true);});
     n++;
   });
+  if(n){log("personnel","Crew transfer: "+n+" officers from "+os.name+" ("+os.registry+") took up their posts aboard "+ns.name+" ("+ns.registry+") \u2014 the lineage continues.");
+    capLogAuto("Crew transferred",n+" officers from "+os.name+" took their posts aboard "+ns.name+".");}
+  return n;
+}
+function uiTransferCrew(newId){ // manual crew move from the legacy predecessor (also fires at commission)
+  const ns=ship(newId);if(!ns||!ns.legacyOf)return;
+  const os=ship(ns.legacyOf);
+  const n=transferCrewCore(newId);
   ns.legacyOfferDone=true;
-  log("personnel","Crew transfer: "+n+" officers from "+os.name+" ("+os.registry+") took up their posts aboard "+ns.name+" ("+ns.registry+") — the lineage continues.");
-  capLogAuto("Crew transferred",n+" officers from "+os.name+" took their posts aboard "+ns.name+".");
-  save();toast("Crew transferred — "+n+" officers aboard "+ns.name+".");render();shipModal(newId);
+  if(!n){save();render();toast("No crew aboard "+(os?os.name:"her predecessor")+" to transfer.");return;}
+  save();toast("Crew transferred \u2014 "+n+" officers aboard "+ns.name+".");render();shipModal(newId);
 }
 function uiBuildShip(cls){
   const c=SHIP_CLASSES[cls],u=shipUnlocked(cls),yards=freeYards();
@@ -15102,7 +15107,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.96</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.97</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
