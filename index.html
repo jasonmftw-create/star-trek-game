@@ -393,6 +393,10 @@ body{touch-action:pan-y;}
 .offCell .grow{flex:1;min-width:0;}
 .offCell .onm{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .offCell .osub{font-size:11px;color:var(--dim);line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.oasg{font-size:11px;line-height:1.3;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.oasg.here{color:#7ee2a8;}
+.oasg.else{color:#ffc46b;}
+.oasg.pool{color:#9aa3b2;font-style:italic;}
 .txtIn{flex:1;background:#000;border:1px solid var(--orange);color:var(--peach);border-radius:8px;padding:9px;font-size:16px;min-width:0;}
 .badge{display:inline-block;font-size:13px;font-weight:700;padding:3px 10px;border-radius:10px;
   background:var(--panel2);color:var(--teal);border:1px solid var(--line);margin:1px 2px 1px 0;}
@@ -11076,6 +11080,9 @@ function uiBilletOfficers(kind,id,bid){
   const crew=(kind==="ship"?crewOfShip(id):crewOfStation(id)).slice().sort((a,b)=>fitScore(b,bid)-fitScore(a,bid));
   const pool=G.officers.filter(o=>o.status==="active"&&!o.dead&&!o.retired&&o.stage==="adult"&&o.post.t==="pool").slice().sort((a,b)=>fitScore(b,bid)-fitScore(a,bid));
   const bds=o=>esc(o.name.toLowerCase());
+  const postName=o=>{if(o.post.t==="pool")return "Unassigned";const pl=o.post.t==="ship"?ship(o.post.id):o.post.t==="station"?station(o.post.id):null;return pl?pl.name:"Unknown posting";};
+  const asgOf=o=>{const isHere=o.post.t===kind&&o.post.id===id;const rl=(o.roles&&o.roles.length)?" · "+o.roles.map(billetLabel).join(", "):"";if(o.post.t==="pool")return '<div class="oasg pool">Unassigned</div>';return '<div class="oasg '+(isHere?"here":"else")+'">'+(o.post.t==="station"?"🛰 ":"🚀 ")+esc(postName(o))+esc(rl)+'</div>';};
+  const elsewhere=G.officers.filter(o=>o.status==="active"&&!o.dead&&!o.retired&&o.stage==="adult"&&o.post.t!=="pool"&&!(o.post.t===kind&&o.post.id===id)).slice().sort((a,b)=>fitScore(b,bid)-fitScore(a,bid));
   let h='<h2>'+esc(billetLabel(bid))+'</h2><div class="flavor">'+esc(tgt.name)+'</div>'+
     '<input type="search" placeholder="Search officers…" oninput="liveSearch(this,\'bilList\')">';
   h+='<p class="dim" style="margin:4px 0 8px;">'+(holder?"Currently held by <b>"+esc(holder.name)+"</b> — pick a replacement, or clear the position.":"Position vacant — pick an officer to assign.")+'</p>';
@@ -11086,14 +11093,21 @@ function uiBilletOfficers(kind,id,bid){
   else h+='<div class="offGrid">';
   crew.forEach(o=>{
     const isH=holder&&holder.id===o.id;
-    h+='<div class="offCell'+(isH?" isH":"")+'" data-search="'+bds(o)+'" data-sec="crew" onclick="uiSetBillet(\''+kind+'\',\''+id+'\',\''+bid+'\',\''+o.id+'\')">'+faceImg(o,"pfaceSm")+'<div class="grow"><div class="onm">'+(isH?"✓ ":"")+esc(o.name)+'</div><div class="osub">'+esc(rankName(o))+' · '+esc(o.dept)+' · Fit '+fitScore(o,bid)+((o.roles&&o.roles.length)?" · "+esc(o.roles.map(billetLabel).join(", ")):"")+'</div></div></div>';
+    h+='<div class="offCell'+(isH?" isH":"")+'" data-search="'+(bds(o)+" "+esc(postName(o).toLowerCase()))+'" data-sec="crew" onclick="uiSetBillet(\''+kind+'\',\''+id+'\',\''+bid+'\',\''+o.id+'\')">'+faceImg(o,"pfaceSm")+'<div class="grow"><div class="onm">'+(isH?"✓ ":"")+esc(o.name)+'</div><div class="osub">'+esc(rankName(o))+' · '+esc(o.dept)+' · Fit '+fitScore(o,bid)+'</div>'+asgOf(o)+'</div></div>';
   });
   if(crew.length)h+='</div>';
   h+='</div>';
   if(pool.length){
     h+='<div data-seccard="pool"><h4>Unassigned officers ('+pool.length+')</h4><p class="dim" style="margin:4px 0 8px;">Assigning one transfers them to '+esc(tgt.name)+'.</p><div class="offGrid">';
     pool.forEach(o=>{
-      h+='<div class="offCell" data-search="'+bds(o)+'" data-sec="pool" onclick="uiSetBillet(\''+kind+'\',\''+id+'\',\''+bid+'\',\''+o.id+'\')">'+faceImg(o,"pfaceSm")+'<div class="grow"><div class="onm">'+esc(o.name)+'</div><div class="osub">'+esc(rankName(o))+' · '+esc(o.dept)+' · Fit '+fitScore(o,bid)+'</div></div></div>';
+      h+='<div class="offCell" data-search="'+(bds(o)+" unassigned")+'" data-sec="pool" onclick="uiSetBillet(\''+kind+'\',\''+id+'\',\''+bid+'\',\''+o.id+'\')">'+faceImg(o,"pfaceSm")+'<div class="grow"><div class="onm">'+esc(o.name)+'</div><div class="osub">'+esc(rankName(o))+' · '+esc(o.dept)+' · Fit '+fitScore(o,bid)+'</div>'+asgOf(o)+'</div></div>';
+    });
+    h+='</div></div>';
+  }
+  if(elsewhere.length){
+    h+='<div data-seccard="else"><h4>Posted elsewhere ('+elsewhere.length+')</h4><p class="dim" style="margin:4px 0 8px;">Assigning one transfers them to '+esc(tgt.name)+' and vacates their current post.</p><div class="offGrid">';
+    elsewhere.forEach(o=>{
+      h+='<div class="offCell" data-search="'+(bds(o)+" "+esc(postName(o).toLowerCase()))+'" data-sec="else" onclick="uiSetBillet(\''+kind+'\',\''+id+'\',\''+bid+'\',\''+o.id+'\')">'+faceImg(o,"pfaceSm")+'<div class="grow"><div class="onm">'+esc(o.name)+'</div><div class="osub">'+esc(rankName(o))+' · '+esc(o.dept)+' · Fit '+fitScore(o,bid)+'</div>'+asgOf(o)+'</div></div>';
     });
     h+='</div></div>';
   }
@@ -14917,7 +14931,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.92</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.93</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
