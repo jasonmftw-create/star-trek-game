@@ -779,6 +779,7 @@ const SHIP_CLASSES={
               special:"Hospital ship. Each active Olympic-class adds +1/day to fleet-wide crew healing (stacks with Medical Station)." },
   constitution:{name:"Constitution II",cr:9000, dl:250, days:60, hull:70, tac:45, sci:60, speed:9.0, slots:14, upkeep:90, comp:430, museumOnly:true},
   nx:        {name:"NX",          cr:4000, dl:100, days:40, hull:40, tac:25, sci:45, speed:5.2, slots:10, upkeep:50, comp:83,  museumOnly:true},
+  nxrefit:   {name:"NX Refit",    cr:4500, dl:120, days:45, hull:48, tac:30, sci:50, speed:5.4, slots:11, upkeep:55, comp:95,  museumOnly:true},
   brel:      {name:"B'rel Bird-of-Prey",cr:6000, dl:150, days:35, hull:45, tac:55, sci:30, speed:9.2, slots:8, upkeep:45, comp:36, museumOnly:true, special:"Klingon cloaking device fitted."},
   constellation:{name:"Constellation",cr:8000, dl:220, days:55, hull:60, tac:40, sci:55, speed:8.8, slots:12, upkeep:80, comp:520, museumOnly:true},
   excelsior:  {name:"Excelsior",cr:12000, dl:350, days:75, hull:85, tac:55, sci:65, speed:9.2, slots:14, upkeep:110, comp:750, museumOnly:true},
@@ -3349,7 +3350,7 @@ const MUSEUM_SEED=[
   {id:"mus-enta",name:"USS Enterprise",registry:"NCC-1701-A",cls:"constitution",status:"museum",daysLeft:0,damage:0,missionId:null,yardId:null,post:"sol",musSd:54973.4,tours:1,msn:0,msnWon:0,batWon:0,commTxt:"Commissioned 2286 · Decommissioned 2293 after the Khitomer Accords",blurb:"Kirk's Enterprise. Seven years, two final frontiers, one Khitomer — the crown jewel of the Fleet Museum."},
   {id:"mus-bounty",name:"HMS Bounty",registry:"\u2014",cls:"brel",status:"museum",daysLeft:0,damage:0,missionId:null,yardId:null,post:"sol",musSd:54973.4,tours:1,msn:0,msnWon:0,batWon:0,commTxt:"Captured 2286 — a Klingon Bird-of-Prey with one hell of a story",blurb:"A stolen Klingon Bird-of-Prey that saved Earth twice — once with a pair of humpback whales."},
   {id:"mus-newjersey",name:"USS New Jersey",registry:"NCC-1975",cls:"constitution",status:"museum",daysLeft:0,damage:0,missionId:null,yardId:null,post:"sol",musSd:54973.4,tours:1,msn:0,msnWon:0,batWon:0,commTxt:"Constitution-class · 23rd century service",blurb:"A proud Constitution-class veteran of the 23rd century, preserved in her prime."},
-  {id:"mus-nx01",name:"Enterprise",registry:"NX-01",cls:"nx",status:"museum",daysLeft:0,damage:0,missionId:null,yardId:null,post:"sol",musSd:54973.4,tours:1,msn:0,msnWon:0,batWon:0,commTxt:"Launched 2151 · Retired 2161 — the first Enterprise",blurb:"The first starship to bear the name. Warp five, no pressure — she opened the final frontier."},
+  {id:"mus-nx01",name:"Enterprise",registry:"NX-01",cls:"nxrefit",status:"museum",daysLeft:0,damage:0,missionId:null,yardId:null,post:"sol",musSd:54973.4,tours:1,msn:0,msnWon:0,batWon:0,commTxt:"Launched 2151 · Retired 2161 — the first Enterprise",blurb:"The first starship to bear the name. Warp five, no pressure — she opened the final frontier."},
   {id:"mus-entd",name:"USS Enterprise",registry:"NCC-1701-D",cls:"galaxy",status:"museum",daysLeft:0,damage:0,missionId:null,yardId:null,post:"sol",musSd:54973.4,tours:1,msn:0,msnWon:0,batWon:0,commTxt:"Launched 2363 · Lost at Veridian III 2371 · Rebuilt by Commodore La Forge",blurb:"Picard's Enterprise. Seven seasons, one generation's home — Geordi rebuilt her, piece by piece, in Hangar 12."},
   {id:"mus-stargazer",name:"USS Stargazer",registry:"NCC-2893",cls:"constellation",status:"museum",daysLeft:0,damage:0,missionId:null,yardId:null,post:"sol",musSd:54973.4,tours:1,msn:0,msnWon:0,batWon:0,commTxt:"Constellation-class · Picard's first command, 22 years",blurb:"Where Picard became a captain — the maneuver that bears his name was born at the Battle of Maxia."},
   {id:"mus-excelsior",name:"USS Excelsior",registry:"NCC-2000",cls:"excelsior",status:"museum",daysLeft:0,damage:0,missionId:null,yardId:null,post:"sol",musSd:54973.4,tours:1,msn:0,msnWon:0,batWon:0,commTxt:"'The Great Experiment' · Captain Sulu's ship",blurb:"The Great Experiment that became a legend — Sulu's Excelsior, hero of the Khitomer peace talks."},
@@ -3494,6 +3495,7 @@ function migrateSave(g){
   (g.ships||[]).forEach(s=>{if(s.comp==null)s.comp=SHIP_CLASSES[s.cls]?SHIP_CLASSES[s.cls].comp:100;if(s.commSd==null)s.commSd=54973.4;if(s.tours==null)s.tours=1;});
   const _CLSMAP={mercy:"olympic",harbinger:"raven",ark:"ambassador",forge:"challenger",shepherd:"centaur",relay:"miranda",tempest:"curry",vesta:"sagan",galaxyx:"dresselhaus"};
   (g.ships||[]).forEach(s=>{if(s&&_CLSMAP[s.cls])s.cls=_CLSMAP[s.cls];});
+  (g.ships||[]).forEach(s=>{if(s&&s.id==="mus-nx01"&&s.cls==="nx")s.cls="nxrefit";});
   (g.ships||[]).filter(s=>s&&s.cls==="tikhov").forEach(s=>{
     (g.officers||[]).forEach(o=>{if(o.post&&o.post.t==="ship"&&o.post.id===s.id){o.post={t:"pool"};o.roles=[];o.shuttle=null;}});
     g.shuttles=(g.shuttles||[]).filter(x=>!(x.host==="ship"&&x.hid===s.id));
@@ -6656,8 +6658,8 @@ function shipParts(shape){
    photo cutouts in ships/icons/. One source of truth for battle + map icons.
    SHIP_PATHS vectors remain the fallback while an image loads (or fails);
    enemy-only shapes (cube/sphere/galor/crescent/wedge) stay vector. ---- */
-const SHIP_ICON_META={academy:[1202,144],akira:[446,89],ambassador:[532,138],angelou:[1060,113],bop:[116,64],california:[541,151],centaur:[216,41],challenger:[396,120],constellation:[317,95],constitution:[288,71],constitution32:[705,114],courage:[571,554],credence:[804,169],crescent:[655,179],crossfield32:[382,37],curry:[232,35],"defiant-side":[1280,214],dresselhaus:[334,128],eisenberg:[611,204],excelsior:[460,74],fed:[222,84],friendship:[601,27],galaxy:[649,148],galor:[487,84],intrepid:[350,74],janeway:[1280,228],ktinga:[220,66],luna:[456,89],mars32:[213,57],merian:[394,65],miranda:[193,54],nebula:[445,140],norway:[360,58],"nova-side":[1280,254],nx:[231,41],odyssey:[1065,159],olympic:[326,123],parliament:[585,109],prometheus:[420,71],protostar:[145,31],raven:[96,23],rombop:[137,49],saber:[229,63],sagan:[546,134],saturn:[526,42],sovereign:[691,88],steamrunner:[361,65],"universe-side":[1280,221],warbird:[276,82],"wells-relativity":[1280,289]};
-const SHIP_ICON_CLASS={nova:"nova-side",intrepid:"intrepid",defiant:"defiant-side",akira:"akira",nebula:"nebula",galaxy:"galaxy",sovereign:"sovereign",prometheus:"prometheus",luna:"luna",california:"california",olympic:"olympic",constitution:"constitution",nx:"nx",brel:"bop",constellation:"constellation",excelsior:"excelsior",ktinga:"ktinga",rombop:"rombop",saber:"saber",steamrunner:"steamrunner",norway:"norway",parliament:"parliament",sagan:"sagan",odyssey:"odyssey",protostar:"protostar",raven:"raven",ambassador:"ambassador",challenger:"challenger",centaur:"centaur",miranda:"miranda",curry:"curry",crossfield32:"crossfield32",intrepid32:"janeway",eisenberg:"eisenberg",credence:"credence",mars32:"mars32",angelou:"angelou",courage:"courage",saturn:"saturn",athena:"academy",constitution32:"constitution32",merian:"merian",friendship:"friendship",wells:"wells-relativity",universe:"universe-side",dresselhaus:"dresselhaus",warbird:"warbird",bop:"bop",crescent:"crescent",galor:"galor"};
+const SHIP_ICON_META={academy:[1202,144],akira:[446,89],ambassador:[532,138],angelou:[1060,113],bop:[116,64],california:[541,151],centaur:[216,41],challenger:[396,120],constellation:[317,95],constitution:[288,71],constitution32:[705,114],courage:[571,554],credence:[804,169],crescent:[655,179],crossfield32:[382,37],curry:[232,35],"defiant-right":[1280,214],dresselhaus:[334,128],eisenberg:[611,204],excelsior:[460,74],fed:[222,84],friendship:[601,27],galaxy:[649,148],galor:[487,84],intrepid:[350,74],"janeway-right":[1280,228],ktinga:[220,66],luna:[456,89],mars32:[213,57],merian:[394,65],miranda:[193,54],nebula:[445,140],norway:[360,58],"nova-right":[1280,257],"nx-side":[1280,205],"nx-refit":[1280,326],odyssey:[1065,159],olympic:[326,123],parliament:[585,109],prometheus:[420,71],protostar:[145,31],raven:[96,23],rombop:[137,49],saber:[229,63],sagan:[546,134],saturn:[526,42],sovereign:[691,88],steamrunner:[361,65],"universe-side":[1280,221],warbird:[276,82],"wells-right":[1280,289]};
+const SHIP_ICON_CLASS={nova:"nova-right",intrepid:"intrepid",defiant:"defiant-right",akira:"akira",nebula:"nebula",galaxy:"galaxy",sovereign:"sovereign",prometheus:"prometheus",luna:"luna",california:"california",olympic:"olympic",constitution:"constitution",nx:"nx-side",nxrefit:"nx-refit",brel:"bop",constellation:"constellation",excelsior:"excelsior",ktinga:"ktinga",rombop:"rombop",saber:"saber",steamrunner:"steamrunner",norway:"norway",parliament:"parliament",sagan:"sagan",odyssey:"odyssey",protostar:"protostar",raven:"raven",ambassador:"ambassador",challenger:"challenger",centaur:"centaur",miranda:"miranda",curry:"curry",crossfield32:"crossfield32",intrepid32:"janeway-right",eisenberg:"eisenberg",credence:"credence",mars32:"mars32",angelou:"angelou",courage:"courage",saturn:"saturn",athena:"academy",constitution32:"constitution32",merian:"merian",friendship:"friendship",wells:"wells-right",universe:"universe-side",dresselhaus:"dresselhaus",warbird:"warbird",bop:"bop",crescent:"crescent",galor:"galor"};
 const EAS_ICONS={"akira":1,"ambassador":1,"angelou":1,"bop":1,"california":1,"centaur":1,"challenger":1,"constellation":1,"constitution":1,"constitution32":1,"courage":1,"credence":1,"crescent":1,"crossfield32":1,"curry":1,"defiant":1,"dresselhaus":1,"eisenberg":1,"excelsior":1,"friendship":1,"galaxy":1,"galor":1,"intrepid":1,"intrepid32":1,"ktinga":1,"luna":1,"mars32":1,"merian":1,"miranda":1,"nebula":1,"norway":1,"nova":1,"nx":1,"odyssey":1,"olympic":1,"parliament":1,"prometheus":1,"protostar":1,"raven":1,"rombop":1,"saber":1,"sagan":1,"saturn":1,"sovereign":1,"steamrunner":1,"warbird":1,"wells":1};
 const SHIP_IMGS={};
 function shipIconName(shape,cls){
@@ -6680,7 +6682,7 @@ function shipIconAspect(shape,cls){
    Odyssey/Enterprise-J reads big without swallowing the screen. One scale
    shared by battle sprites and map icons. Lengths are canonical where known,
    role estimates for game-original classes. */
-const SHIP_ICON_LEN={academy:650,akira:440,ambassador:526,angelou:2109,bop:110,california:535,centaur:210,challenger:390,constellation:310,constitution:305,constitution32:1400,courage:1142,credence:1600,crescent:650,crossfield32:751,curry:272,"defiant-side":120,dresselhaus:655,eisenberg:1212,excelsior:467,fed:360,friendship:1189,galaxy:643,galor:481,intrepid:344,janeway:453,ktinga:214,luna:453,mars32:415,merian:777,miranda:243,nebula:440,norway:355,"nova-side":180,nx:225,odyssey:1060,olympic:320,parliament:580,prometheus:414,protostar:139,raven:90,rombop:131,saber:223,sagan:541,saturn:1042,sovereign:685,steamrunner:356,"universe-side":3200,warbird:1353,"wells-relativity":193};
+const SHIP_ICON_LEN={academy:650,akira:440,ambassador:526,angelou:2109,bop:110,california:535,centaur:210,challenger:390,constellation:310,constitution:305,constitution32:1400,courage:1142,credence:1600,crescent:650,crossfield32:751,curry:272,"defiant-right":120,dresselhaus:655,eisenberg:1212,excelsior:467,fed:360,friendship:1189,galaxy:643,galor:481,intrepid:344,"janeway-right":453,ktinga:214,luna:453,mars32:415,merian:777,miranda:243,nebula:440,norway:355,"nova-right":180,"nx-side":225,"nx-refit":225,odyssey:1060,olympic:320,parliament:580,prometheus:414,protostar:139,raven:90,rombop:131,saber:223,sagan:541,saturn:1042,sovereign:685,steamrunner:356,"universe-side":3200,warbird:1353,"wells-right":193};
 function shipIconScale(shape,cls){
   const n=shipIconName(shape,cls);if(!n)return 1;
   const L=SHIP_ICON_LEN[n]||500;
@@ -7068,14 +7070,14 @@ function tacDrawShip(ctx,p,isPlayer,style){
   }else{
     const _sim=shipImgFor(shape,p.cls);
     if(_sim){
-      // actual side-profile artwork: source profiles face left; you keep that facing, the foe mirrors to face right
+      // actual side-profile artwork: source profiles face right; you mirror to face left, the foe keeps that facing
       const _face=isPlayer?-1:1;
       const _asp=shipIconAspect(shape,p.cls),_w=tacShipW(p,isPlayer),_h=_w/_asp;
       ctx.rotate(_face*clamp((p.vy||0)*0.0012,-0.14,0.14));
       const _rear=-_face*_w/2,_glow=isPlayer?"127,212,255":(style&&style.glowRgb?style.glowRgb:"255,120,120");
       ctx.fillStyle="rgba("+_glow+","+(0.45+0.25*Math.sin(performance.now()/90))+")";
       ctx.beginPath();ctx.moveTo(_rear,-6);ctx.lineTo(_rear-_face*9,0);ctx.lineTo(_rear,6);ctx.closePath();ctx.fill();
-      if(_face>0)ctx.scale(-1,1);
+      if(_face<0)ctx.scale(-1,1);
       if(flash)ctx.filter="brightness(2.4) saturate(0.35)";
       ctx.drawImage(_sim,-_w/2,-_h/2,_w,_h);
       ctx.filter="none";
@@ -9933,7 +9935,7 @@ const TRIBUTE_DEFS=[
 ];
 /* ---------- historical ships & stations: gone before your command began ---------- */
 const HISTORICAL_SHIPS=[
- {name:"Enterprise",reg:"NX-01",art:"nx",cls:"NX class",fate:"Retired 2161 after the Romulan War and the founding of the Federation. Now preserved at the Fleet Museum."},
+ {name:"Enterprise",reg:"NX-01",art:"nxrefit",cls:"NX-class refit",fate:"Retired 2161 after the Romulan War and the founding of the Federation. Now preserved at the Fleet Museum."},
  {name:"Enterprise",reg:"NCC-1701",art:"constitution",cls:"Constitution class",fate:"Destroyed 2285 — Kirk ordered her self-destruct over the Genesis planet to keep her from Klingon hands."},
  {name:"Enterprise",reg:"NCC-1701-A",art:"constitution",cls:"Constitution class",fate:"Decommissioned 2293 following the Khitomer Accords."},
  {name:"Enterprise",reg:"NCC-1701-B",art:"excelsior",cls:"Excelsior class",fate:"Crippled by the Nexus ribbon on her maiden voyage, 2293 — the disaster that took Captain James T. Kirk. Her later disposition is absent from surviving records."},
@@ -10120,6 +10122,73 @@ function uiFutureShipExtractGo(i){
   save();futureShipModal(i);render();
 }
 
+/* ---------- past vessels: pre-Federation hulls recovered into your time ---------- */
+const PAST_SHIPS=[
+ {id:"columbia",name:"USS Columbia",reg:"NX-02",cls:"nx",era:"22nd century",when:"2155",src:"Star Trek: Enterprise",blurb:"Second of the NX class, launched under Captain Erika Hernandez. Where Enterprise broke the Warp 5 barrier, Columbia proved the design could be repeated — the first true sister ship of Starfleet's deep-space fleet. Temporal Mechanics can pull the pre-refit hull forward before her refit, into 2378."}
+];
+function pastShipRows(sec){
+  return PAST_SHIPS.map((f,i)=>{
+    const got=G.rescuedShips&&G.rescuedShips[f.id];
+    const badge=got?'<span class="badge good">✓ Recovered — in your fleet</span>'
+      :(G.tempCd>0?'<span class="badge warn">Array recharging — '+G.tempCd+'d</span>':'<span class="badge">Temporal extraction available</span>');
+    const ds=esc((f.name+" "+(f.reg||"")+" "+SHIP_CLASSES[f.cls].name+" "+(f.era||"")).toLowerCase());
+    return '<div class="card shipCard" data-search="'+ds+'" data-sec="'+sec+'" onclick="pastShipModal('+i+')" style="cursor:pointer;">'+
+      '<div class="shipMedia">'+shipPic(f.cls,true)+'</div>'+
+      '<div class="shipCardNm"><span class="shipCardNmTxt">⟳ '+esc(f.name)+' <span class="reg">'+esc(f.reg||"")+'</span></span></div>'+
+      '<div class="sub2">'+esc(SHIP_CLASSES[f.cls].name)+' class · '+esc(f.era)+'</div>'+
+      '<div style="margin-top:4px;">'+badge+'</div></div>';
+  }).join("");
+}
+function pastShipCard(){
+  return '<div class="card" data-seccard="pastship"><h3>Past Vessels ('+PAST_SHIPS.length+')</h3>'+
+    '<p class="dim">Starships from before the Federation — the museum keeps Enterprise in her refit configuration, but her pre-refit sister can be pulled forward. Temporal Mechanics can recover a hull into 2378, where she will serve as a normal fleet vessel.</p>'+pastShipRows("pastship")+'</div>';
+}
+function pastShipModal(i){
+  const f=PAST_SHIPS[i];if(!f)return;
+  const c=SHIP_CLASSES[f.cls],got=G.rescuedShips&&G.rescuedShips[f.id];
+  let h=shipPic(f.cls,true)+'<h2>⟳ '+esc(f.name)+'<div class="rnkline">'+esc(f.reg||"registry unrecorded")+'</div></h2>'+
+    '<div class="flavor">'+esc(c.name)+'-class · '+esc(f.era)+' · '+esc(f.src)+'</div>';
+  h+='<p>'+esc(f.blurb)+'</p>';
+  h+='<h4>Temporal Extraction</h4>';
+  if(got){
+    h+='<p><span class="badge">✓ Recovered — serving in your fleet</span></p>';
+  }else{
+    h+='<p class="dim">Pull '+esc(f.name)+' from '+esc(f.when)+' into 2378. Cost: '+TEMP_SHIP_COST_PRES+' prestige + '+TEMP_SHIP_COST_DIL+' dilithium. Success rate 85%. Shares the temporal array — '+TEMP_CD+'-day recharge between extractions.</p>';
+    if(G.tempCd>0)h+='<p><span class="badge bad">Array recharging — '+G.tempCd+'d remaining</span></p>';
+    else if(G.prestige<TEMP_SHIP_COST_PRES||G.dilithium<TEMP_SHIP_COST_DIL)
+      h+='<p><span class="badge bad">Requires '+TEMP_SHIP_COST_PRES+' prestige + '+TEMP_SHIP_COST_DIL+' dilithium</span></p>';
+    else h+='<button class="btn" onclick="uiPastShipExtract('+i+')">⟳ Initiate Temporal Extraction</button>';
+  }
+  h+='<div style="margin-top:8px;"><button class="btn ghost" onclick="closeModal()">Close</button></div>';
+  openModal(h);
+}
+function uiPastShipExtract(i){
+  const f=PAST_SHIPS[i];if(!f)return;
+  openModal('<h2>Temporal Extraction</h2><p>Pull <b>⟳ '+esc(f.name)+'</b> ('+esc(SHIP_CLASSES[f.cls].name)+'-class) from '+esc(f.when)+' into 2378?</p>'+
+    '<p class="dim">Cost: '+TEMP_SHIP_COST_PRES+' prestige + '+TEMP_SHIP_COST_DIL+' dilithium · 85% success · array recharges '+TEMP_CD+' days.<br>On failure the window collapses: −25 prestige, and the Department of Temporal Investigations files a formal protest.</p>'+
+    '<button class="btn" onclick="uiPastShipExtractGo('+i+')">Confirm Extraction</button> '+
+    '<button class="btn ghost" onclick="pastShipModal('+i+')">Cancel</button>');
+}
+function uiPastShipExtractGo(i){
+  const f=PAST_SHIPS[i];if(!f)return;
+  if((G.rescuedShips&&G.rescuedShips[f.id])||G.tempCd>0||G.prestige<TEMP_SHIP_COST_PRES||G.dilithium<TEMP_SHIP_COST_DIL){pastShipModal(i);return;}
+  gainPres(-TEMP_SHIP_COST_PRES);G.dilithium=Math.max(0,G.dilithium-TEMP_SHIP_COST_DIL);G.tempCd=TEMP_CD;
+  sfx("temporal");
+  if(Math.random()<TEMP_ODDS){
+    const c=SHIP_CLASSES[f.cls];
+    const s={id:uid("s"),name:f.name,registry:f.reg||"",cls:f.cls,status:"active",daysLeft:0,damage:0,missionId:null,yardId:null,post:"sol",comp:c.comp,commSd:G.stardate,tours:1,blurb:f.blurb};
+    G.ships.push(s);
+    if(!G.rescuedShips)G.rescuedShips={};G.rescuedShips[f.id]=s.id;
+    log("build","⟳ TEMPORAL EXTRACTION SUCCESS: "+f.name+" ("+c.name+"-class) pulled from "+f.when+" and commissioned into the fleet.");
+    toast(f.name+" recovered from the past!");
+  }else{
+    gainPres(-25);
+    log("event","⟳ Temporal extraction of "+f.name+" FAILED — the window collapsed. The Department of Temporal Investigations has filed a formal protest. (−25 prestige)");
+    toast("Extraction failed. The DTI is not pleased.");
+  }
+  save();pastShipModal(i);render();
+}
+
 /* ---------- temporal extraction for the fallen (your own dead officers) ---------- */
 function seedDefFor(name){
   if(typeof CANON_CREW==="undefined")return null;
@@ -10288,7 +10357,7 @@ function renderMemorial(){
     '<button class="btn small'+(memTab==="ships"?" on":"")+'" onclick="memTab=\'ships\';render()">Ships</button>'+
     '<button class="btn small'+(memTab==="stations"?" on":"")+'" onclick="memTab=\'stations\';render()">Stations</button></div><div id="memList">';
   if(memTab==="ships"){
-    h+=futureShipCard();
+    h+=futureShipCard();h+=pastShipCard();
     h+='<div class="card" data-seccard="ship"><h3>Lost Ships ('+ships.length+')</h3>'+(ships.map(m=>memShipCard(m)).join("")||'<p class="dim">Every hull accounted for.</p>')+'</div>';
     h+='<div class="card" data-seccard="hist"><h3>Historical Ships ('+HISTORICAL_SHIPS.length+')</h3><p class="dim">Gone before your command began — but not forgotten.</p>'+HISTORICAL_SHIPS.map((v,hi)=>histShipCard(v,hi)).join("")+'</div>';
   }else if(memTab==="stations"){
@@ -14768,7 +14837,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.69</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.70</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
