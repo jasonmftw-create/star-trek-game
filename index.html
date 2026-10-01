@@ -3505,12 +3505,55 @@ function newGameState(){
 }
 
 /* ---------- save / load ---------- */
-function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(G));}catch(e){}}
-function load(){try{const s=localStorage.getItem(SAVE_KEY);if(!s)return null;
-  const g=JSON.parse(s);if(!g||typeof g.stardate!=="number")return null;return migrateSave(g);}catch(e){return null;}}
+function save(){try{const _s=JSON.stringify(G);localStorage.setItem(SAVE_KEY,_s);bkWrite(_s);}catch(e){}}
+function load(){try{const s=localStorage.getItem(SAVE_KEY);
+  if(s){const g=JSON.parse(s);if(g&&typeof g.stardate==="number"){const m=migrateSave(g);if(m)return m;}}}catch(e){}
+  const bk=bkNewest();
+  if(bk){try{const m2=migrateSave(bk.g);if(m2){restoredBackup=true;restoredBackupDay=bk.day;return m2;}}catch(e){}}
+  return null;}
 function exportSave(){return JSON.stringify(G);}
 function importSave(txt){const g=JSON.parse(txt);if(!g||typeof g.stardate!=="number")throw new Error("bad save");
   G=migrateSave(g);save();}
+
+/* ---------- automatic save backups (v2.98) ---------- */
+const BK_KEY_A=SAVE_KEY+"_bkA", BK_KEY_B=SAVE_KEY+"_bkB";
+let bkLastDay=null, restoredBackup=false, restoredBackupDay=null;
+function bkWrite(serialized){
+  try{
+    if(!G||typeof G.day!=="number")return;
+    if(bkLastDay===G.day)return;
+    bkLastDay=G.day;
+    localStorage.setItem(G.day%2===0?BK_KEY_A:BK_KEY_B,serialized);
+  }catch(e){}
+}
+function bkReadRaw(key){
+  try{const s=localStorage.getItem(key);if(!s)return null;
+    const g=JSON.parse(s);if(!g||typeof g.stardate!=="number")return null;
+    return {g:g,day:(typeof g.day==="number"?g.day:-1)};
+  }catch(e){return null;}
+}
+function bkNewest(){
+  const a=bkReadRaw(BK_KEY_A), b=bkReadRaw(BK_KEY_B);
+  if(a&&b)return a.day>=b.day?a:b;
+  return a||b||null;
+}
+function bkStatusText(){const bk=bkNewest();return bk?("saved on day "+bk.day):"no backup yet";}
+function bkRestoreGo(){
+  const bk=bkNewest();
+  closeModal();
+  if(!bk){toast("No automatic backup found.");return;}
+  const m=migrateSave(bk.g);
+  if(!m){toast("That backup could not be read.");return;}
+  G=m;restoredBackup=false;save();render();
+  toast("Automatic backup restored (day "+bk.day+").");
+}
+function uiRestoreBackup(){
+  const bk=bkNewest();
+  if(!bk){toast("No automatic backup yet.");return;}
+  openModal('<h2>Restore Backup</h2><p>Replace the current sector with the automatic backup saved on day '+bk.day+'? Progress made since that backup will be lost.</p>'+
+    '<div class="btnRow"><button class="btn" onclick="bkRestoreGo()">Restore backup</button>'+
+    '<button class="btn ghost" onclick="closeModal()">Cancel</button></div>');
+}
 
 /* ---------- lookups ---------- */
 function officer(id){return G.officers.find(o=>o.id===id);}
@@ -5077,7 +5120,9 @@ function renderSettings(){
     '<button class="btn small ghost" onclick="uiExport()">Export save</button>'+
     '<button class="btn small ghost" onclick="uiImport()">Import save</button>'+
     '<button class="btn small danger" onclick="uiReset()">New game</button></div>'+
-    '<p class="dim">Autosaves after every time advance.</p></div>';
+    '<p class="dim">Autosaves after every time advance.</p>'+
+    '<p class="dim">Automatic backup: '+bkStatusText()+'</p>'+
+    '<div class="btnRow"><button class="btn small ghost" onclick="uiRestoreBackup()"'+(bkNewest()?"":" disabled")+'>Restore automatic backup</button></div></div>';
   return h;
 }
 
@@ -12865,7 +12910,7 @@ function uiImport(){
 }
 function uiReset(){
   openModal('<h2>New Game</h2><p>Abandon this timeline and start over at stardate 54973.4? Your current sector will be lost.</p>'+
-    '<div class="btnRow"><button class="btn danger" onclick="localStorage.removeItem(\''+SAVE_KEY+'\');location.reload()">Abandon timeline</button>'+
+    '<div class="btnRow"><button class="btn danger" onclick="localStorage.removeItem(\''+SAVE_KEY+'\');localStorage.removeItem(\''+BK_KEY_A+'\');localStorage.removeItem(\''+BK_KEY_B+'\');location.reload()">Abandon timeline</button>'+
     '<button class="btn ghost" onclick="closeModal()">Cancel</button></div>');
 }
 
@@ -15090,6 +15135,10 @@ window.onload=function(){
   try{history.pushState({hw:1},"");}catch(e){} // hardware-BACK guard (v2.39)
   applyTheme(curTheme());
   render();
+  if(restoredBackup){
+    try{log("system","The main save record was missing or damaged, so this sector was recovered from the automatic backup (day "+restoredBackupDay+"). Play on, Commander.");}catch(e){}
+    try{toast("Save recovered from the automatic backup.");}catch(e){}
+  }
 };
 
 </script>
@@ -15107,7 +15156,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.97</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.98</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
