@@ -4402,7 +4402,7 @@ function reqShort(r){
 }
 function reqPitch(o){
   const r=o.request;
-  if(r.type==="transfer")return "Commander, I'd like to request a transfer to "+postName(r.dest)+". "+r.reason+", you know?";
+  if(r.type==="transfer"){const cur=(o.post&&o.post.t==="pool")?"currently unassigned":("currently stationed at "+postName(o.post));return "Commander, I'm "+cur+", but I'd like to request a transfer to "+postName(r.dest)+". "+r.reason+", you know?";}
   if(r.type==="partner"){const p=officer(o.rel.partner);return "Commander... I'd like to be posted with "+(p?p.name.split(" ")[0]:"my partner")+". Serving apart is wearing on us both.";}
   if(r.type==="promotion")return "Commander, I've been at this rank a while. Would you put in a good word for me with the promotion board?";
   if(r.type==="leave")return "Commander, permission to take some shore leave? I could use a little well-earned rest.";
@@ -15102,7 +15102,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.94</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.95</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
