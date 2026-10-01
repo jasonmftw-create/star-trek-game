@@ -796,7 +796,7 @@ const SHIP_CLASSES={
   oberth:{name:"Oberth",cr:1500, dl:60,   days:25,  hull:25,  tac:15,  sci:45, speed:7.5, slots:6,  upkeep:18,  comp:90,  lock:"research:oberth",special:"Planetary survey platform: science missions pay out 10% more"},
   constitution3:{name:"Constitution III",cr:14000, dl:350,  days:65,  hull:95,  tac:85,  sci:70, speed:9.6, slots:16, upkeep:95,  comp:400, lock:"research:constitution3",special:"Neo-Constitution lineage: exploration missions pay out 10% more"},
   mercy:     {name:"Mercy",     cr:13500, dl:420,  days:40,  hull:110, tac:30,  sci:110,speed:8.8, slots:14, upkeep:65,  comp:250, lock:"research:mercy",special:"Hospital ship. Each active Mercy-class adds +1/day to fleet-wide crew healing (stacks with Medical Station)."},
-  survivor:  {name:"Survivor",  cr:42000, dl:1300, days:170, hull:145, tac:110, sci:80, speed:9.2, slots:26, upkeep:230, comp:1600,lock:"research:survivor",special:"Dreadnought of last resort. Built for galaxy-ending crises: civilian shelters, vast hangars, and enough firepower to hold a sector alone."},
+  survivor:  {name:"Survivor",  cr:42000, dl:1300, days:170, hull:145, tac:110, sci:80, speed:11.5,slots:26, upkeep:230, comp:1600,lock:"research:survivor",special:"Dreadnought of last resort. Built for galaxy-ending crises: civilian shelters, vast hangars, enough firepower to hold a sector alone — and the fastest ship in existence."},
   odyssey:   {name:"Odyssey",   cr:32000, dl:1000, days:130, hull:120, tac:90,  sci:90, speed:9.5, slots:22, upkeep:160, comp:1200,lock:"research:odyssey"},
   protostar: {name:"Protostar", cr:28000, dl:900,  days:120, hull:70,  tac:55,  sci:100,speed:9.99,slots:10, upkeep:120, comp:500, lock:"research:protostar",special:"Proto-drive: its missions complete 25% faster"},
   raven: {name:"Raven", cr:16000, dl:450,  days:70,  hull:55,  tac:40,  sci:95, speed:9.8, slots:8,  upkeep:75,  comp:60,
@@ -14855,7 +14855,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.81</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.82</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
