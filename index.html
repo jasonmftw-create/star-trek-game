@@ -5258,6 +5258,7 @@ function aiSystemFor(o){
   try{const ctx=aiFleetContext(o);if(ctx)s+="\nCURRENT FLEET STATUS \u2014 these facts are authoritative, never contradict them:\n"+ctx+"\n";}catch(e){}
   try{const tx=temporalOrigin(o);if(tx)s+="TEMPORAL EXTRACTION \u2014 these facts are authoritative: you were pulled through time by the fleet commander's temporal array into the year 2379, from "+tx+". You remember your original life and era clearly, and you know you now serve in this century's Starfleet. Never deny your extraction, never claim your memories begin in 2379, and never pretend you were always here. If earlier in this conversation you denied being extracted, correct yourself now, plainly and in character. ";}catch(e){}
   try{if(o.post)s+="Your posting: "+postName(o.post)+". ";}catch(e){}
+  try{const sit=officerSituationLine(o);if(sit)s+="WHERE YOU ARE RIGHT NOW \u2014 "+sit+" Let this color your opening exchange naturally and unprompted, the way a person mentions where they are calling from (\u201conce we're done here at DS9\u2026\u201d) \u2014 once, lightly, never as a status report. ";}catch(e){}
   if(o.traits&&o.traits.length)s+="Personality traits: "+o.traits.join(", ")+". ";
   if(o.backstory)s+="Your backstory: "+o.backstory+" ";
   if(o.rel&&partner)s+="You are "+o.rel.stage+" with "+partner.name+". ";
@@ -5293,6 +5294,35 @@ function aiAddrName(){
 }
 function aiFallbackLine(){
   return "Forgive me, "+aiAddrName()+" \u2014 the comm is full of static on my end. Say that again in a moment?";
+}
+/* v3.2: the speaking officer's here-and-now (Jason 2026-10-01) — Talk opens grounded in where they are. */
+function officerSituationLine(o){
+  try{
+    let sit="";
+    if(o.post&&o.post.t==="ship"){
+      const s=ship(o.post.id);
+      if(s){
+        const here=(typeof POST_LABELS!=="undefined"&&POST_LABELS[s.post])||s.post||"deep space";
+        let st;
+        if(s.missionId){const m=(G.missions||[]).find(function(x){return x.id===s.missionId;});let mn="a mission";try{if(m){const t=MISSION_DECK.find(function(x){return x.id===m.tIdx;});if(t)mn=t.name;}}catch(e){}st="underway on "+mn+(m?", about "+Math.ceil(m.daysLeft)+" days from completion":"");}
+        else if(s.status==="refit"||s.status==="repair"){const yd=s.yardId?station(s.yardId):null;st=(s.status==="refit"?"in refit":"undergoing repairs")+(yd?" in drydock at "+yd.name:"")+", about "+Math.ceil(s.daysLeft||0)+" days to go";}
+        else if(s.transit)st="in transit toward "+((typeof POST_LABELS!=="undefined"&&POST_LABELS[s.transit.dest])||"her destination")+", "+Math.ceil(s.transit.daysLeft||0)+" days out";
+        else if(s.status==="damaged")st="holding position with hull damage near "+here;
+        else if(s.cruise)st="out on a cadet training cruise";
+        else{const stn=(G.stations||[]).find(function(x){return x.status==="active"&&x.post&&s.post&&x.post===s.post;});st=stn?"docked at "+stn.name:"on station-keeping near "+here;}
+        sit="You are aboard the "+s.name+", currently "+st+".";
+      }
+    }else if(o.post&&o.post.t==="station"){
+      const st2=station(o.post.id);
+      if(st2)sit="You are aboard "+st2.name+(st2.status==="construction"?" (still under construction)":"")+", in the "+((typeof POST_LABELS!=="undefined"&&POST_LABELS[st2.post])||st2.post||"local")+" sector.";
+    }else if(o.post&&(o.post.t==="hq"||o.post.t==="pool")){
+      sit="You are planet-side on Earth, "+(o.post.t==="pool"?"awaiting your next assignment":"on duty at Starfleet Command")+".";
+    }
+    if(!sit)sit="You are with the fleet in the Sol system.";
+    if(o.activity)sit+=" Right now you are "+o.activity+".";
+    else if(o.dutyNote)sit+=" Current duty: "+o.dutyNote+".";
+    return sit;
+  }catch(e){return "";}
 }
 function aiFleetContext(o){
   const bits=[];
@@ -5355,7 +5385,8 @@ function aiFleetContext(o){
 function aiChatHtml(o){
   const log=aiChatHist(o).map(function(m){return '<div class="'+(m.r==="u"?"aiMsgU":"aiMsgO")+'">'+esc(m.t)+'</div>';}).join("");
   let h='<!--AI_CHAT:'+o.id+'--><div class="pfaceWrap">'+faceImg(o,"pfaceBig")+'<div style="flex:1;min-width:0;"><h2>'+nameHtml(o)+'</h2><div class="flavor">'+esc(rankName(o))+' · '+esc(o.dept||"")+' — private channel</div></div></div>';
-  h+='<div id="aiChatLog" class="aiChatLog">'+(log||'<div class="dim" style="text-align:center;padding:14px 6px;">Say hello — every conversation is fresh.</div>')+'</div>';
+  const sitLine=officerSituationLine(o);
+  h+='<div id="aiChatLog" class="aiChatLog">'+(log||'<div class="dim" style="text-align:center;padding:14px 6px;">'+(sitLine?esc(sitLine)+'<br>':"")+'Say hello — they\'ll answer from right where they are.</div>')+'</div>';
   h+='<div class="aiChatBar"><input id="aiChatIn" maxlength="300" placeholder="Say something…" autocomplete="off" onkeydown="if(event.key===\'Enter\'){aiSend(\''+o.id+'\');}">'+
      '<button class="btn teal" onclick="aiSend(\''+o.id+'\')">Send</button></div>';
   h+='<div class="btnRow"><button class="btn ghost" onclick="closeModal()">Close</button></div>';
@@ -15220,7 +15251,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v3.1</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v3.2</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
