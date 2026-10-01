@@ -3655,6 +3655,8 @@ function migrateSave(g){
   g.ships=(g.ships||[]).filter(s=>!(s&&s.cls==="tikhov"));
   if(g.research){if(g.research.done)for(const _k in _CLSMAP)if(g.research.done[_k]){g.research.done[_CLSMAP[_k]]=true;delete g.research.done[_k];}if(g.research.active&&_CLSMAP[g.research.active.key])g.research.active.key=_CLSMAP[g.research.active.key];}
   (g.stations||[]).forEach(st=>{if(st.comp==null)st.comp=STATION_DEFS[st.type]?STATION_DEFS[st.type].comp:100;});
+  (g.ships||[]).forEach(s=>{if(s.crewOrder===undefined)s.crewOrder=null;if(s.orderCd==null)s.orderCd=0;}); // v4.1 crew-life orders
+  (g.stations||[]).forEach(st=>{if(st.crewOrder===undefined)st.crewOrder=null;if(st.orderCd==null)st.orderCd=0;});
   if(!(g.stations||[]).some(st=>st.id==="ds9")){
     g.stations.push({id:"ds9",name:"Deep Space 9",type:"starbase",status:"active",daysLeft:0,post:"bajor",comp:STATION_DEFS.starbase.comp});
     if(g.shuttles&&!g.shuttles.some(sh=>sh.host==="station"&&sh.hid==="ds9")){
@@ -3863,8 +3865,199 @@ function tickDay(){
   economyTick(); buildTick(); researchTick(); refitTick(); missionTick(); transitTick(); ambientTick();
   if(typeof admiraltyTick==="function")admiraltyTick(); // v2.13: admiral projects upkeep + payoffs
   healTick(); dockedTick(); fatigueTick(); ageTick(); romanceTick(); familyTick(); crewTick();
-  randomEventTick(); scriptedTick(); rankCheckTick(); battleTick(); codexTick(); socialTick(); arcTick(); holoTick(); holidayTick();
+  randomEventTick(); scriptedTick(); rankCheckTick(); battleTick(); codexTick(); socialTick(); arcTick(); holoTick(); holidayTick(); ordersTick();
   if(G.shipOps&&G.shipOps.length)G.shipOps=G.shipOps.filter(function(m){return ship(m.shipId);});
+}
+/* ================= v4.1 CREW LIFE — orders of the day =================
+   Captains and station commanders issue multi-day department orders; the chief
+   and a small team work them visibly in the interiors. o.activity feeds the v3.2
+   Talk slot, the officer detail "Current duty" line, and room crew chips.
+   Pure daily-tick state machine, fully deterministic (hash-seeded), zero AI
+   calls. One active order per posting; ambient only — orders never block
+   repairs, missions, transfers, or shuttle duty. */
+const ORDER_TPLS=[
+ {d:"eng",n:"warp-core efficiency upgrade",lo:3,hi:5},{d:"eng",n:"EPS manifold overhaul",lo:3,hi:4},
+ {d:"eng",n:"impulse drive retune",lo:2,hi:3},{d:"eng",n:"deflector calibration",lo:2,hi:3},
+ {d:"eng",n:"plasma conduit purge",lo:2,hi:4},{d:"eng",n:"fusion reactor retune",lo:3,hi:4,st:1},
+ {d:"eng",n:"docking clamp recalibration",lo:2,hi:3,st:1},
+ {d:"sci",n:"stellar cartography survey",lo:3,hi:5},{d:"sci",n:"astrometrics recalibration",lo:2,hi:4},
+ {d:"sci",n:"sample analysis backlog",lo:2,hi:3},{d:"sci",n:"subspace phenomenon study",lo:3,hi:5},
+ {d:"sci",n:"exobiology catalog update",lo:2,hi:3},
+ {d:"med",n:"inoculation drive",lo:2,hi:3},{d:"med",n:"biobed refit",lo:2,hi:4},
+ {d:"med",n:"crew physicals rotation",lo:2,hi:3},{d:"med",n:"medical supply audit",lo:2,hi:3},
+ {d:"med",n:"trauma-response drill program",lo:2,hi:3},
+ {d:"tac",n:"phaser drill cycle",lo:2,hi:3},{d:"tac",n:"torpedo handling drills",lo:2,hi:3},
+ {d:"tac",n:"weapons calibration",lo:2,hi:4},{d:"tac",n:"battle stations exercise",lo:2,hi:3},
+ {d:"sec",n:"security sweep rotation",lo:2,hi:3},{d:"sec",n:"brig systems inspection",lo:2,hi:3},
+ {d:"sec",n:"boarding-party readiness drill",lo:2,hi:3},{d:"sec",n:"surveillance grid review",lo:2,hi:4},
+ {d:"ops",n:"duty roster overhaul",lo:2,hi:3},{d:"ops",n:"manifest reconciliation",lo:2,hi:3},
+ {d:"ops",n:"transporter pattern audit",lo:2,hi:4},{d:"ops",n:"comms protocol update",lo:2,hi:3},
+ {d:"conn",n:"helm certification runs",lo:2,hi:3},{d:"conn",n:"star-chart update project",lo:2,hi:4},
+ {d:"conn",n:"evasive maneuver practice",lo:2,hi:3},
+ {d:"rec",n:"movie night rotation",lo:1,hi:2},{d:"rec",n:"holodeck tournament bracket",lo:1,hi:2},
+ {d:"rec",n:"crew talent night",lo:1,hi:2},{d:"rec",n:"morale week program",lo:2,hi:3},
+ {d:"rec",n:"shore-leave rotation planning",lo:2,hi:3}
+];
+const ORDER_DEPT={
+ eng:{billet:"eng",dept:"Engineering",stat:"eng",room:"engineering",stRooms:["reactor","relay","sims"]},
+ sci:{billet:"sci",dept:"Science",stat:"sci",room:"science",stRooms:["science","lecture","plans"]},
+ med:{billet:"med",dept:"Medical",stat:"med",room:"sickbay",stRooms:["sickbay"]},
+ tac:{billet:"tac",dept:"Security",stat:"tac",room:"bridge",stRooms:["ops","gym","security"]},
+ sec:{billet:"sec",dept:"Security",stat:"tac",room:"brig",stRooms:["security","gym","ops"]},
+ ops:{billet:"ops",dept:"Operations",stat:"cmd",room:"bridge",stRooms:["ops","sims","docking"]},
+ conn:{billet:"conn",dept:"Command",stat:"cmd",room:"bridge",stRooms:["ops","sims"]},
+ rec:{billet:"xo",dept:null,stat:"dip",room:"mess",stRooms:[]}
+};
+let ORD_FEED={day:-1,n:0};
+function ordRoll(key){return (hashStr(key)%1000)/1000;}
+function ordCap(s){return s?s.charAt(0).toUpperCase()+s.slice(1):s;}
+function ordFlavor(text){if(ORD_FEED.n>=2)return;ORD_FEED.n++;log("orders",text);}
+function orderPostings(){
+  const out=[];
+  (G.ships||[]).forEach(s=>{
+    if((s.status==="active"||s.status==="damaged"||s.status==="mission"||s.status==="docked")&&!s.mothballed&&s.status!=="museum"&&!(s.leave>0))
+      out.push({kind:"ship",p:s,key:"ship:"+s.id,name:s.name,crew:crewOfShip(s.id),co:effShipCO(s).o});
+  });
+  (G.stations||[]).forEach(st=>{
+    if(st.status==="active"&&!st.mothballed)
+      out.push({kind:"station",p:st,key:"station:"+st.id,name:st.name,crew:crewOfStation(st.id),co:effStationCO(st).o});
+  });
+  return out;
+}
+function ordRoomFor(ctx,dept){
+  const cfg=ORDER_DEPT[dept];if(!cfg)return null;
+  if(ctx.kind==="ship")return cfg.room;
+  if(dept==="rec")return sdeckCommons(ctx.p)||null;
+  const ids=sdeckRooms(ctx.p).map(r=>r.id);
+  for(let i=0;i<cfg.stRooms.length;i++)if(ids.indexOf(cfg.stRooms[i])>=0)return cfg.stRooms[i];
+  return null;
+}
+function ordRoomName(ctx,ord){
+  if(ctx.kind==="ship"){const d=DECK_ROOMS.find(r=>r.id===ord.room);return d?d.name:ord.room;}
+  const d=sdeckRoomDef(ctx.p,ord.room);return d?d.name:ord.room;
+}
+function ordChiefFor(ctx,cfg){
+  const crew=ctx.crew;
+  const hold=crew.find(o=>(o.roles||[]).indexOf(cfg.billet)>=0);
+  if(hold&&hold!==ctx.co)return hold;
+  if(cfg.billet==="xo"){const c=crew.find(o=>(o.roles||[]).indexOf("coun")>=0);if(c&&c!==ctx.co)return c;}
+  if(!cfg.dept)return null;
+  const pool=crew.filter(o=>o.dept===cfg.dept&&o!==ctx.co);
+  if(!pool.length)return null;
+  pool.sort((a,b)=>(((b.stats&&b.stats[cfg.stat])||0)-((a.stats&&a.stats[cfg.stat])||0))||((hashStr(a.id+ctx.key)%89)-(hashStr(b.id+ctx.key)%89)));
+  return pool[0];
+}
+function ordTeamFor(ctx,cfg,chief){
+  const pool=ctx.crew.filter(o=>o!==chief&&o!==ctx.co);
+  const same=pool.filter(o=>cfg.dept&&o.dept===cfg.dept),rest=pool.filter(o=>!(cfg.dept&&o.dept===cfg.dept));
+  const key=ctx.key+":"+(chief?chief.id:"")+":team";
+  const byHash=(a,b)=>(hashStr(a.id+key)%100003)-(hashStr(b.id+key)%100003);
+  same.sort(byHash);rest.sort(byHash);
+  const want=ctx.kind==="ship"?1+(hashStr(ctx.key+":n")%3):2+(hashStr(ctx.key+":n")%2);
+  return same.concat(rest).slice(0,Math.min(want,pool.length)).map(o=>o.id);
+}
+function ordDeptWeights(ctx){
+  const w={eng:10,sci:10,med:8,tac:8,sec:7,ops:8,conn:5,rec:6};
+  if(ctx.kind==="ship"){
+    if(ctx.p.status==="damaged"||(ctx.p.damage||0)>0)w.eng+=26;
+    else if(ctx.p.status==="mission"||ctx.p.missionId){w.sci+=8;w.tac+=4;}
+    else{w.tac+=4;w.sec+=3;w.conn+=3;}
+  }else{w.ops+=8;w.sci+=3;w.sec+=3;}
+  return w;
+}
+function ordIssue(ctx){
+  const w=ordDeptWeights(ctx),depts=Object.keys(w);
+  let total=0;depts.forEach(d=>{total+=w[d];});
+  let x=ordRoll(ctx.key+":dept:"+G.day)*total,first=depts[depts.length-1];
+  for(let i=0;i<depts.length;i++){x-=w[depts[i]];if(x<=0){first=depts[i];break;}}
+  const byWeight=depts.slice().sort((a,b)=>w[b]-w[a]);
+  const tries=[first].concat(byWeight.filter(d=>d!==first));
+  for(let ti=0;ti<tries.length;ti++){
+    const d=tries[ti],cfg=ORDER_DEPT[d];if(!cfg)continue;
+    const room=ordRoomFor(ctx,d);if(!room)continue;
+    const chief=ordChiefFor(ctx,cfg);if(!chief)continue;
+    const tpls=ORDER_TPLS.filter(t=>t.d===d&&(!t.st||ctx.kind==="station"));
+    if(!tpls.length)continue;
+    const tpl=tpls[hashStr(ctx.key+":tpl:"+d+":"+G.day)%tpls.length];
+    const days=tpl.lo+(hashStr(ctx.key+":len:"+G.day)%(tpl.hi-tpl.lo+1));
+    ctx.p.crewOrder={dept:d,tpl:tpl.n,room:room,chiefId:chief.id,crewIds:ordTeamFor(ctx,cfg,chief),day:1,days:days,started:G.day,slips:0,checkin:days>=3?2:0,checked:0,coActDay:0};
+    log("orders",ctx.name+": "+(ctx.co?fullName(ctx.co):"The commanding officer")+" orders the "+tpl.n+". "+fullName(chief)+" has the work — day 1 of "+days+".");
+    return true;
+  }
+  return false;
+}
+function ordCheckin(ctx,ord,chief){
+  const left=ord.days-ord.day;
+  if(ctx.co){
+    log("orders",ctx.name+": "+fullName(ctx.co)+" checks in on the "+ord.tpl+". "+fullName(chief)+": “"+(left>0?left+" more day"+(left===1?"":"s"):"Finishing today")+", "+rankName(ctx.co)+".\"");
+    ord.coActDay=G.day;
+  }else{
+    log("orders",ctx.name+": "+fullName(chief)+" reports the "+ord.tpl+" "+(left>0?"needs "+left+" more day"+(left===1?"":"s"):"is wrapping up")+".");
+  }
+}
+function ordComplete(ctx,ord,chief){
+  const p=ctx.p;
+  const ids={};ids[ord.chiefId]=1;(ord.crewIds||[]).forEach(id=>{ids[id]=1;});
+  const part=ctx.crew.filter(o=>ids[o.id]);
+  part.forEach(o=>{o.morale=clamp((o.morale||70)+(o.id===ord.chiefId?7:5),0,100);});
+  let extra="";
+  if(ord.dept==="rec")ctx.crew.forEach(o=>{o.morale=clamp((o.morale||70)+4,0,100);});
+  if(ord.dept==="sci"&&ordRoll(ctx.key+":pay:"+ord.started)<0.5){gainPres(1);extra=" The findings earn fleet notice (+1 prestige).";}
+  if(ord.dept==="eng"&&ctx.kind==="ship"&&(p.damage||0)>0){const fix=Math.min(4,p.damage);p.damage=Math.max(0,p.damage-fix);if(fix>0)extra=" Hull stress eased "+Math.round(fix)+" points.";}
+  if(ord.dept==="eng"&&ctx.kind==="station"){G.credits=(G.credits||0)+20;extra=" Efficiency savings banked (+20 CR).";}
+  if(ord.dept==="ops"&&ctx.kind==="station"){G.credits=(G.credits||0)+25;extra=" Streamlined operations save credits (+25 CR).";}
+  if(ord.dept==="med"){const inj=ctx.crew.filter(o=>o.health==="injured"&&(o.healDays||0)>1).sort((a,b)=>(b.healDays||0)-(a.healDays||0))[0];if(inj){inj.healDays=Math.max(1,(inj.healDays||2)-1);extra=" "+fullName(inj)+" is healing faster for it.";}}
+  if(ordRoll(ctx.key+":acc:"+ord.started)<0.25)awardAccolade(chief,"Project lead — "+ord.tpl);
+  log("orders",ctx.name+": the "+ord.tpl+" is complete. "+fullName(chief)+"'s team signs off."+extra);
+  toast(ctx.name+": "+ordCap(ord.tpl)+" complete");
+  p.crewOrder=null;p.orderCd=1+(hashStr(ctx.key+":cd:"+G.day)%2);
+}
+function ordProgress(ctx){
+  const p=ctx.p,ord=p.crewOrder;if(!ord)return;
+  const cfg=ORDER_DEPT[ord.dept];
+  let chief=ctx.crew.find(o=>o.id===ord.chiefId);
+  if(!chief){
+    const succ=cfg?ordChiefFor(ctx,cfg):null;
+    if(succ){ord.chiefId=succ.id;ord.crewIds=(ord.crewIds||[]).filter(id=>id!==succ.id);chief=succ;ordFlavor(ctx.name+": "+fullName(succ)+" takes over the "+ord.tpl+" mid-stream.");}
+    else{p.crewOrder=null;p.orderCd=2;return;}
+  }
+  ord.crewIds=(ord.crewIds||[]).filter(id=>ctx.crew.some(o=>o.id===id));
+  if(ord.day>=ord.days){ordComplete(ctx,ord,chief);return;}
+  const rk=ctx.key+":roll:"+ord.started+":"+G.day;
+  if(ordRoll(rk+":slip")<0.10&&ord.slips<2){
+    ord.days++;ord.slips++;
+    ordFlavor(ctx.name+": the "+ord.tpl+" runs long — "+fullName(chief)+" found more work than the survey showed and needs another day.");
+  }else{
+    ord.day++;
+    if(ordRoll(rk+":surge")<0.08)ord.day++;
+    if(ord.checkin&&!ord.checked&&ord.day>=ord.checkin&&ord.day<=ord.days){ord.checked=1;ordCheckin(ctx,ord,chief);}
+  }
+}
+function ordSweep(){
+  (G.officers||[]).forEach(o=>{if(o.activityOrd){o.activity=null;o.activityRoom=null;o.activityPost=null;o.activityOrd=0;}});
+}
+function ordApply(ctx){
+  const ord=ctx.p.crewOrder;if(!ord)return;
+  const roomName=ordRoomName(ctx,ord),when="day "+Math.min(ord.day,ord.days)+" of "+ord.days;
+  (ord.crewIds||[]).forEach(id=>{const o=officer(id);if(o&&ctx.crew.indexOf(o)>=0){o.activity="assisting with the "+ord.tpl+" in "+roomName+", "+when;o.activityRoom=ord.room;o.activityPost=ctx.key;o.activityOrd=1;}});
+  const chief=officer(ord.chiefId);
+  if(chief&&ctx.crew.indexOf(chief)>=0){chief.activity="running the "+ord.tpl+" in "+roomName+", "+when;chief.activityRoom=ord.room;chief.activityPost=ctx.key;chief.activityOrd=1;}
+  if(ord.coActDay===G.day&&ctx.co&&!ctx.co.activityOrd){ctx.co.activity="checking on progress of the "+ord.tpl;ctx.co.activityOrd=2;}
+}
+function ordersTick(){
+  try{
+    if(!G||!G.officers)return;
+    if(ORD_FEED.day!==G.day){ORD_FEED.day=G.day;ORD_FEED.n=0;}
+    ordSweep();
+    const postings=orderPostings();
+    postings.forEach(ctx=>{
+      const p=ctx.p;
+      if(p.crewOrder)ordProgress(ctx);
+      else if((p.orderCd||0)>0)p.orderCd--;
+      else if(ctx.crew.length>=2&&ordRoll(ctx.key+":try:"+G.day)<0.5)ordIssue(ctx);
+    });
+    postings.forEach(ordApply);
+  }catch(e){/* crew-life orders must never break the day loop */}
 }
 function economyTick(){
   (function(){try{ // v4.0 trade pacts: +85 CR/day per ship on a pact route (max 2 ships per pact)
@@ -11033,6 +11226,7 @@ function officerModal(id){
     h+='<h4>Accolades & Service Record</h4>'+sorted.map(a=>'<div class="kv"><span class="k">'+esc(a.d)+'</span><span class="v">'+esc(a.n)+(a.cite?'<br><span class="dim" style="font-style:italic;">'+esc(a.cite)+'</span>':"")+'</span></div>').join("");
   }
   h+='<div class="hr"></div><div class="kv"><span class="k">Posting</span><span class="v">'+esc(postName(o.post))+'</span></div>';
+  if(o.activity)h+='<div class="kv"><span class="k">Current duty</span><span class="v">'+esc(ordCap(o.activity))+'</span></div>';
   if(o.shuttle&&shuttle(o.shuttle))h+='<div class="kv"><span class="k">Shuttle duty</span><span class="v">'+esc(shuttle(o.shuttle).name)+' <button class="btn small ghost" onclick="uiRecallOfficer(\''+o.id+'\')">Recall</button></span></div>';
   if(adult){
     h+='<div class="kv" data-hint="How happy this officer is, 0 to 100. High morale boosts mission success. Shore leave, meetings, weddings and reunions raise it; injuries, transfers and disasters lower it."><span class="k">Morale</span><span class="v">'+o.morale+'/100</span></div>'+bar("MOR",o.morale);
@@ -13624,7 +13818,8 @@ function deckRoomFor(o){
 function deckRoomMap(s){
   const crew=crewOfShip(s.id),map={};DECK_ROOMS.forEach(r=>map[r.id]=[]);
   const placed={};
-  crew.forEach(o=>{const rid=deckRoomFor(o);if(rid){map[rid].push(o);placed[o.id]=1;}});
+  crew.forEach(o=>{if(o.activityRoom&&o.activityPost==="ship:"+s.id&&map[o.activityRoom]){map[o.activityRoom].push(o);placed[o.id]=1;}});
+  crew.forEach(o=>{if(placed[o.id])return;const rid=deckRoomFor(o);if(rid){map[rid].push(o);placed[o.id]=1;}});
   const rest=crew.filter(o=>!placed[o.id]);
   // couples share quarters; everyone else drifts between mess and quarters (changes daily)
   const pairs=[];
@@ -13741,7 +13936,7 @@ function deckRoomHtml(s,rid){
   if(occ.length){
     h+='<div class="deckSec" style="margin-top:6px;">Present ('+occ.length+')</div><div class="occGrid">'+
       occ.slice(0,8).map(o=>'<div class="occChip" onclick="officerModal(\''+o.id+'\')">'+faceImg(o,"pface")+
-        '<div><div class="nm">'+esc(o.name)+'</div><div class="rl">'+esc(rankName(o))+(primaryBillet(o)?' · '+esc(billetLabel(primaryBillet(o))):"")+'</div></div></div>').join("")+
+        '<div><div class="nm">'+esc(o.name)+'</div><div class="rl">'+esc(rankName(o))+(primaryBillet(o)?' · '+esc(billetLabel(primaryBillet(o))):"")+'</div>'+(o.activity?'<div class="rl" style="color:var(--teal);font-style:italic;">'+esc(o.activity)+'</div>':"")+'</div></div>').join("")+
       (occ.length>8?'<div class="dim" style="font-size:12px;">+'+(occ.length-8)+' more aboard</div>':"")+'</div>';
   }else{
     h+='<p class="dim">Nobody is here right now. The room waits.</p>';
@@ -14570,7 +14765,8 @@ function sdeckRoomImg(st,rid){
 function sdeckRoomMap(st){
   const crew=crewOfStation(st.id),map={};sdeckRooms(st).forEach(r=>map[r.id]=[]);
   const placed={};
-  crew.forEach(o=>{const rid=sdeckRoomFor(st,o);if(rid){map[rid].push(o);placed[o.id]=1;}});
+  crew.forEach(o=>{if(o.activityRoom&&o.activityPost==="station:"+st.id&&map[o.activityRoom]){map[o.activityRoom].push(o);placed[o.id]=1;}});
+  crew.forEach(o=>{if(placed[o.id])return;const rid=sdeckRoomFor(st,o);if(rid){map[rid].push(o);placed[o.id]=1;}});
   const rest=crew.filter(o=>!placed[o.id]);
   rest.forEach(o=>{if(o.rel){const p=officer(o.rel.partner||o.rel);if(p&&!placed[p.id]&&p.post.t==="station"&&p.post.id===st.id){const slp0=sdeckSleepRoom(st);map[slp0].push(o);map[slp0].push(p);placed[o.id]=placed[p.id]=1;}}});
   const ssh=aliveShift();
@@ -14688,7 +14884,7 @@ function sdeckRoomHtml(st,rid){
   if(occ.length){
     h+='<div class="deckSec" style="margin-top:6px;">Present ('+occ.length+')</div><div class="occGrid">'+
       occ.slice(0,8).map(o=>'<div class="occChip" onclick="officerModal(\''+o.id+'\')">'+faceImg(o,"pface")+
-        '<div><div class="nm">'+esc(o.name)+'</div><div class="rl">'+esc(rankName(o))+(primaryBillet(o)?' · '+esc(billetLabel(primaryBillet(o))):"")+'</div></div></div>').join("")+
+        '<div><div class="nm">'+esc(o.name)+'</div><div class="rl">'+esc(rankName(o))+(primaryBillet(o)?' · '+esc(billetLabel(primaryBillet(o))):"")+'</div>'+(o.activity?'<div class="rl" style="color:var(--teal);font-style:italic;">'+esc(o.activity)+'</div>':"")+'</div></div>').join("")+
       (occ.length>8?'<div class="dim" style="font-size:12px;">+'+(occ.length-8)+' more aboard</div>':"")+'</div>';
   }else{
     h+='<p class="dim">Nobody is here right now. The room waits.</p>';
@@ -15501,7 +15697,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v4.0</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v4.1</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
