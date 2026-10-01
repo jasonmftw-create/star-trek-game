@@ -3373,7 +3373,9 @@ const MUSEUM_SEED=[
   {id:"mus-stargazer",name:"USS Stargazer",registry:"NCC-2893",cls:"constellation",status:"museum",daysLeft:0,damage:0,missionId:null,yardId:null,post:"sol",musSd:54973.4,tours:1,msn:0,msnWon:0,batWon:0,commTxt:"Constellation-class · Picard's first command, 22 years",blurb:"Where Picard became a captain — the maneuver that bears his name was born at the Battle of Maxia."},
   {id:"mus-excelsior",name:"USS Excelsior",registry:"NCC-2000",cls:"excelsior",status:"museum",daysLeft:0,damage:0,missionId:null,yardId:null,post:"sol",musSd:54973.4,tours:1,msn:0,msnWon:0,batWon:0,commTxt:"'The Great Experiment' · Captain Sulu's ship",blurb:"The Great Experiment that became a legend — Sulu's Excelsior, hero of the Khitomer peace talks."},
   {id:"mus-kronos1",name:"Kronos One",registry:"\u2014",cls:"ktinga",status:"museum",daysLeft:0,damage:0,missionId:null,yardId:null,post:"sol",musSd:54973.4,tours:1,msn:0,msnWon:0,batWon:0,commTxt:"Klingon K'tinga battlecruiser · Chancellor Gorkon's flagship",blurb:"Gorkon's flagship — witness to the assassination that nearly destroyed the Khitomer peace."},
-  {id:"mus-rombop",name:"Romulan Bird-of-Prey",registry:"\u2014",cls:"rombop",status:"museum",daysLeft:0,damage:0,missionId:null,yardId:null,post:"sol",musSd:54973.4,tours:1,msn:0,msnWon:0,batWon:0,commTxt:"23rd century · 'Balance of Terror'",blurb:"The invisible raider from 'Balance of Terror' — the Federation's first deadly dance with the Romulans."}
+  {id:"mus-rombop",name:"Romulan Bird-of-Prey",registry:"\u2014",cls:"rombop",status:"museum",daysLeft:0,damage:0,missionId:null,yardId:null,post:"sol",musSd:54973.4,tours:1,msn:0,msnWon:0,batWon:0,commTxt:"23rd century · 'Balance of Terror'",blurb:"The invisible raider from 'Balance of Terror' — the Federation's first deadly dance with the Romulans."},
+  {id:"mus-voyager",name:"USS Voyager",registry:"NCC-74656",cls:"intrepid",status:"museum",daysLeft:0,damage:0,missionId:null,yardId:null,post:"sol",musSd:54973.4,tours:1,msn:0,msnWon:0,batWon:0,commTxt:"Launched 2371 \u00b7 Home from the Delta Quadrant 2378",blurb:"She came home the long way \u2014 seventy thousand light-years, and every light-year earned."},
+  {id:"mus-ente",name:"USS Enterprise",registry:"NCC-1701-E",cls:"sovereign",status:"museum",daysLeft:0,damage:0,missionId:null,yardId:null,post:"sol",musSd:54973.4,tours:1,msn:0,msnWon:0,batWon:0,commTxt:"Launched 2372 \u00b7 Picard's Sovereign-class flagship",blurb:"Picard's second Enterprise \u2014 the Sovereign that faced the Borg at Sector 001 and Shinzon at the Bassen Rift."}
 ];
 function seedMuseum(g){MUSEUM_SEED.forEach(def=>{if(!(g.ships||[]).some(s=>s.id===def.id))g.ships.push(Object.assign({},def,{comp:SHIP_CLASSES[def.cls].comp}));});}
 /* Canon bonds, verified against series canon at 2378 (post-Voyager return):
@@ -14911,7 +14913,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.88</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.89</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
