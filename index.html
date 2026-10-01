@@ -232,12 +232,16 @@ div.meetFace{display:flex;align-items:center;justify-content:center;font-size:42
 .completeCard{position:relative;width:min(94vw,440px);max-height:92vh;overflow-y:auto;border-radius:16px;background:#0a0f1e;border:1px solid rgba(140,190,255,.4);box-shadow:0 0 70px rgba(120,180,255,.28);text-align:center;animation:compIn .5s cubic-bezier(.2,1.4,.4,1);}
 @keyframes compIn{from{transform:scale(.82) translateY(20px);opacity:0;}to{transform:scale(1) translateY(0);opacity:1;}}
 .completeStage{position:relative;height:230px;overflow:hidden;background:radial-gradient(ellipse at 50% 130%,#1b2a4d 0%,#070b16 62%,#03040a 100%);}
+.completeStage .cstars{position:absolute;top:0;bottom:0;left:-7%;width:114%;}
+.cstars.far{opacity:.55;animation:starDrift 95s linear infinite alternate;}
+.cstars.near{animation:starDrift 48s linear infinite alternate;}
+@keyframes starDrift{from{transform:translateX(-3.2%);}to{transform:translateX(3.2%);}}
 .completeStage .cstars{position:absolute;inset:0;background-image:radial-gradient(1.5px 1.5px at 8% 22%,#fff,transparent),radial-gradient(1px 1px at 22% 68%,#cfe4ff,transparent),radial-gradient(1.5px 1.5px at 35% 12%,#fff,transparent),radial-gradient(1px 1px at 48% 42%,#fff,transparent),radial-gradient(1px 1px at 61% 78%,#cfe4ff,transparent),radial-gradient(1.5px 1.5px at 73% 28%,#fff,transparent),radial-gradient(1px 1px at 86% 55%,#fff,transparent),radial-gradient(1px 1px at 93% 18%,#cfe4ff,transparent),radial-gradient(1px 1px at 15% 85%,#fff,transparent),radial-gradient(1.5px 1.5px at 55% 8%,#fff,transparent);}
 .completeStage .speed{position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 46px,rgba(160,200,255,.08) 46px 48px);animation:speedMove 1.1s linear infinite;}
 @keyframes speedMove{from{transform:translateX(0);}to{transform:translateX(48px);}}
 .compShip{position:absolute;top:50%;left:50%;width:82%;max-width:360px;transform:translate(-50%,-50%);animation:shipFly 5s ease-in-out infinite;}
 .compShip img{width:100%;display:block;filter:drop-shadow(0 0 18px rgba(140,200,255,.45));}
-@keyframes shipFly{0%,100%{transform:translate(-58%,-50%) scale(.94);}50%{transform:translate(-42%,-50%) scale(1.02);}}
+@keyframes shipFly{0%,100%{transform:translate(-50%,-50%) scale(.955);}50%{transform:translate(-50%,-50%) scale(1.03);}}
 .compEngine{position:absolute;top:50%;left:50%;width:70%;height:60px;transform:translate(-50%,-50%);background:radial-gradient(ellipse at center,rgba(120,190,255,.5) 0%,transparent 70%);filter:blur(6px);animation:engPulse 2.2s ease-in-out infinite;pointer-events:none;}
 @keyframes engPulse{0%,100%{opacity:.55;}50%{opacity:1;}}
 .compOk{position:absolute;left:0;right:0;bottom:10px;text-align:center;font-size:11px;letter-spacing:3px;color:#9dffb0;text-shadow:0 0 8px rgba(120,255,150,.8);animation:okPulse 1.8s ease-in-out infinite;}
@@ -308,15 +312,16 @@ body{touch-action:pan-y;}
 .row .grow{flex:1;min-width:0;}
 .row .nm{font-weight:700;font-size:18px;}
 .row .sub2{font-size:14px;color:var(--dim);} .rnkline{font-size:11px;font-style:italic;opacity:.72;margin-top:1px;line-height:1.25;}
-.pface{width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid var(--orange);flex:none;background:#000;}
-.pfaceSm{width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid var(--orange);flex:none;background:#000;}
-.pfaceBig{width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid var(--orange);flex:none;background:#000;}
+.pface{width:52px;height:52px;border-radius:50%;object-fit:cover;object-position:50% 32%;border:2px solid var(--orange);flex:none;background:#000;filter:saturate(.86) contrast(1.06) brightness(1.02);}
+.pfaceSm{width:42px;height:42px;border-radius:50%;object-fit:cover;object-position:50% 32%;border:2px solid var(--orange);flex:none;background:#000;filter:saturate(.86) contrast(1.06) brightness(1.02);}
+.pfaceBig{width:120px;height:120px;border-radius:50%;object-fit:cover;object-position:50% 30%;border:3px solid var(--orange);flex:none;background:radial-gradient(circle at 50% 40%,#1b2a4d 0%,#05080f 78%);filter:saturate(.86) contrast(1.06) brightness(1.02);}
 .pfaceWrap{display:flex;align-items:center;gap:14px;margin-bottom:8px;}
 .pfaceInit{display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;color:var(--peach);background:var(--panel2);}
 .shipPic{width:84px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--orange);flex:none;background:#000;}
 .shipPicBig{width:100%;max-height:190px;object-fit:cover;border-radius:10px;border:2px solid var(--orange);margin-bottom:8px;background:#000;display:block;}
 .shipPicBig.stnBig{object-fit:contain;max-height:300px;background:#05080f url(ships/nebula-a.jpg) center/cover no-repeat;padding:12px;}
 .shipPicEAS{object-fit:contain;background:#05080f url(ships/nebula-a.jpg) center/cover no-repeat;box-sizing:border-box;padding:4px;}
+.shipPic.stnThumb{object-fit:contain;background:#05080f url(ships/nebula-a.jpg) center/cover no-repeat;padding:2px;box-sizing:border-box;}
 .shipPicEAS.nebB{background-image:url(ships/nebula-b.jpg);}
 .shipPicEAS.nebC{background-image:url(ships/nebula-c.jpg);}
 .musPhoto{margin:10px 0 2px;border:1px solid #2a3550;border-radius:10px;overflow:hidden;background:#0a0e18;}
@@ -3443,22 +3448,40 @@ const CANON_PAIRS=[
   ["Tom Paris","B'Elanna Torres","married",[{name:"Miral Paris",species:"Klingon/Human",gender:"F",age:0}]],
   ["William Riker","Deanna Troi","dating",[]],["Paul Stamets","Hugh Culber","married",[]],["Jay-Den Kraag","Kyle","dating",[]],
   ["Julian Bashir","Ezri Dax","dating",[]],
-  ["Chakotay","Seven of Nine","dating",[]]
+  ["Chakotay","Seven of Nine","dating",[]],
+  ["Jean-Luc Picard","Beverly Crusher","dating",[]],["Michael Burnham","Cleveland Booker","dating",[]],["Adira Tal","Gray Tal","dating",[]]
 ];
 const CANON_PARENTS={"Jack Crusher":["Beverly Crusher"]};
+// v3.1 canon-bond helpers (Jason 2026-10-01: canon couples must stay canon). Deliberately NOT seeded: Kira/Odo (amicable exes; he returned to the Great Link), Worf (widower; Jadzia is not in the roster), Spock/Chapel (era-local versions, never one couple at once), Raffi/Seven (Picard-era; Seven is with Chakotay in 2378).
+function canonPartnerName(n){for(let i=0;i<CANON_PAIRS.length;i++){if(CANON_PAIRS[i][0]===n)return CANON_PAIRS[i][1];if(CANON_PAIRS[i][1]===n)return CANON_PAIRS[i][0];}return null;}
+function isCanonPair(a,b){if(!a||!b)return false;const cp=canonPartnerName(a.name);return !!cp&&cp===b.name;}
+function canonPartnerAlive(o){const cp=canonPartnerName(o.name);if(!cp)return null;const p=(G.officers||[]).find(function(x){return x.name===cp&&x.stage==="adult"&&x.status==="active"&&!x.dead&&!x.retired;});return p||null;}
+const CANON_SPLIT_P=1e-6;
+const REL_STAGE_RANK={interested:0,dating:1,engaged:2,married:3};
 function seedCanonBonds(g){
   let n=0;const byName={};
   (g.officers||[]).forEach(o=>{if(!o.dead&&!o.retired)byName[o.name]=o;});
   CANON_PAIRS.forEach(function(pr){
     const a=byName[pr[0]],b=byName[pr[1]];
-    if(!a||!b||a.rel||b.rel)return;
-    a.rel={stage:pr[2],partner:b.id,day:0};b.rel={stage:pr[2],partner:a.id,day:0};n++;
+    if(!a||!b)return;
+    if(a.rel&&a.rel.partner===b.id&&b.rel&&b.rel.partner===a.id){
+      if((REL_STAGE_RANK[pr[2]]||0)>(REL_STAGE_RANK[a.rel.stage]||0)){a.rel.stage=pr[2];b.rel.stage=pr[2];n++;}
+    }else{
+      [a,b].forEach(function(x){if(x.rel){const c=(g.officers||[]).find(function(o){return o.id===x.rel.partner;});if(c&&c.id!==a.id&&c.id!==b.id)c.rel=null;x.rel=null;}});
+      a.rel={stage:pr[2],partner:b.id,day:0};b.rel={stage:pr[2],partner:a.id,day:0};n++;
+    }
     (pr[3]||[]).forEach(function(k){
-      if(byName[k.name]||(g.officers||[]).some(function(o){return o.name===k.name;}))return;
-      const kid=MK([k.name,k.species,k.gender,k.age,0,"Operations",[35,35,35,35,35,35],[],"pool","Child","child"]);
-      kid.parents=[a.id,b.id];
-      a.kids.push(kid.id);b.kids.push(kid.id);
-      g.officers.push(kid);byName[k.name]=kid;n++;
+      let kid=byName[k.name]||(g.officers||[]).find(function(o){return o.name===k.name;});
+      if(!kid){
+        kid=MK([k.name,k.species,k.gender,k.age,0,"Operations",[35,35,35,35,35,35],[],"pool","Child","child"]);
+        kid.parents=[a.id,b.id];a.kids.push(kid.id);b.kids.push(kid.id);
+        g.officers.push(kid);byName[k.name]=kid;n++;
+      }else{
+        if(kid.parents&&kid.parents.indexOf(a.id)<0){kid.parents.push(a.id);n++;}
+        if(kid.parents&&kid.parents.indexOf(b.id)<0){kid.parents.push(b.id);n++;}
+        if(a.kids&&a.kids.indexOf(kid.id)<0){a.kids.push(kid.id);n++;}
+        if(b.kids&&b.kids.indexOf(kid.id)<0){b.kids.push(kid.id);n++;}
+      }
     });
   });
   Object.keys(CANON_PARENTS).forEach(function(cn){
@@ -4771,7 +4794,7 @@ function romanceTick(){
   postings().forEach(p=>{
     const crew=p.t==="ship"?crewOfShip(p.id):crewOfStation(p.id);
     if(crew.length<6)return;
-    const singles=crew.filter(o=>!o.rel&&o.stage==="adult");
+    const singles=crew.filter(o=>!o.rel&&o.stage==="adult"&&!canonPartnerAlive(o));
     // sparks
     singles.forEach(o=>{
       if(Math.random()<0.015&&singles.length>1){
@@ -4807,8 +4830,11 @@ function romanceTick(){
       sfx("wedding");
       log("romance","Wedding bells: "+fullName(o)+" and "+fullName(p)+" are married. The captain officiated. Someone cried during the vows (it was the captain).");
       capLogAuto("Wedding",fullName(o)+" and "+fullName(p)+" were married. I officiated. Someone cried during the vows (it was me).");}
-    // drama
-    if(r.stage==="dating"&&Math.random()<0.0015)splitCouple(o,p,"have broken up. The mess hall is awkward now.");
+    // drama — v3.1: canon couples re-roll at CANON_SPLIT_P (~0.0001%/day) and never take the affair path
+    if(isCanonPair(o,p)){
+      if(Math.random()<CANON_SPLIT_P)splitCouple(o,p,"have gone their separate ways. The gossip network had waited years for this one.");
+    }
+    else if(r.stage==="dating"&&Math.random()<0.0015)splitCouple(o,p,"have broken up. The mess hall is awkward now.");
     else if(r.stage==="engaged"&&Math.random()<0.001)splitCouple(o,p,"have called off the engagement.");
     else if(r.stage==="married"){
       if(Math.random()<0.0006*(o.kids.length?0.5:1))splitCouple(o,p,"have divorced"+(o.kids.length?" — the children will split time between parents":"")+".");
@@ -5064,7 +5090,7 @@ let completionQ=[];
 function completionsOn(){try{const v=localStorage.getItem("stfc_completions");return v===null?true:v==="1";}catch(e){return true;}}
 function uiToggleCompletions(){try{localStorage.setItem("stfc_completions",completionsOn()?"0":"1");}catch(e){}render();toast("Completion celebrations "+(completionsOn()?"enabled.":"disabled."));}
 function queueCompletion(c){sfx("dock");completionQ.push(c);}
-function compStars(){return '<div class="cstars"></div>';}
+function compStars(){return '<div class="cstars far"></div><div class="cstars near"></div>';}
 function compGotoShip(id){$("completeRoot").classList.remove("open");pumpCompletions();shipModal(id);}
 function compGotoStation(id){$("completeRoot").classList.remove("open");pumpCompletions();stationModal(id);}
 function showCompletion(c){
@@ -10679,7 +10705,7 @@ const STATION_ART_IDS={ds9:"ds9",utopia:"utopia",douglas:"starbase",sb80:"starba
 function stationArtKey(st){return (st&&STATION_ART_IDS[st.id])||(st&&st.type);}
 function stationPic(type,big){
   const src=(typeof STATION_PICS!=="undefined"&&STATION_PICS[type])?STATION_PICS[type]:"";
-  return src?'<img class="'+(big?"shipPicBig stnBig":"shipPic")+'" src="'+src+'" alt="">':"";
+  return src?'<img class="'+(big?"shipPicBig stnBig":"shipPic stnThumb")+'" src="'+src+'" alt="">':"";
 }
 /* Map station markers: the old blue-square indicator stands alone for most stations;
    only Deep Space 9 and Empok Nor get the DS9 image, and Earth Spacedock gets Jason's
@@ -15194,7 +15220,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v3.0</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v3.1</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
