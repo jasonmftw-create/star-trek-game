@@ -16,10 +16,10 @@
   --orange:#ff9900; --peach:#ffcc99; --purple:#cc99cc; --violet:#9999ff;
   --teal:#99ccff; --ice:#ccffff; --red:#dd4444; --green:#aaccaa; --pink:#ff99cc;
   --gold:#ffcc66; --bg:#050505; --panel:#0d0d12; --panel2:#14141c; --line:#2a2a35;
-  --txt:#f2f2f8; --dim:#bcbcd2;
+  --txt:#f2f2f8; --dim:#bcbcd2; --artframe:#2a3550;
 }
 /* ===== Alternate theme: Picard / Discovery blue LCARS ===== */
-[data-theme="picard"]{
+[data-theme="picard"]{ --artframe:#1d3a5f;
   --orange:#3f9df0; --peach:#cfe6ff; --purple:#7fa8e8; --violet:#6f7ff0;
   --teal:#57c8f5; --ice:#d8f1ff; --gold:#8fc1ff;
   --bg:#04070d; --panel:#0a1119; --panel2:#101a26; --line:#1d2c40;
@@ -29,37 +29,37 @@
 [data-theme="picard"] .mapLbl{fill:#cfe6ff;}
 [data-theme="picard"] #postPick{background:#0a1119;border-color:#1d2c40;color:#eef4fb;}
 /* ===== Alert themes ===== */
-[data-theme="redalert"]{
+[data-theme="redalert"]{ --artframe:#5a2626;
   --orange:#ff3b30; --peach:#ff9a8a; --purple:#ff6b6b; --violet:#ff2222;
   --teal:#ff8a80; --ice:#ffd6d6; --red:#ff1a1a; --green:#7a2e2e; --pink:#ff5c5c;
   --gold:#ff7043; --bg:#0d0202; --panel:#160606; --panel2:#1f0808; --line:#4a1414;
   --txt:#ffe9e9; --dim:#c98f8f;
 }
-[data-theme="yellowalert"]{
+[data-theme="yellowalert"]{ --artframe:#5a4a22;
   --orange:#ffb300; --peach:#ffe0a3; --purple:#ffcf5e; --violet:#ffab00;
   --teal:#ffd54f; --ice:#fff3d6; --red:#dd4444; --green:#8aa68a; --pink:#ffca7a;
   --gold:#ffc400; --bg:#0d0902; --panel:#171106; --panel2:#201806; --line:#4a3a14;
   --txt:#fff6e3; --dim:#d4bd8a;
 }
-[data-theme="bluealert"]{
+[data-theme="bluealert"]{ --artframe:#1f4a5a;
   --orange:#29b6f6; --peach:#b3e5fc; --purple:#4fc3f7; --violet:#40c4ff;
   --teal:#00e5ff; --ice:#e0f7ff; --red:#dd4444; --green:#8aa698; --pink:#7fd4ff;
   --gold:#4dd0e1; --bg:#020a12; --panel:#06121e; --panel2:#081a2c; --line:#14324e;
   --txt:#eaf7ff; --dim:#8fb8d4;
 }
-[data-theme="greenalert"]{
+[data-theme="greenalert"]{ --artframe:#3a4a2f;
   --orange:#ffb066; --peach:#ffd9b3; --purple:#d9b3e6; --violet:#b3b3ff;
   --teal:#a3d9e6; --ice:#e6f7ff; --red:#dd6666; --green:#b3d9b3; --pink:#ffb3d9;
   --gold:#ffd98a; --bg:#0b0906; --panel:#14100a; --panel2:#1c1610; --line:#3a2f22;
   --txt:#fff8f0; --dim:#c9bba8;
 }
-[data-theme="blackalert"]{
+[data-theme="blackalert"]{ --artframe:#35316a;
   --orange:#6a5acd; --peach:#9a8ae6; --purple:#7a6ff0; --violet:#5a4ae6;
   --teal:#4a6a9a; --ice:#8a9ac9; --red:#8a2a3a; --green:#4a6a5a; --pink:#8a5a9a;
   --gold:#6a6a9a; --bg:#02030a; --panel:#070a18; --panel2:#0b1024; --line:#1a2140;
   --txt:#c9cfe6; --dim:#6a7190;
 }
-[data-theme="graymode"]{
+[data-theme="graymode"]{ --artframe:#3f3f3f;
   --orange:#5a5a5a; --peach:#8a8a8a; --purple:#6e6e6e; --violet:#555555;
   --teal:#777777; --ice:#999999; --red:#5a3a3a; --green:#4a4a4a; --pink:#666666;
   --gold:#6a6a6a; --bg:#000000; --panel:#050505; --panel2:#0a0a0a; --line:#1a1a1a;
@@ -113,7 +113,7 @@
 .qquip{font-style:italic;color:var(--dim);margin:8px 0 2px;font-size:13px;}
 [data-qtheme="full"] .qquip{color:#e8c86a;}
 /* Full Continuum also reskins the whole app gold, like the other themes do */
-[data-qtheme="full"]{
+[data-qtheme="full"]{ --artframe:#5a4517;
   --orange:#ffd76a; --peach:#fff3c4; --purple:#e8c86a; --violet:#ffdf8a;
   --teal:#ffe9a8; --ice:#fffbe8;
   --gold:#ffd76a; --bg:#0a0802; --panel:#141006; --panel2:#1d1708; --line:#5a4517;
@@ -233,15 +233,18 @@ div.meetFace{display:flex;align-items:center;justify-content:center;font-size:42
 @keyframes compIn{from{transform:scale(.82) translateY(20px);opacity:0;}to{transform:scale(1) translateY(0);opacity:1;}}
 .completeStage{position:relative;height:230px;overflow:hidden;background:radial-gradient(ellipse at 50% 130%,#1b2a4d 0%,#070b16 62%,#03040a 100%);}
 .completeStage .cstars{position:absolute;top:0;bottom:0;left:-7%;width:114%;}
-.cstars.far{opacity:.55;animation:starDrift 95s linear infinite alternate;}
-.cstars.near{animation:starDrift 48s linear infinite alternate;}
-@keyframes starDrift{from{transform:translateX(-3.2%);}to{transform:translateX(3.2%);}}
-.completeStage .cstars{position:absolute;inset:0;background-image:radial-gradient(1.5px 1.5px at 8% 22%,#fff,transparent),radial-gradient(1px 1px at 22% 68%,#cfe4ff,transparent),radial-gradient(1.5px 1.5px at 35% 12%,#fff,transparent),radial-gradient(1px 1px at 48% 42%,#fff,transparent),radial-gradient(1px 1px at 61% 78%,#cfe4ff,transparent),radial-gradient(1.5px 1.5px at 73% 28%,#fff,transparent),radial-gradient(1px 1px at 86% 55%,#fff,transparent),radial-gradient(1px 1px at 93% 18%,#cfe4ff,transparent),radial-gradient(1px 1px at 15% 85%,#fff,transparent),radial-gradient(1.5px 1.5px at 55% 8%,#fff,transparent);}
-.completeStage .speed{position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 46px,rgba(160,200,255,.08) 46px 48px);animation:speedMove 1.1s linear infinite;}
-@keyframes speedMove{from{transform:translateX(0);}to{transform:translateX(48px);}}
+/* v4.3 Underway: the world rushes past — seamless continuous sternward drift (stars duplicated at +50%% for a perfect loop) */
+@keyframes uwDrift{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+.completeStage .cstars{position:absolute;top:0;bottom:0;left:-50%;width:200%;pointer-events:none;}
+.cstars.far{opacity:.55;background-image:radial-gradient(1.5px 1.5px at 8% 22%,#fff,transparent),radial-gradient(1.5px 1.5px at 58% 22%,#fff,transparent),radial-gradient(1px 1px at 22% 68%,#fff,transparent),radial-gradient(1px 1px at 72% 68%,#fff,transparent),radial-gradient(1.5px 1.5px at 35% 12%,#cfe4ff,transparent),radial-gradient(1.5px 1.5px at 85% 12%,#cfe4ff,transparent),radial-gradient(1px 1px at 48% 42%,#fff,transparent),radial-gradient(1px 1px at 98% 42%,#fff,transparent),radial-gradient(1.5px 1.5px at 11% 78%,#cfe4ff,transparent),radial-gradient(1.5px 1.5px at 61% 78%,#cfe4ff,transparent),radial-gradient(1px 1px at 23% 28%,#cfe4ff,transparent),radial-gradient(1px 1px at 73% 28%,#cfe4ff,transparent),radial-gradient(1.5px 1.5px at 36% 55%,#cfe4ff,transparent),radial-gradient(1.5px 1.5px at 86% 55%,#cfe4ff,transparent),radial-gradient(1px 1px at 43% 18%,#cfe4ff,transparent),radial-gradient(1px 1px at 93% 18%,#cfe4ff,transparent),radial-gradient(1.5px 1.5px at 15% 85%,#fff,transparent),radial-gradient(1.5px 1.5px at 65% 85%,#fff,transparent),radial-gradient(1px 1px at 5% 8%,#cfe4ff,transparent),radial-gradient(1px 1px at 55% 8%,#cfe4ff,transparent),radial-gradient(1.5px 1.5px at 30% 90%,#fff,transparent),radial-gradient(1.5px 1.5px at 80% 90%,#fff,transparent),radial-gradient(1px 1px at 44% 62%,#fff,transparent),radial-gradient(1px 1px at 94% 62%,#fff,transparent);animation:uwDrift 55s linear infinite;}
+.cstars.near{background-image:radial-gradient(2px 2px at 4% 30%,#fff,transparent),radial-gradient(2px 2px at 54% 30%,#fff,transparent),radial-gradient(2.5px 2.5px at 18% 72%,#fff,transparent),radial-gradient(2.5px 2.5px at 68% 72%,#fff,transparent),radial-gradient(2px 2px at 33% 20%,#cfe4ff,transparent),radial-gradient(2px 2px at 83% 20%,#cfe4ff,transparent),radial-gradient(2.5px 2.5px at 46% 50%,#fff,transparent),radial-gradient(2.5px 2.5px at 96% 50%,#fff,transparent),radial-gradient(2px 2px at 10% 60%,#fff,transparent),radial-gradient(2px 2px at 60% 60%,#fff,transparent),radial-gradient(2.5px 2.5px at 27% 85%,#fff,transparent),radial-gradient(2.5px 2.5px at 77% 85%,#fff,transparent),radial-gradient(2px 2px at 39% 35%,#fff,transparent),radial-gradient(2px 2px at 89% 35%,#fff,transparent),radial-gradient(2.5px 2.5px at 49% 10%,#cfe4ff,transparent),radial-gradient(2.5px 2.5px at 99% 10%,#cfe4ff,transparent);animation:uwDrift 26s linear infinite;}
+.completeStage .speed{position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 46px,rgba(160,200,255,.13) 46px 48px);animation:speedMove 1.1s linear infinite;}
+.completeStage .speed2{position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 29px,rgba(170,210,255,.07) 29px 31px);animation:speedMove2 .8s linear infinite;}
+@keyframes speedMove{from{transform:translateX(0);}to{transform:translateX(-48px);}}
+@keyframes speedMove2{from{transform:translateX(0);}to{transform:translateX(-31px);}}
 .compShip{position:absolute;top:50%;left:50%;width:82%;max-width:360px;transform:translate(-50%,-50%);animation:shipFly 5s ease-in-out infinite;}
 .compShip img{width:100%;display:block;filter:drop-shadow(0 0 18px rgba(140,200,255,.45));}
-@keyframes shipFly{0%,100%{transform:translate(-50%,-50%) scale(.955);}50%{transform:translate(-50%,-50%) scale(1.03);}}
+@keyframes shipFly{0%,100%{transform:translate(-50%,-52%) scale(.97);}50%{transform:translate(-50%,-48%) scale(1.01);}}
 .compEngine{position:absolute;top:50%;left:50%;width:70%;height:60px;transform:translate(-50%,-50%);background:radial-gradient(ellipse at center,rgba(120,190,255,.5) 0%,transparent 70%);filter:blur(6px);animation:engPulse 2.2s ease-in-out infinite;pointer-events:none;}
 @keyframes engPulse{0%,100%{opacity:.55;}50%{opacity:1;}}
 .compOk{position:absolute;left:0;right:0;bottom:10px;text-align:center;font-size:11px;letter-spacing:3px;color:#9dffb0;text-shadow:0 0 8px rgba(120,255,150,.8);animation:okPulse 1.8s ease-in-out infinite;}
@@ -312,7 +315,7 @@ body{touch-action:pan-y;}
 .row .grow{flex:1;min-width:0;}
 .row .nm{font-weight:700;font-size:18px;}
 .row .sub2{font-size:14px;color:var(--dim);} .rnkline{font-size:11px;font-style:italic;opacity:.72;margin-top:1px;line-height:1.25;}
-.pface{width:52px;height:52px;border-radius:50%;object-fit:cover;object-position:50% 32%;border:2px solid var(--orange);flex:none;background:#000;filter:saturate(.86) contrast(1.06) brightness(1.02);}
+.pface{width:52px;height:52px;border-radius:50%;object-fit:cover;object-position:50% 32%;border:2px solid var(--orange);flex:none;background:linear-gradient(160deg,#1b2436,#0a0e18);filter:saturate(.86) contrast(1.06) brightness(1.02);}
 .pfaceSm{width:42px;height:42px;border-radius:50%;object-fit:cover;object-position:50% 32%;border:2px solid var(--orange);flex:none;background:#000;filter:saturate(.86) contrast(1.06) brightness(1.02);}
 .pfaceBig{width:120px;height:120px;border-radius:50%;object-fit:cover;object-position:50% 30%;border:3px solid var(--orange);flex:none;background:radial-gradient(circle at 50% 40%,#1b2a4d 0%,#05080f 78%);filter:saturate(.86) contrast(1.06) brightness(1.02);}
 .pfaceWrap{display:flex;align-items:center;gap:14px;margin-bottom:8px;}
@@ -324,14 +327,25 @@ body{touch-action:pan-y;}
 .shipPic.stnThumb{object-fit:contain;background:#05080f url(ships/nebula-a.jpg) center/cover no-repeat;padding:2px;box-sizing:border-box;}
 .shipPicEAS.nebB{background-image:url(ships/nebula-b.jpg);}
 .shipPicEAS.nebC{background-image:url(ships/nebula-c.jpg);}
-.musPhoto{margin:10px 0 2px;border:1px solid #2a3550;border-radius:10px;overflow:hidden;background:#0a0e18;}
+.musPhoto{margin:10px 0 2px;border:2px solid var(--artframe);border-radius:10px;overflow:hidden;background:#0a0e18;}
 .musPhoto img{width:100%;height:auto;display:block;}
-.musPhoto div{font-size:9px;letter-spacing:.14em;color:#8fa3c8;padding:5px 8px;text-transform:uppercase;}
+.musPhoto div{font-size:9px;letter-spacing:.14em;color:var(--dim);padding:5px 8px;text-transform:uppercase;}
 .shipPicBig.shipPicEAS{padding:18px 14px;max-height:240px;}
 .shipMedia{height:88px;border:2px solid var(--orange);border-radius:10px;overflow:hidden;margin-bottom:8px;background:#05080f;}
 .shipMedia.stnMedia{height:200px;}
 .shipMedia img{width:100%;height:100%;max-height:none;border:none;border-radius:0;margin-bottom:0;display:block;}
 .shipMedia .shipPicEAS{padding:6px 10px;}
+/* ===== v4.3 Project: Underway — shared ship presentation (applied at shipPic chokepoint) ===== */
+.uwWrap{position:relative;display:block;overflow:hidden;border-radius:10px;border:2px solid var(--orange);margin:0 0 8px;background:#05080f;}
+.uwWrap .uwStars{position:absolute;top:0;bottom:0;left:-50%;width:200%;pointer-events:none;background-image:radial-gradient(1.5px 1.5px at 6% 25%,#cfe4ff,transparent),radial-gradient(1.5px 1.5px at 56% 25%,#cfe4ff,transparent),radial-gradient(1px 1px at 20% 70%,#fff,transparent),radial-gradient(1px 1px at 70% 70%,#fff,transparent),radial-gradient(1.5px 1.5px at 34% 15%,#cfe4ff,transparent),radial-gradient(1.5px 1.5px at 84% 15%,#cfe4ff,transparent),radial-gradient(1px 1px at 47% 45%,#fff,transparent),radial-gradient(1px 1px at 97% 45%,#fff,transparent),radial-gradient(1.5px 1.5px at 12% 80%,#fff,transparent),radial-gradient(1.5px 1.5px at 62% 80%,#fff,transparent),radial-gradient(1px 1px at 25% 30%,#cfe4ff,transparent),radial-gradient(1px 1px at 75% 30%,#cfe4ff,transparent),radial-gradient(1.5px 1.5px at 38% 58%,#fff,transparent),radial-gradient(1.5px 1.5px at 88% 58%,#fff,transparent),radial-gradient(1px 1px at 45% 20%,#cfe4ff,transparent),radial-gradient(1px 1px at 95% 20%,#cfe4ff,transparent),radial-gradient(1.5px 1.5px at 16% 88%,#fff,transparent),radial-gradient(1.5px 1.5px at 66% 88%,#fff,transparent),radial-gradient(1px 1px at 3% 10%,#cfe4ff,transparent),radial-gradient(1px 1px at 53% 10%,#cfe4ff,transparent),radial-gradient(1.5px 1.5px at 32% 92%,#fff,transparent),radial-gradient(1.5px 1.5px at 82% 92%,#fff,transparent),radial-gradient(1px 1px at 42% 64%,#fff,transparent),radial-gradient(1px 1px at 92% 64%,#fff,transparent);animation:uwDrift 42s linear infinite;}
+.uwWrap .uwStreak{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(90deg,transparent 0 30px,rgba(170,210,255,.10) 30px 32px);animation:uwStreakA .9s linear infinite;}
+@keyframes uwStreakA{from{transform:translateX(0);}to{transform:translateX(-32px);}}
+.uwWrap .uwGlow{position:absolute;top:50%;left:50%;width:82%;height:64%;transform:translate(-50%,-50%);pointer-events:none;background:radial-gradient(ellipse at center,rgba(120,190,255,.32),transparent 70%);filter:blur(8px);animation:engPulse 2.6s ease-in-out infinite;}
+.uwWrap>img{position:relative;z-index:2;display:block;width:100%;}
+.uwWrap .shipPicBig{border:none;margin:0;max-height:260px;}
+.shipMedia .uwWrap{height:100%;border:none;border-radius:0;margin:0;}
+.shipMedia .uwWrap>img{height:100%;width:100%;max-height:none;}
+@media (prefers-reduced-motion:reduce){.uwWrap .uwStars,.uwWrap .uwStreak,.uwWrap .uwGlow,.completeStage .speed2{animation:none!important;}}
 .shipCardNm{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;}
 .shipCardNmTxt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .shipCardNm .reg{font-size:12px;color:var(--dim);font-weight:400;}
@@ -5611,7 +5625,7 @@ function showCompletion(c){
   let stage="",kicker="",buttons="";
   if(c.kind==="ship"){
     kicker="\u2605 Ship commissioned";
-    stage='<div class="speed"></div>'+compStars()+'<div class="compEngine"></div><div class="compShip"><img src="'+c.art+'" alt=""></div>';
+    stage='<div class="speed"></div><div class="speed2"></div>'+compStars()+'<div class="compEngine"></div><div class="compShip"><img src="'+c.art+'" alt=""></div>';
     buttons='<button class="btn" onclick="compGotoShip(\''+c.id+'\')">View ship</button>';
   }else if(c.kind==="station"){
     kicker="\u2605 Station operational";
@@ -5624,17 +5638,17 @@ function showCompletion(c){
     buttons='<button class="btn" onclick="compGotoStation(\''+c.id+'\')">View station</button>';
   }else if(c.kind==="transit"){
     kicker="\u2605 Transit complete";
-    stage='<div class="speed"></div>'+compStars()+'<div class="compEngine"></div><div class="compShip"><img src="'+c.art+'" alt=""></div>';
+    stage='<div class="speed"></div><div class="speed2"></div>'+compStars()+'<div class="compEngine"></div><div class="compShip"><img src="'+c.art+'" alt=""></div>';
     buttons='<button class="btn" onclick="compGotoShip(\''+c.id+'\')">View ship</button>';
   }else if(c.kind==="research"){
     kicker="\u2605 Research breakthrough";
     stage=compStars()+'<div class="compResearch"><img src="'+c.art+'" alt=""><div class="compScan"></div></div>';
   }else if(c.kind==="shuttle"){
     kicker="\u2605 Shuttle ready";
-    stage='<div class="speed"></div>'+compStars()+(c.art?'<div class="compShip compShuttleArt"><img src="'+c.art+'" alt=""></div>':'<div class="compShuttle"></div>');
+    stage='<div class="speed"></div><div class="speed2"></div>'+compStars()+(c.art?'<div class="compShip compShuttleArt"><img src="'+c.art+'" alt=""></div>':'<div class="compShuttle"></div>');
   }else{
     kicker=c.kind==="refit"?"\u2605 Refit complete":"\u2605 Repairs complete";
-    stage='<div class="speed"></div>'+compStars()+'<div class="compEngine"></div><div class="compShip"><img src="'+c.art+'" alt=""></div><div class="compOk">ALL SYSTEMS NOMINAL</div>';
+    stage='<div class="speed"></div><div class="speed2"></div>'+compStars()+'<div class="compEngine"></div><div class="compShip"><img src="'+c.art+'" alt=""></div><div class="compOk">ALL SYSTEMS NOMINAL</div>';
     buttons='<button class="btn" onclick="compGotoShip(\''+c.id+'\')">View ship</button>';
   }
   R.innerHTML='<div class="completeCard"><div class="completeStage">'+stage+'</div>'+
@@ -11346,12 +11360,15 @@ function faceImg(o,cls){
   const init=o.name.split(" ").map(function(w){return w[0];}).join("").slice(0,2).toUpperCase();
   return '<div class="'+cls+' pfaceInit">'+init+'</div>';
 }
+/* v4.3 ONE FLEET ONE LOOK */
 function shipArtFor(s,big){return shipPic(s?s.cls:"",big);}
 function shipPic(cls,big){
   const _icn=(typeof shipIconName==="function"&&typeof SHIP_ICON_META!=="undefined"&&typeof tacPlayerShape==="function")?shipIconName(tacPlayerShape(cls),cls):null;
-  if(_icn&&SHIP_ICON_META[_icn]){var _nb=[""," nebB"," nebC"][Array.from(String(cls)).reduce(function(a,c){return a+c.charCodeAt(0);},0)%3];return '<img class="'+(big?"shipPicBig":"shipPic")+' shipPicEAS'+_nb+'" src="ships/icons/'+_icn+'.png" alt="">';}
-  const src=(typeof SHIP_PICS!=="undefined"&&SHIP_PICS[cls])?SHIP_PICS[cls]:"";
-  return src?'<img class="'+(big?"shipPicBig":"shipPic")+'" src="'+src+'" alt="">':"";
+  let img="";
+  if(_icn&&SHIP_ICON_META[_icn]){var _nb=[""," nebB"," nebC"][Array.from(String(cls)).reduce(function(a,c){return a+c.charCodeAt(0);},0)%3];img='<img class="'+(big?"shipPicBig":"shipPic")+' shipPicEAS'+_nb+'" src="ships/icons/'+_icn+'.png" alt="">';}
+  else{const src=(typeof SHIP_PICS!=="undefined"&&SHIP_PICS[cls])?SHIP_PICS[cls]:"";img=src?'<img class="'+(big?"shipPicBig":"shipPic")+'" src="'+src+'" alt="">':"";}
+  if(big&&img)return '<span class="uwWrap"><span class="uwStars"></span><span class="uwStreak"></span><span class="uwGlow"></span>'+img+'</span>';
+  return img;
 }
 function compArtFor(cls){const _icn=(typeof shipIconName==="function"&&typeof SHIP_ICON_META!=="undefined"&&typeof tacPlayerShape==="function")?shipIconName(tacPlayerShape(cls),cls):null;if(_icn&&SHIP_ICON_META[_icn])return "ships/icons/"+_icn+".png";return (typeof SHIP_PICS!=="undefined"&&SHIP_PICS[cls])?SHIP_PICS[cls]:"";
 }
@@ -15908,7 +15925,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v4.2</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v4.3</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
