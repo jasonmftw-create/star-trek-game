@@ -3672,6 +3672,7 @@ function migrateSave(g){
   (g.ships||[]).forEach(s=>{if(s.crewOrder===undefined)s.crewOrder=null;if(s.orderCd==null)s.orderCd=0;}); // v4.1 crew-life orders
   (g.ships||[]).forEach(s=>{if(s.refitT==null)s.refitT=0;if(s.refitTo==null)s.refitTo=0;if(s.patrol==null)s.patrol=false;}); // v4.2 refit tiers + auto-patrol
   (g.stations||[]).forEach(st=>{if(st.upg==null)st.upg=0;}); // v4.2 station upgrades
+  (g.officers||[]).forEach(o=>{if(DIVISIONS.indexOf(o.division)<0)o.division=officerDivision(o)||"operations";}); // v4.4 assignable divisions
   if(g.sproj==null)g.sproj=[];if(g.sprojDone==null)g.sprojDone={}; // v4.2 sector projects
   if(g.corridorInc==null)g.corridorInc=0;if(g.habitatInc==null)g.habitatInc=0;if(g.snetCd==null)g.snetCd=0;if(g.summitHall==null)g.summitHall=false; // v4.2
   (g.stations||[]).forEach(st=>{if(st.crewOrder===undefined)st.crewOrder=null;if(st.orderCd==null)st.orderCd=0;});
@@ -10852,7 +10853,7 @@ function lostModal(idx){
   portraitTabForce=true;
   let h='<div class="pfaceWrap">'+faceImg(e,"pfaceBig")+'<div style="flex:1;min-width:0;"><h2>'+esc(e.name)+'<div class="rnkline">'+esc(e.rank)+'</div></h2>'+
     '<div class="flavor">'+esc(e.species)+'</div></div></div>';
-  if(typeof PORTRAITS_ALT!=="undefined"&&PORTRAITS_ALT[e.name])h+=portraitToggleHtml(e.name,e);
+  if(portraitHasToggle(e.name))h+=portraitToggleHtml(e.name,e);
   h+='<div class="sub2 dim">'+esc(e.cause)+' · '+esc(e.when)+'</div>';
   if(acc)h+='<h4>Service Record</h4>'+acc;
   h+='<h4>Temporal Extraction</h4>';
@@ -11134,7 +11135,7 @@ function tributeModal(si){
   portraitTabForce=true;
   let h='<div class="pfaceWrap">'+faceImg(s,"pfaceBig")+'<div style="flex:1;min-width:0;"><h2>† '+esc(s.name)+'<div class="rnkline">'+esc(s.rank)+'</div></h2>'+
     '<div class="flavor">'+esc(s.species)+'</div></div></div>';
-  if(typeof PORTRAITS_ALT!=="undefined"&&PORTRAITS_ALT[s.name])h+=portraitToggleHtml(s.name,s);
+  if(portraitHasToggle(s.name))h+=portraitToggleHtml(s.name,s);
   h+='<div class="sub2 dim">'+esc(s.cause)+' · '+esc(s.when)+'</div>';
   if(acc)h+='<h4>Service Record</h4>'+acc;
   h+='<h4>Temporal Extraction</h4>';
@@ -11352,13 +11353,125 @@ function crewPortraitFor(o){
 }
 function portraitSrc(name,entry){var pick=portraitPick(name,entry);if(pick==="alt"&&typeof PORTRAITS_ALT!=="undefined"&&PORTRAITS_ALT[name])return PORTRAITS_ALT[name];if(typeof PORTRAITS!=="undefined"&&PORTRAITS[name])return PORTRAITS[name];if(entry&&entry.customPic)return entry.customPic;if(entry){var cp=crewPortraitFor(entry);if(cp)return cp;}return "";}
 function portraitVerCur(name,entry){return portraitPick(name,entry);}
-function portraitToggleHtml(name,entry){const info=PORTRAIT_VER_INFO[name];if(!info||typeof PORTRAITS_ALT==="undefined"||!PORTRAITS_ALT[name])return "";const cur=portraitVerCur(name,entry);const q=name.replace(/'/g,"\\'");return '<div class="kv"><span class="k">Portrait</span><span class="v"><span class="seg"><button class="btn small'+(cur==="main"?" on":"")+'" onclick="uiPortraitVer(\''+q+'\',\'main\',this)">'+info.main+'</button><button class="btn small'+(cur==="alt"?" on":"")+'" onclick="uiPortraitVer(\''+q+'\',\'alt\',this)">'+info.alt+'</button></span></span></div>';}
-function uiPortraitVer(name,ver,btn){if(!G.portraitVer)G.portraitVer={};if(ver==="alt")G.portraitVer[name]="alt";else delete G.portraitVer[name];save();var wrap=btn.closest(".pfaceWrap");if(wrap){var img=wrap.querySelector("img.pfaceBig");if(img)img.src=portraitSrc(name);}var seg=btn.parentElement;if(seg)seg.querySelectorAll("button").forEach(function(b){b.classList.toggle("on",b===btn);});render();}
+function portraitToggleHtml(name,entry){
+  const info=PORTRAIT_VER_INFO[name];if(!info)return "";
+  const hasAlt=(typeof PORTRAITS_ALT!=="undefined"&&PORTRAITS_ALT[name]);
+  if(!hasAlt&&!PENDING_UNIFORM_ALT[name])return "";
+  const cur=portraitVerCur(name,entry);
+  const q=name.replace(/'/g,"\\'");
+  const btnA='<button class="btn small'+(cur==="main"?" on":"")+'" onclick="uiPortraitVer(\''+q+'\',\'main\',this)">'+info.main+'</button>';
+  const btnB=hasAlt
+    ?'<button class="btn small'+(cur==="alt"?" on":"")+'" onclick="uiPortraitVer(\''+q+'\',\'alt\',this)">'+info.alt+'</button>'
+    :'<button class="btn small ghost" disabled title="Uniform portrait coming soon">'+info.alt+'</button>';
+  return '<div class="kv"><span class="k">Portrait</span><span class="v"><span class="seg">'+btnA+btnB+'</span></span></div>';
+}
+function uiPortraitVer(name,ver,btn){if(!G.portraitVer)G.portraitVer={};if(ver==="alt")G.portraitVer[name]="alt";else delete G.portraitVer[name];save();var wrap=btn.closest(".pfaceWrap");if(wrap){var img=wrap.querySelector("img.pfaceBig");if(img)uiPortraitImgRefresh(img,name);}var seg=btn.parentElement;if(seg)seg.querySelectorAll("button").forEach(function(b){b.classList.toggle("on",b===btn);});render();}
 function faceImg(o,cls){
   const src=portraitSrc(o.name,o);
-  if(src)return '<img class="'+cls+'" src="'+src+'" alt="">';
+  if(src)return '<img class="'+cls+'" src="'+src+'"'+divImgAttrs(o)+' alt="">';
   const init=o.name.split(" ").map(function(w){return w[0];}).join("").slice(0,2).toUpperCase();
   return '<div class="'+cls+' pfaceInit">'+init+'</div>';
+}
+/* v4.4 DRESS UNIFORMS OPTIONAL — assignable divisions + runtime uniform recolor */
+const DIVISIONS=["command","operations","sciences"];
+const DIV_LABEL={command:"Command",operations:"Operations",sciences:"Sciences"};
+const DIV_HUE={command:4,operations:46,sciences:212};
+const DEPT_DIVISION={Command:"command",Operations:"operations",Engineering:"operations",Security:"operations",Science:"sciences",Medical:"sciences"};
+function officerDivision(o){if(!o)return null;if(DIVISIONS.indexOf(o.division)>=0)return o.division;return DEPT_DIVISION[o.dept]||null;}
+/* portraits whose MAIN photo is not a Starfleet uniform (canon audit 2026-10-01): excluded from recolor until uniformed stills land */
+const CIV_MAIN={"Jean-Luc Picard":1,"Beverly Crusher":1,"Deanna Troi":1,"Seven of Nine":1,"Benjamin Sisko":1,"Christine Chapel":1,"T'Pol":1,"Crist\u00f3bal Rios":1,"Gabriel Lorca":1,"Hugh Culber":1,"Philippa Georgiou":1,"Kyle":1,"Raffi Musiker":1,"Elnor":1,"Jack Crusher":1,"Cleveland Booker":1,"Nhan":1,"Joann Owosekun":1,"Keyla Detmer":1,"Tracy Pollard":1,"Guinan":1,"Neelix":1,"Jake Sisko":1,"Phlox":1,"Sarek":1,"Pelia":1,"Naomi Wildman":1,"Gray Tal":1,"L'Rell":1,"Kovich":1,"Thy'lek Shran":1,"Soji Asha":1,"Icheb":1,"Murf":1,"Kira Nerys":1,"Odo":1,"Leland":1,"Zero":1,"William Riker":1,"Data":1,"Worf":1,"Ro Laren":1,"Hoshi Sato":1,"Sylvia Tilly":1,"Ash Tyler":1};
+/* the 14 never-uniformed: their "Uniform" alt portrait slot lights up once its image lands */
+const ALT14_UNIFORMED={"Guinan":1,"Neelix":1,"Jake Sisko":1,"Phlox":1,"Sarek":1,"Pelia":1,"Naomi Wildman":1,"Gray Tal":1,"L'Rell":1,"Kovich":1,"Thy'lek Shran":1,"Soji Asha":1,"Icheb":1,"Murf":1};
+const PENDING_UNIFORM_ALT=ALT14_UNIFORMED;
+Object.assign(PORTRAIT_VER_INFO,{Guinan:{main:"Civilian",alt:"Uniform"},Neelix:{main:"Civilian",alt:"Uniform"},"Jake Sisko":{main:"Civilian",alt:"Uniform"},Phlox:{main:"Civilian",alt:"Uniform"},Sarek:{main:"Civilian",alt:"Uniform"},Pelia:{main:"Civilian",alt:"Uniform"},"Naomi Wildman":{main:"Civilian",alt:"Uniform"},"Gray Tal":{main:"Civilian",alt:"Uniform"},"L'Rell":{main:"Civilian",alt:"Uniform"},Kovich:{main:"Civilian",alt:"Uniform"},"Thy'lek Shran":{main:"Civilian",alt:"Uniform"},"Soji Asha":{main:"Civilian",alt:"Uniform"},Icheb:{main:"Civilian",alt:"Uniform"},Murf:{main:"Civilian",alt:"Uniform"}});
+function portraitHasToggle(name){return (typeof PORTRAITS_ALT!=="undefined"&&!!PORTRAITS_ALT[name])||!!PENDING_UNIFORM_ALT[name];}
+function portraitIsUniformed(name,entry){
+  var ver=(typeof portraitPick==="function")?portraitPick(name,entry):"main";
+  if(ver==="alt")return !!ALT14_UNIFORMED[name]||!CIV_MAIN[name];
+  if(entry&&entry.customPic)return false;
+  if(typeof PORTRAITS!=="undefined"&&PORTRAITS[name])return !CIV_MAIN[name];
+  return true;
+}
+function divImgAttrs(o){
+  var d=officerDivision(o);
+  if(d&&portraitIsUniformed(o.name,o)){var s=portraitSrc(o.name,o);return ' data-divsrc="'+s+'" data-div="'+d+'" onload="divRecolorApply(this)"';}
+  return "";
+}
+function uiPortraitImgRefresh(img,name){
+  var oe=null,offs=(typeof G!=="undefined"&&G&&G.officers)||[];
+  for(var i=0;i<offs.length;i++)if(offs[i].name===name){oe=offs[i];break;}
+  var os=portraitSrc(name,oe||undefined);
+  img.removeAttribute("data-divsrc");img.removeAttribute("data-div");img.removeAttribute("onload");
+  if(oe){var d=officerDivision(oe);if(d&&portraitIsUniformed(name,oe)){img.setAttribute("data-divsrc",os);img.setAttribute("data-div",d);img.setAttribute("onload","divRecolorApply(this)");}}
+  img.src=os;
+}
+function divisionPickerHtml(o){
+  var cur=officerDivision(o)||"operations";
+  return '<div class="kv"><span class="k">Division</span><span class="v"><span class="seg">'+
+    DIVISIONS.map(function(d){return '<button class="btn small'+(cur===d?" on":"")+'" onclick="uiDivision(\''+o.id+'\',\''+d+'\',this)">'+DIV_LABEL[d]+'</button>';}).join("")+
+    '</span></span></div>';
+}
+function uiDivision(id,div,btn){
+  var offs=(typeof G!=="undefined"&&G&&G.officers)||[],o=null;
+  for(var i=0;i<offs.length;i++)if(offs[i].id===id){o=offs[i];break;}
+  if(!o||DIVISIONS.indexOf(div)<0)return;
+  o.division=div;if(typeof save==="function")save();
+  var seg=btn.parentElement;
+  if(seg){var bs=seg.querySelectorAll("button");for(var j=0;j<bs.length;j++)bs[j].classList.toggle("on",bs[j]===btn);}
+  var wrap=btn.closest(".pfaceWrap"),img=wrap?wrap.querySelector("img.pfaceBig"):null;
+  if(img)uiPortraitImgRefresh(img,o.name);
+  if(typeof render==="function")render();
+}
+/* --- runtime uniform recolor: dominant-band hue shift, skin-safe --- */
+var DIV_BANDS=[[347,7],[46,12],[212,16]];
+function divHSL(r,g,b){
+  var mx=r>g?(r>b?r:b):(g>b?g:b),mn=r<g?(r<b?r:b):(g<b?g:b);
+  var l=(mx+mn)/510;if(l<=0.06||l>=0.8)return null;
+  if(mx===mn)return null;
+  var d=(mx-mn)/255,s=l>0.5?d/(2-(mx+mn)/255):d/((mx+mn)/255);
+  if(s<=0.5)return null;
+  var h,rr=r/255,gg=g/255,bb=b/255;
+  if(mx===r)h=(gg-bb)/d+(gg<bb?6:0);else if(mx===g)h=(bb-rr)/d+2;else h=(rr-gg)/d+4;
+  return [h*60,s,l];
+}
+function divBandOfH(h){
+  for(var i=0;i<3;i++){var dd=Math.abs(h-DIV_BANDS[i][0]);if(dd>180)dd=360-dd;if(dd<=DIV_BANDS[i][1])return i;}
+  return -1;
+}
+function divShiftHSL(h,s,l,targetHue,band){
+  var off=((h-DIV_BANDS[band][0]+540)%360)-180;
+  var nh=(((targetHue+off)%360)+360)%360,hh=nh/360;
+  var q=l<0.5?l*(1+s):l+s-l*s,p=2*l-q;
+  function ch(t){if(t<0)t+=1;if(t>1)t-=1;return t<1/6?p+(q-p)*6*t:(t<1/2?q:(t<2/3?p+(q-p)*(2/3-t)*6:p));}
+  return [Math.round(ch(hh+1/3)*255),Math.round(ch(hh)*255),Math.round(ch(hh-1/3)*255)];
+}
+var _divCache={};
+function divRecolorApply(img){
+  try{
+    var src=img.getAttribute("data-divsrc"),div=img.getAttribute("data-div");
+    img.removeAttribute("data-divsrc");img.removeAttribute("data-div");
+    if(!src||!div||DIV_HUE[div]==null)return;
+    var key=src+"|"+div,out=null;
+    if(_divCache[key]){img.src=_divCache[key];return;}
+    var tw=img.naturalWidth||0,th=img.naturalHeight||0;
+    if(!tw||!th||!img.complete)return;
+    var cv=document.createElement("canvas");cv.width=tw;cv.height=th;
+    var x=cv.getContext("2d");if(!x)return;
+    x.drawImage(img,0,0,tw,th);
+    var id=x.getImageData(0,0,tw,th),p=id.data,target=DIV_HUE[div],y0=(th*0.55)|0;
+    var counts=[0,0,0],y,xx,i,row,hsl,b,band=-1,bn=0,k;
+    for(y=y0;y<th;y++){row=y*tw;for(xx=0;xx<tw;xx++){i=(row+xx)*4;
+      hsl=divHSL(p[i],p[i+1],p[i+2]);if(hsl&&(b=divBandOfH(hsl[0]))>=0)counts[b]++;}}
+    for(k=0;k<3;k++)if(counts[k]>bn){bn=counts[k];band=k;}
+    if(band>=0&&bn>40){
+      var changed=false;
+      for(y=y0;y<th;y++){row=y*tw;for(xx=0;xx<tw;xx++){i=(row+xx)*4;
+        hsl=divHSL(p[i],p[i+1],p[i+2]);
+        if(hsl&&divBandOfH(hsl[0])===band){var o2=divShiftHSL(hsl[0],hsl[1],hsl[2],target,band);p[i]=o2[0];p[i+1]=o2[1];p[i+2]=o2[2];changed=true;}}}
+      if(changed){x.putImageData(id,0,0);out=cv.toDataURL("image/jpeg",0.92);}
+    }
+    _divCache[key]=out||src;img.src=_divCache[key];
+  }catch(e){/* tainted canvas or missing image: keep the original photo */}
 }
 /* v4.3 ONE FLEET ONE LOOK */
 function shipArtFor(s,big){return shipPic(s?s.cls:"",big);}
@@ -11431,7 +11544,8 @@ function officerModal(id){
   const cost=25*(o.rank+1);
   let h='<!--OFFICER_MODAL:'+id+'--><div class="pfaceWrap">'+faceImg(o,"pfaceBig")+'<div style="flex:1;min-width:0;"><h2>'+nameHtml(o)+'</h2><div class="flavor">'+esc(o.species)+' · '+(o.gender==="M"?"Male":o.gender==="F"?"Female":"Non-binary")+
     ' · Age '+Math.floor(o.age)+' · '+esc(o.dept)+'</div></div></div>';
-  if(typeof PORTRAITS_ALT!=="undefined"&&PORTRAITS_ALT[o.name])h+=portraitToggleHtml(o.name);
+  if(portraitHasToggle(o.name))h+=portraitToggleHtml(o.name);
+  if(portraitSrc(o.name,o))h+=divisionPickerHtml(o);
   if(o.dead)h+='<p class="badge bad">Deceased — see Memorial Wall</p>';
   if(o.retired)h+='<p><span class="badge">Retired with honors</span></p>';
   if(o.request&&!o.dead&&!o.retired)h+='<p><span class="badge violet">Requests an audience — use Request meeting below</span></p>';
@@ -15925,7 +16039,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v4.3</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v4.4</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
