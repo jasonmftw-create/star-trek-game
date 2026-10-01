@@ -3556,7 +3556,7 @@ function migrateSave(g){
       if(!o.accolades.some(a=>a.n===ad[0]))o.accolades.push({n:ad[0],d:ad[1]});
     });
   });
-  // v1.3: era rule — the 15 headliners + the Enterprise pair return to Lost-to-Time unless genuinely rescued via temporal extraction.
+  // v1.3: era rule — the 15 headliners + the Enterprise pair return to Temporal Anomalies unless genuinely rescued via temporal extraction.
   // Runs BEFORE the 2379-correctness audit so they are cleanly removed (not marked dead/duplicated).
   const ERA_REVERT=MOVED_TO_ACTIVE.concat(["Phlox","Thy'lek Shran"]);
   try{
@@ -3573,7 +3573,7 @@ function migrateSave(g){
       });
       g.officers=(g.officers||[]).filter(function(x){return !goneIds[x.id];});
       g.memorial=(g.memorial||[]).filter(function(m){return !(m&&ERA_REVERT.indexOf(m.name)>=0&&m.cause&&(m.cause.indexOf("Lost to time")===0||m.cause.indexOf("Lost to history")===0));});
-      log("personnel","Era correction: "+gone.map(function(o){return o.name;}).join(", ")+" returned to their own times — find them under Lost to Time in the Memorial tab.");
+      log("personnel","Era correction: "+gone.map(function(o){return o.name;}).join(", ")+" returned to their own times — find them under Temporal Anomalies in the Memorial tab.");
     }
   }catch(err){}
   // 2379-correctness: personnel from eras long past are listed as lost to time
@@ -9683,24 +9683,53 @@ function renderBuild(){
   if(legacyFrom){
     const ls=ship(legacyFrom);
     if(ls&&(ls.mothballed||ls.status==="museum")){
-      h+='<div class="card" style="border:1px solid var(--teal)"><h3>Legacy build</h3><p class="dim">Commissioning the successor to '+esc(ls.name)+' ('+esc(ls.registry)+'). She keeps the name — her registry takes the next letter: <b>'+esc(nextRegistry(ls.registry))+'</b>. Pick a class below — you can still edit the name and registry before the keel is laid.</p><div class="btnRow"><button class="btn small ghost" onclick="legacyFrom=null;render()">Cancel legacy</button></div></div>';
+      h+='<div class="card" style="border:1px solid var(--teal)"><h3>Legacy build</h3><p class="dim">Commissioning the successor to '+esc(ls.name)+' ('+esc(ls.registry)+'). She keeps the name \u2014 her registry takes the next letter: <b>'+esc(nextRegistry(ls.registry))+'</b>. Pick a class below \u2014 you can still edit the name and registry before the keel is laid.</p><div class="btnRow"><button class="btn small ghost" onclick="legacyFrom=null;render()">Cancel legacy</button></div></div>';
     }else legacyFrom=null;
+  }
+  h+='<div class="cmdsubseg" style="margin:0 0 10px;">'+
+    '<button class="btn small'+(buildPage==="ships"?" on":"")+'" onclick="buildPage=\'ships\';render()">Starships</button>'+
+    '<button class="btn small'+(buildPage==="stations"?" on":"")+'" onclick="buildPage=\'stations\';render()">Stations</button></div>';
+  if(buildPage==="stations"){
+    const stBuilding=G.stations.filter(s=>s.status==="construction").length;
+    h+='<div class="card"><h3>Construct Station</h3><div class="kv"><span class="k">Construction crews</span><span class="v">'+stBuilding+' / 2 underway</span></div></div>';
+    Object.keys(STATION_DEFS).forEach(k=>{
+      const d=STATION_DEFS[k];if(d.unique)return;
+      const afford=G.credits>=d.cr&&G.dilithium>=d.dl;
+      let sWhy="";
+      if(!afford){
+        const bits=[];
+        if(G.credits<d.cr)bits.push("need "+fmt(d.cr-G.credits)+" more CR");
+        if(G.dilithium<d.dl)bits.push("need "+fmt(d.dl-G.dilithium)+" more dilithium");
+        sWhy="Cannot afford \u2014 "+bits.join(", ");
+      }else if(stBuilding>=2){
+        sWhy="Construction crews at capacity \u2014 finish a project first (max 2)";
+      }
+      const detKey="bld-"+k,detOpen=stnCardOpen.has(detKey);
+      h+='<div class="card shipCard">'+
+        '<div class="shipMedia stnMedia">'+stationPic(k,true)+'</div>'+
+        '<div class="shipCardNm"><span class="shipCardNmTxt">'+d.name+'</span>'+
+        '<button class="shipDetBtn" id="stnDetBtn-'+detKey+'" onclick="toggleStnDet(\''+detKey+'\',event)">'+(detOpen?'Details \u25b4':'Details \u25be')+'</button></div>'+
+        '<div class="shipDet'+(detOpen?' open':'')+'" id="stnDet-'+detKey+'">'+
+        '<div class="sub2">'+fmt(d.cr)+' CR \u00b7 '+fmt(d.dl)+' DL \u00b7 '+d.days+' days \u00b7 Upkeep '+d.upkeep+'/d</div>'+
+        '<div class="sub2" style="color:var(--teal)">'+esc(d.desc)+'</div>'+
+        (sWhy?'<div class="sub2" style="color:var(--red)">'+esc(sWhy)+'</div>':"")+
+        '<div class="btnRow"><button class="btn small violet" '+(afford&&stBuilding<2?"":"disabled")+' onclick="uiBuildStation(\''+k+'\')">Build</button></div>'+
+        '</div></div>';
+    });
+    return h;
   }
   h+='<div class="card"><h3>Shipyard Capacity</h3>'+
     '<div class="kv"><span class="k">Free yard slots</span><span class="v">'+yards.length+' / '+activeStations("shipyard").length+'</span></div>'+
-    '<div class="kv"><span class="k">Build-time modifier</span><span class="v">×'+buildTimeMod().toFixed(2)+'</span></div>'+
+    '<div class="kv"><span class="k">Build-time modifier</span><span class="v">\u00d7'+buildTimeMod().toFixed(2)+'</span></div>'+
     '</div>';
-  let qh='';
   if(G.builds.length){
-    qh+='<div class="card"><h3>Construction Queue</h3>';
+    h+='<div class="card"><h3>Construction Queue</h3>';
     G.builds.forEach(b=>{const c=SHIP_CLASSES[b.cls];
-      qh+='<div class="kv"><span class="k">'+esc(b.name)+' ('+c.name+')</span><span class="v">'+b.daysLeft+'d · '+(b.yardId?(station(b.yardId)||{name:"?"}).name:"?")+'</span></div>'+
+      h+='<div class="kv"><span class="k">'+esc(b.name)+' ('+c.name+')</span><span class="v">'+b.daysLeft+'d \u00b7 '+(b.yardId?(station(b.yardId)||{name:"?"}).name:"?")+'</span></div>'+
       '<div class="prog"><i style="width:'+Math.round((1-b.daysLeft/b.total)*100)+'%"></i></div>'+
       (b.id==="titan0"?"":'<div class="btnRow"><button class="btn small ghost" onclick="uiCancelBuild(\'ship\',\''+b.id+'\')">Cancel build</button></div>');});
-    qh+='</div>';
+    h+='</div>';
   }
-  h+=qh;
-  h+='<div class="card"><h3>Commission Starship</h3>';
   Object.keys(SHIP_CLASSES).forEach(k=>{
     const c=SHIP_CLASSES[k];if(c.museumOnly||c.futureOnly)return;
     const u=shipUnlocked(k);
@@ -9713,40 +9742,25 @@ function renderBuild(){
       const bits=[];
       if(G.credits<c.cr)bits.push("need "+fmt(c.cr-G.credits)+" more CR");
       if(G.dilithium<c.dl)bits.push("need "+fmt(c.dl-G.dilithium)+" more dilithium");
-      blockWhy="Cannot afford — "+bits.join(", ");
+      blockWhy="Cannot afford \u2014 "+bits.join(", ");
     }else if(u.ok&&!yards.length){
-      blockWhy="No free shipyard — every yard is busy";
+      blockWhy="No free shipyard \u2014 every yard is busy";
     }
-    h+='<div class="row">'+shipPic(k)+'<div class="grow"><div class="nm">'+c.name+'-class '+(u.ok?"":'<span class="badge bad">LOCKED</span>')+'</div>'+
-      '<div class="sub2">'+fmt(c.cr)+' CR · '+fmt(c.dl)+' DL · '+days+' days · Hull '+c.hull+' · Tac '+c.tac+' · Sci '+c.sci+' · Warp '+c.speed+' · '+c.slots+' officers</div>'+
+    const detKey="bld-"+k,detOpen=shipCardOpen.has(detKey);
+    h+='<div class="card shipCard">'+
+      '<div class="shipMedia">'+shipPic(k,true)+'</div>'+
+      '<div class="shipCardNm"><span class="shipCardNmTxt">'+c.name+'-class'+(u.ok?"":' <span class="badge bad">LOCKED</span>')+'</span>'+
+      '<button class="shipDetBtn" id="shipDetBtn-'+detKey+'" onclick="toggleShipDet(\''+detKey+'\',event)">'+(detOpen?'Details \u25b4':'Details \u25be')+'</button></div>'+
+      '<div class="shipDet'+(detOpen?' open':'')+'" id="shipDet-'+detKey+'">'+
+      '<div class="sub2">'+fmt(c.cr)+' CR \u00b7 '+fmt(c.dl)+' DL \u00b7 '+days+' days \u00b7 Hull '+c.hull+' \u00b7 Tac '+c.tac+' \u00b7 Sci '+c.sci+' \u00b7 Warp '+c.speed+' \u00b7 '+c.slots+' officers</div>'+
       (c.special?'<div class="sub2" style="color:var(--teal)">'+esc(c.special)+'</div>':"")+
       (!u.ok?'<div class="sub2" style="color:var(--red)">'+esc(u.why)+'</div>':"")+
-      (blockWhy?'<div class="sub2" style="color:var(--red)">'+esc(blockWhy)+'</div>':"")+'</div>'+
-      (rKey&&!u.ok
-        ?'<button class="btn small violet" '+((!R.active&&!R.done[rKey]&&G.credits>=RESEARCH_DEFS[rKey].cr&&G.dilithium>=RESEARCH_DEFS[rKey].dl)?"":"disabled")+' onclick="uiStartResearch(\''+rKey+'\')">Research</button></div>'
-        :'<button class="btn small" '+(u.ok&&afford&&yards.length?"":"disabled")+' onclick="uiBuildShip(\''+k+'\')">Build</button></div>');
+      (blockWhy?'<div class="sub2" style="color:var(--red)">'+esc(blockWhy)+'</div>':"")+
+      '<div class="btnRow">'+(rKey&&!u.ok
+        ?'<button class="btn small violet" '+((!R.active&&!R.done[rKey]&&G.credits>=RESEARCH_DEFS[rKey].cr&&G.dilithium>=RESEARCH_DEFS[rKey].dl)?"":"disabled")+' onclick="uiStartResearch(\''+rKey+'\')">Research</button>'
+        :'<button class="btn small" '+(u.ok&&afford&&yards.length?"":"disabled")+' onclick="uiBuildShip(\''+k+'\')">Build</button>')+'</div>'+
+      '</div></div>';
   });
-  h+='</div><div class="card"><h3>Construct Station</h3>';
-  const stBuilding=G.stations.filter(s=>s.status==="construction").length;
-  Object.keys(STATION_DEFS).forEach(k=>{
-    const d=STATION_DEFS[k];if(d.unique)return;
-    const afford=G.credits>=d.cr&&G.dilithium>=d.dl;
-    let sWhy="";
-    if(!afford){
-      const bits=[];
-      if(G.credits<d.cr)bits.push("need "+fmt(d.cr-G.credits)+" more CR");
-      if(G.dilithium<d.dl)bits.push("need "+fmt(d.dl-G.dilithium)+" more dilithium");
-      sWhy="Cannot afford — "+bits.join(", ");
-    }else if(stBuilding>=2){
-      sWhy="Construction crews at capacity — finish a project first (max 2)";
-    }
-    h+='<div class="row">'+stationPic(k)+'<div class="grow"><div class="nm">'+d.name+'</div>'+
-      '<div class="sub2">'+fmt(d.cr)+' CR · '+fmt(d.dl)+' DL · '+d.days+' days · Upkeep '+d.upkeep+'/d</div>'+
-      '<div class="sub2" style="color:var(--teal)">'+esc(d.desc)+'</div>'+
-      (sWhy?'<div class="sub2" style="color:var(--red)">'+esc(sWhy)+'</div>':"")+'</div>'+
-      '<button class="btn small violet" '+(afford&&stBuilding<2?"":"disabled")+' onclick="uiBuildStation(\''+k+'\')">Build</button></div>';
-  });
-  h+='</div>';
   return h;
 }
 function nextRegistry(reg){
@@ -9775,7 +9789,7 @@ function nextRegistry(reg){
 function uiLegacyShip(id){
   const s=ship(id);
   if(!s||!(s.mothballed||s.status==="museum")){toast("Only mothballed or museum ships can found a legacy line.");return;}
-  legacyFrom=id;closeModal();setTab("build");
+  legacyFrom=id;buildPage="ships";closeModal();setTab("build");
   toast("Choose a class for "+s.name+"'s successor.");
 }
 function uiTransferCrew(newId){ // v2.42: one-tap crew move from the legacy predecessor
@@ -10383,7 +10397,7 @@ function renderMemorial(){
   const entry=(m,sub,sec,oi)=>'<div class="row" data-search="'+dsOf(m)+'" data-sec="'+sec+'" style="padding:6px;'+(oi>=0?'cursor:pointer;':'cursor:default;')+'"'+(oi>=0?' onclick="fallenModal('+oi+')"':"")+'>'+faceImg(m,"pfaceSm")+'<div class="grow"><div class="nm">† '+esc(m.name)+'</div>'+(sub?'<div class="sub2">'+esc(sub)+'</div>':"")+'<div class="sub2 dim">'+esc((m.lost==="decommissioned"?"Decommissioned":"Lost in service")+" — "+m.cause)+' · Stardate '+sdStr(m.sd)+'</div>'+(oi>=0?'<div style="margin-top:4px;">'+fallenBadge(m)+'</div>':"")+'</div></div>';
   const sentry=(m,si)=>'<div class="row" data-search="'+dsOf(m)+'" data-sec="lost" style="padding:6px;cursor:pointer;" onclick="tributeModal('+si+')">'+faceImg(m,"pfaceSm")+'<div class="grow"><div class="nm">† '+esc(m.name)+'</div><div class="sub2">'+esc(m.rank+" · "+m.species)+'</div><div class="sub2 dim">'+esc(m.cause)+' · '+esc(m.when)+'</div><div style="margin-top:4px;">'+tributeBadge(m)+'</div></div></div>';
   if(lostShow==="SHIPS")lostShow="all";
-  let h='<div class="card"><h3>Memorial</h3><p class="dim">"They are gone, but their light travels on." — In honored memory of all who served.</p>'+
+  let h='<div class="card">'+
     '<label>Search</label><input type="search" placeholder="Search the memorial…" oninput="liveSearch(this,\'memList\')"></div>'+
     '<div class="cmdsubseg" style="margin:0 0 10px;">'+
     '<button class="btn small'+(memTab==="personnel"?" on":"")+'" onclick="memTab=\'personnel\';render()">Personnel</button>'+
@@ -10402,9 +10416,9 @@ function renderMemorial(){
     const lostList=MEMORIAL_LOST.map((l,i)=>({l:l,i:i})).filter(o=>lostShow==="all"||o.l.show===lostShow);
     const showFallen=lostShow==="all";
     const fallenRows=showFallen?MEMORIAL_STATIC.map(sentry).join("")+offs.map((m,i)=>entry(m,m.rank+" · "+m.species,"lost",i)).join(""):"";
-    const lostTitle=showFallen?("◷ Lost in Time ("+(offs.length+MEMORIAL_STATIC.length+MEMORIAL_LOST.length)+")"):("◷ Lost in Time — "+LOST_SHOWS.filter(s=>s[0]===lostShow)[0][1]+" ("+lostList.length+" of "+MEMORIAL_LOST.length+")");
+    const lostTitle=showFallen?("◷ Temporal Anomalies ("+(offs.length+MEMORIAL_STATIC.length+MEMORIAL_LOST.length)+")"):("◷ Temporal Anomalies — "+LOST_SHOWS.filter(s=>s[0]===lostShow)[0][1]+" ("+lostList.length+" of "+MEMORIAL_LOST.length+")");
     portraitTabForce=true;
-    h+='<div class="card" data-seccard="lost"><h3>'+lostTitle+'</h3><p class="dim">Gone, but their light travels on — whether fallen in the line of duty or lost to the currents of time. Tap a name for their service record, then <b>Temporal Extraction</b> — 250 prestige + 100 dilithium, 85% odds, 45-day array cooldown.</p>'+lostPills+fallenRows+lostList.map(o=>lostEntry(o.l,o.i,"lost")).join("")+'</div>';
+    h+='<div class="card" data-seccard="lost"><h3>'+lostTitle+'</h3>'+lostPills+fallenRows+lostList.map(o=>lostEntry(o.l,o.i,"lost")).join("")+'</div>';
     portraitTabForce=false;
   }
   h+='</div><div id="memListNoRes" style="display:none;"><div class="card"><p class="dim">No matching entries in the memorial.</p></div></div>';
@@ -10417,6 +10431,7 @@ let shipQuad="all";
 let stationQuad="all";
 let lostShow="all";
 let memTab="personnel";
+let buildPage="ships";
 let legacyFrom=null;
 let portraitTabForce=false;
 /* ================= CAPTAIN'S LOG ================= */
@@ -14870,7 +14885,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.86</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.87</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
