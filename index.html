@@ -4408,6 +4408,7 @@ function contactClockTick(){
 }
 /* v4.0 Living Relations: standings drift with temperament, pacts need ships, grievances escalate. */
 function codexDrift(cx){
+  if(!cx)return;
   if(Math.random()>0.08)return;
   let d=0;
   if(cx.disp==="warlike"||cx.disp==="xenophobic")d=-1;
