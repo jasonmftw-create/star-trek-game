@@ -749,6 +749,9 @@ const RANKS=["Ensign","Lieutenant Junior Grade","Lieutenant","Lieutenant Command
 const RANK_ABBR=["En","Lt JG","Lt","Lt Cmdr","Cmdr","Capt","Cdre","R Adm","V Adm","Adm"];
 const DEPTS=["Command","Science","Medical","Engineering","Security","Operations"];
 const PLAYER_TITLES=[[0,"Commodore"],[200,"Rear Admiral"],[500,"Vice Admiral"],[1000,"Admiral"],[2000,"Fleet Admiral"]];
+/* v4.0 Honest Progression: rank needs a mission record, not just prestige (Jason/appraisal: idle years reached Fleet Admiral). */
+const RANK_MISSIONS=[0,10,40,90,160];
+const ECONO={baseIncome:700,starbaseIncome:150,otherIncome:100,upkeepMult:1.35};
 const TRAITS=["Borg Expertise","Holographic","Android","Empath","Veteran of Wolf 359","Maquis Veteran",
   "Q Encounter Survivor","Klingon Honor","Diplomat","Surgeon","Warp Theorist","Exobiologist",
   "Tactician","Test Pilot","Counselor","Xenolinguist","Field Medic","Starship Designer"];
@@ -1269,6 +1272,9 @@ const MISSION_DECK=[
 
 /* ================= CONFIG: SHUTTLE MISSION DECK ================= */
 /* type, difficulty 20-70, duration days, rewards. shuttleStat/pilotSkill drive success. */
+/* v4.0 "small verbs": shuttle capability tags. shuttleOdds reads tags, not type ids. */
+const SHUTTLE_TAGS={deltaflyer:["combat","sar"],aeroshuttle:["survey"],yacht:["diplomacy"],danube:["cargo"],yellowstone:["cargo"],type9a:["cargo"],spacedock:["cargo"],workbee:["work"],sphinx:["work"],type15:["work"],type18:["work"],peregrine:["combat"],valkyrie:["combat"],type11:["survey"],type9:["survey"],sc4:["survey"],classf:["survey"],aeon:["chronometric"],trainer:[],travelpod:[],type6:[],type7:[],type8:[],type10:[],type14:[]};
+function shuttleHas(sh,tag){const t=SHUTTLE_TAGS[sh.type]||[];return t.indexOf(tag)>=0;}
 const SHUTTLE_MISSION_DECK=[
  {id:"sh-typhon",name:"Survey the Typhon Expanse",type:"Survey",diff:30,days:6,cr:1500,dl:60,pres:12,
   shipStat:"sci",capSkill:"sci",
@@ -3629,6 +3635,7 @@ function shuttlePilot(sh){const c=shuttleCrew(typeof sh==="string"?sh:sh.id);ret
 function shuttleStatusLabel(sh){
   if(sh.status==="construction")return "Under construction — "+sh.daysLeft+"d";
   if(sh.status==="mission")return "On mission";
+  if(sh.status==="route")return "Supply run — "+(sh.route?sh.route.daysLeft:0)+"d";
   if(sh.status==="repair")return "Repairing — "+sh.daysLeft+"d";
   return "Docked";
 }
@@ -3853,18 +3860,23 @@ function doAdvance(n){
 function tickDay(){
   G.day++; G.stardate+=1.0; // TNG scale: 1000 units per year
   if(G.tempCd>0)G.tempCd--;
-  economyTick(); buildTick(); researchTick(); refitTick(); missionTick(); transitTick();
+  economyTick(); buildTick(); researchTick(); refitTick(); missionTick(); transitTick(); ambientTick();
   if(typeof admiraltyTick==="function")admiraltyTick(); // v2.13: admiral projects upkeep + payoffs
   healTick(); dockedTick(); fatigueTick(); ageTick(); romanceTick(); familyTick(); crewTick();
   randomEventTick(); scriptedTick(); rankCheckTick(); battleTick(); codexTick(); socialTick(); arcTick(); holoTick(); holidayTick();
   if(G.shipOps&&G.shipOps.length)G.shipOps=G.shipOps.filter(function(m){return ship(m.shipId);});
 }
 function economyTick(){
-  let income=1500+300*activeStations("starbase").length
-    +150*(activeStations("shipyard").length+activeStations("medical").length+activeStations("research").length+activeStations("embassy").length+activeStations("gate").length
+  (function(){try{ // v4.0 trade pacts: +85 CR/day per ship on a pact route (max 2 ships per pact)
+    const bySpecies={};
+    G.ships.forEach(function(sh){if(sh.routeFor&&sh.status==="active"&&!sh.mothballed)bySpecies[sh.routeFor]=(bySpecies[sh.routeFor]||0)+1;});
+    Object.keys(bySpecies).forEach(function(nm){const cx=(G.codex||{})[nm];if(cx&&cx.pact)G.credits+=85*Math.min(2,bySpecies[nm]);});
+  }catch(e){}})();
+  let income=ECONO.baseIncome+ECONO.starbaseIncome*activeStations("starbase").length
+    +ECONO.otherIncome*(activeStations("shipyard").length+activeStations("medical").length+activeStations("research").length+activeStations("embassy").length+activeStations("gate").length
     +activeStations("academy").length+activeStations("sfcommand").length);
   let upkeep=0;
-  G.ships.forEach(s=>{if(s.status!=="museum"&&!s.mothballed)upkeep+=SHIP_CLASSES[s.cls].upkeep;});
+  G.ships.forEach(s=>{if(s.status!=="museum"&&!s.mothballed)upkeep+=Math.round(SHIP_CLASSES[s.cls].upkeep*ECONO.upkeepMult);});
   G.stations.forEach(st=>{if(st.status==="active"&&!st.mothballed)upkeep+=STATION_DEFS[st.type].upkeep;});
   G.credits+=income-upkeep;
   gainPres(2*activeStations("starbase").length+3*activeStations("embassy").length+2*G.ships.filter(s=>s.status==="active"&&s.cls==="ambassador"&&!s.transit&&s.post&&s.post!=="sol"&&["alpha","beta","gamma","delta"].indexOf(s.post)<0).length);
@@ -3928,6 +3940,7 @@ function buildTick(){
     else if(sh.status==="repair"){sh.daysLeft--;
       if(sh.daysLeft<=0){sh.status="docked";log("build",sh.name+" repairs complete — back on the flight line.");
       queueCompletion({kind:"shuttle",name:sh.name,art:SHUTTLE_PICS[sh.type],sub:"Repairs complete \u2014 back on the flight line"});}}
+    shuttleJobTick(sh);
   });
   // auto-start repairs for damaged ships when a yard is free
   G.ships.forEach(s=>{if(s.status==="damaged"){const y=freeYards();
@@ -4301,8 +4314,8 @@ function codexRecord(name,trait,disp,outcome){
 function renderCodex(){
   G.codex=G.codex||{};
   const keys=Object.keys(G.codex).sort((a,b)=>G.codex[b].standing-G.codex[a].standing);
-  let h='<div class="card"><h3>Species Codex</h3><p class="dim">Every species you have made first contact with — and what they think of you. Friends send trade delegations; the hostile cause border incidents.</p></div>';
-  if(!keys.length)h+='<div class="card"><p class="dim">No first contacts yet. The galaxy awaits.</p></div>';
+  let h='<div class="card"><h3>Species Codex</h3><p class="dim">Every species you have made first contact with — and what they think of you. Friends sign trade pacts (assign ships to their routes); the hostile cause border incidents, and grievances can escalate.</p><div class="btnRow" style="margin-top:6px"><button class="btn small violet" onclick="uiSurveyGrant()">Sector survey grant (4,000 CR)</button></div></div>';
+  if(!keys.length)h+='<div class="card"><p class="dim">No first contacts yet. The galaxy awaits — and it is looking back. Keep ships posted beyond Sol and wandering peoples will find you; the first contact usually comes within a season or two. Every species you meet is recorded here, and remembers how you treated them.</p></div>';
   keys.forEach(function(k){
     const cx=G.codex[k],lb=codexStandingLabel(cx.standing);
     const pct=Math.round((cx.standing+100)/2);
@@ -4310,8 +4323,45 @@ function renderCodex(){
       '<div class="sub2">'+esc(cx.trait)+', '+esc(cx.disp)+' · '+cx.encounters+' encounter'+(cx.encounters===1?"":"s")+' · last contact stardate '+sdStr(cx.lastSd)+'</div></div>'+
       '<span class="badge" style="background:'+lb[1]+';color:#fff;font-weight:700">'+lb[0]+'</span></div>'+
       '<div class="statBar" style="margin-top:6px"><i style="width:'+pct+'%;background:'+lb[1]+'"></i></div>'+
-      '<div class="sub2" style="margin-top:4px">Standing '+cx.standing+' · last outcome: '+esc(cx.lastOutcome||"—")+'</div>'+summitCardHTML(cx)+'</div>';
+      '<div class="sub2" style="margin-top:4px">Standing '+cx.standing+' · last outcome: '+esc(cx.lastOutcome||"—")+'</div>'+pactCardHTML(cx)+summitCardHTML(cx)+'</div>';
   });
+  return h;
+}
+/* v4.0: trade pacts, cultural exchange, survey grants — spending credits on friends. */
+function uiCodexPact(name){
+  const cx=(G.codex||{})[name];if(!cx)return;
+  if(cx.pact){cx.pact=false;G.ships.forEach(function(sh){if(sh.routeFor===name)sh.routeFor=null;});log("event","The trade pact with the "+name+" is dissolved; their routes go dark.");save();render();toast("Pact with the "+name+" ended.");return;}
+  if(cx.standing<25){toast("The "+name+" are not friendly enough for a trade pact (standing "+cx.standing+").");return;}
+  if(G.credits<2500){toast("Not enough credits (2,500 CR needed).");return;}
+  gainCR(-2500);cx.pact=true;cx.lastPactBump=G.day||0;
+  log("event","Trade pact signed with the "+name+" — assign a ship to their route (ship card → Trade route) to start commerce flowing. (−2,500 CR)");
+  save();render();toast("Trade pact signed with the "+name+".");
+}
+function uiCodexExchange(name){
+  const cx=(G.codex||{})[name];if(!cx)return;
+  if((cx.exCd||0)>0){toast("Too soon — the "+name+" need "+cx.exCd+"d before another exchange.");return;}
+  if(G.credits<1200){toast("Not enough credits (1,200 CR needed).");return;}
+  gainCR(-1200);cx.exCd=45;cx.standing=clamp(cx.standing+6,-100,100);cx.lastOutcome="exchange";cx.lastSd=G.stardate;
+  log("event","Cultural exchange with the "+name+": artists, engineers, and one very confused chef swap places for a season. Standing improves. (−1,200 CR)");
+  save();render();toast("Cultural exchange with the "+name+" begins (+6 standing).");
+}
+function uiSurveyGrant(){
+  if(G.credits<4000){toast("Not enough credits (4,000 CR needed).");return;}
+  gainCR(-4000);gainPres(4);
+  const eta=(G.nextContactDay!=null)?Math.max(0,G.nextContactDay-(G.day||0)):null;
+  log("event","Sector Survey Grant funded: long-range survey sweeps sharpen our picture of the neighborhood. (+4 prestige)"+(eta!=null?(" Cartographers estimate the next wandering contact in roughly "+eta+" days."):("")));
+  save();render();toast(eta!=null?("Survey funded — next wandering contact ≈ "+eta+"d."):"Survey funded (+4 prestige).");
+}
+function pactCardHTML(cx){
+  let h="";
+  if(cx.pact){
+    const n=G.ships.filter(function(sh){return sh.routeFor===cx.name&&sh.status==="active";}).length;
+    h+='<div class="sub2" style="margin-top:4px;color:var(--teal)">Trade pact active — '+n+' ship'+(n===1?"":"s")+' on route ('+(n?("+85 CR/day each, max 2 paid"):"no ship assigned — assign one from its ship card")+')</div>';
+    h+='<div class="btnRow" style="margin-top:6px"><button class="btn small ghost" onclick="uiCodexPact(\''+cx.name.replace(/'/g,"\\'")+'\')">End trade pact</button></div>';
+  }else if(cx.standing>=25){
+    h+='<div class="btnRow" style="margin-top:6px"><button class="btn small teal" onclick="uiCodexPact(\''+cx.name.replace(/'/g,"\\'")+'\')">Open trade pact (2,500 CR)</button></div>';
+  }
+  if(cx.standing>-25)h+='<div class="btnRow" style="margin-top:6px"><button class="btn small" onclick="uiCodexExchange(\''+cx.name.replace(/'/g,"\\'")+'\')">Cultural exchange (1,200 CR'+((cx.exCd||0)>0?(" · "+cx.exCd+"d"):"") +')</button></div>';
   return h;
 }
 function summitCardHTML(cx){ // v2.43 diplomatic summits
@@ -4342,12 +4392,72 @@ function summitResolve(cx){
   log("event",(breakthrough?"Breakthrough at the summit! The "+cx.name+" sign a new treaty.":"The summit with the "+cx.name+" concludes cordially — relations improve.")+" ("+lb[0]+", +"+pr+" prestige)");
   toast(breakthrough?("Treaty signed with the "+cx.name+"!"):("Summit concludes — "+cx.name+" relations improve."));
 }
+/* v4.0 Living Sector: wandering first contacts find the player; the busier the fleet, the sooner. */
+function contactClockTick(){
+  if(FC)return;
+  const nC=Object.keys(G.codex||{}).length;
+  if(nC>=10)return;
+  if(G.nextContactDay==null)G.nextContactDay=(G.day||0)+ri(35,70);
+  if((G.day||0)<G.nextContactDay)return;
+  const out=G.ships.filter(function(x){return x.status==="active"&&!x.mothballed;});
+  const away=out.filter(function(x){return x.post&&x.post!=="sol";});
+  const sys=(away.length&&Math.random()<0.75)?pick(away).post:pick(Object.keys(POST_LABELS));
+  log("event","Long-range sensors pick up an unknown vessel near "+(POST_LABELS[sys]||sys)+" — someone out there is looking back at us.");
+  fcStart(sys);
+  G.nextContactDay=(G.day||0)+(away.length?ri(40,75):ri(60,100));
+}
+/* v4.0 Living Relations: standings drift with temperament, pacts need ships, grievances escalate. */
+function codexDrift(cx){
+  if(Math.random()>0.08)return;
+  let d=0;
+  if(cx.disp==="warlike"||cx.disp==="xenophobic")d=-1;
+  else if(cx.disp==="peaceful"||cx.disp==="curious")d=1;
+  if(d&&cx.standing>-85&&cx.standing<85)cx.standing=clamp(cx.standing+d,-100,100);
+}
+function codexArcBeat(cx,stage){
+  if(stage===1){
+    interruptQueue.push({title:"Ultimatum — the "+cx.name,sub:"Stardate "+sdStr(G.stardate),
+      html:'<p>Three border incidents in a season have curdled into a crisis. The '+esc(cx.name)+' deliver an ultimatum: reparations and a formal apology within the cycle, or they will consider the border an open question.</p>',
+      buttons:[
+        {t:"Concede — pay reparations (−3,000 CR)",fn:function(){
+          if(G.credits<3000){toast("Not enough credits.");return null;}
+          G.credits-=3000;cx.standing=clamp(cx.standing+20,-100,100);cx.incidents=0;cx.arc=null;
+          log("event","You meet the "+cx.name+" ultimatum with reparations. It stings — and it works. The crisis cools.");
+          save();return {title:"Crisis cooled",sub:"",html:"<p>The "+esc(cx.name)+" accept the reparations with stiff formality. The border goes quiet.</p>",buttons:[{t:"Continue"}]};}},
+        {t:"Refuse — we do not bend",fn:function(){
+          cx.standing=clamp(cx.standing-15,-100,100);cx.arc={stage:2,daysLeft:10};
+          log("event","You refuse the "+cx.name+" ultimatum. Their fleet begins maneuvers along the border.");
+          save();return {title:"The border heats up",sub:"",html:"<p>Long-range sensors track "+esc(cx.name)+" fleet movements. Ten days, give or take, before this becomes something worse.</p>",buttons:[{t:"Continue"}]};}}
+      ]});
+  }else if(stage===2){
+    interruptQueue.push({title:"Raids — the "+cx.name,sub:"Stardate "+sdStr(G.stardate),
+      html:'<p>'+esc(cx.name)+' raiders are hitting Federation shipping along the border. Starfleet Command wants a decision: buy the peace, or answer in kind and let the sector draw its own conclusions.</p>',
+      buttons:[
+        {t:"Buy the peace (−4,500 CR)",fn:function(){
+          if(G.credits<4500){toast("Not enough credits.");return null;}
+          G.credits-=4500;cx.standing=clamp(cx.standing+25,-100,100);cx.incidents=0;cx.arc=null;
+          log("event","A quiet settlement ends the "+cx.name+" raids. Expensive peace is still peace.");
+          save();return {title:"Peace purchased",sub:"",html:"<p>The raids stop. The "+esc(cx.name)+" count their credits and, perhaps, reconsider you.</p>",buttons:[{t:"Continue"}]};}},
+        {t:"Answer in kind",fn:function(){
+          cx.standing=clamp(cx.standing-25,-100,100);cx.incidents=0;cx.arc=null;gainPres(15);
+          log("event","Your patrols answer the "+cx.name+" raids in kind. The sector respects strength — and remembers it. (+15 prestige)");
+          save();return {title:"A harder border",sub:"",html:"<p>The raids stop — because the "+esc(cx.name)+" have learned the price. Relations are ice, but the border holds.</p>",buttons:[{t:"Continue"}]};}}
+      ]});
+  }
+  save();
+}
 function codexTick(){
+  contactClockTick();
   if(FC)return;
   G.codex=G.codex||{};
   const keys=Object.keys(G.codex);
   keys.forEach(function(k){const cx=G.codex[k]; // v2.43 summits tick daily
     if(cx.summitCd>0)cx.summitCd--;
+    if(cx.exCd>0)cx.exCd--;
+    codexDrift(cx);
+    if(cx.pact&&(G.day||0)-(cx.lastPactBump||0)>=20){cx.lastPactBump=G.day||0;if(cx.standing<100)cx.standing=clamp(cx.standing+1,-100,100);}
+    if(cx.arc){cx.arc.daysLeft--;if(cx.arc.daysLeft<=0){const st=cx.arc.stage;cx.arc=null;codexArcBeat(cx,st);}}
+    else if((cx.incidents||0)>=3&&(G.day||0)-(cx.lastIncidentDay||0)<=150){cx.incidents=0;codexArcBeat(cx,1);}
     if(cx.summit){cx.summit.daysLeft--;if(cx.summit.daysLeft<=0){cx.summit=null;summitResolve(cx);}}});
   if(!keys.length||Math.random()>0.02)return;
   const cx=G.codex[pick(keys)];
@@ -4355,14 +4465,17 @@ function codexTick(){
   else if(cx.standing<=-25)codexHostile(cx);
 }
 function codexFriendly(cx){
-  const cr=ri(2000,7000),pr=ri(5,12);
-  gainCR(cr);gainPres(pr);
+  if(cx.pact){
+    log("event","A "+cx.name+" trade envoy visits — the pact holds, and their merchants speak well of the Federation in every port.");
+    return;
+  }
   codexRecord(cx.name,cx.trait,cx.disp,"trade");
-  log("event","A "+cx.name+" trade delegation arrives bearing gifts — new markets, new friends. (+"+fmt(cr)+" CR, +"+pr+" prestige)");
-  toast("Trade delegation from the "+cx.name+" (+"+fmt(cr)+" CR)");
+  log("event","A "+cx.name+" trade delegation arrives — they propose a formal trade pact: real routes, real ships, real commerce. (Open the Species Codex to sign.)");
+  toast("The "+cx.name+" propose a trade pact — see the Species Codex");
   save();
 }
 function codexHostile(cx){
+  cx.incidents=(cx.incidents||0)+1;cx.lastIncidentDay=G.day||0;
   interruptQueue.push({title:"Border incident — the "+cx.name,sub:"Stardate "+sdStr(G.stardate),
     html:'<p>The '+esc(cx.name)+' have seized a Federation freighter near the border and are demanding you answer for past insults. Their ships are powering weapons.</p>',
     buttons:[
@@ -4641,12 +4754,13 @@ function resolveShuttleMission(m){
   if(!sh||!t)return;
   const c=SHUTTLE_TYPES[sh.type];
   let stat=t.shipStat==="hull"?c.hull:c[t.shipStat];
-  if(sh.type==="deltaflyer"&&t.type==="Combat")stat+=15;
-  if(sh.type==="aeroshuttle"&&t.type==="Survey")stat+=15;
+  if(shuttleHas(sh,"combat")&&t.type==="Combat")stat+=15;
+  if(shuttleHas(sh,"survey")&&t.type==="Survey")stat+=15;
+  if(shuttleHas(sh,"sar")&&t.type==="Rescue")stat+=15;
   const crew=shuttleCrew(sh.id);
   const pilot=crew.slice().sort((a,b)=>b.rank-a.rank)[0]||null;
   let capSkill=pilot?pilot.stats[t.capSkill]:30;
-  if(sh.type==="yacht"&&t.type==="Diplomacy")capSkill+=15;
+  if(shuttleHas(sh,"diplomacy")&&t.type==="Diplomacy")capSkill+=15;
   const moraleAvg=crew.length?avg(crew.map(o=>o.morale)):50;
   let chance=50+(stat-t.diff)*0.6+capSkill*0.3+(moraleAvg-70)*0.1+rnd(-15,15);
   chance=clamp(chance+socialMissionMod(crew),5,98);
@@ -4957,11 +5071,16 @@ function scriptedTick(){
 /* ---------- player rank ---------- */
 function rankCheckTick(){
   let r=0;
-  PLAYER_TITLES.forEach((t,i)=>{if(G.prestige>=t[0])r=i;});
+  PLAYER_TITLES.forEach((t,i)=>{if(G.prestige>=t[0]&&(G.ledger?G.ledger.missions||0:0)>=RANK_MISSIONS[i])r=i;});
+  PLAYER_TITLES.forEach((t,i)=>{ // v4.0: prestige qualifies but the mission record doesn't — say so, once per rank
+    if(i>G.playerRank&&G.prestige>=t[0]&&(G.ledger?G.ledger.missions||0:0)<RANK_MISSIONS[i]&&!G["rankNote"+i]){
+      G["rankNote"+i]=1;
+      log("personnel","Starfleet Command: your prestige qualifies you for "+t[1]+", but promotion now requires a mission record — "+RANK_MISSIONS[i]+" missions flown (you have "+(G.ledger?G.ledger.missions||0:0)+"). The fleet that flies, rises.");
+    }});
   if(r>G.playerRank){
     G.playerRank=r;
     sfx("promote");
-    const bonus=[null,{cr:5000,dl:200},{cr:15000,dl:500},{cr:40000,dl:1000},{cr:100000,dl:2500}][r];
+    const bonus=[null,{cr:2500,dl:200},{cr:8000,dl:500},{cr:20000,dl:1000},{cr:50000,dl:2500}][r];
     gainCR(bonus.cr);gainDL(bonus.dl);
     log("personnel","PROMOTION: You are now "+PLAYER_TITLES[r][1]+". Starfleet Command acknowledges your sector's record.");
     interruptQueue.push({title:"Promotion Ceremony",sub:"Starfleet Command · Stardate "+sdStr(G.stardate),
@@ -5151,10 +5270,42 @@ function uiSetTheme(t){applyTheme(t);save();render();toast(THEME_TOASTS[t]||"The
 function battlesOn(){try{const v=localStorage.getItem("stfc_battles");return v===null?true:v==="1";}catch(e){return true;}}
 function uiToggleBattles(){try{localStorage.setItem("stfc_battles",battlesOn()?"0":"1");}catch(e){}render();
   toast(battlesOn()?"Hostile-space encounters enabled — fly careful out there.":"Hostile-space encounters disabled.");}
+/* v4.0 Ambient Fleet Movement (Jason 2026-10-01): idle ships cruise between waypoints on the daily
+   tick so the map lives. Player orders always override — instantly. Deterministic tick logic, no AI. */
+function ambientOn(){try{const v=localStorage.getItem("stfc_ambient");return v===null?true:v==="1";}catch(e){return true;}}
+function uiToggleAmbient(){try{localStorage.setItem("stfc_ambient",ambientOn()?"0":"1");}catch(e){}render();toast("Ambient fleet movement "+(ambientOn()?"enabled — idle ships will cruise on their own.":"disabled — ships hold position."));}
+function clearAmbient(s){if(s&&s.ambient)s.ambient=null;}
+function ambientEligible(s){return s.status==="active"&&!s.mothballed&&!s.transit&&!s.missionId&&!s.dock&&!s.cruise&&!s.abandoned&&!s.routeFor;}
+function ambientTick(){
+  if(!ambientOn())return;
+  const posts=Object.keys(POST_LABELS);
+  const counts={};G.ships.forEach(function(x){if(x.post)counts[x.post]=(counts[x.post]||0)+1;});
+  G.ships.forEach(function(s){
+    if(!ambientEligible(s)){clearAmbient(s);return;}
+    if(!s.ambient){
+      if(Math.random()<0.5)return;
+      const dests=posts.filter(function(p){return p!==(s.post||"sol")&&(counts[p]||0)<3;});
+      if(!dests.length)return;
+      s.ambient={dest:pick(dests),daysLeft:ri(2,6),dwell:0};
+    }else if((s.ambient.dwell||0)>0){
+      s.ambient.dwell--;if(s.ambient.dwell<=0)s.ambient=null;
+    }else{
+      s.ambient.daysLeft--;
+      if(s.ambient.daysLeft<=0){
+        const from=s.post||"sol";s.post=s.ambient.dest;
+        if(Math.random()<0.10)log("command",s.name+" arrives at "+(POST_LABELS[s.post]||s.post)+" on routine patrol out of "+(POST_LABELS[from]||from)+" — the sector feels watched over.");
+        s.ambient={dest:s.post,daysLeft:0,dwell:ri(2,5)};
+      }
+    }
+  });
+}
 const COMPLETION_TOGGLE_ROW='<div class="card"><h3>Gameplay</h3>'+
 '<div class="kv"><span class="k">Completion celebrations</span><span class="v">'+
 '<button class="btn small'+(completionsOn()?" on":"")+'" onclick="uiToggleCompletions()">'+(completionsOn()?"On":"Off")+'</button>'+
-'</span></div>';
+'</span></div>'+
+'<div class="kv"><span class="k">Ambient fleet movement</span><span class="v">'+
+'<button class="btn small'+(ambientOn()?" on":"")+'" onclick="uiToggleAmbient()">'+(ambientOn()?"On":"Off")+'</button>'+
+'</span></div><div class="sub2 dim">Idle ships cruise between waypoints on their own. Any order you give overrides it at once.</div>';
 
 function renderSettings(){
   const th=curTheme();
@@ -9291,7 +9442,7 @@ function renderCommand(){
     '<div class="kv"><span class="k">Officers lost</span><span class="v">'+G.ledger.lost+'</span></div>'+
     '<div class="kv"><span class="k">Events weathered</span><span class="v">'+G.ledger.events+'</span></div></div>'+
   '<div class="card"><h3>Flag Rank Progression</h3>'+
-    PLAYER_TITLES.map((t,i)=>'<div class="kv"><span class="k">'+t[1]+'</span><span class="v">'+(i<=G.playerRank?"★ CURRENT":t[0]+" prestige")+'</span></div>').join("")+'</div>'+
+    PLAYER_TITLES.map((t,i)=>'<div class="kv"><span class="k">'+t[1]+'</span><span class="v">'+(i<=G.playerRank?"★ CURRENT":t[0]+" prestige · "+RANK_MISSIONS[i]+" missions flown")+'</span></div>').join("")+'</div>'+
   '<div class="card"><h3>Captain\'s Manual</h3><p style="font-size:16px;line-height:1.6;">'+
     '<b>1.</b> Advance time with the +Day buttons. The sector lives while you watch.<br>'+
     '<b>2.</b> Build ships at shipyards and stations in the <b>Build</b> tab — every yard past the first speeds construction.<br>'+
@@ -9800,6 +9951,7 @@ function msnRefreshRoute(){
   if(btn){btn.disabled=!fits;btn.style.opacity=fits?1:0.4;}
 }
 function uiLaunchMission(sid,tid){
+  clearAmbient(ship(sid));
   const s=ship(sid),t=MISSION_DECK.find(x=>x.id===tid);
   if(!s||s.status!=="active"||s.transit){toast("Ship unavailable.");return;}
   if(s.mothballed){toast("Ship is mothballed.");return;}
@@ -9821,12 +9973,13 @@ function uiLaunchMission(sid,tid){
 function shuttleOdds(sh,t){
   const c=SHUTTLE_TYPES[sh.type];
   let stat=t.shipStat==="hull"?c.hull:c[t.shipStat];
-  if(sh.type==="deltaflyer"&&t.type==="Combat")stat+=15;
-  if(sh.type==="aeroshuttle"&&t.type==="Survey")stat+=15;
+  if(shuttleHas(sh,"combat")&&t.type==="Combat")stat+=15;
+  if(shuttleHas(sh,"survey")&&t.type==="Survey")stat+=15;
+  if(shuttleHas(sh,"sar")&&t.type==="Rescue")stat+=15;
   const crew=shuttleCrew(sh.id);
   const pilot=crew.slice().sort((a,b)=>b.rank-a.rank)[0]||null;
   let capSkill=pilot?pilot.stats[t.capSkill]:30;
-  if(sh.type==="yacht"&&t.type==="Diplomacy")capSkill+=15;
+  if(shuttleHas(sh,"diplomacy")&&t.type==="Diplomacy")capSkill+=15;
   const moraleAvg=crew.length?avg(crew.map(o=>o.morale)):50;
   return {chance:clamp(Math.round(50+(stat-t.diff)*0.6+capSkill*0.3+(moraleAvg-70)*0.1),5,98),pilot,crew};
 }
@@ -9856,6 +10009,64 @@ function uiLaunchShuttleMission(shid,tid){
   closeModal();save();render();toast(sh.name+" away.");
 }
 
+/* v4.0 shuttle standing orders, supply runs, and the Aeon chronometric peek.
+   Daily-tick state machines in buildTick — no AI calls anywhere near this. */
+const SHUTTLE_ORDERS={patrol:"Patrol — sweeps earn +2 prestige every 14 days.",survey:"Survey — science trickle credits while berthed.",ferry:"Ferry — crew transfers; lifts host-crew morale.",workgang:"Work gang — speeds repair & refit at the berth.",vip:"VIP circuit — +3 prestige every 14 days (diplomat's craft)."};
+function uiShuttleOrder(shid,order){
+  const sh=shuttle(shid);if(!sh)return;
+  if(order==="vip"&&!shuttleHas(sh,"diplomacy")){toast("The VIP circuit needs a diplomat's craft (Captain's Yacht).");return;}
+  if(order==="workgang"&&!shuttleHas(sh,"work")){toast("Work gangs fly work craft (Bee, Sphinx, pods).");return;}
+  sh.order=order||null;sh.od=0;sh._wga=0;
+  log("build",sh.name+(order?(" assigned standing order: "+order+"."):" standing order cleared."));
+  save();shuttleModal(shid);render();
+}
+function uiShuttleRoute(shid,post){
+  const sh=shuttle(shid);if(!sh||sh.status!=="docked")return;
+  const st=SHUTTLE_TYPES[sh.type];
+  const days=Math.max(2,Math.round(9-st.speed*0.8));
+  sh.route={dest:post,daysLeft:days,total:days};sh.status="route";
+  log("build",sh.name+" departs on a supply run to "+(POST_LABELS[post]||post)+" ("+days+" days).");
+  closeModal();save();render();
+}
+function uiAeonPeek(shid){
+  const sh=shuttle(shid);if(!sh)return;
+  if(sh.peekCd>0){toast("Chronometric sensors are recharging — "+sh.peekCd+" days.");return;}
+  sh.peekCd=30;save();
+  const lines=[];
+  (G.buildQueue||[]).forEach(function(b){if(b.daysLeft<=10)lines.push("Construction: "+(b.name||b.cls||"project")+" — "+b.daysLeft+"d");});
+  (G.missions||[]).forEach(function(m){if(m.daysLeft<=7)lines.push("Mission returns: "+(m.kind==="shuttle"?"shuttle operation":"ship operation")+" — "+m.daysLeft+"d");});
+  G.ships.forEach(function(x){if((x.status==="repair"||x.status==="refit")&&x.daysLeft<=10)lines.push(x.name+" "+x.status+" — "+x.daysLeft+"d");});
+  if(G.nextContactDay)lines.push("Long-range sensors: a first contact is coming — roughly "+Math.max(1,G.nextContactDay-G.day)+" days out.");
+  (G.shuttles||[]).forEach(function(x){if(x.route)lines.push(x.name+" supply run — "+x.route.daysLeft+"d");});
+  openModal('<h2>Chronometric Peek \u2014 '+esc(sh.name)+'</h2><p class="flavor">The timeship\u2019s sensors read the near timeline. No paradoxes were harmed.</p>'+
+    (lines.length?lines.map(function(l){return '<div class="kv"><span class="v">'+esc(l)+'</span></div>';}).join(""):'<p class="dim">The next thirty days look quiet. Suspiciously quiet.</p>')+
+    '<div class="btnRow"><button class="btn ghost" onclick="shuttleModal(\''+shid+'\')">Back</button></div>');
+}
+function shuttleJobTick(sh){
+  if(sh.route){
+    if(sh.status==="route"){sh.route.daysLeft--;
+      if(sh.route.daysLeft<=0){const st=SHUTTLE_TYPES[sh.type];const profit=ri(500,1200)+Math.round(st.speed*70);
+        G.credits+=profit;
+        log("build",sh.name+" completes its supply run to "+(POST_LABELS[sh.route.dest]||sh.route.dest)+" — +"+fmt(profit)+" CR in delivered stores and courier fees.");
+        sh.route=null;sh.status="docked";}}
+    return;
+  }
+  if(sh.peekCd>0)sh.peekCd--;
+  if(sh.status!=="docked"||!sh.order)return;
+  const st=SHUTTLE_TYPES[sh.type];
+  sh.od=(sh.od||0)+1;
+  if(sh.order==="survey"){G.credits+=Math.max(2,Math.round(st.sci/6));}
+  else if(sh.order==="patrol"&&sh.od>=14){sh.od=0;G.prestige+=2;log("build",sh.name+" completes a patrol rotation — +2 prestige.");}
+  else if(sh.order==="vip"&&sh.od>=14){sh.od=0;G.prestige+=3;log("build",sh.name+" returns from the VIP circuit — +3 prestige.");}
+  else if(sh.order==="ferry"&&sh.od>=10){sh.od=0;const hs=shuttleHost(sh);
+    if(hs&&hs.cls)crewOfShip(hs.id).forEach(function(o){o.morale=clamp((o.morale||70)+1,0,100);});}
+  else if(sh.order==="workgang"){const hs=shuttleHost(sh);if(!hs)return;
+    let tgt=null;
+    if(hs.cls&&(hs.status==="repair"||hs.status==="refit"))tgt=hs;
+    else if(hs.type)tgt=G.ships.find(function(x){return x.dock===hs.id&&(x.status==="repair"||x.status==="refit");})||null;
+    if(tgt){sh._wga=(sh._wga||0)+0.25;
+      if(sh._wga>=1){sh._wga=0;if(tgt.daysLeft>1){tgt.daysLeft--;log("build",sh.name+"'s work gang shaves a day off "+tgt.name+"'s "+tgt.status+".");}}}}
+}
 /* ---------- BUILD tab ---------- */
 const SHIP_NAME_POOL=["Aldrin","Bellerophon","Cochrane","Drake","Endeavour","Farragut","Gagarin","Hood","Kearsarge","Lexington","Malinche","Nash","Proxima","Rabin","Sarek","Valiant","Yeager","Zheng He","Cuyahoga","Dauntless","Essex","Firebrand","Gettysburg","Hathaway","Kyushu","Lakota","Merrimac","Nobel","Orinoco","Potemkin","Sutherland","Tripoli","Ulysses","Venture","Zephyr","Okuda","Rutledge"];
 function renderBuild(){
@@ -10066,9 +10277,22 @@ function uiCancelBuildGo(kind,id){
 }
 function destroyShip(s,cause,allHands,soulsOv){
   sfx("explosion");
+  // v4.0 lifeboats: berthed shuttles are escape craft. Officer crew beyond seats faces the old odds.
+  const _berthed=(G.shuttles||[]).filter(x=>x.host==="ship"&&x.hid===s.id&&x.status==="docked");
+  let _seats=0;_berthed.forEach(x=>{_seats+=((SHUTTLE_TYPES[x.type]?SHUTTLE_TYPES[x.type].crew:1)*3);});
+  const _flyer=_berthed.find(x=>shuttleHas(x,"sar"));
+  if(_flyer)_seats+=6;
   const crew=crewOfShip(s.id);
-  crew.forEach(o=>{o.shuttle=null;if(allHands||Math.random()<0.7)killOfficer(o,(allHands?"Went down with "+s.name+" — ":"Lost with "+s.name+" — ")+cause);else{o.post={t:"pool"};o.roles=[];o.health="injured";o.healDays=ri(10,30);}});
-  G.shuttles=G.shuttles.filter(x=>!(x.host==="ship"&&x.hid===s.id));
+  let _saved=0;
+  crew.forEach(o=>{o.shuttle=null;
+    if(_saved<_seats){_saved++;o.post={t:"pool"};o.roles=[];o.health="injured";o.healDays=ri(7,21);}
+    else if(allHands||Math.random()<0.7)killOfficer(o,(allHands?"Went down with "+s.name+" — ":"Lost with "+s.name+" — ")+cause);else{o.post={t:"pool"};o.roles=[];o.health="injured";o.healDays=ri(10,30);}});
+  if(_saved>0)log("combat","Lifeboats away: "+_saved+" officer"+(_saved===1?"":"s")+" escaped "+s.name+" in her shuttles before the end"+(_flyer?" — the "+_flyer.name+" flew search-and-rescue to the last.":"."));
+  const _sb=G.stations.filter(x=>x.status==="active")[0];
+  G.shuttles=G.shuttles.filter(x=>{
+    if(!(x.host==="ship"&&x.hid===s.id))return true;
+    if(x.status==="docked"&&_sb){x.host="station";x.hid=_sb.id;return true;}
+    return false;});
   G.ships=G.ships.filter(x=>x.id!==s.id);
   G.memorial.unshift({kind:"ship",cls:s.cls,registry:s.registry||"",name:s.name,sub:SHIP_CLASSES[s.cls].name+"-class · "+s.registry,lost:"destroyed",cause:cause,sd:G.stardate});
   G.ledger.lost++;
@@ -11773,11 +11997,13 @@ function setShipDock(id,v){
 }
 function setShipPost(id,post){
   const s=ship(id);if(!s||!POST_COORDS[post])return;
+  clearAmbient(s);
   if(s.transit){toast("Ship is in transit — recall it first.");return;}
   s.post=post;log("command",s.name+" posted to "+POST_LABELS[post]+".");save();shipModal(id);render();
 }
 function orderCourse(id,v){
   const s=ship(id);if(!s)return;
+  clearAmbient(s);
   if(s.transit||s.status!=="active"||s.mothballed){toast("Ship can't take orders right now.");shipModal(id);return;}
   if(v===(s.post||"sol")){toast("Already on station here.");shipModal(id);return;}
   const r=planTravel(s,s.post||"sol",v);
@@ -12392,6 +12618,12 @@ function uiSetTrainingShip(id){
   }
   save();shipModal(id);render();
 }
+function uiSetRoute(sid,v){
+  const s=ship(sid);if(!s)return;
+  s.routeFor=v||null;
+  if(v)log("event",s.name+" takes up the "+v+" trade route — commerce, and goodwill, follow her.");
+  save();shipModal(sid);render();
+}
 function shipModal(id){
   const s=ship(id);if(!s)return;const c=shipClass(s),crew=crewOfShip(s.id);const isFl=flagshipId()===s.id;const isTv=trainingShipId()===s.id;
   const _eff=effShipCO(s),co=_eff.o,xo=_eff.acting?null:shipXO(s.id,co);
@@ -12419,6 +12651,16 @@ function shipModal(id){
       h+='<div class="kv"><span class="k">Orders</span><span class="v">'+sheetPick('Set course',postOptions(s.post||"sol"),(function(_sid){return function(v){orderCourse(_sid,v);};})(s.id))+'</span></div>';
     }else{
       h+='<div class="kv"><span class="k">Posting</span><span class="v">'+esc(POST_LABELS[s.post||"sol"]||"Deep Space")+'</span></div>';
+    }
+    if(s.ambient&&s.ambient.daysLeft>0)h+='<div class="kv"><span class="k">On patrol</span><span class="v">Routine patrol \u2192 '+esc(POST_LABELS[s.ambient.dest]||s.ambient.dest)+' ('+s.ambient.daysLeft+'d out) \u00b7 any order overrides</span></div>';
+    if(s.status==="active"&&!s.mothballed){
+      const _pacts=Object.keys(G.codex||{}).filter(function(nm){return G.codex[nm].pact;});
+      if(_pacts.length){
+        const _ro='<option value="">— No trade route —</option>'+_pacts.map(function(nm){return '<option value="'+esc(nm)+'"'+(s.routeFor===nm?" selected":"")+'>The '+esc(nm)+' trade route (+85 CR/day)</option>';}).join("");
+        h+='<div class="kv"><span class="k">Trade route</span><span class="v">'+sheetPick('Assign trade route',_ro,(function(_sid){return function(v){uiSetRoute(_sid,v);};})(s.id))+'</span></div>';
+      }else if(s.routeFor){
+        s.routeFor=null;
+      }
     }
     if(canDock(s)){
       h+='<div class="kv"><span class="k">Docked at</span><span class="v">'+sheetPick('Dock at station',dockOptions(s),(function(_sid){return function(v){setShipDock(_sid,v);};})(s.id))+'</span></div>';
@@ -12603,8 +12845,15 @@ function shuttleModal(id){
   if(sh.status==="construction")
     h+='<div class="prog"><i style="width:'+Math.round((1-sh.daysLeft/st.days)*100)+'%"></i></div>';
   h+='<div class="btnRow">';
+  if(sh.order)h+='<div class="kv"><span class="k">Standing order</span><span class="v">'+esc(sh.order)+' \u00b7 '+esc(SHUTTLE_ORDERS[sh.order]||"")+'</span></div>';
+  if(sh.route)h+='<div class="kv"><span class="k">Supply run</span><span class="v">\u2192 '+esc(POST_LABELS[sh.route.dest]||sh.route.dest)+' \u00b7 '+sh.route.daysLeft+'d out</span></div>';
+  if(shuttleHas(sh,"chronometric")&&sh.status==="docked")h+='<div class="btnRow"><button class="btn small violet" onclick="uiAeonPeek(\''+sh.id+'\')">Chronometric peek'+(sh.peekCd>0?" ("+sh.peekCd+"d)":"")+'</button></div>';
   if(sh.status==="docked"){
     h+='<button class="btn small violet" onclick="uiShuttleCrewPicker(\''+sh.id+'\')">Assign crew</button>';
+    h+='<div class="btnRow">'+
+      Object.keys(SHUTTLE_ORDERS).map(function(k){return '<button class="btn small'+(sh.order===k?" on":"")+'" onclick="uiShuttleOrder(\''+sh.id+'\',\''+k+'\')">'+k+'</button>';}).join("")+
+      (sh.order?'<button class="btn small ghost" onclick="uiShuttleOrder(\''+sh.id+'\',\'\')">stand down</button>':"")+'</div>';
+    if(shuttleHas(sh,"cargo")){const _hp=shuttleHost(sh);h+='<div class="btnRow">'+Object.keys(POST_LABELS).filter(function(p){return !(_hp&&_hp.cls&&p===(_hp.post||"sol"));}).map(function(p){return '<button class="btn small" onclick="uiShuttleRoute(\''+sh.id+'\',\''+p+'\')">Run \u2192 '+esc(POST_LABELS[p])+'</button>';}).join("")+'</div><p class="dim">Cargo craft run supply routes between waypoints; faster craft turn them quicker and dearer.</p>';}
     h+='<button class="btn small" onclick="uiShuttleTransferPicker(\''+sh.id+'\')">Transfer</button>';
     if(crew.length)h+='<button class="btn small ghost" onclick="uiRecallShuttleCrew(\''+sh.id+'\')">Recall all</button>';
     if(pilot&&shuttleHostActive(sh))h+='<button class="btn small teal" onclick="uiShuttleMissionPicker(\''+sh.id+'\')">Missions</button>';
@@ -15251,7 +15500,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v3.2</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v4.0</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
