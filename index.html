@@ -928,22 +928,40 @@ function buildTimeMod(){ // each shipyard beyond the first: -10% build time, max
 
 /* ================= CONFIG: SHUTTLE TYPES ================= */
 /* cost CR, cost DL, build days, hull, tac, sci, speed, crew cap. Built in the ship's shuttlebay. */
-const SHUTTLE_PICS={"classf":"ships/shuttle/classf_08f84d.jpg","type6":"ships/shuttle/type6_57b6c6.jpg","type7":"ships/shuttle/type7_6fd0ab.jpg","type8":"ships/shuttle/type8_49ad60.jpg","type9":"ships/shuttle/type9_32edb0.jpg","type10":"ships/shuttle/type10_9d74a4.jpg","type11":"ships/shuttle/type11_662baf.jpg","valkyrie":"ships/shuttle/valkyrie_a54e73.jpg","deltaflyer":"ships/shuttle/deltaflyer_3b33a4.jpg","danube":"ships/shuttle/danube_a1c4f1.jpg","aeroshuttle":"ships/shuttle/aeroshuttle_cfbe32.jpg","yacht":"ships/shuttle/yacht_423fa1.jpg","yellowstone":"ships/shuttle/yellowstone_102381.jpg"};
+const SHUTTLE_PICS={"classf":"ships/shuttle/classf_fe6b6d.png","type6":"ships/shuttle/type6_6bab91.png","type7":"ships/shuttle/type7_57bd36.png","type8":"ships/shuttle/type8_8a4e48.png","type9":"ships/shuttle/type9_67239e.png","type10":"ships/shuttle/type10_eb5c91.png","type11":"ships/shuttle/type11_394714.png","valkyrie":"ships/shuttle/valkyrie_a54e73.jpg","deltaflyer":"ships/shuttle/deltaflyer_cf796d.png","danube":"ships/shuttle/danube_5a5ed6.png","aeroshuttle":"ships/shuttle/aeroshuttle_ce3497.png","yacht":"ships/shuttle/yacht_da36c4.png","yellowstone":"ships/shuttle/yellowstone_102381.jpg","type15":"ships/shuttle/type15_3249e8.png","type18":"ships/shuttle/type18_e1f314.png","type9a":"ships/shuttle/type9a_3db6a1.png","type14":"ships/shuttle/type14_fda9d2.png","travelpod":"ships/shuttle/travelpod_201315.png","workbee":"ships/shuttle/workbee_8b7a79.png","sphinx":"ships/shuttle/sphinx_3418d0.png","spacedock":"ships/shuttle/spacedock_720b53.png","trainer":"ships/shuttle/trainer_a93ab2.png","peregrine":"ships/shuttle/peregrine_8d9a25.png","sc4":"ships/shuttle/sc4_162e3c.png","aeon":"ships/shuttle/aeon_92f6f9.png"};
 const SHUTTLE_TYPES={
+  workbee:{name:"Cargo Work Bee",short:"Work Bee",cr:700,dl:15,days:2,hull:8,tac:5,sci:15,speed:3.0,crew:1,
+    desc:"One seat, two grabber arms, endless patience. The drydock's best friend."},
+  travelpod:{name:"Travel Pod",short:"Travel Pod",cr:900,dl:20,days:2,hull:10,tac:5,sci:20,speed:3.5,crew:2,
+    desc:"The original sightseeing pod. All windows, no warp to speak of."},
+  type15:{name:"Type 15 Shuttlepod",short:"Type 15",cr:1100,dl:30,days:3,hull:12,tac:5,sci:25,speed:4.5,crew:2,
+    desc:"Two-seat shuttlepod. Technically warp-capable, spiritually sublight."},
   classf:{name:"Class F Shuttlecraft",short:"Class F",cr:1500,dl:40,days:4,hull:20,tac:10,sci:30,speed:5.0,crew:2,
     desc:"TOS-era workhorse. Boxy, reliable, and older than most of your crew."},
+  sphinx:{name:"Sphinx Workpod",short:"Sphinx",cr:1600,dl:45,days:4,hull:15,tac:10,sci:30,speed:4.0,crew:1,
+    desc:"A curved little workpod with an aquarium view. Single seat, all viewport."},
   type6:{name:"Type 6 Shuttlecraft",short:"Type 6",cr:2000,dl:60,days:5,hull:25,tac:15,sci:45,speed:6.0,crew:2,
     desc:"The fleet's everyday taxi. Unremarkable, unstoppable."},
+  type18:{name:"Type 18 Shuttlepod",short:"Type 18",cr:2200,dl:70,days:5,hull:22,tac:15,sci:40,speed:5.5,crew:2,
+    desc:"The Defiant's pocket shuttle. Small hull, big attitude, actual warp drive."},
   type7:{name:"Type 7 Shuttlecraft",short:"Type 7",cr:2500,dl:80,days:6,hull:30,tac:15,sci:50,speed:6.5,crew:3,
     desc:"Roomy personnel shuttle with panoramic viewports. A survey team's best friend."},
+  spacedock:{name:"Spacedock Shuttle",short:"Spacedock",cr:2800,dl:90,days:6,hull:28,tac:10,sci:40,speed:5.5,crew:4,
+    desc:"Spacedock ferry. Rows of seats, zero legroom, unbeatable view of the fleet."},
+  trainer:{name:"Academy Trainer Craft",short:"Trainer",cr:3200,dl:110,days:7,hull:30,tac:20,sci:45,speed:7.2,crew:2,
+    desc:"Academy flight trainer. Built to survive cadets \u2014 and does, daily."},
   type8:{name:"Type 8 Shuttlecraft",short:"Type 8",cr:3000,dl:100,days:7,hull:35,tac:25,sci:55,speed:7.0,crew:3,
     desc:"Sleek and angular. A favorite of security detachments."},
   type9:{name:"Type 9 Shuttlecraft",short:"Type 9",cr:3500,dl:120,days:8,hull:40,tac:30,sci:60,speed:8.0,crew:4,
     desc:"Voyager-era fast shuttle. Nimble, modern, dependable."},
+  type9a:{name:"Type 9A Cargo Shuttle",short:"Type 9A",cr:3800,dl:130,days:9,hull:50,tac:15,sci:40,speed:6.0,crew:3,
+    desc:"Heavy cargo shuttle. Hauls freight, fuel, and everyone's luggage."},
   type10:{name:"Type 10 Shuttlecraft",short:"Type 10",cr:4000,dl:150,days:9,hull:45,tac:35,sci:65,speed:8.2,crew:4,
     desc:"Armored and rugged. Built for hot zones."},
   type11:{name:"Type 11 Shuttlecraft",short:"Type 11",cr:4500,dl:180,days:10,hull:50,tac:40,sci:70,speed:8.5,crew:4,
     desc:"Long-range diplomatic courier. Arrives in style."},
+  type14:{name:"Type 14 Shuttlecraft",short:"Type 14",cr:5500,dl:200,days:11,hull:55,tac:45,sci:60,speed:8.5,crew:4,
+    desc:"The fleet's big sleek shuttle \u2014 a runabout that decided to travel light."},
   aeroshuttle:{name:"Aeroshuttle",short:"Aeroshuttle",cr:6000,dl:250,days:12,hull:45,tac:45,sci:70,speed:8.8,crew:3,
     special:"Atmospheric specialist: +15 science on Survey missions.",
     desc:"Voyager's dart-like atmospheric flyer. Born for planetary flight."},
@@ -957,6 +975,12 @@ const SHUTTLE_TYPES={
     desc:"Voyager's custom hot rod. Borg tech, Paris swagger, Janeway-approved."},
   valkyrie:{name:"Valkyrie-class Strike Fighter",short:"Valkyrie",cr:9500,dl:380,days:15,hull:60,tac:80,sci:40,speed:9.5,crew:2,
     desc:"Dark, fast, and mean. Starfleet's answer to 'what if a shuttle had anger issues.'"},
+  peregrine:{name:"Peregrine-class Fighter",short:"Peregrine",cr:10000,dl:400,days:16,hull:70,tac:85,sci:30,speed:9.4,crew:2,
+    desc:"The Federation's attack fighter. Maquis-tested, Dominion War approved."},
+  sc4:{name:"SC-4 Shuttlecraft",short:"SC-4",cr:11000,dl:420,days:16,hull:55,tac:60,sci:85,speed:9.4,crew:2,
+    desc:"Admiral Janeway's 25th-century ride. Stealth skin, coffee holder, timeline sold separately."},
+  aeon:{name:"Aeon-class Timeship",short:"Aeon",cr:13000,dl:450,days:18,hull:40,tac:50,sci:95,speed:9.8,crew:1,lock:"prestige300",
+    desc:"A 29th-century timeship. Temporal Investigations has questions. So many questions."},
   yellowstone:{name:"Yellowstone-class Runabout",short:"Yellowstone",cr:14000,dl:500,days:20,hull:85,tac:60,sci:80,speed:9.0,crew:8,
     stationOnly:true,desc:"Next-gen heavy runabout. A Danube that went to the gym. Too large for starship shuttlebays."}
 };
@@ -964,15 +988,21 @@ function shuttleUnlocked(key){
   if(typeof G!=="undefined"&&G&&G.qmode)return{ok:true};
   const c=SHUTTLE_TYPES[key];
   if(!c.lock)return{ok:true};
-  if(c.lock==="prestige150"){
-    if(G.prestige>=150)return{ok:true};
-    return{ok:false,why:"Requires 150 prestige (Starfleet R&D sign-off)"};
+  const _pm=/^prestige(\d+)$/.exec(c.lock||"");
+  if(_pm){
+    if((G.prestige||0)>=+_pm[1])return{ok:true};
+    return{ok:false,why:"Requires "+_pm[1]+" prestige (Starfleet R&D sign-off)"};
   }
   return{ok:true};
 }
 function shuttlePic(type,big){
   const src=(typeof SHUTTLE_PICS!=="undefined"&&SHUTTLE_PICS[type])?SHUTTLE_PICS[type]:"";
-  return src?'<img class="'+(big?"shipPicBig":"shipPic")+'" src="'+src+'" alt="">':"";
+  if(!src)return "";
+  if(src.slice(-4)===".png"){
+    const _nb=[""," nebB"," nebC"][Array.from(String(type)).reduce(function(a,c){return a+c.charCodeAt(0);},0)%3];
+    return '<img class="'+(big?"shipPicBig":"shipPic")+' shipPicEAS'+_nb+'" src="'+src+'" alt="">';
+  }
+  return '<img class="'+(big?"shipPicBig":"shipPic")+'" src="'+src+'" alt="">';
 }
 const SHUTTLE_NAME_POOL=["Galileo","Columbus","Copernicus","Curie","Einstein","Feynman","Hawking","Nogura","Onizuka","Sakharov","Voltaire","Goddard","Brahe","Kepler","El-Baz","Drake","Pike","Okuda","Chaffee","Sagan"];
 
@@ -15164,8 +15194,8 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v2.99</div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v3.0</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
 </body>
