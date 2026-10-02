@@ -3823,6 +3823,7 @@ function migrateSave(g){
     });
   }
   (g.officers||[]).forEach(o=>{if(o.shuttle&&!g.shuttles.some(x=>x.id===o.shuttle))o.shuttle=null;if(o.pic==null)o.pic=0;});
+  xenoEnsureAll(g); // v4.8: re-register alien ship classes on load
   return g;
 }
 function stationOf(o){return o.post.t==="station"?station(o.post.id):null;}
@@ -4723,7 +4724,7 @@ function renderCodex(){
       '<div class="sub2">'+esc(cx.trait)+', '+esc(cx.disp)+' · '+cx.encounters+' encounter'+(cx.encounters===1?"":"s")+' · last contact stardate '+sdStr(cx.lastSd)+'</div></div>'+
       '<span class="badge" style="background:'+lb[1]+';color:#fff;font-weight:700">'+lb[0]+'</span></div>'+
       '<div class="statBar" style="margin-top:6px"><i style="width:'+pct+'%;background:'+lb[1]+'"></i></div>'+
-      '<div class="sub2" style="margin-top:4px">Standing '+cx.standing+' · last outcome: '+esc(cx.lastOutcome||"—")+'</div>'+pactCardHTML(cx)+summitCardHTML(cx)+giftCardHTML(cx)+'</div>';
+      '<div class="sub2" style="margin-top:4px">Standing '+cx.standing+' · last outcome: '+esc(cx.lastOutcome||"—")+'</div>'+pactCardHTML(cx)+summitCardHTML(cx)+giftCardHTML(cx)+xchgCardHTML(cx)+xenoCardHTML(cx)+'</div>';
   });
   return h;
 }
@@ -4853,6 +4854,7 @@ function codexTick(){
   contactClockTick();
   if(FC)return;
   G.codex=G.codex||{};
+  xchgResignTick(); // v4.8: exchange officers resign if standing collapses
   const keys=Object.keys(G.codex);
   keys.forEach(function(k){const cx=G.codex[k]; // v2.43 summits tick daily
     if(cx.summitCd>0)cx.summitCd--;
@@ -4877,6 +4879,13 @@ function codexFriendly(cx){
     log("event","A "+cx.name+" trade envoy visits — the pact holds, and their merchants speak well of the Federation in every port.");
     return;
   }
+  /* v4.8: occasionally they offer an exchange officer instead of trade talk. */
+  if(xchgEligible(cx)&&Math.random()<0.25){
+    var t=xchgTraitOf(cx);
+    log("event","🤝 The "+cx.name+" propose something rarer than trade: an officer exchange. One of their own would serve in your fleet ("+t.label+", +"+t.amt+" "+t.stat.toUpperCase()+"). (Open the Species Codex to accept.)");
+    toast("The "+cx.name+" offer an exchange officer — see the Species Codex");
+    save();return;
+  }
   codexRecord(cx.name,cx.trait,cx.disp,"trade");
   log("event","A "+cx.name+" trade delegation arrives — they propose a formal trade pact: real routes, real ships, real commerce. (Open the Species Codex to sign.)");
   toast("The "+cx.name+" propose a trade pact — see the Species Codex");
@@ -4884,8 +4893,9 @@ function codexFriendly(cx){
 }
 function codexHostile(cx){
   cx.incidents=(cx.incidents||0)+1;cx.lastIncidentDay=G.day||0;
+  var _raider=(cx.standing<=-60)?xenoRaiderHTML(cx):"";
   interruptQueue.push({title:"Border incident — the "+cx.name,sub:"Stardate "+sdStr(G.stardate),
-    html:'<p>The '+esc(cx.name)+' have seized a Federation freighter near the border and are demanding you answer for past insults. Their ships are powering weapons.</p>',
+    html:'<p>The '+esc(cx.name)+' have seized a Federation freighter near the border and are demanding you answer for past insults. Their ships are powering weapons.</p>'+_raider,
     buttons:[
       {t:"Apologize, pay reparations (−2,000 CR)",fn:function(){
         if(G.credits<2000){toast("Not enough credits.");return null;}
@@ -4912,6 +4922,170 @@ function codexHostile(cx){
     ]});
   save();
 }
+/* ================= v4.8 THE EXCHANGE PROGRAM ================= */
+/* Alien exchange officers (A) + alien ships (B). Original Codex species only —
+   no canon races, no likeness issues. Zero AI calls; all art is baked. */
+const XCHG_TRAIT={
+  "telepathic":{stat:"dip",amt:15,label:"Telepathic",note:"senses emotion and intent"},
+  "crystalline":{stat:"sci",amt:15,label:"Crystalline",note:"resonates with sensor systems"},
+  "aquatic":{stat:"med",amt:10,label:"Aquatic",note:"fluid-physiology expertise"},
+  "nomadic":{stat:"cmd",amt:10,label:"Nomadic",note:"adaptable wanderer"},
+  "hive-minded":{stat:"tac",amt:10,label:"Hive-Minded",note:"coordinated instincts"},
+  "silicon-based":{stat:"eng",amt:15,label:"Silicon-Based",note:"lithic durability"},
+};
+const XCHG_PORTRAIT={
+  "telepathic":"portraits/baked/xoff_telepathic_8d1760.jpg",
+  "crystalline":"portraits/baked/xoff_crystalline_c90814.jpg",
+  "aquatic":"portraits/baked/xoff_aquatic_c5aa10.jpg",
+  "nomadic":"portraits/baked/xoff_nomadic_90deaf.jpg",
+  "hive-minded":"portraits/baked/xoff_hive_minded_fd0efb.jpg",
+  "silicon-based":"portraits/baked/xoff_silicon_based_c8064a.jpg",
+};
+const XCHG_SHIP_ART={
+  "telepathic":"ships/alien/xeno_telepathic.jpg",
+  "crystalline":"ships/alien/xeno_crystalline.jpg",
+  "aquatic":"ships/alien/xeno_aquatic.jpg",
+  "nomadic":"ships/alien/xeno_nomadic.jpg",
+  "hive-minded":"ships/alien/xeno_hive_minded.jpg",
+  "silicon-based":"ships/alien/xeno_silicon_based.jpg",
+};
+const XENO_SHIP_KIND={
+  "telepathic":"Mindweaver","crystalline":"Shard","aquatic":"Tidecaller",
+  "nomadic":"Wayfarer","hive-minded":"Swarm","silicon-based":"Stoneheart",
+};
+const XCHG_GIVEN=["Sarella","Korv","Mira","Thalen","Ysara","Drev","Olan","Keth","Vana","Ril","Tavo","Nysa","Bran","Sel","Zin","Pela"];
+const XCHG_FAM=["th'Zar","Vex","Morn","Krel","Tor","Vaan","Lys","Bren","Zeth","Dal","Ryn","Osk"];
+function xchgName(){return pick(XCHG_GIVEN)+" "+pick(XCHG_FAM);}
+function xchgTraitOf(cx){return XCHG_TRAIT[cx.trait]||XCHG_TRAIT["nomadic"];}
+function xchgServing(){return (G.officers||[]).filter(function(o){return o.xchgFor&&o.status==="active"&&!o.dead&&!o.retired;});}
+function xchgEligible(cx){
+  if(!cx||cx.standing<40)return false;
+  var s=xchgServing();
+  if(s.some(function(o){return o.xchgFor===cx.name;}))return false;
+  if(s.length>=4)return false;
+  return true;
+}
+function xchgCardHTML(cx){
+  if(!xchgEligible(cx))return "";
+  return '<div class="btnRow" style="margin-top:6px"><button class="btn small teal" onclick="uiXchgRequest(\''+cx.name.replace(/'/g,"\\'")+'\')">Request exchange officer</button></div>';
+}
+function uiXchgRequest(name){
+  var cx=(G.codex||{})[name];if(!cx||!xchgEligible(cx))return;
+  var t=xchgTraitOf(cx);
+  openModal('<h2>Exchange officer?</h2><p class="dim">The '+esc(cx.name)+' will send one of their own to serve in your fleet — an exchange of trust as much as personnel.</p>'+
+    '<p>Their '+t.label.toLowerCase()+' heritage brings <b>+'+t.amt+' '+t.stat.toUpperCase()+'</b> ('+esc(t.note)+'). They serve like any officer — billets, morale, loyalty — and hold one slot of the four exchange postings.</p>'+
+    '<p class="dim">If relations with the '+esc(cx.name)+' collapse (standing below 0), they will resign and go home.</p>'+
+    '<div class="btnRow"><button class="btn" onclick="renderCodex();render();">Not yet</button> '+
+    '<button class="btn teal" onclick="uiXchgAccept(\''+cx.name.replace(/'/g,"\\'")+'\')">Accept the exchange</button></div>');
+}
+function uiXchgAccept(name){
+  var cx=(G.codex||{})[name];if(!cx||!xchgEligible(cx))return;
+  var t=xchgTraitOf(cx), nm=xchgName(), gender=pick(["M","F"]);
+  var st=[ri(40,60),ri(40,60),ri(40,60),ri(40,60),ri(40,60),ri(40,60)];
+  var o=MK([nm,cx.name,gender,ri(24,44),2,"Science",st,["Exchange Officer",t.label],"pool","Lieutenant","adult"]);
+  var sk={cmd:"cmd",sci:"sci",eng:"eng",med:"med",dip:"dip",tac:"tac"}[t.stat];
+  if(sk)o.stats[sk]=clamp(o.stats[sk]+t.amt,0,100);
+  o.xchgFor=cx.name;o.xchgTrait=cx.trait;
+  o.customPic=XCHG_PORTRAIT[cx.trait]||XCHG_PORTRAIT["nomadic"];
+  o.morale=85;o.loyal=80;
+  o.backstory="Exchange officer from the "+cx.name+" ("+t.label.toLowerCase()+"). Sent as a gesture of friendship — and quietly, as their people's eyes aboard your ships.";
+  o.division=officerDivision(o)||"sciences";
+  G.officers.push(o);
+  awardAccolade(o,"Joined the Exchange Program");
+  log("personnel","🤝 EXCHANGE: "+o.name+" of the "+cx.name+" has joined your fleet as an exchange officer ("+t.label+", +"+t.amt+" "+t.stat.toUpperCase()+").");
+  save();renderCodex();render();officerModal(o.id);
+  toast(o.name+" joins the fleet!");
+}
+/* v4.8: exchange officers resign if relations collapse — bittersweet log beat. */
+function xchgResignTick(){
+  var changed=false;
+  xchgServing().forEach(function(o){
+    var cx=(G.codex||{})[o.xchgFor];
+    if(cx&&cx.standing<0){
+      o.status="inactive";o.retired=true;o.retiredReason="Returned to the "+o.xchgFor;
+      o.post={t:"pool"};
+      log("personnel","💔 "+o.name+" has resigned "+(o.gender==="F"?"her":o.gender==="M"?"his":"their")+" exchange posting and returned to the "+o.xchgFor+". With standing at "+cx.standing+", they felt they could no longer serve beside your crew. The farewell on the shuttlebay deck was quiet — no speeches, just a long look back.");
+      toast("💔 "+o.name+" has returned to the "+o.xchgFor+".");
+      changed=true;
+    }
+  });
+  if(changed)save();
+}
+/* ---------- v4.8 alien ships ---------- */
+function xenoClassKey(cx){return "xeno_"+String(cx.name).toLowerCase().replace(/[^a-z]+/g,"").slice(0,24);}
+function xenoEnsureClass(cx){
+  var key=xenoClassKey(cx);
+  if(SHIP_CLASSES[key])return key;
+  var kind=XENO_SHIP_KIND[cx.trait]||"Wanderer";
+  var hull=85,tac=60,sci=70;
+  if(cx.trait==="crystalline")hull+=30;
+  if(cx.trait==="hive-minded")sci+=25;
+  if(cx.trait==="silicon-based"){hull+=20;tac+=10;}
+  if(cx.trait==="telepathic")sci+=15;
+  if(cx.trait==="aquatic"){sci+=10;hull+=10;}
+  SHIP_CLASSES[key]={name:kind+" Cruiser",cr:0,dl:0,days:0,hull:hull,tac:tac,sci:sci,
+    speed:9.0,slots:10,upkeep:90,comp:400,xeno:true,
+    special:"Alien design, "+((XCHG_TRAIT[cx.trait]||{}).label||"heritage")+". Gift of the "+cx.name+"."};
+  SHIP_PICS[key]=XCHG_SHIP_ART[cx.trait]||XCHG_SHIP_ART["nomadic"];
+  return key;
+}
+/* Re-register xeno classes on load (they live in code, ships in save). */
+function xenoEnsureAll(gg){
+  var g0=gg||G;
+  Object.keys(g0.codex||{}).forEach(function(n){try{xenoEnsureClass(g0.codex[n]);}catch(e){}});
+  (g0.ships||[]).forEach(function(s){
+    if(s.cls&&s.cls.indexOf("xeno_")===0&&!SHIP_CLASSES[s.cls]){
+      SHIP_CLASSES[s.cls]={name:"Alien Cruiser",cr:0,dl:0,days:0,hull:85,tac:60,sci:70,speed:9.0,slots:10,upkeep:90,comp:400,xeno:true,special:"Alien design."};
+      SHIP_PICS[s.cls]=XCHG_SHIP_ART["nomadic"];
+    }
+  });
+}
+function xenoShipName(cx){
+  var kind=XENO_SHIP_KIND[cx.trait]||"Wanderer";
+  return kind+" of the "+cx.name;
+}
+function xenoGiftEligible(cx){
+  if(!cx||cx.standing<60)return false;
+  if((G.ships||[]).some(function(s){return s.xenoFor===cx.name&&s.status==="active";}))return false;
+  return true;
+}
+function xenoCardHTML(cx){
+  if(!xenoGiftEligible(cx))return "";
+  var kind=XENO_SHIP_KIND[cx.trait]||"Wanderer";
+  return '<div class="btnRow" style="margin-top:6px"><button class="btn small violet" onclick="uiXenoGift(\''+cx.name.replace(/'/g,"\\'")+'\')">Request ship gift — '+esc(kind)+' Cruiser</button></div>';
+}
+function uiXenoGift(name){
+  var cx=(G.codex||{})[name];if(!cx||!xenoGiftEligible(cx))return;
+  var key=xenoEnsureClass(cx);
+  var kind=XENO_SHIP_KIND[cx.trait]||"Wanderer";
+  openModal('<h2>A gift of a starship?</h2><p class="dim">The '+esc(cx.name)+' offer you one of their '+kind+' cruisers — '+esc(xenoShipName(cx))+'. It will fly under your command, with your crew, but it remains their design: alien systems, alien quirks.</p>'+
+    '<div class="row"><div class="grow"><div class="sub2">Hull '+SHIP_CLASSES[key].hull+' · Tac '+SHIP_CLASSES[key].tac+' · Sci '+SHIP_CLASSES[key].sci+' · Speed '+SHIP_CLASSES[key].speed+'</div></div></div>'+
+    '<div class="btnRow"><button class="btn" onclick="renderCodex();render();">Decline</button> '+
+    '<button class="btn violet" onclick="uiXenoAccept(\''+cx.name.replace(/'/g,"\\'")+'\')">Accept the gift</button></div>');
+}
+function uiXenoAccept(name){
+  var cx=(G.codex||{})[name];if(!cx||!xenoGiftEligible(cx))return;
+  var key=xenoEnsureClass(cx);
+  var s={id:uid("s"),name:xenoShipName(cx),registry:"X-"+ri(100,999)+"-"+cx.name.slice(0,3).toUpperCase(),
+    cls:key,status:"active",daysLeft:0,damage:0,missionId:null,yardId:null,post:"sol",
+    comp:SHIP_CLASSES[key].comp,commSd:G.stardate,tours:1,xenoFor:cx.name};
+  G.ships.push(s);
+  cx.standing=clamp(cx.standing+5,-100,100);
+  log("event","🎁 The "+cx.name+" have gifted you the "+s.name+" ("+SHIP_CLASSES[key].name+")! An alien cruiser now flies in your fleet. Relations warm (+5 standing).");
+  save();renderCodex();render();shipModal(s.id);
+  toast("🎁 The "+s.name+" joins your fleet!");
+}
+/* v4.8: hostile raiders get names + faces. */
+function xenoRaiderName(cx){
+  var kind=XENO_SHIP_KIND[cx.trait]||"Wanderer";
+  return kind+" "+pick(["Vex","Kor","Dral","Mek","Sor","Vel","Rath","Keth"]);
+}
+function xenoRaiderHTML(cx){
+  var art=XCHG_SHIP_ART[cx.trait]||XCHG_SHIP_ART["nomadic"];
+  var nm=xenoRaiderName(cx);
+  return '<div class="row" style="margin:8px 0"><img class="shipPic" src="'+art+'" alt="" style="max-width:220px"><div class="grow"><div class="nm">'+esc(nm)+'</div><div class="sub2">'+esc(cx.name)+' raider — '+(XENO_SHIP_KIND[cx.trait]||"Wanderer")+'-class</div></div></div>';
+}
+
 /* ---------- story arcs tab ---------- */
 function renderArcs(){
   G.arcs=G.arcs||[];G.contacts=G.contacts||[];
@@ -11414,16 +11588,11 @@ function divisionPickerHtml(o){
     '</span></span></div>';
 }
 function uiDivision(id,div,btn){
-  var offs=(typeof G!=="undefined"&&G&&G.officers)||[],o=null;
-  for(var i=0;i<offs.length;i++)if(offs[i].id===id){o=offs[i];break;}
+  var o=officer(id);
   if(!o||DIVISIONS.indexOf(div)<0)return;
-  o.division=div;if(typeof save==="function")save();
-  var seg=btn.parentElement;
-  if(seg){var bs=seg.querySelectorAll("button");for(var j=0;j<bs.length;j++)bs[j].classList.toggle("on",bs[j]===btn);}
-  var wrap=btn.closest(".pfaceWrap"),img=wrap?wrap.querySelector("img.pfaceBig"):null;
-  if(img)uiPortraitImgRefresh(img,o.name);
-  if(typeof render==="function")render();
+  o.division=div;save();render();officerModal(id);
 }
+
 /* --- runtime uniform recolor: dominant-band hue shift, skin-safe --- */
 var DIV_BANDS=[[347,7],[46,12],[212,16]];
 function divHSL(r,g,b){
@@ -11431,7 +11600,7 @@ function divHSL(r,g,b){
   var l=(mx+mn)/510;if(l<=0.06||l>=0.8)return null;
   if(mx===mn)return null;
   var d=(mx-mn)/255,s=l>0.5?d/(2-(mx+mn)/255):d/((mx+mn)/255);
-  if(s<=0.5)return null;
+  if(s<=0.32)return null; /* v4.8: was 0.5 — dark PIC-era yokes read ~0.25-0.4 */
   var h,rr=r/255,gg=g/255,bb=b/255;
   if(mx===r)h=(gg-bb)/d+(gg<bb?6:0);else if(mx===g)h=(bb-rr)/d+2;else h=(rr-gg)/d+4;
   return [h*60,s,l];
@@ -11439,6 +11608,13 @@ function divHSL(r,g,b){
 function divBandOfH(h){
   for(var i=0;i<3;i++){var dd=Math.abs(h-DIV_BANDS[i][0]);if(dd>180)dd=360-dd;if(dd<=DIV_BANDS[i][1])return i;}
   return -1;
+}
+/* v4.8: dark blue (vignette/shadow, l<0.10) is not a yoke — the v4.3 grade's
+   blue-gray vignette was outvoting dark red yokes once the sat gate dropped. */
+function divBandOfHSL(h,l){
+  var b=divBandOfH(h);
+  if(b===2&&l<0.10)return -1;
+  return b;
 }
 function divShiftHSL(h,s,l,targetHue,band){
   var off=((h-DIV_BANDS[band][0]+540)%360)-180;
@@ -11463,13 +11639,13 @@ function divRecolorApply(img){
     var id=x.getImageData(0,0,tw,th),p=id.data,target=DIV_HUE[div],y0=(th*0.55)|0;
     var counts=[0,0,0],y,xx,i,row,hsl,b,band=-1,bn=0,k;
     for(y=y0;y<th;y++){row=y*tw;for(xx=0;xx<tw;xx++){i=(row+xx)*4;
-      hsl=divHSL(p[i],p[i+1],p[i+2]);if(hsl&&(b=divBandOfH(hsl[0]))>=0)counts[b]++;}}
+      hsl=divHSL(p[i],p[i+1],p[i+2]);if(hsl&&(b=divBandOfHSL(hsl[0],hsl[2]))>=0)counts[b]++;}}
     for(k=0;k<3;k++)if(counts[k]>bn){bn=counts[k];band=k;}
     if(band>=0&&bn>40){
       var changed=false;
       for(y=y0;y<th;y++){row=y*tw;for(xx=0;xx<tw;xx++){i=(row+xx)*4;
         hsl=divHSL(p[i],p[i+1],p[i+2]);
-        if(hsl&&divBandOfH(hsl[0])===band){var o2=divShiftHSL(hsl[0],hsl[1],hsl[2],target,band);p[i]=o2[0];p[i+1]=o2[1];p[i+2]=o2[2];changed=true;}}}
+        if(hsl&&divBandOfHSL(hsl[0],hsl[2])===band){var o2=divShiftHSL(hsl[0],hsl[1],hsl[2],target,band);p[i]=o2[0];p[i+1]=o2[1];p[i+2]=o2[2];changed=true;}}}
       if(changed){x.putImageData(id,0,0);out=cv.toDataURL("image/jpeg",0.92);}
     }
     _divCache[key]=out||src;img.src=_divCache[key];
@@ -16041,7 +16217,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v4.7 — DS9 arch fix</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v4.8 — The Exchange Program</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
