@@ -926,7 +926,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v6.18';
+const ART_BUST='v6.19';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -11980,8 +11980,10 @@ function shipPic(cls,big,state,opts){
   if(_icn&&SHIP_ICON_META[_icn]){
     if(big){
       /* v6.15 (Jason 2026-10-02): SHOT 7. Lamarr faces the other direction (scaleX(-1)). All big ship imgs get padding for a gap around the border. */
+      /* v6.19 (Jason 2026-10-02): SHOT 11. Put the drydock background ON THE IMG ITSELF (like shipPicEAS did with nebula). The container backgrounds (v6.13-v6.18) never rendered. */
       var _flip=(_icn==="lamarr-right")?'transform:scaleX(-1);':"";
-      img='<img class="shipPicBig" src="'+bustUrl('ships/icons/'+_icn+'.png')+'" alt="" style="'+_flip+'padding:6px;box-sizing:border-box;">';
+      var _drydockBg=(opts&&opts.bees)?'background:var(--drydock) center/cover no-repeat;':"";
+      img='<img class="shipPicBig" src="'+bustUrl('ships/icons/'+_icn+'.png')+'" alt="" style="'+_flip+'padding:6px;box-sizing:border-box;'+_drydockBg+'">';
     }else{
       var _nb=[""," nebB"," nebC"][Array.from(String(cls)).reduce(function(a,c){return a+c.charCodeAt(0);},0)%3];img='<img class="'+(big?"shipPicBig":"shipPic")+' shipPicEAS'+_nb+'" src="'+bustUrl('ships/icons/'+_icn+'.png')+'" alt="">';
     }
@@ -16562,7 +16564,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v6.18 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v6.19 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
