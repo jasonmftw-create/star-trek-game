@@ -344,8 +344,9 @@ body{touch-action:pan-y;}
 /* v6.20 (Jason 2026-10-02): SHOT 12. Colorful warp streaks like Jason's reference (blue/purple/pink/yellow), faster animation so ship appears to be moving. */
 @keyframes uwStreakA{from{transform:translateX(0);}to{transform:translateX(-32px);}}
 /* v000.6.037 (Jason 2026-10-02): Stars drift for moving ships — animated starfield, no lines. */
+/* v000.6.038 (Jason 2026-10-02): Faster drift (2.5s → 1.2s). */
 @keyframes starDrift{from{background-position:0 0;}to{background-position:-120px 0;}}
-.uwWrap.uwMoving img.shipPicBig{animation:starDrift 2.5s linear infinite;}
+.uwWrap.uwMoving img.shipPicBig{animation:starDrift 1.2s linear infinite;}
 .uwWrap .uwGlow{position:absolute;top:50%;left:50%;width:82%;height:64%;transform:translate(-50%,-50%);pointer-events:none;background:radial-gradient(ellipse at center,rgba(120,190,255,.32),transparent 70%);filter:blur(8px);animation:engPulse 2.6s ease-in-out infinite;}
 .uwWrap>img{position:relative;z-index:2;display:block;width:100%;}
 .uwWrap .shipPicBig{border:none;margin:0;max-height:260px;}
@@ -982,7 +983,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.037';
+const ART_BUST='v000.6.038';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -16628,7 +16629,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.037 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.038 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
