@@ -12054,9 +12054,9 @@ function compArtFor(cls){const _icn=(typeof shipIconName==="function"&&typeof SH
 }
 const STATION_ART_IDS={ds9:"ds9",utopia:"utopia",douglas:"starbase",sb80:"starbase",sb25:"starbase",jupiter:"jupiter",spacedock:"spacedock",mckinley:"mckinley",sb375:"starbase",sb74:"starbase",empoknor:"ds9",daystrom:"daystrom"};
 const STN_SCENE={jupiter:"jupiter",utopia:"mars",mckinley:"earth",ds9:"wormhole",
-  starbase:"greenneb",research:"neb2",sb80:"asteroid",spacedock:"earth",gate:"neb2",empoknor:"neb2",
+  starbase:"neb2",research:"neb2",sb80:"asteroid",spacedock:"neb2",gate:"neb2",empoknor:"neb2",
   shipyard:"neb1",academy:"neb1",sfcommand:"neb1",sb25:"blueplanet",sb375:"redneb",sb74:"purpleneb",regula:"neb1",embassy:"neb1",
-  medical:"medicalneb",douglas:"neb4",epsilon9:"neb4",daystrom:"neb4",
+  medical:"neb4",douglas:"neb4",epsilon9:"neb4",daystrom:"neb4",
   caretaker:"neb3"};
 function stnScene(type){return (typeof STN_SCENE!=="undefined"&&STN_SCENE[type])||"neb1";}
 function stationArtKey(st){return (st&&STATION_ART_IDS[st.id])||(st&&st.type);}
