@@ -1008,7 +1008,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.091';
+const ART_BUST='v000.6.092';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -3441,6 +3441,11 @@ const CANON_CREW=[
  ["Jack Paris","Klingon/Human","M",25,1,"Science",[65,75,70,55,65,60],[],"pool","Ensign"],
  ["Q Junior","Q","M",21,1,"Operations",[80,80,80,80,80,80],["Q"],"pool","Ensign"],
  ["Kes","Ocampa","F",3,0,"Medical",[60,70,60,95,75,50],["Empath","Telekinesis"],"pool","Civilian"],
+ ["David Marcus","Human","M",25,0,"Science",[65,75,70,60,70,55],["Genesis Project"],"pool","Civilian"],
+
+];
+const LOST_CREW=[
+/* v000.6.092 (Jason 2026-10-03): Kelvin crew + Spock Prime moved here from CANON_CREW — they belong in Temporal Anomalies, not the active roster. */
  ["James T. Kirk (Kelvin)","Human","M",30,6,"Command",[92,72,70,60,88,78],["Living Legend"],"pool","Captain"],
  ["Nyota Uhura (Kelvin)","Human","F",28,2,"Operations",[72,62,58,52,92,58],["Linguist","Living Legend"],"pool","Lieutenant"],
  ["Leonard McCoy (Kelvin)","Human","M",35,4,"Medical",[72,78,62,100,82,52],["Surgeon","Living Legend"],"pool","Lt. Commander"],
@@ -3449,10 +3454,6 @@ const CANON_CREW=[
  ["Pavel Chekov (Kelvin)","Human","M",22,1,"Operations",[78,68,62,52,72,82],["Living Legend"],"pool","Ensign"],
  ["Spock (Kelvin)","Vulcan/Human","M",30,5,"Science",[95,90,85,70,60,75],["Vulcan Logic"],"pool","Commander"],
  ["Spock (Prime)","Vulcan/Human","M",157,0,"Science",[95,95,90,75,65,80],["Vulcan Logic","Ambassador"],"pool","Ambassador"],
- ["David Marcus","Human","M",25,0,"Science",[65,75,70,60,70,55],["Genesis Project"],"pool","Civilian"],
-
-];
-const LOST_CREW=[
 
  ["Leonard McCoy","Human","M",38,7,"Medical",[70,75,60,100,80,50],["Surgeon","Living Legend","Grumpy"],"pool"],
  ["Montgomery Scott","Human","M",38,5,"Engineering",[70,60,100,50,70,55],["Miracle Worker","Living Legend"],"pool"],
@@ -4139,6 +4140,9 @@ function migrateSave(g){
       text:"Starfleet records audit: "+(_lostN?_lostN+" historical personnel listed as lost to time":"")+
       (_lostN&&_backN?"; ":"")+(_backN?_backN+" personnel reinstated to active duty":"")+"."});
   }
+  /* v000.6.092: Remove Kelvin crew + Spock Prime from active roster — they were incorrectly in CANON_CREW. */
+  (g.officers||[]).forEach(o=>{if(o.name&&(/\(Kelvin\)/.test(o.name)||o.name==="Spock (Prime)"))o._removeKelvinFix=true;});
+  g.officers=(g.officers||[]).filter(o=>!o._removeKelvinFix);
   CANON_CREW.forEach(def=>{
     if(!(g.officers||[]).some(o=>o.name===def[0])&&!(g.memorial||[]).some(m=>m.name===def[0]))
       g.officers.push(MK(def));
@@ -17018,7 +17022,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.091 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.092 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
