@@ -1002,7 +1002,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.062';
+const ART_BUST='v000.6.063';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -3426,6 +3426,9 @@ const CANON_CREW=[
  ["Soji Asha","Android","F",30,1,"Science",[70,90,80,60,75,55],["Synth"],"pool"],
  ["Naomi Wildman","Human","F",7,0,"Operations",[35,40,30,30,55,25],[],"voyager","Civilian","child"],
  ["Icheb","Brunali","M",19,0,"Science",[60,85,65,55,60,55],["Borg Expertise"],"voyager","Cadet"],
+ /* v000.6.063 (Jason 2026-10-03): Sidney & Alandra La Forge were added to LOST_CREW in v000.6.042, which never seeds — moved here so they're active crew. Sidney's post was "titan" but no ship with id "titan" exists yet (USS Titan is still under construction), so she seeds to the pool like her sister. The save-migration backfill adds both to existing games automatically. */
+ ["Sidney La Forge","Human","F",25,2,"Operations",[75,70,85,60,70,75],[],"pool"],
+ ["Alandra La Forge","Human","F",28,2,"Science",[70,75,70,65,80,70],[],"pool"],
 
 ];
 const LOST_CREW=[
@@ -3489,9 +3492,7 @@ const LOST_CREW=[
  ["Kyle", "Human", "M", 18, 0, "Command", [70, 65, 60, 55, 75, 60], [], "pool", "Cadet"],
  ["Phlox","Denobulan","M",150,3,"Medical",[65,90,55,100,80,45],["Physician","Living Legend"],"pool"],
  ["Thy'lek Shran","Andorian","M",273,5,"Security",[85,65,60,55,70,90],["Living Legend","Warrior"],"pool"],
- ["Sidney La Forge","Human","F",25,2,"Operations",[75,70,85,60,70,75],[],"titan"],
- ["Alandra La Forge","Human","F",28,2,"Science",[70,75,70,65,80,70],[],"pool"],
-];
+]; /* v000.6.063: Sidney & Alandra La Forge moved to CANON_CREW (they're active officers, not lost crew). */
 const MEMORIAL_LOST=[
 
 
@@ -16880,7 +16881,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.062 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.063 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
