@@ -533,18 +533,21 @@ body{touch-action:pan-y;}
 /* Shipyard backdrop for build-page ships (explicit uwShipyard class from shipPic opts.bees;
    sits behind the ship; the CSS starfield is hidden to avoid double stars — the art has its own). */
 .uwWrap.uwShipyard{
-  background-image:url('stations/shipyard-bg.jpg?v=v6.2');
-  background-size:cover;
-  background-position:center;
+  background-image:url('stations/shipyard-bg.jpg?v=v6.13')!important;
+  background-size:cover!important;
+  background-position:center!important;
 }
-.uwWrap.uwShipyard .uwStars{display:none;}
+.uwWrap.uwShipyard .uwStars{display:none!important;}
 /* v6.5 (Jason 2026-10-02): Belt-and-suspenders — Build page ships get the drydock even if the uwShipyard class is missing. Targets .shipCard .shipMedia .uwWrap directly. */
+/* v6.13 (Jason 2026-10-02): SHOT 5 fix. Added !important + fresh ?v= cache-bust. The drydock wasn't rendering (black background). Also added object-fit:contain for the 1280px icons so they fit without distortion. */
 .shipCard .shipMedia .uwWrap{
-  background-image:url('stations/shipyard-bg.jpg?v=v6.4');
-  background-size:cover;
-  background-position:center;
+  background-image:url('stations/shipyard-bg.jpg?v=v6.13')!important;
+  background-size:cover!important;
+  background-position:center!important;
+  background-color:#05080f;
 }
-.shipCard .shipMedia .uwWrap .uwStars{display:none;}
+.shipCard .shipMedia .uwWrap .uwStars{display:none!important;}
+.shipCard .shipMedia .uwWrap>img.shipPicBig{object-fit:contain!important;}
 
 /* ============================================================================
 
@@ -910,7 +913,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v6.12';
+const ART_BUST='v6.13';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -16542,7 +16545,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v6.12 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v6.13 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
