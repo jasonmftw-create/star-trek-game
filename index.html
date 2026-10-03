@@ -1008,7 +1008,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.092';
+const ART_BUST='v000.6.093';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -11933,7 +11933,7 @@ function portraitToggleHtml(name,entry){
 }
 function uiPortraitVer(name,ver,btn){if(!G.portraitVer)G.portraitVer={};if(ver==="alt")G.portraitVer[name]="alt";else delete G.portraitVer[name];save();var wrap=btn.closest(".pfaceWrap");if(wrap){var img=wrap.querySelector("img.pfaceBig");if(img)uiPortraitImgRefresh(img,name);}var seg=btn.parentElement;if(seg)seg.querySelectorAll("button").forEach(function(b){b.classList.toggle("on",b===btn);});render();}
 /* v000.6.067 (Jason 2026-10-03): Picard-size portraits have smaller faces in frame — thumbnails zoom to the face so they read the same size as older portraits. Keyed by officer name: [zoom scale, face-center Y%]. */
-const PFACE_ZOOM={"Chakotay":[1.45,127],"Jack Ransom":[1.45,127],"Sovar":[0.89,-89],"Drex":[1.37,123],"Jack Crusher":[0.89,-89],"Guinan":[1.37,123],"Beverly Crusher":[0.81,12]};
+const PFACE_ZOOM={"Jack Ransom":[1.45,127],"Sovar":[0.89,-89],"Drex":[1.37,123],"Jack Crusher":[0.89,-89],"Guinan":[1.37,123],"Beverly Crusher":[0.81,12]};
 function faceImg(o,cls){
   const src=portraitSrc(o.name,o);
   if(src){
@@ -17022,7 +17022,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.092 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.093 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
