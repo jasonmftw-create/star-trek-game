@@ -1002,7 +1002,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.063';
+const ART_BUST='v000.6.064';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -12141,7 +12141,7 @@ function portraitIsUniformed(name,entry){
 }
 function divImgAttrs(o){
   var d=officerDivision(o);
-  if(d&&portraitIsUniformed(o.name,o)){var s=portraitSrc(o.name,o);return ' data-divsrc="'+s+'" data-div="'+d+'" data-divnat="'+(o.divNat||'')+'" onload="divRecolorApply(this)"';}
+  if(d&&portraitIsUniformed(o.name,o)){var s=portraitSrc(o.name,o);return ' data-divsrc="'+s+'" data-div="'+d+'" data-divnat="'+(o.divNat||'')+'" data-divname="'+esc(o.name)+'" onload="divRecolorApply(this)"';} /* v000.6.064: data-divname keys the DIV_SHIRT_OVERRIDE map (officer name, stable across rebakes) */
   return "";
 }
 function uiPortraitImgRefresh(img,name){
@@ -12208,6 +12208,95 @@ function divShiftHSL(h,s,l,targetHue,band){
   return [Math.round(ch(hh+1/3)*255),Math.round(ch(hh)*255),Math.round(ch(hh-1/3)*255)];
 }
 var _divCache={};
+/* v000.6.064 (Jason 2026-10-03): FLOOD-FILL UNDERSHIRT helpers.
+   Per-portrait overrides, keyed by officer NAME (stable across rebakes):
+   {sx,sy} = custom seed point as 0-1 fractions (flood starts there, sampling the
+   shirt color at that point); {skip:true} = never recolor this portrait. */
+const DIV_SHIRT_OVERRIDE={};
+function divHueDist(a,b){var d=Math.abs(a-b);return d>180?360-d:d;}
+function divHSLfull(r,g,b){
+  var mx=r>g?(r>b?r:b):(g>b?g:b),mn=r<g?(r<b?r:b):(g<b?g:b);
+  var l=(mx+mn)/510;
+  if(mx===mn)return [0,0,l];
+  var d=(mx-mn)/255,s=l>0.5?d/(2-(mx+mn)/255):d/((mx+mn)/255);
+  var h,rr=r/255,gg=g/255,bb=b/255;
+  if(mx===r)h=(gg-bb)/d+(gg<bb?6:0);else if(mx===g)h=(bb-rr)/d+2;else h=(rr-gg)/d+4;
+  return [h*60,s,l];
+}
+function divIsSkin(h,s,l){return h>=8&&h<=32&&s>=0.30&&s<=0.68&&l>=0.35&&l<=0.85;}
+function divSetHue(p,si,targetH,s,l){
+  var hh=(((targetH%360)+360)%360)/360;
+  var q=l<0.5?l*(1+s):l+s-l*s,pp=2*l-q;
+  function ch(t){if(t<0)t+=1;if(t>1)t-=1;return t<1/6?pp+(q-pp)*6*t:(t<1/2?q:(t<2/3?pp+(q-pp)*(2/3-t)*6:pp));}
+  p[si]=Math.round(ch(hh+1/3)*255);p[si+1]=Math.round(ch(hh)*255);p[si+2]=Math.round(ch(hh-1/3)*255);
+}
+/* Undershirt flood fill. p = ImageData.data, target = DIV_HUE degrees.
+   Returns true if any pixel was recolored. */
+function divShirtFlood(p,tw,th,target,name){
+  var ov=name&&DIV_SHIRT_OVERRIDE[name];
+  if(ov&&ov.skip)return false;
+  var sh,ss,sl,sx,sy;
+  if(ov&&ov.sx!=null&&ov.sy!=null){
+    sx=Math.min(tw-1,Math.max(0,Math.round(tw*ov.sx)));
+    sy=Math.min(th-1,Math.max(0,Math.round(th*ov.sy)));
+    var c0=divHSLfull(p[(sy*tw+sx)*4],p[(sy*tw+sx)*4+1],p[(sy*tw+sx)*4+2]);
+    sh=c0[0];ss=c0[1];sl=c0[2];
+  }else{
+    /* seed = median-hue of colorful non-skin pixels in the throat zone */
+    var cand=[];
+    var zx0=(tw*0.40)|0,zx1=(tw*0.60)|0,zy0=(th*0.50)|0,zy1=(th*0.72)|0;
+    for(var zy=zy0;zy<zy1;zy++){var zrow=zy*tw;
+      for(var zx=zx0;zx<zx1;zx++){var zi=(zrow+zx)*4;
+        var zc=divHSLfull(p[zi],p[zi+1],p[zi+2]);
+        if(zc[1]>=0.35&&zc[2]>=0.12&&zc[2]<=0.70&&!divIsSkin(zc[0],zc[1],zc[2]))
+          cand.push([zx,zy,zc[0],zc[1],zc[2]]);
+      }}
+    if(cand.length<40)return false;
+    cand.sort(function(a,b){return a[2]-b[2];});
+    var m=cand[cand.length>>1];
+    sx=m[0];sy=m[1];sh=m[2];ss=m[3];sl=m[4];
+  }
+  /* pass 1: hue-anchored flood from the seed — follows the shirt's real shape */
+  var x0=(tw*0.30)|0,x1=(tw*0.70)|0,y0=(th*0.45)|0,y1=(th*0.75)|0;
+  var seen=new Uint8Array(tw*th);
+  var stack=[[sx,sy]];seen[sy*tw+sx]=1;
+  var filled=[];
+  while(stack.length){
+    var pt=stack.pop(),x=pt[0],y=pt[1],i=(y*tw+x)*4;
+    var c=divHSLfull(p[i],p[i+1],p[i+2]);
+    if(divHueDist(c[0],sh)>26)continue;
+    if(c[1]<0.28||c[2]<0.08||c[2]>0.78)continue;
+    if(divIsSkin(c[0],c[1],c[2]))continue;
+    divSetHue(p,i,target,c[1]<0.18?0.5:c[1],c[2]);
+    filled.push(x+","+y);
+    if(x+1<x1&&!seen[y*tw+x+1]){seen[y*tw+x+1]=1;stack.push([x+1,y]);}
+    if(x-1>=x0&&!seen[y*tw+x-1]){seen[y*tw+x-1]=1;stack.push([x-1,y]);}
+    if(y+1<y1&&!seen[(y+1)*tw+x]){seen[(y+1)*tw+x]=1;stack.push([x,y+1]);}
+    if(y-1>=y0&&!seen[(y-1)*tw+x]){seen[(y-1)*tw+x]=1;stack.push([x,y-1]);}
+  }
+  if(filled.length<30)return false;
+  /* pass 2: grow straight UP from the mask's top edge. The collar-top band sits
+     in chin shadow (desaturated/hue-shifted) which pass 1 can't cross — but it's
+     always directly above the shirt, never below (jacket) or sideways (hair). */
+  var topY={},fi;
+  var pxa=(tw*0.40)|0,pxb=(tw*0.60)|0;
+  for(fi=0;fi<filled.length;fi++){var fxy=filled[fi].split(","),fx=+fxy[0],fy=+fxy[1];
+    if(fx>=pxa&&fx<pxb&&(topY[fx]===undefined||fy<topY[fx]))topY[fx]=fy;}
+  var y2a=(th*0.40)|0;
+  for(var kx in topY){
+    var xx=+kx,yy=topY[kx]-1;
+    while(yy>=y2a){
+      var i2=(yy*tw+xx)*4;
+      var c2=divHSLfull(p[i2],p[i2+1],p[i2+2]);
+      if(divHueDist(c2[0],sh)>30)break;
+      if(c2[1]<0.15||c2[2]<0.05||c2[2]>0.82)break;
+      if(divIsSkin(c2[0],c2[1],c2[2]))break;
+      divSetHue(p,i2,target,c2[1]<0.18?0.5:c2[1],c2[2]);
+      yy--;
+    }
+  }
+  return true;
+}
 function divRecolorApply(img){
   try{
     var src=img.getAttribute("data-divsrc"),div=img.getAttribute("data-div"),nat=img.getAttribute("data-divnat");
@@ -12225,26 +12314,19 @@ function divRecolorApply(img){
     var id=x.getImageData(0,0,tw,th),p=id.data,target=DIV_HUE[div],y0=(th*0.38)|0;
     /* v6.3 (Jason 2026-10-02): was 0.55 (lower 45%). The FC/NEM unified uniform has the division color on the NECK undershirt (y~35-55%), not the lower torso. 0.35 includes neck + shoulders + torso. */
     /* v6.9 (Jason 2026-10-02): raised 0.35→0.38. Crusher's lips (y~0.32-0.36, pink hue 340-350°) were caught by narrow RED band and shifted to GOLD → yellow lips. 0.38 excludes lips, still catches undershirt (y~0.42+). */
-    /* v6.10 (Jason 2026-10-02): SPATIAL REWRITE. Abandon hue-band detection for FC/NEM neck undershirt. The undershirt is at fixed location (x 0.30-0.70, y 0.42-0.58). Paint that region directly to target hue, preserving S/L. No hue guessing, works for all skin tones, can't break Raffi. */
-    var nx0=(tw*0.30)|0,nx1=(tw*0.70)|0,ny0=(th*0.42)|0,ny1=(th*0.58)|0;
-    var sChanged=false;
-    for(var sy=ny0;sy<ny1;sy++){var srow=sy*tw;for(var sx=nx0;sx<nx1;sx++){var si=(srow+sx)*4;
-      var shsl=divHSL(p[si],p[si+1],p[si+2]);
-      if(shsl){
-        /* shsl=[h,s,l]. Set hue to target, keep s,l. Convert HSL→RGB. */
-        var hh=target/360,ss=shsl[1],ll=shsl[2];
-        var qq=ll<0.5?ll*(1+ss):ll+ss-ll*ss,pp=2*ll-qq;
-        function chh(t){if(t<0)t+=1;if(t>1)t-=1;return t<1/6?pp+(qq-pp)*6*t:(t<1/2?qq:(t<2/3?pp+(qq-pp)*(2/3-t)*6:pp));}
-        p[si]=Math.round(chh(hh+1/3)*255);p[si+1]=Math.round(chh(hh)*255);p[si+2]=Math.round(chh(hh-1/3)*255);
-        sChanged=true;
-      }}}
-    if(sChanged){
+    /* v000.6.064 (Jason 2026-10-03): FLOOD-FILL UNDERSHIRT — replaces the v6.10 fixed
+       rectangle (same zone on every photo, but not every photo is framed the same:
+       it painted chins on some portraits and missed shirts on others). Finds the
+       actual shirt per photo and follows its real shape. */
+    if(divShirtFlood(p,tw,th,target,img.getAttribute("data-divname"))){
       x.putImageData(id,0,0);
       out=cv.toDataURL("image/jpeg",0.92);
       _divCache[key]=out;
       img.src=out;
+      img.removeAttribute("data-divname");
       return;
     }
+    img.removeAttribute("data-divname");
     /* Fallback: old hue-band detection for pre-FC/NEM uniforms (shoulders/torso). */
     var counts=[0,0,0],y,xx,i,row,hsl,b,band=-1,bn=0,k;
     var yNeck=(th*0.40)|0;
@@ -16881,7 +16963,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.063 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.064 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
