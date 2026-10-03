@@ -11642,6 +11642,8 @@ function divRecolorApply(img){
       hsl=divHSL(p[i],p[i+1],p[i+2]);if(hsl&&(b=divBandOfHSL(hsl[0],hsl[2]))>=0)counts[b]++;}}
     for(k=0;k<3;k++)if(counts[k]>bn){bn=counts[k];band=k;}
     if(band>=0&&bn>40){
+      /* v5.1: winning band already matches the officer's division — the uniform is natively the right color. Shifting only adds artifacts (command band center 347 vs target hue 4 = +17deg rotation mottling native reds orange). */
+      if(band==={command:0,operations:1,sciences:2}[div]){_divCache[key]=src;img.src=src;return;}
       var changed=false;
       for(y=y0;y<th;y++){row=y*tw;for(xx=0;xx<tw;xx++){i=(row+xx)*4;
         hsl=divHSL(p[i],p[i+1],p[i+2]);
@@ -16217,7 +16219,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v5.0 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v5.1 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
