@@ -3425,6 +3425,7 @@ function MK(arr){
   const postObj = post==="pool"?{t:"pool"}:post==="hq"?{t:"hq"}:
     ["voyager","enterprise","defiant","callisto","peregrine","horizon","titan","cerritos"].includes(post)?{t:"ship",id:post}:{t:"station",id:post};
   return {id:uid("o"),name,species,gender,age,rank,dept,
+    divNat:YOKE_DIVISION[name]||DEPT_DIVISION[dept]||null, // v5.2 natural division
     stats:{cmd:st[0],sci:st[1],eng:st[2],med:st[3],dip:st[4],tac:st[5]},
     traits:traits.slice(),post:postObj,morale:ri(60,85),health:"healthy",healDays:0,
     rel:null,kids:[],parents:[],stage:stage||"adult",orient:orient||CANON_ORIENT[name]||randOrient(),timeInGrade:ri(100,500),
@@ -3673,6 +3674,7 @@ function migrateSave(g){
   (g.ships||[]).forEach(s=>{if(s.refitT==null)s.refitT=0;if(s.refitTo==null)s.refitTo=0;if(s.patrol==null)s.patrol=false;}); // v4.2 refit tiers + auto-patrol
   (g.stations||[]).forEach(st=>{if(st.upg==null)st.upg=0;}); // v4.2 station upgrades
   (g.officers||[]).forEach(o=>{if(DIVISIONS.indexOf(o.division)<0)o.division=officerDivision(o)||"operations";}); // v4.4 assignable divisions
+  (g.officers||[]).forEach(o=>{if(o.divNat==null)o.divNat=YOKE_DIVISION[o.name]||DEPT_DIVISION[o.dept]||null;}); // v5.2 natural division
   if(g.sproj==null)g.sproj=[];if(g.sprojDone==null)g.sprojDone={}; // v4.2 sector projects
   if(g.corridorInc==null)g.corridorInc=0;if(g.habitatInc==null)g.habitatInc=0;if(g.snetCd==null)g.snetCd=0;if(g.summitHall==null)g.summitHall=false; // v4.2
   (g.stations||[]).forEach(st=>{if(st.crewOrder===undefined)st.crewOrder=null;if(st.orderCd==null)st.orderCd=0;});
@@ -5573,6 +5575,7 @@ function birthChild(a,b){
   const pt=a.traits.concat(b.traits);
   if(pt.length&&Math.random()<0.6)kid.traits.push(pick(pt));
   a.kids.push(kid.id);b.kids.push(kid.id);
+  kid.divNat=YOKE_DIVISION[kid.name]||DEPT_DIVISION[kid.dept]||null; // v5.2 natural division
   G.officers.push(kid);G.ledger.births++;
   a.morale=clamp(a.morale+10,0,100);b.morale=clamp(b.morale+10,0,100);
   log("family","A child is born! "+a.name+" and "+b.name+" welcome "+kid.name+" ("+kid.species+"). The "+postName(a.post)+" celebrates.");
@@ -8623,6 +8626,7 @@ function qResurrect(i){
       health:"healthy",healDays:0,rel:null,kids:[],parents:[],stage:"adult",timeInGrade:0,
       missions:{s:0,t:0},medals:[],status:"active",dead:false,retired:false,pic:0,accolades:[],
       rankLabel:m.rank||null,affairCooldown:0,roles:[]};
+    o.divNat=YOKE_DIVISION[o.name]||DEPT_DIVISION[o.dept]||null; // v5.2 natural division
     G.officers.push(o);
   }
   const mi=G.memorial.indexOf(m);if(mi>=0)G.memorial.splice(mi,1);
@@ -11570,15 +11574,15 @@ function portraitIsUniformed(name,entry){
 }
 function divImgAttrs(o){
   var d=officerDivision(o);
-  if(d&&portraitIsUniformed(o.name,o)){var s=portraitSrc(o.name,o);return ' data-divsrc="'+s+'" data-div="'+d+'" onload="divRecolorApply(this)"';}
+  if(d&&portraitIsUniformed(o.name,o)){var s=portraitSrc(o.name,o);return ' data-divsrc="'+s+'" data-div="'+d+'" data-divnat="'+(o.divNat||'')+'" onload="divRecolorApply(this)"';}
   return "";
 }
 function uiPortraitImgRefresh(img,name){
   var oe=null,offs=(typeof G!=="undefined"&&G&&G.officers)||[];
   for(var i=0;i<offs.length;i++)if(offs[i].name===name){oe=offs[i];break;}
   var os=portraitSrc(name,oe||undefined);
-  img.removeAttribute("data-divsrc");img.removeAttribute("data-div");img.removeAttribute("onload");
-  if(oe){var d=officerDivision(oe);if(d&&portraitIsUniformed(name,oe)){img.setAttribute("data-divsrc",os);img.setAttribute("data-div",d);img.setAttribute("onload","divRecolorApply(this)");}}
+  img.removeAttribute("data-divsrc");img.removeAttribute("data-div");img.removeAttribute("data-divnat");img.removeAttribute("onload");
+  if(oe){var d=officerDivision(oe);if(d&&portraitIsUniformed(name,oe)){img.setAttribute("data-divsrc",os);img.setAttribute("data-div",d);img.setAttribute("data-divnat",oe.divNat||"");img.setAttribute("onload","divRecolorApply(this)");}}
   img.src=os;
 }
 function divisionPickerHtml(o){
@@ -11626,10 +11630,12 @@ function divShiftHSL(h,s,l,targetHue,band){
 var _divCache={};
 function divRecolorApply(img){
   try{
-    var src=img.getAttribute("data-divsrc"),div=img.getAttribute("data-div");
-    img.removeAttribute("data-divsrc");img.removeAttribute("data-div");
+    var src=img.getAttribute("data-divsrc"),div=img.getAttribute("data-div"),nat=img.getAttribute("data-divnat");
+    img.removeAttribute("data-divsrc");img.removeAttribute("data-div");img.removeAttribute("data-divnat");
     if(!src||!div||DIV_HUE[div]==null)return;
-    var key=src+"|"+div,out=null;
+    var key=src+"|"+div+"|"+(nat||""),out=null;
+    /* v5.2 natural division: the uniform already wears this division's color — never recolor. Pristine canon art on default views; the hue-shift only fires on real division overrides. */
+    if(nat&&nat===div){_divCache[key]=src;img.src=src;return;}
     if(_divCache[key]){img.src=_divCache[key];return;}
     var tw=img.naturalWidth||0,th=img.naturalHeight||0;
     if(!tw||!th||!img.complete)return;
@@ -16219,7 +16225,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v5.1 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v5.2 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
