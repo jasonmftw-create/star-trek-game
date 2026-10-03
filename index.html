@@ -1008,7 +1008,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.076';
+const ART_BUST='v000.6.077';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -3571,7 +3571,7 @@ const MEMORIAL_LOST=[
 {name:"Thy'lek Shran",show:"ENT",rank:"Captain",species:"Andorian",cause:"Lost to history \u2014 22nd century",when:"2150s"},
 /* v000.6.073 (Jason 2026-10-03): VOY tab - adult Naomi Wildman and Miral Paris pulled from the "Endgame" future. */
 {name:"Naomi Wildman",show:"VOY",rank:"Lieutenant",species:"Human",cause:"Pulled from a possible future \u2014 Voyager Endgame timeline",when:"2404",pic:"portraits/baked/naomi_wildman_adult_d3701a.jpg"},
-{name:"Miral Paris",show:"VOY",rank:"Ensign",species:"Human/Klingon",cause:"Pulled from a possible future \u2014 Voyager Endgame timeline",when:"2404",pic:"portraits/baked/miral_paris_7a2575.jpg"},
+{name:"Miral Paris",show:"VOY",rank:"Ensign",species:"Human/Klingon",cause:"Pulled from a possible future \u2014 Voyager Endgame timeline",when:"2404",pic:"portraits/baked/miral_paris_31fe20.jpg"},
 {name:"Q Junior",show:"VOY",rank:"Ensign",species:"Q",cause:"Q Continuum \u2014 took humanoid form aboard Voyager",when:"2377",pic:"portraits/baked/q_junior_5c43eb.jpg"}
 ];
 const CANON_ACCOLADES={
@@ -16985,7 +16985,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.076 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.077 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
