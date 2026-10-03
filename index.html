@@ -460,6 +460,48 @@ body{touch-action:pan-y;}
   radial-gradient(ellipse 90% 70% at 50% 112%, rgba(25,35,120,.5), transparent 75%),
   radial-gradient(ellipse 70% 50% at 88% 82%, rgba(60,80,200,.22), transparent 70%);
   animation:nebDriftB 118s ease-in-out infinite alternate;}
+/* v000.6.028 (Jason 2026-10-02): UNIQUE CSS backgrounds for Starbases — NOT generated images. Each has distinct colors and elements, behind the existing station art. */
+/* sb80: Asteroid belt — brown/orange, dense rocks */
+.sc-asteroid .scBody{inset:-14%;background:
+  radial-gradient(ellipse 30% 20% at 20% 40%, rgba(120,70,30,.6), transparent 70%),
+  radial-gradient(ellipse 25% 18% at 65% 25%, rgba(100,60,25,.55), transparent 70%),
+  radial-gradient(ellipse 35% 22% at 80% 70%, rgba(110,65,28,.5), transparent 70%),
+  radial-gradient(ellipse 20% 15% at 40% 80%, rgba(90,55,22,.6), transparent 70%),
+  radial-gradient(ellipse 90% 70% at 50% 50%, rgba(60,35,15,.4), transparent 75%);
+  animation:nebDriftA 90s ease-in-out infinite alternate;}
+/* sb25: Blue planet — vivid blue ocean world */
+.sc-blueplanet .scBody{inset:auto;width:70%;aspect-ratio:1/1;right:-15%;top:-10%;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%, #7dd3fc, #0ea5e9 40%, #0369a1 70%, #082f49);
+  box-shadow:inset -20px -20px 40px rgba(0,0,0,.6), 0 0 40px rgba(14,165,233,.3);
+  animation:nebDriftB 120s ease-in-out infinite alternate;}
+/* sb375: Red nebula — wartime, intense crimson */
+.sc-redneb .scBody{inset:-14%;background:
+  radial-gradient(ellipse 60% 45% at 30% 35%, rgba(220,38,38,.35), transparent 70%),
+  radial-gradient(ellipse 50% 55% at 70% 65%, rgba(185,28,28,.3), transparent 70%),
+  radial-gradient(ellipse 90% 70% at 50% 110%, rgba(100,15,15,.55), transparent 75%),
+  radial-gradient(ellipse 70% 50% at 85% 15%, rgba(200,50,50,.25), transparent 70%);
+  animation:nebDriftA 80s ease-in-out infinite alternate;}
+/* sb74: Purple nebula — deep violet, elegant */
+.sc-purpleneb .scBody{inset:-14%;background:
+  radial-gradient(ellipse 55% 42% at 25% 30%, rgba(168,85,247,.35), transparent 70%),
+  radial-gradient(ellipse 48% 55% at 75% 70%, rgba(147,51,234,.3), transparent 70%),
+  radial-gradient(ellipse 90% 70% at 50% -10%, rgba(80,25,140,.55), transparent 75%),
+  radial-gradient(ellipse 70% 50% at 15% 85%, rgba(120,60,200,.25), transparent 70%);
+  animation:nebDriftB 100s ease-in-out infinite alternate;}
+/* starbase (deepstation): Green nebula — alien, bioluminescent */
+.sc-greenneb .scBody{inset:-14%;background:
+  radial-gradient(ellipse 55% 42% at 60% 40%, rgba(34,197,94,.32), transparent 70%),
+  radial-gradient(ellipse 48% 55% at 30% 70%, rgba(22,163,74,.28), transparent 70%),
+  radial-gradient(ellipse 90% 70% at 50% 110%, rgba(10,80,40,.5), transparent 75%),
+  radial-gradient(ellipse 70% 50% at 80% 20%, rgba(50,180,100,.24), transparent 70%);
+  animation:nebDriftA 110s ease-in-out infinite alternate;}
+/* medical: White-blue — clean, healing, bright */
+.sc-medicalneb .scBody{inset:-14%;background:
+  radial-gradient(ellipse 60% 45% at 50% 40%, rgba(224,242,254,.4), transparent 70%),
+  radial-gradient(ellipse 50% 55% at 30% 70%, rgba(186,230,253,.32), transparent 70%),
+  radial-gradient(ellipse 90% 70% at 50% 110%, rgba(100,160,200,.35), transparent 75%),
+  radial-gradient(ellipse 70% 50% at 70% 20%, rgba(200,230,250,.28), transparent 70%);
+  animation:nebDriftB 95s ease-in-out infinite alternate;}
 @keyframes nebDriftA{from{transform:translate(-3.5%,-2.5%);}to{transform:translate(3.5%,2.5%);}}
 @keyframes nebDriftB{from{transform:translate(3%,-3%);}to{transform:translate(-3%,3%);}}
 
@@ -933,7 +975,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.027';
+const ART_BUST='v000.6.028';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -12012,9 +12054,9 @@ function compArtFor(cls){const _icn=(typeof shipIconName==="function"&&typeof SH
 }
 const STATION_ART_IDS={ds9:"ds9",utopia:"utopia",douglas:"starbase",sb80:"starbase",sb25:"starbase",jupiter:"jupiter",spacedock:"spacedock",mckinley:"mckinley",sb375:"starbase",sb74:"starbase",empoknor:"ds9",daystrom:"daystrom"};
 const STN_SCENE={jupiter:"jupiter",utopia:"mars",mckinley:"earth",ds9:"wormhole",
-  starbase:"neb2",research:"neb2",sb80:"neb2",spacedock:"neb2",gate:"neb2",empoknor:"neb2",
-  shipyard:"neb1",academy:"neb1",sfcommand:"neb1",sb25:"neb1",sb375:"neb1",sb74:"neb1",regula:"neb1",embassy:"neb1",
-  medical:"neb4",douglas:"neb4",epsilon9:"neb4",daystrom:"neb4",
+  starbase:"greenneb",research:"neb2",sb80:"asteroid",spacedock:"earth",gate:"neb2",empoknor:"neb2",
+  shipyard:"neb1",academy:"neb1",sfcommand:"neb1",sb25:"blueplanet",sb375:"redneb",sb74:"purpleneb",regula:"neb1",embassy:"neb1",
+  medical:"medicalneb",douglas:"neb4",epsilon9:"neb4",daystrom:"neb4",
   caretaker:"neb3"};
 function stnScene(type){return (typeof STN_SCENE!=="undefined"&&STN_SCENE[type])||"neb1";}
 function stationArtKey(st){return (st&&STATION_ART_IDS[st.id])||(st&&st.type);}
@@ -16573,7 +16615,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.027 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.028 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
