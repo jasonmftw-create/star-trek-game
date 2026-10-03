@@ -389,9 +389,6 @@ body{touch-action:pan-y;}
 /* Station img stays on top. background:none beats .shipPicBig.stnBig's nebula-a.jpg (which would otherwise
    cover the scene behind transparent station PNGs). Higher specificity (0,2,1) is deliberate. */
 .stnScene>img.shipPicBig{position:relative;z-index:3;display:block;width:100%;max-height:260px;margin:0 auto;background:none;object-fit:contain;padding:10px;box-sizing:border-box;}
-/* v000.6.029 (Jason 2026-10-02): For the 4 Starbases with unique CSS backgrounds, shrink the station image so the CSS background shows around it. The JPGs are opaque, so the background must be visible in the margins. */
-.sc-asteroid>img.shipPicBig,.sc-blueplanet>img.shipPicBig,.sc-redneb>img.shipPicBig,.sc-purpleneb>img.shipPicBig{width:82%!important;padding:0!important;}
-.sc-asteroid,.sc-blueplanet,.sc-redneb,.sc-purpleneb{display:flex!important;align-items:center!important;justify-content:center!important;}
 .shipMedia .stnScene{height:100%;border:none;border-radius:0;margin:0;}
 .shipMedia .stnScene>img.shipPicBig{height:100%;max-height:none;padding:6px;}
 
@@ -982,7 +979,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.029';
+const ART_BUST='v000.6.030';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -12069,7 +12066,13 @@ function stnScene(type){return (typeof STN_SCENE!=="undefined"&&STN_SCENE[type])
 function stationArtKey(st){return (st&&STATION_ART_IDS[st.id])||(st&&st.type);}
 function stationPic(type,big){
   const src=(typeof STATION_PICS!=="undefined"&&STATION_PICS[type])?STATION_PICS[type]:"";
-  const img=src?'<img class="'+(big?"shipPicBig stnBig":"shipPic stnThumb")+'" src="'+bustUrl(src)+'" alt="">':"";
+  /* v000.6.030 (Jason 2026-10-02): Do what worked for ships — put the background DIRECTLY ON THE IMG via inline style, not on parent containers. The 4 Starbases get unique space backgrounds. */
+  var _stnBg="";
+  if(type==="sb80")_stnBg="background:radial-gradient(ellipse 60% 50% at 30% 40%, #5a3a1a, #1a0f08 70%);";
+  else if(type==="sb25")_stnBg="background:radial-gradient(circle at 65% 35%, #7dd3fc, #0ea5e9 35%, #041a2e 75%);";
+  else if(type==="sb375")_stnBg="background:radial-gradient(ellipse 65% 55% at 40% 45%, #7f1d1d, #1a0808 70%);";
+  else if(type==="sb74")_stnBg="background:radial-gradient(ellipse 60% 50% at 60% 40%, #6d28d9, #150a25 70%);";
+  const img=src?'<img class="'+(big?"shipPicBig stnBig":"shipPic stnThumb")+'" src="'+bustUrl(src)+'" alt="" style="'+_stnBg+'">':"";
   if(big&&img){var _moon=(stnScene(type)==="earth")?'<span class="scMoon" aria-hidden="true"></span>':"";
     return '<span class="stnScene sc-'+stnScene(type)+'"><span class="scBody" aria-hidden="true"></span>'+_moon+'<span class="scStars"></span>'+img+'</span>';}
   return img;
@@ -16622,7 +16625,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.029 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.030 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
