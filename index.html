@@ -323,7 +323,8 @@ body{touch-action:pan-y;}
 .pfaceInit{display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;color:var(--peach);background:var(--panel2);}
 .shipPic{width:84px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--orange);flex:none;background:#000;}
 .shipPicBig{width:100%;max-height:190px;object-fit:cover;border-radius:10px;border:2px solid var(--orange);margin-bottom:8px;background:#000;display:block;}
-.shipPicBig.stnBig{object-fit:contain;max-height:300px;background:#05080f url(ships/nebula-a.jpg) center/cover no-repeat;padding:12px;}
+.shipPicBig.stnBig{object-fit:cover;max-height:300px;background:#05080f url(ships/nebula-a.jpg) center/cover no-repeat;padding:0;}
+/* v000.6.022 (Jason 2026-10-02): Daystrom image fit. Changed object-fit:contain→cover and padding:12px→0 so station images fill the rectangle without dark bars. */
 .shipPicEAS{object-fit:contain;background:#05080f url(ships/nebula-a.jpg) center/cover no-repeat;box-sizing:border-box;padding:4px;}
 .shipPic.stnThumb{object-fit:contain;background:#05080f url(ships/nebula-a.jpg) center/cover no-repeat;padding:2px;box-sizing:border-box;}
 .shipPicEAS.nebB{background-image:url(ships/nebula-b.jpg);}
@@ -927,7 +928,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v6.21';
+const ART_BUST='v000.6.022';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -16567,7 +16568,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v6.21 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.022 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
