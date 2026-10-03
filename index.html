@@ -899,7 +899,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v5.8';
+const ART_BUST='v5.9';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -11884,9 +11884,11 @@ function divRecolorApply(img){
       /* v5.1: winning band already matches the officer's division — the uniform is natively the right color. Shifting only adds artifacts (command band center 347 vs target hue 4 = +17deg rotation mottling native reds orange). */
       if(band==={command:0,operations:1,sciences:2}[div]){_divCache[key]=src;img.src=src;return;}
       var changed=false;
+      /* v5.9 (Jason 2026-10-02): recolor ALL division bands, not just the dominant. The old code only shifted the dominant band, leaving secondary uniform colors (e.g. red shoulders on a blue torso) untouched — "leaves some of the original color." Each pixel shifts from its OWN band center to the target, preserving offsets. */
       for(y=y0;y<th;y++){row=y*tw;for(xx=0;xx<tw;xx++){i=(row+xx)*4;
         hsl=divHSL(p[i],p[i+1],p[i+2]);
-        if(hsl&&divBandOfHSL(hsl[0],hsl[2])===band){var o2=divShiftHSL(hsl[0],hsl[1],hsl[2],target,band);p[i]=o2[0];p[i+1]=o2[1];p[i+2]=o2[2];changed=true;}}}
+        var _pb=hsl?divBandOfHSL(hsl[0],hsl[2]):-1;
+        if(_pb>=0){var o2=divShiftHSL(hsl[0],hsl[1],hsl[2],target,_pb);p[i]=o2[0];p[i+1]=o2[1];p[i+2]=o2[2];changed=true;}}}
       if(changed){x.putImageData(id,0,0);out=cv.toDataURL("image/jpeg",0.92);}
     }
     _divCache[key]=out||src;img.src=_divCache[key];
@@ -16478,7 +16480,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v5.8 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v5.9 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
