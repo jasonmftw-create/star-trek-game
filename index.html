@@ -910,7 +910,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v6.9';
+const ART_BUST='v6.10';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -11902,6 +11902,27 @@ function divRecolorApply(img){
     var id=x.getImageData(0,0,tw,th),p=id.data,target=DIV_HUE[div],y0=(th*0.38)|0;
     /* v6.3 (Jason 2026-10-02): was 0.55 (lower 45%). The FC/NEM unified uniform has the division color on the NECK undershirt (y~35-55%), not the lower torso. 0.35 includes neck + shoulders + torso. */
     /* v6.9 (Jason 2026-10-02): raised 0.35→0.38. Crusher's lips (y~0.32-0.36, pink hue 340-350°) were caught by narrow RED band and shifted to GOLD → yellow lips. 0.38 excludes lips, still catches undershirt (y~0.42+). */
+    /* v6.10 (Jason 2026-10-02): SPATIAL REWRITE. Abandon hue-band detection for FC/NEM neck undershirt. The undershirt is at fixed location (x 0.30-0.70, y 0.42-0.58). Paint that region directly to target hue, preserving S/L. No hue guessing, works for all skin tones, can't break Raffi. */
+    var nx0=(tw*0.30)|0,nx1=(tw*0.70)|0,ny0=(th*0.42)|0,ny1=(th*0.58)|0;
+    var sChanged=false;
+    for(var sy=ny0;sy<ny1;sy++){var srow=sy*tw;for(var sx=nx0;sx<nx1;sx++){var si=(srow+sx)*4;
+      var shsl=divHSL(p[si],p[si+1],p[si+2]);
+      if(shsl){
+        /* shsl=[h,s,l]. Set hue to target, keep s,l. Convert HSL→RGB. */
+        var hh=target/360,ss=shsl[1],ll=shsl[2];
+        var qq=ll<0.5?ll*(1+ss):ll+ss-ll*ss,pp=2*ll-qq;
+        function chh(t){if(t<0)t+=1;if(t>1)t-=1;return t<1/6?pp+(qq-pp)*6*t:(t<1/2?qq:(t<2/3?pp+(qq-pp)*(2/3-t)*6:pp));}
+        p[si]=Math.round(chh(hh+1/3)*255);p[si+1]=Math.round(chh(hh)*255);p[si+2]=Math.round(chh(hh-1/3)*255);
+        sChanged=true;
+      }}}
+    if(sChanged){
+      x.putImageData(id,0,0);
+      out=cv.toDataURL("image/jpeg",0.92);
+      _divCache[key]=out;
+      img.src=out;
+      return;
+    }
+    /* Fallback: old hue-band detection for pre-FC/NEM uniforms (shoulders/torso). */
     var counts=[0,0,0],y,xx,i,row,hsl,b,band=-1,bn=0,k;
     var yNeck=(th*0.40)|0;
     /* v6.7: Use widened neck bands (DIV_BANDS_NECK) for y>=0.40 to catch undershirt highlights without tinting face skin (y<0.40). */
@@ -16513,7 +16534,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v6.9 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v6.10 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
