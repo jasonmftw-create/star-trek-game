@@ -910,7 +910,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v6.7';
+const ART_BUST='v6.8';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -11844,8 +11844,9 @@ function uiDivision(id,div,btn){
 /* --- runtime uniform recolor: dominant-band hue shift, skin-safe --- */
 var DIV_BANDS=[[347,7],[46,12],[212,16]];
 /* v6.6 (Jason 2026-10-02): REVERTED v6.4 widen [0,18] — it caught skin (hue 10-30°) and tinted Picard's face green. The 10-14° undershirt highlights remain unrecolored; need spatial targeting instead of hue widening. */
-var DIV_BANDS_NECK=[[0,18],[46,18],[212,20]];
+var DIV_BANDS_NECK=[[0,18],[50,14],[212,20]];
 /* v6.7 (Jason 2026-10-02): Widened bands for NECK region only (y>=0.40). The FC/NEM undershirt has 10-14° orange-red highlights from fabric folds — 194/650 neck pixels missed by narrow bands. Global widening tinted faces, so apply widened bands ONLY below the chin (y>=0.40), protecting face skin (y<0.40). */
+/* v6.8 (Jason 2026-10-02): GOLD neck narrowed [46,18]→[50,14] (36-64°). The 28-30° lower range was catching Crusher's chin skin and tinting it green on Engineering. */
 function divBandOfHNeck(h){
   for(var i=0;i<3;i++){var dd=Math.abs(h-DIV_BANDS_NECK[i][0]);if(dd>180)dd=360-dd;if(dd<=DIV_BANDS_NECK[i][1])return i;}
   return -1;
@@ -16511,7 +16512,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v6.7 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v6.8 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
