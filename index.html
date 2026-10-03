@@ -343,6 +343,8 @@ body{touch-action:pan-y;}
 .uwWrap .uwStreak{position:absolute;top:0;bottom:0;left:-140px;right:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 24px,rgba(120,170,255,.32) 24px 26px,transparent 26px 56px,rgba(190,120,255,.28) 56px 58px,transparent 58px 96px,rgba(255,120,190,.24) 96px 98px,transparent 98px 132px,rgba(255,220,120,.20) 132px 134px,transparent 134px 168px);-webkit-mask-image:repeating-linear-gradient(90deg,#000 0 70px,transparent 70px 130px);mask-image:repeating-linear-gradient(90deg,#000 0 70px,transparent 70px 130px);animation:uwStreakA .5s linear infinite;}
 /* v000.6.056 (Jason 2026-10-03): Warp restyled as horizontal speed-lines. The old 90deg gradient drew vertical bars ("jail bars"). Now 0deg = thin horizontal streaks in his blue/purple/pink/yellow reference colors, dashed by a 130px mask so they read as rushing past; the -130px slide matches the mask period for a seamless loop. Left bleed covers the travel so no gap opens at the edge. */
 @keyframes uwStreakA{from{transform:translateX(0);}to{transform:translateX(-130px);}}
+/* v000.6.057 (Jason 2026-10-03): Defiant reads massive on the Ships tab — its art fills the 1280px canvas edge to edge. Render at ~55% there; transform keeps layout and the baked starfield framing intact, and the .uwStars layer fills the surround. Scoped to .shipsPage so the Build page and ship modal are untouched. */
+.shipsPage .shipMedia .uwWrap>img.icn-defiant-right{transform:scale(.55);}
 /* v000.6.037 (Jason 2026-10-02): Stars drift for moving ships — animated starfield, no lines. */
 /* v000.6.038 (Jason 2026-10-02): Faster drift (2.5s → 1.2s). */
 /* v000.6.047 (Jason 2026-10-03): Doubled again (1.2s → 0.6s) for traveling/on-mission ships. */
@@ -986,7 +988,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.056';
+const ART_BUST='v000.6.057';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -9973,7 +9975,7 @@ function render(){renderHUD();
   const v=$("view");
   if(currentTab==="command")v.innerHTML=renderCommand();
   else if(currentTab==="commander")v.innerHTML=renderCommander();
-  else if(currentTab==="ships")v.innerHTML=renderShips();
+  else if(currentTab==="ships")v.innerHTML='<div class="shipsPage">'+renderShips()+'</div>';
   else if(currentTab==="stations")v.innerHTML=renderStations();
   else if(currentTab==="galaxy"){v.innerHTML=(mapView==="galaxy"?renderGalaxy():renderQuadrant(mapView));initMapZoom();}
   else if(currentTab==="personnel")v.innerHTML=renderPersonnel();
@@ -12274,7 +12276,7 @@ function shipPic(cls,big,state,opts){
       var _flip=(_icn==="lamarr-right")?'transform:scaleX(-1);':"";
       var _drydockBg=(opts&&opts.bees)?'background:var(--drydock) center/cover no-repeat;':"";
       var _starfieldBg=(opts&&opts.shipyard&&!(opts&&opts.bees))?'background:#02040a;background-image:radial-gradient(1.5px 1.5px at 8% 20%,#cfe4ff,transparent),radial-gradient(1px 1px at 18% 65%,#fff,transparent),radial-gradient(1.5px 1.5px at 28% 40%,#cfe4ff,transparent),radial-gradient(1px 1px at 38% 85%,#fff,transparent),radial-gradient(1.5px 1.5px at 48% 15%,#cfe4ff,transparent),radial-gradient(1px 1px at 58% 55%,#fff,transparent),radial-gradient(1.5px 1.5px at 68% 30%,#cfe4ff,transparent),radial-gradient(1px 1px at 78% 70%,#fff,transparent),radial-gradient(1.5px 1.5px at 88% 10%,#cfe4ff,transparent),radial-gradient(1px 1px at 95% 50%,#fff,transparent),radial-gradient(1px 1px at 12% 90%,#cfe4ff,transparent),radial-gradient(1.5px 1.5px at 42% 60%,#fff,transparent);':"";
-      img='<img class="shipPicBig" src="'+bustUrl('ships/icons/'+_icn+'.png')+'" alt="" style="'+_flip+'padding:6px;box-sizing:border-box;'+_drydockBg+_starfieldBg+'">';
+      img='<img class="shipPicBig icn-'+_icn+'" src="'+bustUrl('ships/icons/'+_icn+'.png')+'" alt="" style="'+_flip+'padding:6px;box-sizing:border-box;'+_drydockBg+_starfieldBg+'">';
     }else{
       var _nb=[""," nebB"," nebC"][Array.from(String(cls)).reduce(function(a,c){return a+c.charCodeAt(0);},0)%3];img='<img class="'+(big?"shipPicBig":"shipPic")+' shipPicEAS'+_nb+'" src="'+bustUrl('ships/icons/'+_icn+'.png')+'" alt="">';
     }
@@ -16862,7 +16864,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.056 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.057 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
