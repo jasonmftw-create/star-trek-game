@@ -1,4 +1,4 @@
-const C = 'stfc-v000.6.065';
+const C = 'stfc-v000.6.066';
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(C).then(c => c.addAll(['./', 'index.html', 'manifest.json'])).then(() => self.skipWaiting()));
 });
