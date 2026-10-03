@@ -897,14 +897,14 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    Single file. Vanilla JS. localStorage save.
    ============================================================ */
 /* ================= UTILITIES ================= */
-/* ---- v5.4 art cache-bust: every game-art URL gets ?v=<ART_BUST> so browsers
+/* ---- v5.5 uniform fix: every game-art URL gets ?v=<ART_BUST> so browsers
    fetch fresh files when art changes between releases (filenames are reused
    in place, e.g. v5.0 stylized portraits overwrote v4.8 photos). Bump
    ART_BUST with the version whenever art ships. Applied at the art-URL
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v5.4';
+const ART_BUST='v5.5';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -16481,7 +16481,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v5.4 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v5.5 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
