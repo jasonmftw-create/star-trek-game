@@ -359,9 +359,10 @@ body{touch-action:pan-y;}
    transform/opacity/display only — theme-safe; the wrap keeps its
    var(--orange) border and #05080f backdrop from the base rule. */
 
-/* Still mode overrides (applied alongside the base .uwWrap rules above) */
+/* Still mode: idle/docked ships get a VERY slow ambient star drift (alive but calm).
+   No warp streak when not moving. Engine glow sits static at low opacity. */
 .uwWrap.uwStill .uwStreak{display:none;}
-.uwWrap.uwStill .uwStars{animation:none;}
+.uwWrap.uwStill .uwStars{animation:uwDrift 120s linear infinite;}
 .uwWrap.uwStill .uwGlow{animation:none;opacity:.35;}
 
 /* Explicit moving class (base animations already apply; this is documentation-by-class) */
@@ -389,35 +390,26 @@ body{touch-action:pan-y;}
 .shipMedia .stnScene>img.shipPicBig{height:100%;max-height:none;padding:6px;}
 
 /* --- Jupiter (station art key "jupiter"): large banded gas giant, upper-right, cropped, slow drift --- */
+/* v5.6: replaced CSS gradients with real planet art (Jason: "planets don't look good, especially Jupiter") */
 .sc-jupiter .scBody{inset:auto;width:155%;aspect-ratio:1/1;top:-62%;right:-55%;border-radius:50%;
-  background:
-    radial-gradient(ellipse 22% 12% at 58% 64%, rgba(193,110,74,.9), rgba(193,110,74,0) 70%),
-    radial-gradient(circle at 30% 25%, rgba(255,255,255,.18), transparent 55%),
-    radial-gradient(circle at 50% 50%, transparent 62%, rgba(20,8,4,.5) 100%),
-    repeating-linear-gradient(to bottom,#e8d9b8 0 7%,#c8a06a 7% 13%,#a9764a 13% 19%,#e3cfa0 19% 26%,#8f6242 26% 33%,#d9bd8a 33% 40%,#b98d5f 40% 47%,#efdfba 47% 54%,#9c6f47 54% 61%,#d3af7d 61% 68%,#e9dab9 68% 75%,#a87c52 75% 82%,#cfa872 82% 89%,#e6d3a8 89% 100%);
+  background-image:url('stations/planet-jupiter.jpg');
+  background-size:cover;background-position:center;
   animation:jupDrift 56s ease-in-out infinite alternate;}
 @keyframes jupDrift{from{transform:translate(0,0);}to{transform:translate(-4%,3%);}}
 
-/* --- Mars (station art key "utopia"): smaller rust-red disc, darker maria patches, subtle --- */
+/* --- Mars (station art key "utopia"): rust-red planet art, slow drift --- */
+/* v5.6: replaced CSS gradients with real planet art */
 .sc-mars .scBody{inset:auto;width:46%;aspect-ratio:1/1;left:4%;bottom:-16%;border-radius:50%;
-  background:
-    radial-gradient(circle at 32% 30%, rgba(255,220,190,.25), transparent 55%),
-    radial-gradient(circle at 62% 58%, rgba(90,40,25,.55), transparent 42%),
-    radial-gradient(circle at 38% 70%, rgba(70,30,20,.5), transparent 38%),
-    radial-gradient(circle at 50% 50%, transparent 60%, rgba(30,10,6,.55) 100%),
-    radial-gradient(circle at 50% 45%, #c1623c, #8a3d22 70%, #5e2817);
+  background-image:url('stations/planet-mars.jpg');
+  background-size:cover;background-position:center;
   animation:marsDrift 70s ease-in-out infinite alternate;}
 @keyframes marsDrift{from{transform:translate(0,0);}to{transform:translate(2.5%,-2%);}}
 
-/* --- Earth (station art key "mckinley"): blue marble, landmass blobs, polar cap, atmosphere glow --- */
+/* --- Earth (station art key "mckinley"): blue marble art, atmosphere glow, slow drift --- */
+/* v5.6: replaced CSS gradients with real planet art */
 .sc-earth .scBody{inset:auto;width:58%;aspect-ratio:1/1;left:-18%;top:6%;border-radius:50%;
-  background:
-    radial-gradient(ellipse 46% 14% at 50% 6%, rgba(255,255,255,.9), transparent 70%),
-    radial-gradient(ellipse 30% 22% at 38% 52%, rgba(74,124,60,.85), transparent 70%),
-    radial-gradient(ellipse 24% 18% at 64% 62%, rgba(110,95,55,.8), transparent 70%),
-    radial-gradient(ellipse 18% 14% at 56% 38%, rgba(80,130,70,.75), transparent 70%),
-    radial-gradient(circle at 50% 50%, transparent 62%, rgba(4,10,30,.55) 100%),
-    radial-gradient(circle at 42% 38%, #4a90d9, #1e5aa8 55%, #0d3268);
+  background-image:url('stations/planet-earth.jpg');
+  background-size:cover;background-position:center;
   box-shadow:0 0 70px 14px rgba(110,170,255,.35), inset -14px -10px 40px rgba(2,6,20,.5);
   animation:earthDrift 64s ease-in-out infinite alternate;}
 @keyframes earthDrift{from{transform:translate(0,0);}to{transform:translate(3%,2%);}}
@@ -498,26 +490,26 @@ body{touch-action:pan-y;}
 .uwWrap .uwBees i{position:absolute;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;
   border-radius:50%;background:#ffdf9e;
   box-shadow:0 0 6px 2px rgba(255,196,110,.8),0 0 14px 5px rgba(255,170,80,.35);}
-/* bee 1 — wide clockwise loop over the mid-hull */
+/* bee 1 — wide clockwise loop over the mid-hull (slow worker pace) */
 .uwWrap .uwBees i:nth-child(1){left:14%;top:54%;
-  animation:beePath1 11s linear infinite,beeBlink 1.7s ease-in-out infinite;
-  animation-delay:-3s,-.4s;}
+  animation:beePath1 22s linear infinite,beeBlink 1.7s ease-in-out infinite;
+  animation-delay:-6s,-.4s;}
 /* bee 2 — small vertical oval around the starboard nacelle */
 .uwWrap .uwBees i:nth-child(2){left:78%;top:30%;width:4px;height:4px;margin:-2px 0 0 -2px;
-  animation:beePath2 8.5s linear infinite,beeBlink 1.3s ease-in-out infinite;
-  animation-delay:-5.2s,-1.1s;}
+  animation:beePath2 17s linear infinite,beeBlink 1.3s ease-in-out infinite;
+  animation-delay:-10.4s,-1.1s;}
 /* bee 3 — long low sweep, figure-eight across the lower frame */
 .uwWrap .uwBees i:nth-child(3){left:42%;top:72%;
-  animation:beePath3 12.5s linear infinite,beeBlink 1.9s ease-in-out infinite;
-  animation-delay:-8.7s,-.2s;}
+  animation:beePath3 25s linear infinite,beeBlink 1.9s ease-in-out infinite;
+  animation-delay:-17.4s,-.2s;}
 /* bee 4 — long arc over the top of the frame */
 .uwWrap .uwBees i:nth-child(4){left:62%;top:16%;width:4px;height:4px;margin:-2px 0 0 -2px;
-  animation:beePath4 9.5s linear infinite,beeBlink 1.1s ease-in-out infinite;
-  animation-delay:-1.4s,-.8s;}
+  animation:beePath4 19s linear infinite,beeBlink 1.1s ease-in-out infinite;
+  animation-delay:-2.8s,-.8s;}
 /* bee 5 — tight welding loop, portside */
 .uwWrap .uwBees i:nth-child(5){left:30%;top:24%;width:4px;height:4px;margin:-2px 0 0 -2px;
-  animation:beePath5 7s linear infinite,beeBlink 2.3s ease-in-out infinite;
-  animation-delay:-4.6s,-1.5s;}
+  animation:beePath5 14s linear infinite,beeBlink 2.3s ease-in-out infinite;
+  animation-delay:-9.2s,-1.5s;}
 @keyframes beePath1{0%{transform:translate(0,0);}15%{transform:translate(45px,-24px);}
   30%{transform:translate(105px,-20px);}45%{transform:translate(150px,8px);}
   60%{transform:translate(125px,32px);}75%{transform:translate(60px,36px);}
@@ -539,6 +531,16 @@ body{touch-action:pan-y;}
   67%{transform:translate(-28px,22px);}83%{transform:translate(-18px,-2px);}
   100%{transform:translate(0,0);}}
 @keyframes beeBlink{0%,100%{opacity:.55;}50%{opacity:1;}}
+
+/* ===== v5.6: Build-page shipyard drydock background (Jason: "should look like they're at a shipyard") ===== */
+/* Targets ship display wraps that contain worker bees (build page only). The shipyard art */
+/* sits behind the ship; the CSS starfield is hidden to avoid double stars (the art has its own). */
+.uwWrap:has(> .uwBees){
+  background-image:url('stations/shipyard-bg.jpg');
+  background-size:cover;
+  background-position:center;
+}
+.uwWrap:has(> .uwBees) .uwStars{display:none;}
 
 /* ============================================================================
 
@@ -897,14 +899,14 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    Single file. Vanilla JS. localStorage save.
    ============================================================ */
 /* ================= UTILITIES ================= */
-/* ---- v5.5 uniform fix: every game-art URL gets ?v=<ART_BUST> so browsers
+/* ---- v5.6 visual polish: every game-art URL gets ?v=<ART_BUST> so browsers
    fetch fresh files when art changes between releases (filenames are reused
    in place, e.g. v5.0 stylized portraits overwrote v4.8 photos). Bump
    ART_BUST with the version whenever art ships. Applied at the art-URL
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v5.5';
+const ART_BUST='v5.6';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -16481,7 +16483,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v5.5 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v5.6 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
