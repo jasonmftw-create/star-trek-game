@@ -343,6 +343,9 @@ body{touch-action:pan-y;}
 .uwWrap .uwStreak{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(90deg,transparent 0 18px,rgba(100,150,255,.35) 18px 20px,transparent 20px 38px,rgba(180,100,255,.30) 38px 40px,transparent 40px 58px,rgba(255,100,180,.25) 58px 60px,transparent 60px 78px,rgba(255,220,100,.20) 78px 80px,transparent 80px 100px);animation:uwStreakA .5s linear infinite;}
 /* v6.20 (Jason 2026-10-02): SHOT 12. Colorful warp streaks like Jason's reference (blue/purple/pink/yellow), faster animation so ship appears to be moving. */
 @keyframes uwStreakA{from{transform:translateX(0);}to{transform:translateX(-32px);}}
+/* v000.6.035 (Jason 2026-10-02): Animate warp streaks on the IMG background for moving ships. */
+@keyframes streakSlide{from{background-position:0 0;}to{background-position:-80px 0;}}
+.uwWrap.uwMoving img.shipPicBig{animation:streakSlide .6s linear infinite;}
 .uwWrap .uwGlow{position:absolute;top:50%;left:50%;width:82%;height:64%;transform:translate(-50%,-50%);pointer-events:none;background:radial-gradient(ellipse at center,rgba(120,190,255,.32),transparent 70%);filter:blur(8px);animation:engPulse 2.6s ease-in-out infinite;}
 .uwWrap>img{position:relative;z-index:2;display:block;width:100%;}
 .uwWrap .shipPicBig{border:none;margin:0;max-height:260px;}
@@ -979,7 +982,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.034';
+const ART_BUST='v000.6.035';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -12038,7 +12041,8 @@ function shipPic(cls,big,state,opts){
       var _flip=(_icn==="lamarr-right")?'transform:scaleX(-1);':"";
       var _drydockBg=(opts&&opts.bees)?'background:var(--drydock) center/cover no-repeat;':"";
       /* v000.6.034 (Jason 2026-10-02): Warp streaks for moving ships — put the streak gradients DIRECTLY ON THE IMG (like stars), not in the separate .uwStreak span which gets covered. */
-      var _streakGrad=(state!=="still")?',repeating-linear-gradient(90deg,transparent 0 18px,rgba(100,150,255,.35) 18px 20px,transparent 20px 38px,rgba(180,100,255,.30) 38px 40px,transparent 40px 58px,rgba(255,100,180,.25) 58px 60px,transparent 60px 78px,rgba(255,220,100,.20) 78px 80px,transparent 80px 100px)':"";
+      /* v000.6.035 (Jason 2026-10-02): Fixed direction — horizontal streaks like Jason's reference (was vertical). */
+      var _streakGrad=(state!=="still")?',repeating-linear-gradient(0deg,transparent 0 14px,rgba(100,150,255,.45) 14px 16px,transparent 16px 34px,rgba(180,100,255,.40) 34px 36px,transparent 36px 54px,rgba(255,100,180,.35) 54px 56px,transparent 56px 74px,rgba(255,220,100,.30) 74px 76px,transparent 76px 94px)':"";
       var _starfieldBg=(opts&&opts.shipyard&&!(opts&&opts.bees))?'background:#02040a;background-image:radial-gradient(1.5px 1.5px at 8% 20%,#cfe4ff,transparent),radial-gradient(1px 1px at 18% 65%,#fff,transparent),radial-gradient(1.5px 1.5px at 28% 40%,#cfe4ff,transparent),radial-gradient(1px 1px at 38% 85%,#fff,transparent),radial-gradient(1.5px 1.5px at 48% 15%,#cfe4ff,transparent),radial-gradient(1px 1px at 58% 55%,#fff,transparent),radial-gradient(1.5px 1.5px at 68% 30%,#cfe4ff,transparent),radial-gradient(1px 1px at 78% 70%,#fff,transparent),radial-gradient(1.5px 1.5px at 88% 10%,#cfe4ff,transparent),radial-gradient(1px 1px at 95% 50%,#fff,transparent),radial-gradient(1px 1px at 12% 90%,#cfe4ff,transparent),radial-gradient(1.5px 1.5px at 42% 60%,#fff,transparent)'+_streakGrad+';':"";
       img='<img class="shipPicBig" src="'+bustUrl('ships/icons/'+_icn+'.png')+'" alt="" style="'+_flip+'padding:6px;box-sizing:border-box;'+_drydockBg+_starfieldBg+'">';
     }else{
@@ -16627,7 +16631,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.034 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.035 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
