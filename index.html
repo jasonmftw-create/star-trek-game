@@ -345,7 +345,232 @@ body{touch-action:pan-y;}
 .uwWrap .shipPicBig{border:none;margin:0;max-height:260px;}
 .shipMedia .uwWrap{height:100%;border:none;border-radius:0;margin:0;}
 .shipMedia .uwWrap>img{height:100%;width:100%;max-height:none;}
-@media (prefers-reduced-motion:reduce){.uwWrap .uwStars,.uwWrap .uwStreak,.uwWrap .uwGlow,.completeStage .speed2{animation:none!important;}}
+/* ===== v5.3 Project: Underway Everywhere ===== */
+/* ---------- 1. SHIPS: state-driven scenes (uwMoving / uwStill) ---------- */
+/* ===== Project: Underway Everywhere — SHIPS surface: state-driven space scenes =====
+   Splice location: directly after the existing v4.3 Underway block, before the
+   `@media (prefers-reduced-motion:reduce)` line at ~348, or anywhere later in
+   the stylesheet. Must NOT be inside the reduced-motion query.
+
+   Convention: moving mode = the existing .uwWrap animation set (stars drift,
+   streak scrolls, glow pulses). Still mode freezes it: stars stay visible but
+   static, the warp streak is hidden entirely, and the engine glow sits static
+   at low opacity (ship at rest, not powered down). All animations here are
+   transform/opacity/display only — theme-safe; the wrap keeps its
+   var(--orange) border and #05080f backdrop from the base rule. */
+
+/* Still mode overrides (applied alongside the base .uwWrap rules above) */
+.uwWrap.uwStill .uwStreak{display:none;}
+.uwWrap.uwStill .uwStars{animation:none;}
+.uwWrap.uwStill .uwGlow{animation:none;opacity:.35;}
+
+/* Explicit moving class (base animations already apply; this is documentation-by-class) */
+.uwWrap.uwMoving .uwStreak{display:block;}
+
+/* Reduced motion: already covered by the existing query
+   `@media (prefers-reduced-motion:reduce){.uwWrap .uwStars,.uwWrap .uwStreak,.uwWrap .uwGlow,...{animation:none!important;}}`
+   — those selectors match descendants of .uwWrap regardless of uwMoving/uwStill,
+   so no new rule is required. The .uwStill static overrides above are not
+   animations and are unaffected. */
+
+/* ---------- 2. STATIONS: planet / wormhole / nebula scenery ---------- */
+/* ===== v5.1 Project: Underway Everywhere — Station scenery (applied at the stationPic big-branch chokepoint) ===== */
+/* SPLICE: paste directly after the existing v4.3 "Project: Underway" CSS block (after its
+   @media (prefers-reduced-motion:reduce) line). All scenery is procedural gradients — no image assets, no AI.
+   Animations are transform/opacity only (drift = translate, wormhole = scaleY/opacity).
+   Frame accent uses var(--artframe) to match the v5.0 portrait frames across all 8 LCARS themes. */
+.stnScene{position:relative;display:block;overflow:hidden;background:#05080f;border-radius:10px;border:2px solid var(--artframe,#3b82f6);margin:0 0 8px;}
+.stnScene .scBody{position:absolute;inset:0;z-index:1;pointer-events:none;}
+.stnScene .scStars{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:.85;background-image:radial-gradient(1.4px 1.4px at 8% 22%,#d8e9ff,transparent),radial-gradient(1px 1px at 22% 66%,#fff,transparent),radial-gradient(1.4px 1.4px at 38% 12%,#cfe4ff,transparent),radial-gradient(1px 1px at 55% 38%,#fff,transparent),radial-gradient(1.4px 1.4px at 68% 78%,#d8e9ff,transparent),radial-gradient(1px 1px at 82% 18%,#fff,transparent),radial-gradient(1.4px 1.4px at 90% 55%,#cfe4ff,transparent),radial-gradient(1px 1px at 12% 88%,#fff,transparent),radial-gradient(1px 1px at 48% 92%,#d8e9ff,transparent),radial-gradient(1.4px 1.4px at 74% 8%,#fff,transparent),radial-gradient(1px 1px at 30% 48%,#cfe4ff,transparent),radial-gradient(1px 1px at 96% 84%,#fff,transparent);}
+/* Station img stays on top. background:none beats .shipPicBig.stnBig's nebula-a.jpg (which would otherwise
+   cover the scene behind transparent station PNGs). Higher specificity (0,2,1) is deliberate. */
+.stnScene>img.shipPicBig{position:relative;z-index:3;display:block;width:100%;max-height:260px;margin:0 auto;background:none;object-fit:contain;padding:10px;box-sizing:border-box;}
+.shipMedia .stnScene{height:100%;border:none;border-radius:0;margin:0;}
+.shipMedia .stnScene>img.shipPicBig{height:100%;max-height:none;padding:6px;}
+
+/* --- Jupiter (station art key "jupiter"): large banded gas giant, upper-right, cropped, slow drift --- */
+.sc-jupiter .scBody{inset:auto;width:155%;aspect-ratio:1/1;top:-62%;right:-55%;border-radius:50%;
+  background:
+    radial-gradient(ellipse 22% 12% at 58% 64%, rgba(193,110,74,.9), rgba(193,110,74,0) 70%),
+    radial-gradient(circle at 30% 25%, rgba(255,255,255,.18), transparent 55%),
+    radial-gradient(circle at 50% 50%, transparent 62%, rgba(20,8,4,.5) 100%),
+    repeating-linear-gradient(to bottom,#e8d9b8 0 7%,#c8a06a 7% 13%,#a9764a 13% 19%,#e3cfa0 19% 26%,#8f6242 26% 33%,#d9bd8a 33% 40%,#b98d5f 40% 47%,#efdfba 47% 54%,#9c6f47 54% 61%,#d3af7d 61% 68%,#e9dab9 68% 75%,#a87c52 75% 82%,#cfa872 82% 89%,#e6d3a8 89% 100%);
+  animation:jupDrift 56s ease-in-out infinite alternate;}
+@keyframes jupDrift{from{transform:translate(0,0);}to{transform:translate(-4%,3%);}}
+
+/* --- Mars (station art key "utopia"): smaller rust-red disc, darker maria patches, subtle --- */
+.sc-mars .scBody{inset:auto;width:46%;aspect-ratio:1/1;left:4%;bottom:-16%;border-radius:50%;
+  background:
+    radial-gradient(circle at 32% 30%, rgba(255,220,190,.25), transparent 55%),
+    radial-gradient(circle at 62% 58%, rgba(90,40,25,.55), transparent 42%),
+    radial-gradient(circle at 38% 70%, rgba(70,30,20,.5), transparent 38%),
+    radial-gradient(circle at 50% 50%, transparent 60%, rgba(30,10,6,.55) 100%),
+    radial-gradient(circle at 50% 45%, #c1623c, #8a3d22 70%, #5e2817);
+  animation:marsDrift 70s ease-in-out infinite alternate;}
+@keyframes marsDrift{from{transform:translate(0,0);}to{transform:translate(2.5%,-2%);}}
+
+/* --- Earth (station art key "mckinley"): blue marble, landmass blobs, polar cap, atmosphere glow --- */
+.sc-earth .scBody{inset:auto;width:58%;aspect-ratio:1/1;left:-18%;top:6%;border-radius:50%;
+  background:
+    radial-gradient(ellipse 46% 14% at 50% 6%, rgba(255,255,255,.9), transparent 70%),
+    radial-gradient(ellipse 30% 22% at 38% 52%, rgba(74,124,60,.85), transparent 70%),
+    radial-gradient(ellipse 24% 18% at 64% 62%, rgba(110,95,55,.8), transparent 70%),
+    radial-gradient(ellipse 18% 14% at 56% 38%, rgba(80,130,70,.75), transparent 70%),
+    radial-gradient(circle at 50% 50%, transparent 62%, rgba(4,10,30,.55) 100%),
+    radial-gradient(circle at 42% 38%, #4a90d9, #1e5aa8 55%, #0d3268);
+  box-shadow:0 0 70px 14px rgba(110,170,255,.35), inset -14px -10px 40px rgba(2,6,20,.5);
+  animation:earthDrift 64s ease-in-out infinite alternate;}
+@keyframes earthDrift{from{transform:translate(0,0);}to{transform:translate(3%,2%);}}
+
+/* --- Wormhole (station art key "ds9", shared with Empok Nor): vertical elliptical aperture,
+   swirling blue-white conic streak texture + glow; opens on a 26s cycle (see whOpen below). --- */
+.sc-wormhole .scBody{inset:0;}
+.sc-wormhole .scBody::before{content:"";position:absolute;left:50%;top:42%;width:30%;height:80%;border-radius:50%;
+  background:
+    repeating-conic-gradient(from 0deg at 50% 50%, rgba(255,255,255,.14) 0deg 7deg, transparent 7deg 22deg),
+    radial-gradient(ellipse at center, rgba(240,248,255,.95) 0%, rgba(170,215,255,.8) 24%, rgba(100,160,255,.5) 46%, rgba(50,95,235,.22) 66%, transparent 74%);
+  box-shadow:0 0 60px 16px rgba(130,190,255,.5), 0 0 140px 40px rgba(80,130,255,.25);
+  filter:blur(1px);
+  opacity:0;transform:translate(-50%,-50%) scaleY(.03);
+  animation:whOpen 26s ease-in-out infinite;}
+/* Closed/invisible 0-68% (~17.7s quiet), opening 68-78%, open hold 78-88%, closing 88-100%.
+   100% matches 0% (closed) so the loop has no pop. Swirl is a static conic texture — rotation would
+   need a nested element, which the transform/opacity-only constraint rules out. */
+@keyframes whOpen{
+  0%,68%{opacity:0;transform:translate(-50%,-50%) scaleY(.03);}
+  78%,88%{opacity:1;transform:translate(-50%,-50%) scaleY(1);}
+  100%{opacity:0;transform:translate(-50%,-50%) scaleY(.03);}
+}
+
+/* --- Nebulae: every other art key gets one of 4 treatments, layered radial-gradients, very slow drift.
+   scBody is oversized (inset:-14%) so the translate drift never exposes an edge. --- */
+.sc-neb1 .scBody,.sc-neb2 .scBody,.sc-neb3 .scBody,.sc-neb4 .scBody{inset:-14%;}
+.sc-neb1 .scBody{background:
+  radial-gradient(ellipse 55% 42% at 28% 32%, rgba(45,212,191,.28), transparent 70%),
+  radial-gradient(ellipse 48% 55% at 74% 66%, rgba(20,184,166,.22), transparent 70%),
+  radial-gradient(ellipse 90% 70% at 50% 110%, rgba(13,80,90,.5), transparent 75%),
+  radial-gradient(ellipse 70% 50% at 85% 12%, rgba(45,120,140,.2), transparent 70%);
+  animation:nebDriftA 96s ease-in-out infinite alternate;}
+.sc-neb2 .scBody{background:
+  radial-gradient(ellipse 55% 42% at 70% 30%, rgba(139,92,246,.3), transparent 70%),
+  radial-gradient(ellipse 48% 55% at 24% 68%, rgba(124,58,237,.24), transparent 70%),
+  radial-gradient(ellipse 90% 70% at 50% -10%, rgba(60,20,110,.5), transparent 75%),
+  radial-gradient(ellipse 70% 50% at 12% 88%, rgba(90,50,180,.22), transparent 70%);
+  animation:nebDriftB 108s ease-in-out infinite alternate;}
+.sc-neb3 .scBody{background:
+  radial-gradient(ellipse 55% 42% at 30% 66%, rgba(245,158,11,.26), transparent 70%),
+  radial-gradient(ellipse 48% 55% at 72% 34%, rgba(217,119,6,.22), transparent 70%),
+  radial-gradient(ellipse 90% 70% at 110% 50%, rgba(120,60,10,.45), transparent 75%),
+  radial-gradient(ellipse 70% 50% at 18% 18%, rgba(200,140,60,.2), transparent 70%);
+  animation:nebDriftA 84s ease-in-out infinite alternate reverse;}
+.sc-neb4 .scBody{background:
+  radial-gradient(ellipse 55% 42% at 66% 62%, rgba(99,102,241,.3), transparent 70%),
+  radial-gradient(ellipse 48% 55% at 30% 30%, rgba(79,70,229,.24), transparent 70%),
+  radial-gradient(ellipse 90% 70% at 50% 112%, rgba(25,35,120,.5), transparent 75%),
+  radial-gradient(ellipse 70% 50% at 88% 82%, rgba(60,80,200,.22), transparent 70%);
+  animation:nebDriftB 118s ease-in-out infinite alternate;}
+@keyframes nebDriftA{from{transform:translate(-3.5%,-2.5%);}to{transform:translate(3.5%,2.5%);}}
+@keyframes nebDriftB{from{transform:translate(3%,-3%);}to{transform:translate(-3%,3%);}}
+
+/* ---------- 3. BUILD: worker bees ---------- */
+/* ============================================================================
+   Project: Underway Everywhere — BUILD surface fragment
+   File: frag-build.css (PATCH ONLY — merge into star-trek-fleet-command.html's
+   <style>, do not edit the game source directly)
+
+   DEPENDENCY: the SHIPS-surface patch MUST be merged BEFORE this fragment.
+   It extends shipPic() to shipPic(cls, big, state, opts) and emits the
+   <span class="uwBees"><i></i><i></i><i></i><i></i><i></i></span> skeleton
+   inside the .uwWrap scene when opts.bees === true. Without that patch this
+   CSS matches nothing and the call-site edits below would throw on the old
+   2-arg signature.
+
+   What this does: 5 worker-bee dots orbiting the ship silhouette on the BUILD
+   page (build-list ship cards + commission modal), over the still ('uwStill')
+   starfield — the "yard crew at work" treatment. Transform + opacity
+   animations ONLY; no layout properties. Theme-safe: warm amber on the fixed
+   #05080f scene bg reads on all 8 LCARS themes.
+   (Assembled: this block splices with the rest of underway.css per MERGE_PLAN.md.)
+   ========================================================================== */
+
+/* ===== Underway Everywhere: build-page worker bees ===== */
+.uwWrap .uwBees{position:absolute;inset:0;z-index:3;pointer-events:none;}
+.uwWrap .uwBees i{position:absolute;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;
+  border-radius:50%;background:#ffdf9e;
+  box-shadow:0 0 6px 2px rgba(255,196,110,.8),0 0 14px 5px rgba(255,170,80,.35);}
+/* bee 1 — wide clockwise loop over the mid-hull */
+.uwWrap .uwBees i:nth-child(1){left:14%;top:54%;
+  animation:beePath1 11s linear infinite,beeBlink 1.7s ease-in-out infinite;
+  animation-delay:-3s,-.4s;}
+/* bee 2 — small vertical oval around the starboard nacelle */
+.uwWrap .uwBees i:nth-child(2){left:78%;top:30%;width:4px;height:4px;margin:-2px 0 0 -2px;
+  animation:beePath2 8.5s linear infinite,beeBlink 1.3s ease-in-out infinite;
+  animation-delay:-5.2s,-1.1s;}
+/* bee 3 — long low sweep, figure-eight across the lower frame */
+.uwWrap .uwBees i:nth-child(3){left:42%;top:72%;
+  animation:beePath3 12.5s linear infinite,beeBlink 1.9s ease-in-out infinite;
+  animation-delay:-8.7s,-.2s;}
+/* bee 4 — long arc over the top of the frame */
+.uwWrap .uwBees i:nth-child(4){left:62%;top:16%;width:4px;height:4px;margin:-2px 0 0 -2px;
+  animation:beePath4 9.5s linear infinite,beeBlink 1.1s ease-in-out infinite;
+  animation-delay:-1.4s,-.8s;}
+/* bee 5 — tight welding loop, portside */
+.uwWrap .uwBees i:nth-child(5){left:30%;top:24%;width:4px;height:4px;margin:-2px 0 0 -2px;
+  animation:beePath5 7s linear infinite,beeBlink 2.3s ease-in-out infinite;
+  animation-delay:-4.6s,-1.5s;}
+@keyframes beePath1{0%{transform:translate(0,0);}15%{transform:translate(45px,-24px);}
+  30%{transform:translate(105px,-20px);}45%{transform:translate(150px,8px);}
+  60%{transform:translate(125px,32px);}75%{transform:translate(60px,36px);}
+  90%{transform:translate(5px,14px);}100%{transform:translate(0,0);}}
+@keyframes beePath2{0%{transform:translate(0,0);}15%{transform:translate(-28px,14px);}
+  30%{transform:translate(-34px,42px);}45%{transform:translate(-12px,60px);}
+  60%{transform:translate(16px,48px);}75%{transform:translate(26px,20px);}
+  90%{transform:translate(12px,-6px);}100%{transform:translate(0,0);}}
+@keyframes beePath3{0%{transform:translate(0,0);}14%{transform:translate(55px,-16px);}
+  28%{transform:translate(105px,2px);}42%{transform:translate(60px,22px);}
+  56%{transform:translate(0,12px);}70%{transform:translate(-55px,24px);}
+  84%{transform:translate(-85px,4px);}100%{transform:translate(0,0);}}
+@keyframes beePath4{0%{transform:translate(0,0);}15%{transform:translate(-55px,10px);}
+  30%{transform:translate(-110px,26px);}45%{transform:translate(-90px,48px);}
+  60%{transform:translate(-30px,52px);}75%{transform:translate(15px,38px);}
+  90%{transform:translate(20px,14px);}100%{transform:translate(0,0);}}
+@keyframes beePath5{0%{transform:translate(0,0);}17%{transform:translate(26px,12px);}
+  33%{transform:translate(20px,34px);}50%{transform:translate(-8px,40px);}
+  67%{transform:translate(-28px,22px);}83%{transform:translate(-18px,-2px);}
+  100%{transform:translate(0,0);}}
+@keyframes beeBlink{0%,100%{opacity:.55;}50%{opacity:1;}}
+
+/* ============================================================================
+
+/* ---------- 4. SHUTTLES: docking bay frame ---------- */
+/* ===== v5.1 Project: Underway Everywhere — shuttle docking bay (shuttlePic big branch) ===== */
+.dockBay{position:relative;display:block;overflow:hidden;border-radius:10px;border:2px solid var(--artframe);margin:0 0 8px;background:#05080f;}
+/* bay walls: dark gunmetal panels, subtle vertical ribbing, gentle top-down shading */
+.dockBay .dbBack{position:absolute;inset:0;pointer-events:none;z-index:1;
+  background:
+    linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,.55) 100%),
+    repeating-linear-gradient(90deg,rgba(255,255,255,.045) 0 2px,transparent 2px 56px),
+    linear-gradient(180deg,#232b3a 0%,#1a212e 55%,#141a26 100%);}
+.dockBay .dbFloor{position:absolute;left:0;right:0;bottom:0;height:28%;pointer-events:none;z-index:1;
+  background:
+    repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 2px,transparent 2px 64px),
+    linear-gradient(180deg,#2e3749 0%,#232b3b 100%);
+  box-shadow:inset 0 3px 0 rgba(0,0,0,.55);}
+/* center guide-line stripe on the deck, dimmed theme-safe accent */
+.dockBay .dbFloor::after{content:"";position:absolute;top:50%;left:6%;right:6%;height:2px;transform:translateY(-50%);opacity:.55;
+  background:linear-gradient(90deg,transparent,var(--artframe) 20%,var(--artframe) 80%,transparent);}
+/* ceiling light strips: two thin glowing bars, very dim */
+.dockBay .dbLights{position:absolute;left:0;right:0;top:6px;height:27px;pointer-events:none;z-index:1;opacity:.30;filter:blur(1px);
+  background:repeating-linear-gradient(180deg,transparent 0 8px,var(--teal) 8px 11px,transparent 11px 19px);}
+/* tiny wall beacon: subtle 3s opacity blink (transform/opacity only) */
+.dockBay .dbBeacon{position:absolute;top:32%;left:8%;width:6px;height:6px;border-radius:50%;pointer-events:none;z-index:3;
+  background:#ff8a5c;box-shadow:0 0 6px 2px rgba(255,110,60,.55);animation:dbBlink 3s ease-in-out infinite;}
+@keyframes dbBlink{0%,100%{opacity:.25;}50%{opacity:1;}}
+/* the shuttle: ~70% width, centered, parked just above the floor line, soft drop-shadow beneath */
+.dockBay>img{position:relative;z-index:2;display:block;width:70%;margin:9% auto 5%;border:none;max-height:190px;filter:drop-shadow(0 12px 10px rgba(0,0,0,.65));}
+/* in the bay the gunmetal interior is the backdrop: neutralize the img-box nebula/padding from shipPicEAS */
+.dockBay>img.shipPicEAS{background:none!important;padding:0!important;}
+@media (prefers-reduced-motion:reduce){.uwWrap .uwStars,.uwWrap .uwStreak,.uwWrap .uwGlow,.completeStage .speed2,.stnScene .scBody,.stnScene .scBody::before{animation:none!important;}.uwBees{display:none;}.dockBay .dbBeacon{animation:none!important;opacity:.8;}}
 .shipCardNm{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;}
 .shipCardNmTxt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .shipCardNm .reg{font-size:12px;color:var(--dim);font-weight:400;}
@@ -1020,11 +1245,15 @@ function shuttleUnlocked(key){
 function shuttlePic(type,big){
   const src=(typeof SHUTTLE_PICS!=="undefined"&&SHUTTLE_PICS[type])?SHUTTLE_PICS[type]:"";
   if(!src)return "";
+  let img;
   if(src.slice(-4)===".png"){
     const _nb=[""," nebB"," nebC"][Array.from(String(type)).reduce(function(a,c){return a+c.charCodeAt(0);},0)%3];
-    return '<img class="'+(big?"shipPicBig":"shipPic")+' shipPicEAS'+_nb+'" src="'+src+'" alt="">';
+    img='<img class="'+(big?"shipPicBig":"shipPic")+' shipPicEAS'+_nb+'" src="'+src+'" alt="">';
+  }else{
+    img='<img class="'+(big?"shipPicBig":"shipPic")+'" src="'+src+'" alt="">';
   }
-  return '<img class="'+(big?"shipPicBig":"shipPic")+'" src="'+src+'" alt="">';
+  if(big)return '<span class="dockBay"><span class="dbBack"></span><span class="dbFloor"></span><span class="dbLights"></span><span class="dbBeacon"></span>'+img+'</span>';
+  return img;
 }
 const SHUTTLE_NAME_POOL=["Galileo","Columbus","Copernicus","Curie","Einstein","Feynman","Hawking","Nogura","Onizuka","Sakharov","Voltaire","Goddard","Brahe","Kepler","El-Baz","Drake","Pike","Okuda","Chaffee","Sagan"];
 
@@ -10122,7 +10351,7 @@ function renderShips(){
     const badges=[fl?'<span class="badge" style="background:var(--gold);color:#0b0b12;font-weight:bold;">FLAGSHIP</span>':"",tv?'<span class="badge" style="background:var(--teal);color:#0b0b12;font-weight:bold;">TRAINING VESSEL</span>':"",om?'<span class="badge" style="background:var(--violet);color:#0b0b12;font-weight:bold;">ON MISSION</span>':"",(!om&&s.transit)?'<span class="badge" style="background:var(--teal);color:#0b0b12;font-weight:bold;">IN TRANSIT</span>':""].filter(Boolean).join(" ");
     const detOpen=shipCardOpen.has(s.id);
     rows+='<div class="card shipCard" onclick="shipModal(\''+s.id+'\')" style="cursor:pointer;">'+
-      '<div class="shipMedia">'+shipPic(s.cls,true)+'</div>'+
+      '<div class="shipMedia">'+shipPic(s.cls,true,uwShipState(s))+'</div>'+
       '<div class="shipCardNm"><span class="shipCardNmTxt">'+(fl?'<span class="flagGlyph">'+CMDR_GLYPH+'</span>':"")+esc(shipNameG(s))+' <span class="reg">'+esc(s.registry)+'</span></span>'+
       '<button class="shipDetBtn" id="shipDetBtn-'+s.id+'" onclick="toggleShipDet(\''+s.id+'\',event)">'+(detOpen?'Details ▴':'Details ▾')+'</button></div>'+
       '<div class="shipDet'+(detOpen?' open':'')+'" id="shipDet-'+s.id+'" onclick="event.stopPropagation()">'+
@@ -10732,7 +10961,7 @@ function renderBuild(){
     }
     const detKey="bld-"+k,detOpen=shipCardOpen.has(detKey);
     h+='<div class="card shipCard">'+
-      '<div class="shipMedia">'+shipPic(k,true)+'</div>'+
+      '<div class="shipMedia">'+shipPic(k,true,'still',{bees:true})+'</div>'+
       '<div class="shipCardNm"><span class="shipCardNmTxt">'+c.name+'-class'+(u.ok?"":' <span class="badge bad">LOCKED</span>')+'</span>'+
       '<button class="shipDetBtn" id="shipDetBtn-'+detKey+'" onclick="toggleShipDet(\''+detKey+'\',event)">'+(detOpen?'Details \u25b4':'Details \u25be')+'</button></div>'+
       '<div class="shipDet'+(detOpen?' open':'')+'" id="shipDet-'+detKey+'">'+
@@ -10803,7 +11032,7 @@ function uiBuildShip(cls){
   if(!u.ok||!yards.length||G.credits<c.cr||G.dilithium<c.dl)return;
   let sugN="USS "+pick(SHIP_NAME_POOL),sugR="NCC-"+ri(74000,89999);
   if(legacyFrom){const ls=ship(legacyFrom);if(ls&&(ls.mothballed||ls.status==="museum")){sugN=ls.name;sugR=nextRegistry(ls.registry);}}
-  openModal('<h2>Commission '+c.name+'-class</h2>'+shipPic(cls,true)+'<div class="flavor">'+fmt(c.cr)+' CR · '+fmt(c.dl)+' DL · '+Math.ceil(c.days*buildTimeMod())+' days at '+esc(yards[0].name)+'</div>'+
+  openModal('<h2>Commission '+c.name+'-class</h2>'+shipPic(cls,true,'still',{bees:true})+'<div class="flavor">'+fmt(c.cr)+' CR · '+fmt(c.dl)+' DL · '+Math.ceil(c.days*buildTimeMod())+' days at '+esc(yards[0].name)+'</div>'+
     '<label>Ship name</label><input type="text" id="bnName" value="'+esc(sugN)+'">'+
     '<label>Registry</label><input type="text" id="bnReg" value="'+esc(sugR)+'">'+
     '<div class="btnRow"><button class="btn" onclick="uiBuildShipGo(\''+cls+'\',\''+yards[0].id+'\')">Lay the keel</button>'+
@@ -11660,22 +11889,40 @@ function divRecolorApply(img){
   }catch(e){/* tainted canvas or missing image: keep the original photo */}
 }
 /* v4.3 ONE FLEET ONE LOOK */
-function shipArtFor(s,big){return shipPic(s?s.cls:"",big);}
-function shipPic(cls,big){
+/* Ship-motion state for the Ships tab scenes. Moving = s.status==="mission"||s.transit
+   (mirrors the ON MISSION / IN TRANSIT badges). Everything else — docked, idle,
+   refit, museum, or a non-ship object — reads "still". */
+function uwShipState(s){return (s&&(s.status==="mission"||s.transit))?"moving":"still";}
+
+function shipArtFor(s,big){return shipPic(s?s.cls:"",big,uwShipState(s));}
+
+function shipPic(cls,big,state,opts){
   const _icn=(typeof shipIconName==="function"&&typeof SHIP_ICON_META!=="undefined"&&typeof tacPlayerShape==="function")?shipIconName(tacPlayerShape(cls),cls):null;
   let img="";
   if(_icn&&SHIP_ICON_META[_icn]){var _nb=[""," nebB"," nebC"][Array.from(String(cls)).reduce(function(a,c){return a+c.charCodeAt(0);},0)%3];img='<img class="'+(big?"shipPicBig":"shipPic")+' shipPicEAS'+_nb+'" src="ships/icons/'+_icn+'.png" alt="">';}
   else{const src=(typeof SHIP_PICS!=="undefined"&&SHIP_PICS[cls])?SHIP_PICS[cls]:"";img=src?'<img class="'+(big?"shipPicBig":"shipPic")+'" src="'+src+'" alt="">':"";}
-  if(big&&img)return '<span class="uwWrap"><span class="uwStars"></span><span class="uwStreak"></span><span class="uwGlow"></span>'+img+'</span>';
+  if(big&&img){
+    var _st=(state==="still")?"still":"moving"; /* default "moving": preserves v4.3 behavior unless a caller opts in */
+    var _bees=(opts&&opts.bees)?'<span class="uwBees"><i></i><i></i><i></i><i></i><i></i></span>':"";
+    return '<span class="uwWrap uw'+(_st==="still"?"Still":"Moving")+'">'+_bees+'<span class="uwStars"></span>'+(_st==="still"?"":'<span class="uwStreak"></span>')+'<span class="uwGlow"></span>'+img+'</span>';
+  }
   return img;
 }
 function compArtFor(cls){const _icn=(typeof shipIconName==="function"&&typeof SHIP_ICON_META!=="undefined"&&typeof tacPlayerShape==="function")?shipIconName(tacPlayerShape(cls),cls):null;if(_icn&&SHIP_ICON_META[_icn])return "ships/icons/"+_icn+".png";return (typeof SHIP_PICS!=="undefined"&&SHIP_PICS[cls])?SHIP_PICS[cls]:"";
 }
 const STATION_ART_IDS={ds9:"ds9",utopia:"utopia",douglas:"starbase",sb80:"starbase",sb25:"starbase",jupiter:"jupiter",spacedock:"spacedock",mckinley:"mckinley",sb375:"starbase",sb74:"starbase",empoknor:"ds9",daystrom:"daystrom"};
+const STN_SCENE={jupiter:"jupiter",utopia:"mars",mckinley:"earth",ds9:"wormhole",empoknor:"wormhole",
+  starbase:"neb2",research:"neb2",sb80:"neb2",spacedock:"neb2",gate:"neb2",
+  shipyard:"neb1",academy:"neb1",sfcommand:"neb1",sb25:"neb1",sb375:"neb1",sb74:"neb1",regula:"neb1",embassy:"neb1",
+  medical:"neb4",douglas:"neb4",epsilon9:"neb4",daystrom:"neb4",
+  caretaker:"neb3"};
+function stnScene(type){return (typeof STN_SCENE!=="undefined"&&STN_SCENE[type])||"neb1";}
 function stationArtKey(st){return (st&&STATION_ART_IDS[st.id])||(st&&st.type);}
 function stationPic(type,big){
   const src=(typeof STATION_PICS!=="undefined"&&STATION_PICS[type])?STATION_PICS[type]:"";
-  return src?'<img class="'+(big?"shipPicBig stnBig":"shipPic stnThumb")+'" src="'+src+'" alt="">':"";
+  const img=src?'<img class="'+(big?"shipPicBig stnBig":"shipPic stnThumb")+'" src="'+src+'" alt="">':"";
+  if(big&&img)return '<span class="stnScene sc-'+stnScene(type)+'"><span class="scBody" aria-hidden="true"></span><span class="scStars"></span>'+img+'</span>';
+  return img;
 }
 /* Map station markers: the old blue-square indicator stands alone for most stations;
    only Deep Space 9 and Empok Nor get the DS9 image, and Earth Spacedock gets Jason's
@@ -16225,7 +16472,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v5.2 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v5.3 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
