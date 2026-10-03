@@ -1008,7 +1008,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.083';
+const ART_BUST='v000.6.084';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -3400,7 +3400,6 @@ const CANON_CREW=[
  ["Tuvok","Vulcan","M",114,4,"Security",[80,85,55,50,60,90],["Tactician"],"voyager"],
  ["Tom Paris","Human","M",32,2,"Operations",[70,55,75,45,60,60],["Test Pilot"],"voyager"],
  ["B'Elanna Torres","Klingon/Human","F",31,3,"Engineering",[75,65,95,50,55,60],["Maquis Veteran"],"voyager"],
- ["Jack Paris","Klingon/Human","M",25,1,"Science",[65,75,70,55,65,60],[],"voyager"], /* v000.6.083 (Jason 2026-10-03): original character — son of Tom & B'Elanna, brother of Miral. */
  ["Harry Kim","Human","M",29,2,"Operations",[65,80,70,50,60,55],[],"voyager"],
  ["The Doctor","Hologram","M",6,3,"Medical",[70,85,60,100,65,50],["Holographic","Surgeon"],"voyager"],
  ["Seven of Nine","Human","F",29,2,"Science",[70,95,80,60,55,65],["Borg Expertise"],"voyager","Civilian Specialist"],
@@ -3439,6 +3438,7 @@ const CANON_CREW=[
  /* v000.6.079 (Jason 2026-10-03): extraction defs for VOY/TNG temporal entries. */
  ["Naomi Wildman (adult)","Human","F",28,2,"Operations",[70,65,70,55,75,60],["Captain's Assistant"],"pool","Lieutenant"],
  ["Miral Paris","Human/Klingon","F",30,1,"Operations",[75,70,75,55,65,70],[],"pool","Ensign"],
+ ["Jack Paris","Klingon/Human","M",25,1,"Science",[65,75,70,55,65,60],[],"pool","Ensign"],
  ["Q Junior","Q","M",21,1,"Operations",[80,80,80,80,80,80],["Q"],"pool","Ensign"],
  ["Kes","Ocampa","F",3,0,"Medical",[60,70,60,95,75,50],["Empath","Telekinesis"],"pool","Civilian"],
  ["James T. Kirk (Kelvin)","Human","M",30,6,"Command",[92,72,70,60,88,78],["Living Legend"],"pool","Captain"],
@@ -3585,6 +3585,8 @@ const MEMORIAL_LOST=[
 /* v000.6.073 (Jason 2026-10-03): VOY tab - adult Naomi Wildman and Miral Paris pulled from the "Endgame" future. */
 {name:"Naomi Wildman",show:"VOY",rank:"Lieutenant",species:"Human",cause:"Pulled from a possible future \u2014 Voyager Endgame timeline",when:"2404",pic:"portraits/baked/naomi_wildman_adult_d3701a.jpg",extractAs:"Naomi Wildman (adult)"},
 {name:"Miral Paris",show:"VOY",rank:"Ensign",species:"Human/Klingon",cause:"Pulled from a possible future \u2014 Voyager Endgame timeline",when:"2404",pic:"portraits/baked/miral_paris_31fe20.jpg"},
+/* v000.6.084 (Jason 2026-10-03): Jack Paris — original character, son of Tom & B'Elanna, brother of Miral. */
+{name:"Jack Paris",show:"VOY",rank:"Ensign",species:"Klingon/Human",cause:"Pulled from a possible future \u2014 Voyager Endgame timeline",when:"2404",pic:"portraits/baked/jack_paris_33f1bb.jpg"},
 {name:"Q Junior",show:"VOY",rank:"Ensign",species:"Q",cause:"Q Continuum \u2014 took humanoid form aboard Voyager",when:"2377",pic:"portraits/baked/q_junior_5c43eb.jpg"},
 {name:"Kes",show:"VOY",rank:"Civilian",species:"Ocampa",cause:"Evolved beyond physical form \u2014 left Voyager",when:"2374",pic:"portraits/baked/kes_b91829.jpg"},
 /* v000.6.079 (Jason 2026-10-03): TNG tab — Tasha Yar, extractable. */
@@ -3718,7 +3720,7 @@ const PORTRAITS={"Kathryn Janeway":"portraits/baked/kathryn_janeway_462a89.jpg",
  * entries, brace-match to find the real object end. The `"]};` closer belongs to
  * CANON_PARENTS further down; searching for it lands mid-array and corrupts it. */
 /* v000.6.042 (Jason 2026-10-03): Removed PORTRAITS_ALT — each person has only one portrait now. */
-const CANON_SHOW={"Kathryn Janeway":"VOY","Chakotay":"VOY","Tuvok":"VOY","Tom Paris":"VOY","B'Elanna Torres":"VOY","Jack Paris":"VOY","Harry Kim":"VOY","The Doctor":"VOY","Seven of Nine":"VOY","Neelix":"VOY","Naomi Wildman":"VOY","Icheb":"VOY","Jean-Luc Picard":"TNG","William Riker":"TNG","Data":"TNG","Geordi La Forge":"TNG","Beverly Crusher":"TNG","Deanna Troi":"TNG","Worf":"TNG","Wesley Crusher":"TNG","Reginald Barclay":"TNG","Ro Laren":"TNG","Katherine Pulaski":"TNG","Guinan":"TNG","Benjamin Sisko":"DS9","Kira Nerys":"DS9","Julian Bashir":"DS9","Miles O'Brien":"DS9","Ezri Dax":"DS9","Nog":"DS9","Odo":"DS9","Jake Sisko":"DS9","Phlox":"ENT","Thy'lek Shran":"ENT","Raffi Musiker":"PIC","Crist\u00f3bal Rios":"PIC","Elnor":"PIC","Jack Crusher":"PIC","Soji Asha":"PIC","Pelia":"SNW","Michael Burnham":"DISCO","Saru":"DISCO","Paul Stamets":"DISCO","Hugh Culber":"DISCO","Sylvia Tilly":"DISCO","Cleveland Booker":"DISCO","Keyla Detmer":"DISCO","Jett Reno":"DISCO","Christopher Pike":"SNW","Una Chin-Riley":"SNW","La'an Noonien-Singh":"SNW","Joseph M'Benga":"SNW","Erica Ortegas":"SNW","Caleb Mir":"SFA","Nahla Ake":"SFA","Kyle":"SFA"};
+const CANON_SHOW={"Kathryn Janeway":"VOY","Chakotay":"VOY","Tuvok":"VOY","Tom Paris":"VOY","B'Elanna Torres":"VOY","Harry Kim":"VOY","The Doctor":"VOY","Seven of Nine":"VOY","Neelix":"VOY","Naomi Wildman":"VOY","Icheb":"VOY","Jean-Luc Picard":"TNG","William Riker":"TNG","Data":"TNG","Geordi La Forge":"TNG","Beverly Crusher":"TNG","Deanna Troi":"TNG","Worf":"TNG","Wesley Crusher":"TNG","Reginald Barclay":"TNG","Ro Laren":"TNG","Katherine Pulaski":"TNG","Guinan":"TNG","Benjamin Sisko":"DS9","Kira Nerys":"DS9","Julian Bashir":"DS9","Miles O'Brien":"DS9","Ezri Dax":"DS9","Nog":"DS9","Odo":"DS9","Jake Sisko":"DS9","Phlox":"ENT","Thy'lek Shran":"ENT","Raffi Musiker":"PIC","Crist\u00f3bal Rios":"PIC","Elnor":"PIC","Jack Crusher":"PIC","Soji Asha":"PIC","Pelia":"SNW","Michael Burnham":"DISCO","Saru":"DISCO","Paul Stamets":"DISCO","Hugh Culber":"DISCO","Sylvia Tilly":"DISCO","Cleveland Booker":"DISCO","Keyla Detmer":"DISCO","Jett Reno":"DISCO","Christopher Pike":"SNW","Una Chin-Riley":"SNW","La'an Noonien-Singh":"SNW","Joseph M'Benga":"SNW","Erica Ortegas":"SNW","Caleb Mir":"SFA","Nahla Ake":"SFA","Kyle":"SFA"};
 const ORIGINAL_CREW=[
  ["Dara Voss","Human","F",46,5,"Command",[88,65,60,55,80,70],["Veteran of Wolf 359"],"callisto"],
  ["Sovar","Vulcan","M",58,4,"Science",[75,92,60,55,50,60],[],"callisto"],
@@ -17010,7 +17012,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.083 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.084 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
