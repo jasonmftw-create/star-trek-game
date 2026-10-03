@@ -897,6 +897,15 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    Single file. Vanilla JS. localStorage save.
    ============================================================ */
 /* ================= UTILITIES ================= */
+/* ---- v5.4 art cache-bust: every game-art URL gets ?v=<ART_BUST> so browsers
+   fetch fresh files when art changes between releases (filenames are reused
+   in place, e.g. v5.0 stylized portraits overwrote v4.8 photos). Bump
+   ART_BUST with the version whenever art ships. Applied at the art-URL
+   chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
+   compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
+   already carrying the current bust marker is returned untouched. ---- */
+const ART_BUST='v5.4';
+function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
 function ri(a,b){return Math.floor(rnd(a,b+1));}
@@ -1248,9 +1257,9 @@ function shuttlePic(type,big){
   let img;
   if(src.slice(-4)===".png"){
     const _nb=[""," nebB"," nebC"][Array.from(String(type)).reduce(function(a,c){return a+c.charCodeAt(0);},0)%3];
-    img='<img class="'+(big?"shipPicBig":"shipPic")+' shipPicEAS'+_nb+'" src="'+src+'" alt="">';
+    img='<img class="'+(big?"shipPicBig":"shipPic")+' shipPicEAS'+_nb+'" src="'+bustUrl(src)+'" alt="">';
   }else{
-    img='<img class="'+(big?"shipPicBig":"shipPic")+'" src="'+src+'" alt="">';
+    img='<img class="'+(big?"shipPicBig":"shipPic")+'" src="'+bustUrl(src)+'" alt="">';
   }
   if(big)return '<span class="dockBay"><span class="dbBack"></span><span class="dbFloor"></span><span class="dbLights"></span><span class="dbBeacon"></span>'+img+'</span>';
   return img;
@@ -4556,16 +4565,16 @@ function buildTick(){
   G.stations.forEach(st=>{if(st.status==="construction"){st.daysLeft-=_sb;
     if(st.daysLeft<=0){st.status="active";G.ledger.stationsBuilt++;gainPres(25);
       log("build",st.name+" ("+STATION_DEFS[st.type].name+") is now fully operational.");
-      queueCompletion({kind:"station",id:st.id,name:st.name,sub:STATION_DEFS[st.type].name+" \u2014 now fully operational",art:(typeof STATION_PICS!=="undefined"&&STATION_PICS[stationArtKey(st)])?STATION_PICS[stationArtKey(st)]:""});}}});
+      queueCompletion({kind:"station",id:st.id,name:st.name,sub:STATION_DEFS[st.type].name+" \u2014 now fully operational",art:bustUrl((typeof STATION_PICS!=="undefined"&&STATION_PICS[stationArtKey(st)])?STATION_PICS[stationArtKey(st)]:"")});}}});
   // shuttle construction & repair (built in each ship's shuttlebay, no yard needed)
   (G.shuttles||[]).forEach(sh=>{
     if(sh.status==="construction"){sh.daysLeft--;
       if(sh.daysLeft<=0){sh.status="docked";const hs=shuttleHost(sh);
         log("build",sh.name+" ("+SHUTTLE_TYPES[sh.type].name+") is ready in "+(hs?hs.name:"its")+(sh.host==="station"?" docking bay.":" shuttlebay."));
-        queueCompletion({kind:"shuttle",name:sh.name,art:SHUTTLE_PICS[sh.type],sub:SHUTTLE_TYPES[sh.type].name+" \u2014 ready in "+(hs?hs.name:"its")+(sh.host==="station"?" docking bay":" shuttlebay")});}}
+        queueCompletion({kind:"shuttle",name:sh.name,art:bustUrl(SHUTTLE_PICS[sh.type]),sub:SHUTTLE_TYPES[sh.type].name+" \u2014 ready in "+(hs?hs.name:"its")+(sh.host==="station"?" docking bay":" shuttlebay")});}}
     else if(sh.status==="repair"){sh.daysLeft--;
       if(sh.daysLeft<=0){sh.status="docked";log("build",sh.name+" repairs complete — back on the flight line.");
-      queueCompletion({kind:"shuttle",name:sh.name,art:SHUTTLE_PICS[sh.type],sub:"Repairs complete \u2014 back on the flight line"});}}
+      queueCompletion({kind:"shuttle",name:sh.name,art:bustUrl(SHUTTLE_PICS[sh.type]),sub:"Repairs complete \u2014 back on the flight line"});}}
     shuttleJobTick(sh);
   });
   // auto-start repairs for damaged ships when a yard is free
@@ -7825,7 +7834,7 @@ function shipIconName(shape,cls){
 function shipImgFor(shape,cls){
   const n=shipIconName(shape,cls);if(!n)return null;
   let im=SHIP_IMGS[n];
-  if(!im){im=new Image();im.src="ships/icons/"+n+".png";SHIP_IMGS[n]=im;}
+  if(!im){im=new Image();im.src=bustUrl("ships/icons/"+n+".png");SHIP_IMGS[n]=im;}
   return (im.complete&&im.naturalWidth>0)?im:null;
 }
 function shipIconAspect(shape,cls){
@@ -11747,7 +11756,7 @@ function portraitPick(name,entry){
 }
 const SPECIES_PKEY={"Human":"human","Klingon":"klingon","Vulcan":"vulcan","Romulan":"romulan","Liberated Borg":"borg","Ferengi":"ferengi","Andorian":"andorian","Android":"synth","Android / Synth":"synth","Tellarite":"tellarite","Trill":"trill","Hologram":"hologram","Talaxian":"talaxian","Ocampa":"ocampa","Hirogen":"hirogen","Kazon":"kazon","Jem'Hadar":"jemhadar","Vorta":"vorta","Changeling":"changeling"};
 function crewPoolUrls(key){
-  const out=[];for(let i=1;i<=50;i++)out.push("portraits/"+key+"-"+String(i).padStart(2,"0")+".jpg");
+  const out=[];for(let i=1;i<=50;i++)out.push(bustUrl("portraits/"+key+"-"+String(i).padStart(2,"0")+".jpg"));
   return out;
 }
 function crewPortraitFor(o){
@@ -11756,9 +11765,9 @@ function crewPortraitFor(o){
   const g=(o.gender==="F"||o.gender==="f")?"f":"m";
   let hsh=0;const nm=o.name||"";
   for(let i=0;i<nm.length;i++)hsh=(hsh*31+nm.charCodeAt(i))>>>0;
-  return "portraits/"+key+"-"+g+"-"+String(hsh%50+1).padStart(2,"0")+".jpg";
+  return bustUrl("portraits/"+key+"-"+g+"-"+String(hsh%50+1).padStart(2,"0")+".jpg");
 }
-function portraitSrc(name,entry){var pick=portraitPick(name,entry);if(pick==="alt"&&typeof PORTRAITS_ALT!=="undefined"&&PORTRAITS_ALT[name])return PORTRAITS_ALT[name];if(typeof PORTRAITS!=="undefined"&&PORTRAITS[name])return PORTRAITS[name];if(entry&&entry.customPic)return entry.customPic;if(entry){var cp=crewPortraitFor(entry);if(cp)return cp;}return "";}
+function portraitSrc(name,entry){var pick=portraitPick(name,entry);if(pick==="alt"&&typeof PORTRAITS_ALT!=="undefined"&&PORTRAITS_ALT[name])return bustUrl(PORTRAITS_ALT[name]);if(typeof PORTRAITS!=="undefined"&&PORTRAITS[name])return bustUrl(PORTRAITS[name]);if(entry&&entry.customPic)return bustUrl(entry.customPic);if(entry){var cp=crewPortraitFor(entry);if(cp)return cp;}return "";}
 function portraitVerCur(name,entry){return portraitPick(name,entry);}
 function portraitToggleHtml(name,entry){
   const info=PORTRAIT_VER_INFO[name];if(!info)return "";
@@ -11899,8 +11908,8 @@ function shipArtFor(s,big){return shipPic(s?s.cls:"",big,uwShipState(s));}
 function shipPic(cls,big,state,opts){
   const _icn=(typeof shipIconName==="function"&&typeof SHIP_ICON_META!=="undefined"&&typeof tacPlayerShape==="function")?shipIconName(tacPlayerShape(cls),cls):null;
   let img="";
-  if(_icn&&SHIP_ICON_META[_icn]){var _nb=[""," nebB"," nebC"][Array.from(String(cls)).reduce(function(a,c){return a+c.charCodeAt(0);},0)%3];img='<img class="'+(big?"shipPicBig":"shipPic")+' shipPicEAS'+_nb+'" src="ships/icons/'+_icn+'.png" alt="">';}
-  else{const src=(typeof SHIP_PICS!=="undefined"&&SHIP_PICS[cls])?SHIP_PICS[cls]:"";img=src?'<img class="'+(big?"shipPicBig":"shipPic")+'" src="'+src+'" alt="">':"";}
+  if(_icn&&SHIP_ICON_META[_icn]){var _nb=[""," nebB"," nebC"][Array.from(String(cls)).reduce(function(a,c){return a+c.charCodeAt(0);},0)%3];img='<img class="'+(big?"shipPicBig":"shipPic")+' shipPicEAS'+_nb+'" src="'+bustUrl('ships/icons/'+_icn+'.png')+'" alt="">';}
+  else{const src=(typeof SHIP_PICS!=="undefined"&&SHIP_PICS[cls])?SHIP_PICS[cls]:"";img=src?'<img class="'+(big?"shipPicBig":"shipPic")+'" src="'+bustUrl(src)+'" alt="">':"";}
   if(big&&img){
     var _st=(state==="still")?"still":"moving"; /* default "moving": preserves v4.3 behavior unless a caller opts in */
     var _bees=(opts&&opts.bees)?'<span class="uwBees"><i></i><i></i><i></i><i></i><i></i></span>':"";
@@ -11908,7 +11917,7 @@ function shipPic(cls,big,state,opts){
   }
   return img;
 }
-function compArtFor(cls){const _icn=(typeof shipIconName==="function"&&typeof SHIP_ICON_META!=="undefined"&&typeof tacPlayerShape==="function")?shipIconName(tacPlayerShape(cls),cls):null;if(_icn&&SHIP_ICON_META[_icn])return "ships/icons/"+_icn+".png";return (typeof SHIP_PICS!=="undefined"&&SHIP_PICS[cls])?SHIP_PICS[cls]:"";
+function compArtFor(cls){const _icn=(typeof shipIconName==="function"&&typeof SHIP_ICON_META!=="undefined"&&typeof tacPlayerShape==="function")?shipIconName(tacPlayerShape(cls),cls):null;if(_icn&&SHIP_ICON_META[_icn])return bustUrl("ships/icons/"+_icn+".png");return bustUrl((typeof SHIP_PICS!=="undefined"&&SHIP_PICS[cls])?SHIP_PICS[cls]:"");
 }
 const STATION_ART_IDS={ds9:"ds9",utopia:"utopia",douglas:"starbase",sb80:"starbase",sb25:"starbase",jupiter:"jupiter",spacedock:"spacedock",mckinley:"mckinley",sb375:"starbase",sb74:"starbase",empoknor:"ds9",daystrom:"daystrom"};
 const STN_SCENE={jupiter:"jupiter",utopia:"mars",mckinley:"earth",ds9:"wormhole",empoknor:"wormhole",
@@ -11920,7 +11929,7 @@ function stnScene(type){return (typeof STN_SCENE!=="undefined"&&STN_SCENE[type])
 function stationArtKey(st){return (st&&STATION_ART_IDS[st.id])||(st&&st.type);}
 function stationPic(type,big){
   const src=(typeof STATION_PICS!=="undefined"&&STATION_PICS[type])?STATION_PICS[type]:"";
-  const img=src?'<img class="'+(big?"shipPicBig stnBig":"shipPic stnThumb")+'" src="'+src+'" alt="">':"";
+  const img=src?'<img class="'+(big?"shipPicBig stnBig":"shipPic stnThumb")+'" src="'+bustUrl(src)+'" alt="">':"";
   if(big&&img)return '<span class="stnScene sc-'+stnScene(type)+'"><span class="scBody" aria-hidden="true"></span><span class="scStars"></span>'+img+'</span>';
   return img;
 }
@@ -11929,8 +11938,8 @@ function stationPic(type,big){
    supplied birdseye photo. */
 function stationMapIcon(st){
   const id=String(st&&st.id||"");
-  if(id==="ds9"||id==="empoknor")return"ships/icons/ds9.png";
-  if(id==="spacedock")return"ships/icons/spacedock.png";
+  if(id==="ds9"||id==="empoknor")return bustUrl("ships/icons/ds9.png");
+  if(id==="spacedock")return bustUrl("ships/icons/spacedock.png");
   return"";
 }
 function stationMapTag(s,x,y){
@@ -16472,7 +16481,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v5.3 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v5.4 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
