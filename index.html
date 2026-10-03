@@ -1008,7 +1008,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.074';
+const ART_BUST='v000.6.075';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -11852,6 +11852,8 @@ function postingOptions(sel){
   return h;
 }
 const PORTRAIT_VER_INFO={"Christopher Pike":{main:"SNW",alt:"TOS"},"Spock":{main:"TOS",alt:"SNW"},"Nyota Uhura":{main:"TOS",alt:"SNW"},"Christine Chapel":{main:"TOS",alt:"SNW"},"Una Chin-Riley":{main:"SNW",alt:"TOS"},"Joseph M'Benga":{main:"SNW",alt:"TOS"},"Montgomery Scott":{main:"TOS",alt:"SNW"}};
+/* v000.6.075 (Jason 2026-10-03): SNW Spock portrait (Ethan Peck promo, FC uniform) — Jason supplied the image after the generator refused. */
+const PORTRAITS_ALT={"Spock":"portraits/baked/spock_snw_670626.jpg"};
 function portraitPick(name,entry){
   if(typeof PORTRAIT_VER_INFO!=="undefined"&&PORTRAIT_VER_INFO[name]){
     if(typeof portraitTabForce!=="undefined"&&portraitTabForce&&typeof lostShow!=="undefined"&&(lostShow==="TOS"||lostShow==="SNW")){
@@ -11877,15 +11879,15 @@ function crewPortraitFor(o){
   for(let i=0;i<nm.length;i++)hsh=(hsh*31+nm.charCodeAt(i))>>>0;
   return bustUrl("portraits/"+key+"-"+g+"-"+String(hsh%11+1).padStart(2,"0")+".jpg");
 } /* v000.6.046 (Jason 2026-10-03): hsh%11 (not %50) — only 11 portraits exist per group. */
-function portraitSrc(name,entry){if(entry&&entry.pic)return bustUrl(entry.pic);if(typeof PORTRAITS!=="undefined"&&PORTRAITS[name])return bustUrl(PORTRAITS[name]);if(entry&&entry.customPic)return bustUrl(entry.customPic);if(entry){var cp=crewPortraitFor(entry);if(cp)return cp;}return "";}
+function portraitSrc(name,entry){if(entry&&entry.pic)return bustUrl(entry.pic);if(typeof PORTRAITS_ALT!=="undefined"&&PORTRAITS_ALT[name]&&portraitPick(name,entry)==="alt")return bustUrl(PORTRAITS_ALT[name]);if(typeof PORTRAITS!=="undefined"&&PORTRAITS[name])return bustUrl(PORTRAITS[name]);if(entry&&entry.customPic)return bustUrl(entry.customPic);if(entry){var cp=crewPortraitFor(entry);if(cp)return cp;}return "";}
 function portraitVerCur(name,entry){return portraitPick(name,entry);}
 function portraitToggleHtml(name,entry){
   const info=PORTRAIT_VER_INFO[name];if(!info)return "";
-  if(!PENDING_UNIFORM_ALT[name])return "";
+  if(!PENDING_UNIFORM_ALT[name]&&!(typeof PORTRAITS_ALT!=="undefined"&&PORTRAITS_ALT[name]))return ""; /* v000.6.075: Spock passes via PORTRAITS_ALT */
   const cur=portraitVerCur(name,entry);
   const q=name.replace(/'/g,"\\'");
   const btnA='<button class="btn small'+(cur==="main"?" on":"")+'" onclick="uiPortraitVer(\''+q+'\',\'main\',this)">'+info.main+'</button>';
-  const hasAlt=false; /* v000.6.062: PORTRAITS_ALT was removed in v000.6.042, so no alt art exists — the toggle's alt button renders disabled ("coming soon"). Restores the hasAlt definition that edit deleted; its absence threw a ReferenceError that broke personnel files for Icheb, Neelix, Naomi Wildman, Guinan, Jake Sisko, Phlox, Gray Tal, L'Rell, Kovich, Thy'lek Shran and Soji Asha. */
+  const hasAlt=(typeof PORTRAITS_ALT!=="undefined"&&!!PORTRAITS_ALT[name]); /* v000.6.075: alt exists only where PORTRAITS_ALT has art (Spock SNW). */
   const btnB=hasAlt
     ?'<button class="btn small'+(cur==="alt"?" on":"")+'" onclick="uiPortraitVer(\''+q+'\',\'alt\',this)">'+info.alt+'</button>'
     :'<button class="btn small ghost" disabled title="Uniform portrait coming soon">'+info.alt+'</button>';
@@ -12150,7 +12152,7 @@ const CIV_MAIN={}; /* audit 2026-10-03: v000.6.042 put all 169 baked portraits i
 const ALT14_UNIFORMED={"Guinan":1,"Neelix":1,"Jake Sisko":1,"Phlox":1,"Naomi Wildman":1,"Gray Tal":1,"L'Rell":1,"Kovich":1,"Thy'lek Shran":1,"Soji Asha":1,"Icheb":1};
 const PENDING_UNIFORM_ALT=ALT14_UNIFORMED;
 Object.assign(PORTRAIT_VER_INFO,{Guinan:{main:"Civilian",alt:"Uniform"},Neelix:{main:"Civilian",alt:"Uniform"},"Jake Sisko":{main:"Civilian",alt:"Uniform"},Phlox:{main:"Civilian",alt:"Uniform"},"Naomi Wildman":{main:"Civilian",alt:"Uniform"},"Gray Tal":{main:"Civilian",alt:"Uniform"},"L'Rell":{main:"Civilian",alt:"Uniform"},Kovich:{main:"Civilian",alt:"Uniform"},"Thy'lek Shran":{main:"Civilian",alt:"Uniform"},"Soji Asha":{main:"Civilian",alt:"Uniform"},Icheb:{main:"Civilian",alt:"Uniform"},});
-function portraitHasToggle(name){return !!PENDING_UNIFORM_ALT[name];} /* v000.6.042: No more alts — one portrait per person. */
+function portraitHasToggle(name){return !!PENDING_UNIFORM_ALT[name]||(typeof PORTRAITS_ALT!=="undefined"&&!!PORTRAITS_ALT[name]);} /* v000.6.075: Spock gets his SNW toggle via PORTRAITS_ALT. */
 function portraitIsUniformed(name,entry){
   var ver=(typeof portraitPick==="function")?portraitPick(name,entry):"main";
   if(ver==="alt")return !!ALT14_UNIFORMED[name]||!CIV_MAIN[name];
@@ -16982,7 +16984,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.074 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.075 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
