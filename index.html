@@ -315,9 +315,9 @@ body{touch-action:pan-y;}
 .row .grow{flex:1;min-width:0;}
 .row .nm{font-weight:700;font-size:18px;}
 .row .sub2{font-size:14px;color:var(--dim);} .rnkline{font-size:11px;font-style:italic;opacity:.72;margin-top:1px;line-height:1.25;}
-.pface{width:52px;height:52px;border-radius:50%;object-fit:cover;object-position:50% 32%;border:2px solid var(--orange);flex:none;background:linear-gradient(160deg,#1b2436,#0a0e18);filter:saturate(.86) contrast(1.06) brightness(1.02);}
-.pfaceSm{width:42px;height:42px;border-radius:50%;object-fit:cover;object-position:50% 32%;border:2px solid var(--orange);flex:none;background:#000;filter:saturate(.86) contrast(1.06) brightness(1.02);}
-.pfaceBig{width:120px;height:120px;border-radius:50%;object-fit:cover;object-position:50% 30%;border:3px solid var(--orange);flex:none;background:radial-gradient(circle at 50% 40%,#1b2a4d 0%,#05080f 78%);filter:saturate(.86) contrast(1.06) brightness(1.02);}
+.pface{width:52px;height:52px;border-radius:22%;object-fit:cover;object-position:50% 32%;border:2px solid var(--artframe);flex:none;background:linear-gradient(160deg,#1b2436,#0a0e18);filter:saturate(.86) contrast(1.06) brightness(1.02);}
+.pfaceSm{width:42px;height:42px;border-radius:22%;object-fit:cover;object-position:50% 32%;border:2px solid var(--artframe);flex:none;background:#000;filter:saturate(.86) contrast(1.06) brightness(1.02);}
+.pfaceBig{width:120px;height:120px;border-radius:22%;object-fit:cover;object-position:50% 30%;border:3px solid var(--artframe);flex:none;background:radial-gradient(circle at 50% 40%,#1b2a4d 0%,#05080f 78%);filter:saturate(.86) contrast(1.06) brightness(1.02);}
 .pfaceWrap{display:flex;align-items:center;gap:14px;margin-bottom:8px;}
 .pfaceInit{display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;color:var(--peach);background:var(--panel2);}
 .shipPic{width:84px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--orange);flex:none;background:#000;}
@@ -16217,7 +16217,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v4.8 — The Exchange Program</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v5.0 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
