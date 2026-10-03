@@ -984,7 +984,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.048';
+const ART_BUST='v000.6.049';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -10063,7 +10063,7 @@ function openCmdrAppearance(){
 }
 function cmdrAppearanceHTML(){
   const d=cmdrDraft,g=d.gender,key=d.species+"-"+g;
-  const arr=(typeof CMDR_PORTRAITS!=="undefined"&&CMDR_PORTRAITS[key])?CMDR_PORTRAITS[key]:crewPoolUrls(key);
+  const arr=crewPoolUrls(key); /* v000.6.049 (Jason 2026-10-03): Use full portrait set (1762) like Create-A-Cadet, not just CMDR_PORTRAITS (220). */
   const prevSrc=arr[d.portrait]||arr[0]||"";
   let h='<h2>Commander Appearance</h2>';
   h+='<div class="pfaceWrap">'+(prevSrc?'<img class="pfaceBig" src="'+prevSrc+'" alt="">':'<div class="pfaceBig pfaceInit">?</div>')+
@@ -10073,7 +10073,7 @@ function cmdrAppearanceHTML(){
     '<button class="btn small '+(g==="m"?"peach":"ghost")+'" onclick="cmdrDraftGender(\'m\')">Male</button>'+
     '<button class="btn small '+(g==="f"?"peach":"ghost")+'" onclick="cmdrDraftGender(\'f\')">Female</button></div>';
   h+='<h3>2 · Species</h3><div class="cmdrGrid">'+CMDR_SPECIES.map(sp=>{
-    const k2=sp[0]+"-"+g,a2=(typeof CMDR_PORTRAITS!=="undefined"&&CMDR_PORTRAITS[k2])?CMDR_PORTRAITS[k2]:crewPoolUrls(k2),src=a2?a2[0]:"";
+    const k2=sp[0]+"-"+g,a2=crewPoolUrls(k2),src=a2?a2[0]:""; /* v000.6.049: Use full set like Create-A-Cadet. */
     return '<div class="cmdrOpt'+(d.species===sp[0]?" sel":"")+'" onclick="cmdrDraftSpecies(\''+sp[0]+'\')">'+
       (src?'<img src="'+src+'" alt="">':'<div class="pfaceInit" style="width:100%;aspect-ratio:1;font-size:22px;">?</div>')+
       '<div class="cmdrLbl">'+sp[1]+'</div></div>';
@@ -16860,7 +16860,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.048 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.049 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
