@@ -546,6 +546,12 @@ body{touch-action:pan-y;}
   background-position:center!important;
   background-color:#05080f;
 }
+/* v6.16 (Jason 2026-10-02): SHOT 8. The per-ship drydock (CSS background-image on .uwWrap, and <img> tag) wasn't rendering. Try the simpler approach: drydock on the .shipMedia container itself. The ship imgs are transparent, so the container background shows through. */
+.shipCard .shipMedia{
+  background-image:url('stations/shipyard-bg.jpg?v=v6.16')!important;
+  background-size:cover!important;
+  background-position:center!important;
+}
 .shipCard .shipMedia .uwWrap .uwStars{display:none!important;}
 .shipCard .shipMedia .uwWrap>img.shipPicBig{object-fit:contain!important;}
 
@@ -913,7 +919,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v6.15';
+const ART_BUST='v6.16';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -16549,7 +16555,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v6.15 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v6.16 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
