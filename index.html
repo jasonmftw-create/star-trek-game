@@ -903,7 +903,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v6.2';
+const ART_BUST='v6.3';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -11879,7 +11879,8 @@ function divRecolorApply(img){
     var cv=document.createElement("canvas");cv.width=tw;cv.height=th;
     var x=cv.getContext("2d");if(!x)return;
     x.drawImage(img,0,0,tw,th);
-    var id=x.getImageData(0,0,tw,th),p=id.data,target=DIV_HUE[div],y0=(th*0.55)|0;
+    var id=x.getImageData(0,0,tw,th),p=id.data,target=DIV_HUE[div],y0=(th*0.35)|0;
+    /* v6.3 (Jason 2026-10-02): was 0.55 (lower 45%). The FC/NEM unified uniform has the division color on the NECK undershirt (y~35-55%), not the lower torso. 0.35 includes neck + shoulders + torso. */
     var counts=[0,0,0],y,xx,i,row,hsl,b,band=-1,bn=0,k;
     for(y=y0;y<th;y++){row=y*tw;for(xx=0;xx<tw;xx++){i=(row+xx)*4;
       hsl=divHSL(p[i],p[i+1],p[i+2]);if(hsl&&(b=divBandOfHSL(hsl[0],hsl[2]))>=0)counts[b]++;}}
@@ -16485,7 +16486,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v6.2 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v6.3 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
