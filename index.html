@@ -910,7 +910,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v6.6';
+const ART_BUST='v6.7';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -11844,6 +11844,17 @@ function uiDivision(id,div,btn){
 /* --- runtime uniform recolor: dominant-band hue shift, skin-safe --- */
 var DIV_BANDS=[[347,7],[46,12],[212,16]];
 /* v6.6 (Jason 2026-10-02): REVERTED v6.4 widen [0,18] — it caught skin (hue 10-30°) and tinted Picard's face green. The 10-14° undershirt highlights remain unrecolored; need spatial targeting instead of hue widening. */
+var DIV_BANDS_NECK=[[0,18],[46,18],[212,20]];
+/* v6.7 (Jason 2026-10-02): Widened bands for NECK region only (y>=0.40). The FC/NEM undershirt has 10-14° orange-red highlights from fabric folds — 194/650 neck pixels missed by narrow bands. Global widening tinted faces, so apply widened bands ONLY below the chin (y>=0.40), protecting face skin (y<0.40). */
+function divBandOfHNeck(h){
+  for(var i=0;i<3;i++){var dd=Math.abs(h-DIV_BANDS_NECK[i][0]);if(dd>180)dd=360-dd;if(dd<=DIV_BANDS_NECK[i][1])return i;}
+  return -1;
+}
+function divBandOfHSLNeck(h,l){
+  var b=divBandOfHNeck(h);
+  if(b===2&&l<0.10)return -1;
+  return b;
+}
 function divHSL(r,g,b){
   var mx=r>g?(r>b?r:b):(g>b?g:b),mn=r<g?(r<b?r:b):(g<b?g:b);
   var l=(mx+mn)/510;if(l<=0.06||l>=0.8)return null;
@@ -11890,8 +11901,14 @@ function divRecolorApply(img){
     var id=x.getImageData(0,0,tw,th),p=id.data,target=DIV_HUE[div],y0=(th*0.35)|0;
     /* v6.3 (Jason 2026-10-02): was 0.55 (lower 45%). The FC/NEM unified uniform has the division color on the NECK undershirt (y~35-55%), not the lower torso. 0.35 includes neck + shoulders + torso. */
     var counts=[0,0,0],y,xx,i,row,hsl,b,band=-1,bn=0,k;
+    var yNeck=(th*0.40)|0;
+    /* v6.7: Use widened neck bands (DIV_BANDS_NECK) for y>=0.40 to catch undershirt highlights without tinting face skin (y<0.40). */
     for(y=y0;y<th;y++){row=y*tw;for(xx=0;xx<tw;xx++){i=(row+xx)*4;
-      hsl=divHSL(p[i],p[i+1],p[i+2]);if(hsl&&(b=divBandOfHSL(hsl[0],hsl[2]))>=0)counts[b]++;}}
+      hsl=divHSL(p[i],p[i+1],p[i+2]);
+      if(hsl){
+        b=(y>=yNeck)?divBandOfHSLNeck(hsl[0],hsl[2]):divBandOfHSL(hsl[0],hsl[2]);
+        if(b>=0)counts[b]++;
+      }}}
     for(k=0;k<3;k++)if(counts[k]>bn){bn=counts[k];band=k;}
     if(band>=0&&bn>40){
       /* v5.1: winning band already matches the officer's division — the uniform is natively the right color. Shifting only adds artifacts (command band center 347 vs target hue 4 = +17deg rotation mottling native reds orange). */
@@ -11901,7 +11918,7 @@ function divRecolorApply(img){
       /* v6.0 (Jason 2026-10-02): v5.9 was too aggressive — it recolored stray pixels (skin tones, etc.) that happened to fall in a division hue band. Now only recolor bands with significant pixel counts (>40, same threshold as the dominant-band check). Significant = part of the uniform; insignificant = noise/skin to leave alone. */
       for(y=y0;y<th;y++){row=y*tw;for(xx=0;xx<tw;xx++){i=(row+xx)*4;
         hsl=divHSL(p[i],p[i+1],p[i+2]);
-        var _pb=hsl?divBandOfHSL(hsl[0],hsl[2]):-1;
+        var _pb=hsl?((y>=yNeck)?divBandOfHSLNeck(hsl[0],hsl[2]):divBandOfHSL(hsl[0],hsl[2])):-1;
         if(_pb>=0&&counts[_pb]>40){var o2=divShiftHSL(hsl[0],hsl[1],hsl[2],target,_pb);p[i]=o2[0];p[i+1]=o2[1];p[i+2]=o2[2];changed=true;}}}
       if(changed){x.putImageData(id,0,0);out=cv.toDataURL("image/jpeg",0.92);}
     }
@@ -16494,7 +16511,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v6.6 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v6.7 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
