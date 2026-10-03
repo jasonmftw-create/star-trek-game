@@ -354,6 +354,11 @@ body{touch-action:pan-y;}
 #modalBox .uwWrap.icn-defiant-right{background:#02040a!important;background-image:radial-gradient(1.5px 1.5px at 8% 20%,#cfe4ff,transparent),radial-gradient(1px 1px at 18% 65%,#fff,transparent),radial-gradient(1.5px 1.5px at 28% 40%,#cfe4ff,transparent),radial-gradient(1px 1px at 38% 85%,#fff,transparent),radial-gradient(1.5px 1.5px at 48% 15%,#cfe4ff,transparent),radial-gradient(1px 1px at 58% 55%,#fff,transparent),radial-gradient(1.5px 1.5px at 68% 30%,#cfe4ff,transparent),radial-gradient(1px 1px at 78% 70%,#fff,transparent),radial-gradient(1.5px 1.5px at 88% 10%,#cfe4ff,transparent),radial-gradient(1px 1px at 95% 50%,#fff,transparent),radial-gradient(1px 1px at 12% 90%,#fff,transparent),radial-gradient(1.5px 1.5px at 42% 60%,#fff,transparent)!important;}
 #modalBox .uwWrap.icn-defiant-right.uwMoving{animation:starDrift .6s linear infinite;}
 #modalBox .uwWrap>img.icn-defiant-right{transform:scale(.55);}
+/* v000.6.061 (Jason 2026-10-03): A Defiant at dry dock showed the yard as a small box (the img's drydock bg shrinks with the 55% scale). Put the drydock full-bleed on the wrap for a docked Defiant, on both the Ships tab and the ship modal. */
+.shipsPage .shipMedia .uwWrap.icn-defiant-right.indock{background:var(--drydock) center/cover no-repeat!important;}
+.shipsPage .shipMedia .uwWrap.icn-defiant-right.indock>img{background:none!important;}
+#modalBox .uwWrap.icn-defiant-right.indock{background:var(--drydock) center/cover no-repeat!important;}
+#modalBox .uwWrap.icn-defiant-right.indock>img{background:none!important;}
 /* v000.6.037 (Jason 2026-10-02): Stars drift for moving ships — animated starfield, no lines. */
 /* v000.6.038 (Jason 2026-10-02): Faster drift (2.5s → 1.2s). */
 /* v000.6.047 (Jason 2026-10-03): Doubled again (1.2s → 0.6s) for traveling/on-mission ships. */
@@ -997,7 +1002,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.060';
+const ART_BUST='v000.6.061';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -12268,7 +12273,7 @@ function divRecolorApply(img){
 /* Ship-motion state for the Ships tab scenes. Moving = s.status==="mission"||s.transit
    (mirrors the ON MISSION / IN TRANSIT badges). Everything else — docked, idle,
    refit, museum, or a non-ship object — reads "still". */
-function uwShipState(s){return (s&&(s.status==="mission"||s.transit))?"moving":"still";}
+function uwShipState(s){if(!s)return "still";if(s.status==="refit"||s.status==="repair")return "still";return (s.status==="mission"||s.transit)?"moving":"still";} /* v000.6.061: a docked ship is parked — never "moving", even if a stale transit flag is set (that combo made the drydock backdrop drift). */
 
 function shipArtFor(s,big){return shipPic(s?s.cls:"",big,uwShipState(s),{shipyard:true,indrydock:!!(s&&(s.status==="refit"||s.status==="repair"))});} /* v000.6.039 (Jason 2026-10-02): Ship modal gets the same starfield as Ships tab. */
 
@@ -12294,11 +12299,11 @@ function shipPic(cls,big,state,opts){
   else{img=_pics?'<img class="'+(big?"shipPicBig":"shipPic")+'" src="'+bustUrl(_pics)+'" alt="">':"";}
   if(big&&img){
     var _st=(state==="still")?"still":"moving"; /* default "moving": preserves v4.3 behavior unless a caller opts in */
-    var _bees=(opts&&opts.bees)?'<span class="uwBees"><i></i><i></i><i></i><i></i><i></i></span>':"";
+    var _bees=(opts&&(opts.bees||opts.indrydock))?'<span class="uwBees"><i></i><i></i><i></i><i></i><i></i></span>':""; /* v000.6.061: worker bees for ships at dry dock too (Jason) */
     var _sy=(opts&&(opts.bees||opts.shipyard))?" uwShipyard":""; /* explicit class: :has() proved unreliable on device; shipyard opt for Ships tab (no bees) */
     /* v6.14 (Jason 2026-10-02): SHOT 6. CSS background-image for drydock wasn't rendering (black background). Use an <img> tag instead — more reliable. Positioned absolute behind the ship. */
     var _drydock=""; /* v6.18: removed uwDrydockBg img tag (redundant; CSS --drydock on .shipMedia is primary) */
-    return '<span class="uwWrap uw'+(_st==="still"?"Still":"Moving")+_sy+(_icn?' icn-'+_icn:'')+'">'+_bees+'<span class="uwStars"></span>'+(_st==="still"?"":'<span class="uwStreak"></span>')+'<span class="uwGlow"></span>'+_drydock+img+'</span>';
+    return '<span class="uwWrap uw'+(_st==="still"?"Still":"Moving")+_sy+(_icn?' icn-'+_icn:'')+(opts&&opts.indrydock?' indock':'')+'">'+_bees+'<span class="uwStars"></span>'+(_st==="still"?"":'<span class="uwStreak"></span>')+'<span class="uwGlow"></span>'+_drydock+img+'</span>';
   }
   return img;
 }
@@ -16874,7 +16879,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.060 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.061 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
