@@ -910,7 +910,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v6.11';
+const ART_BUST='v6.12';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -11960,9 +11960,14 @@ function shipPic(cls,big,state,opts){
   const _icn=(typeof shipIconName==="function"&&typeof SHIP_ICON_META!=="undefined"&&typeof tacPlayerShape==="function")?shipIconName(tacPlayerShape(cls),cls):null;
   const _pics=(typeof SHIP_PICS!=="undefined"&&SHIP_PICS[cls])?SHIP_PICS[cls]:"";
   let img="";
-  /* v6.11 (Jason 2026-10-02): When big=true (Build page, ship cards), prefer SHIP_PICS transparent class images over ships/icons (which have baked-in starfield backgrounds). The icons are for tactical/mini displays. Falls back to icons when SHIP_PICS has no entry for the class (e.g. lamarr). */
-  const usePics=(big&&_pics)||!(_icn&&SHIP_ICON_META[_icn]);
-  if(!usePics){var _nb=[""," nebB"," nebC"][Array.from(String(cls)).reduce(function(a,c){return a+c.charCodeAt(0);},0)%3];img='<img class="'+(big?"shipPicBig":"shipPic")+' shipPicEAS'+_nb+'" src="'+bustUrl('ships/icons/'+_icn+'.png')+'" alt="">';}
+  /* v6.12 (Jason 2026-10-02): SHOT 4 fix. The v6.11 _cut.png files are the WRONG SHIPS (mislabeled JPG sources). Revert to ships/icons/*-right.png which are the CORRECT ships and already transparent. For big=true (Build page), use the icon WITHOUT the shipPicEAS nebula classes (those added baked-in starfield backgrounds). The uwShipyard CSS provides the drydock behind the transparent icon. */
+  if(_icn&&SHIP_ICON_META[_icn]){
+    if(big){
+      img='<img class="shipPicBig" src="'+bustUrl('ships/icons/'+_icn+'.png')+'" alt="">';
+    }else{
+      var _nb=[""," nebB"," nebC"][Array.from(String(cls)).reduce(function(a,c){return a+c.charCodeAt(0);},0)%3];img='<img class="'+(big?"shipPicBig":"shipPic")+' shipPicEAS'+_nb+'" src="'+bustUrl('ships/icons/'+_icn+'.png')+'" alt="">';
+    }
+  }
   else{img=_pics?'<img class="'+(big?"shipPicBig":"shipPic")+'" src="'+bustUrl(_pics)+'" alt="">':"";}
   if(big&&img){
     var _st=(state==="still")?"still":"moving"; /* default "moving": preserves v4.3 behavior unless a caller opts in */
@@ -16537,7 +16542,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v6.11 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v6.12 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
