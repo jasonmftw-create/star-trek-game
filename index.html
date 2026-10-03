@@ -408,31 +408,23 @@ body{touch-action:pan-y;}
 /* --- Earth (station art key "mckinley"): blue marble art, atmosphere glow, slow drift --- */
 /* v5.6: replaced CSS gradients with real planet art */
 .sc-earth .scBody{inset:auto;width:58%;aspect-ratio:1/1;left:-18%;top:6%;border-radius:50%;
-  background-image:url('stations/planet-earth.jpg');
+  background-image:url('stations/planet-earth.jpg?v=v5.7');
   background-size:cover;background-position:center;
   box-shadow:0 0 70px 14px rgba(110,170,255,.35), inset -14px -10px 40px rgba(2,6,20,.5);
   animation:earthDrift 64s ease-in-out infinite alternate;}
 @keyframes earthDrift{from{transform:translate(0,0);}to{transform:translate(3%,2%);}}
+/* Moon in top-right of Earth scene (Jason 2026-10-02) — CSS disc, no art file needed */
+.sc-earth .scMoon{position:absolute;top:5%;right:7%;width:13%;aspect-ratio:1/1;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #f2f2f2, #c9c9c9 55%, #8a8a8a);
+  box-shadow:0 0 12px rgba(220,220,220,.35);}
 
-/* --- Wormhole (station art key "ds9", shared with Empok Nor): vertical elliptical aperture,
-   swirling blue-white conic streak texture + glow; opens on a 26s cycle (see whOpen below). --- */
-.sc-wormhole .scBody{inset:0;}
-.sc-wormhole .scBody::before{content:"";position:absolute;left:50%;top:42%;width:30%;height:80%;border-radius:50%;
-  background:
-    repeating-conic-gradient(from 0deg at 50% 50%, rgba(255,255,255,.14) 0deg 7deg, transparent 7deg 22deg),
-    radial-gradient(ellipse at center, rgba(240,248,255,.95) 0%, rgba(170,215,255,.8) 24%, rgba(100,160,255,.5) 46%, rgba(50,95,235,.22) 66%, transparent 74%);
-  box-shadow:0 0 60px 16px rgba(130,190,255,.5), 0 0 140px 40px rgba(80,130,255,.25);
-  filter:blur(1px);
-  opacity:0;transform:translate(-50%,-50%) scaleY(.03);
-  animation:whOpen 26s ease-in-out infinite;}
-/* Closed/invisible 0-68% (~17.7s quiet), opening 68-78%, open hold 78-88%, closing 88-100%.
-   100% matches 0% (closed) so the loop has no pop. Swirl is a static conic texture — rotation would
-   need a nested element, which the transform/opacity-only constraint rules out. */
-@keyframes whOpen{
-  0%,68%{opacity:0;transform:translate(-50%,-50%) scaleY(.03);}
-  78%,88%{opacity:1;transform:translate(-50%,-50%) scaleY(1);}
-  100%{opacity:0;transform:translate(-50%,-50%) scaleY(.03);}
-}
+/* --- Wormhole (station art key "ds9", shared with Empok Nor): real art, top-right corner --- */
+/* Bajoran wormhole: real art, top-right corner (Jason 2026-10-02: old CSS version "ugly", wanted right corner).
+   Static (no open/close cycle) — the art carries it. */
+.sc-wormhole .scBody{inset:auto;width:42%;aspect-ratio:1/1;top:3%;right:3%;border-radius:50%;
+  background-image:url('stations/wormhole.jpg');background-size:cover;background-position:center;
+  box-shadow:0 0 40px 12px rgba(130,190,255,.45);}
+
 
 /* --- Nebulae: every other art key gets one of 4 treatments, layered radial-gradients, very slow drift.
    scBody is oversized (inset:-14%) so the translate drift never exposes an edge. --- */
@@ -534,13 +526,14 @@ body{touch-action:pan-y;}
 
 /* ===== v5.6: Build-page shipyard drydock background (Jason: "should look like they're at a shipyard") ===== */
 /* Targets ship display wraps that contain worker bees (build page only). The shipyard art */
-/* sits behind the ship; the CSS starfield is hidden to avoid double stars (the art has its own). */
-.uwWrap:has(> .uwBees){
+/* Shipyard backdrop for build-page ships (explicit uwShipyard class from shipPic opts.bees;
+   sits behind the ship; the CSS starfield is hidden to avoid double stars — the art has its own). */
+.uwWrap.uwShipyard{
   background-image:url('stations/shipyard-bg.jpg');
   background-size:cover;
   background-position:center;
 }
-.uwWrap:has(> .uwBees) .uwStars{display:none;}
+.uwWrap.uwShipyard .uwStars{display:none;}
 
 /* ============================================================================
 
@@ -572,7 +565,7 @@ body{touch-action:pan-y;}
 .dockBay>img{position:relative;z-index:2;display:block;width:70%;margin:9% auto 5%;border:none;max-height:190px;filter:drop-shadow(0 12px 10px rgba(0,0,0,.65));}
 /* in the bay the gunmetal interior is the backdrop: neutralize the img-box nebula/padding from shipPicEAS */
 .dockBay>img.shipPicEAS{background:none!important;padding:0!important;}
-@media (prefers-reduced-motion:reduce){.uwWrap .uwStars,.uwWrap .uwStreak,.uwWrap .uwGlow,.completeStage .speed2,.stnScene .scBody,.stnScene .scBody::before{animation:none!important;}.uwBees{display:none;}.dockBay .dbBeacon{animation:none!important;opacity:.8;}}
+@media (prefers-reduced-motion:reduce){.uwWrap .uwStars,.uwWrap .uwStreak,.uwWrap .uwGlow,.completeStage .speed2,.stnScene .scBody{animation:none!important;}.uwBees{display:none;}.dockBay .dbBeacon{animation:none!important;opacity:.8;}}
 .shipCardNm{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;}
 .shipCardNmTxt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .shipCardNm .reg{font-size:12px;color:var(--dim);font-weight:400;}
@@ -899,14 +892,14 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    Single file. Vanilla JS. localStorage save.
    ============================================================ */
 /* ================= UTILITIES ================= */
-/* ---- v5.6 visual polish: every game-art URL gets ?v=<ART_BUST> so browsers
+/* ---- v5.7 screenshot fixes: every game-art URL gets ?v=<ART_BUST> so browsers
    fetch fresh files when art changes between releases (filenames are reused
    in place, e.g. v5.0 stylized portraits overwrote v4.8 photos). Bump
    ART_BUST with the version whenever art ships. Applied at the art-URL
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v5.6';
+const ART_BUST='v5.7';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -11915,7 +11908,8 @@ function shipPic(cls,big,state,opts){
   if(big&&img){
     var _st=(state==="still")?"still":"moving"; /* default "moving": preserves v4.3 behavior unless a caller opts in */
     var _bees=(opts&&opts.bees)?'<span class="uwBees"><i></i><i></i><i></i><i></i><i></i></span>':"";
-    return '<span class="uwWrap uw'+(_st==="still"?"Still":"Moving")+'">'+_bees+'<span class="uwStars"></span>'+(_st==="still"?"":'<span class="uwStreak"></span>')+'<span class="uwGlow"></span>'+img+'</span>';
+    var _sy=(opts&&opts.bees)?" uwShipyard":""; /* explicit class: :has() proved unreliable on device */
+    return '<span class="uwWrap uw'+(_st==="still"?"Still":"Moving")+_sy+'">'+_bees+'<span class="uwStars"></span>'+(_st==="still"?"":'<span class="uwStreak"></span>')+'<span class="uwGlow"></span>'+img+'</span>';
   }
   return img;
 }
@@ -11932,7 +11926,8 @@ function stationArtKey(st){return (st&&STATION_ART_IDS[st.id])||(st&&st.type);}
 function stationPic(type,big){
   const src=(typeof STATION_PICS!=="undefined"&&STATION_PICS[type])?STATION_PICS[type]:"";
   const img=src?'<img class="'+(big?"shipPicBig stnBig":"shipPic stnThumb")+'" src="'+bustUrl(src)+'" alt="">':"";
-  if(big&&img)return '<span class="stnScene sc-'+stnScene(type)+'"><span class="scBody" aria-hidden="true"></span><span class="scStars"></span>'+img+'</span>';
+  if(big&&img){var _moon=(stnScene(type)==="earth")?'<span class="scMoon" aria-hidden="true"></span>':""; /* Jason: Moon top-right of Earth scene */
+    return '<span class="stnScene sc-'+stnScene(type)+'"><span class="scBody" aria-hidden="true"></span>'+_moon+'<span class="scStars"></span>'+img+'</span>';}
   return img;
 }
 /* Map station markers: the old blue-square indicator stands alone for most stations;
@@ -16483,7 +16478,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v5.6 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v5.7 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
