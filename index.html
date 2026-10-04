@@ -1008,7 +1008,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.111';
+const ART_BUST='v000.6.112';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -6318,14 +6318,33 @@ const COMPLETION_TOGGLE_ROW='<div class="card"><h3>Gameplay</h3>'+
 '<button class="btn small'+(ambientOn()?" on":"")+'" onclick="uiToggleAmbient()">'+(ambientOn()?"On":"Off")+'</button>'+
 '</span></div><div class="sub2 dim">Idle ships cruise between waypoints on their own. Any order you give overrides it at once.</div>';
 
-function uiAddAcademyDoctor(){ /* v000.6.105: Manual fix for missing Academy Doctor (hardcoded def) */
-  if(G.officers.some(o=>o.name==="The Doctor (Academy)")){toast("Academy Doctor is already in your crew.");return;}
-  const def=["The Doctor (Academy)", "Hologram", "M", 30, 4, "Medical", [70, 75, 60, 100, 80, 50], ["Surgeon", "EMH"], "pool", "Lt. Commander"];
-  const off=MK(def);
-  G.officers.push(off);
-  log("personnel","The Doctor (Academy) reports for duty.");
+function uiAddAcademyDoctor(){ /* v000.6.112: Manual fix for missing Academy personnel */
+  let added=[];
+  const fixes=[
+    ["The Doctor (Academy)", "Hologram", "M", 30, 4, "Medical", [70, 75, 60, 100, 80, 50], ["Surgeon", "EMH"], "pool", "Lt. Commander"],
+    ["Kyle Jokovich", "Human", "M", 18, 0, "Command", [70, 65, 60, 55, 75, 60], [], "pool", "Cadet"],
+    ["Caleb Mir", "Human", "M", 17, 0, "Command", [65, 70, 65, 55, 70, 60], [], "pool", "Cadet"]
+  ];
+  fixes.forEach(def=>{
+    if(!G.officers.some(o=>o.name===def[0])){
+      const off=MK(def);
+      G.officers.push(off);
+      // Remove from memorial if present
+      if(G.memorial)G.memorial=G.memorial.filter(m=>m.name!==def[0]);
+      log("personnel",def[0]+" reports for duty.");
+      added.push(def[0]);
+    }
+  });
+  // Also revive if dead
+  G.officers.forEach(o=>{
+    if((o.name==="Kyle"||o.name==="Kyle Jokovich"||o.name==="Caleb Mir"||o.name==="The Doctor (Academy)")&&(o.dead||o.status==="inactive")){
+      o.dead=false;o.status="active";o.retired=false;if(o.post&&o.post.t==="gone")o.post={t:"pool"};
+      if(o.name==="Kyle")o.name="Kyle Jokovich";
+      added.push(o.name+" (revived)");
+    }
+  });
   save();render();
-  toast("The Doctor (Academy) added to Personnel.");
+  toast(added.length?("Added: "+added.join(", ")):("All Academy personnel already present."));
 }
 function renderSettings(){
   const th=curTheme();
@@ -6335,7 +6354,7 @@ function renderSettings(){
     [["full","Full Continuum"],["badge","Badge only"],["off","Off"]].map(function(o){return '<button class="btn small'+(G.qtheme===o[0]?" on":"")+'" onclick="uiSetQTheme(\''+o[0]+'\')">'+o[1]+'</button>';}).join("")+
     '</div></span></div><p class="dim">Full Continuum: gold Q theme, glowing sigil in the header, drifting Continuum haze, and rotating Q quips. Badge only: just the sigil. Off: Q Mode with no visual change.</p></div>';
   if(G.qmode)h+=renderQCard();
-  h+='<div class="card"><h3>Fix Missing Personnel</h3><p class="dim">If the Academy Doctor is missing from Personnel, tap below to add him.</p><div class="btnRow"><button class="btn" onclick="uiAddAcademyDoctor()">Add Academy Doctor</button></div></div>'; /* v000.6.103 */
+  h+='<div class="card"><h3>Fix Missing Personnel</h3><p class="dim">If Academy personnel (Doctor, Kyle Jokovich, Caleb Mir) are missing from Personnel, tap below to add them.</p><div class="btnRow"><button class="btn" onclick="uiAddAcademyDoctor()">Fix Academy Personnel</button></div></div>'; /* v000.6.112 */
   h+='<div class="card"><h3>Display Theme</h3><p class="dim">Reskin the entire LCARS interface. Applies instantly.</p><div class="btnRow">'+
     Object.keys(THEMES).map(k=>'<button class="btn small'+(th===k?" on":"")+'" onclick="uiSetTheme(\''+k+'\')">'+THEMES[k]+'</button>').join("")+'</div>'+
     '<p class="dim">Classic: the familiar orange-and-purple 24th-century palette. Picard Blue: the cooler Discovery / Picard era.<br>'+
@@ -17090,7 +17109,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.111 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.112 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
