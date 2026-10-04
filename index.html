@@ -12025,16 +12025,16 @@ function portraitPick(name,entry){
 }
 const SPECIES_PKEY={"Human":"human","Klingon":"klingon","Vulcan":"vulcan","Romulan":"romulan","Liberated Borg":"borg","Ferengi":"ferengi","Andorian":"andorian","Android":"synth","Android / Synth":"synth","Tellarite":"tellarite","Trill":"trill","Hologram":"hologram","Talaxian":"talaxian","Ocampa":"ocampa","Hirogen":"hirogen","Kazon":"kazon","Jem'Hadar":"jemhadar","Vorta":"vorta","Changeling":"changeling"};
 function crewPoolUrls(key){
-  const out=[];const max=(key==="human-m")?12:11;for(let i=1;i<=max;i++)out.push(bustUrl("portraits/"+key+"-"+String(i).padStart(2,"0")+".jpg"));
+  const out=[];for(let i=1;i<=50;i++)out.push(bustUrl("portraits/"+key+"-"+String(i).padStart(2,"0")+".jpg"));
   return out;
-} /* v000.6.045 (Jason 2026-10-03): Only 11 portraits exist per group (not 50) — fixes broken/duplicate placeholders in selectors. v000.6.127: human-m has 12 (Jason's photo). */
+} /* v000.6.045 (Jason 2026-10-03): Only 11 portraits exist per group (not 50) — fixes broken/duplicate placeholders in selectors. v000.6.138 (Jason 2026-10-04): Actually 50 exist — show them all. */
 function crewPortraitFor(o){
   if(o.stage==="child")return null;
   const key=SPECIES_PKEY[o.species];if(!key)return null;
   const g=(o.gender==="F"||o.gender==="f")?"f":"m";
   let hsh=0;const nm=o.name||"";
   for(let i=0;i<nm.length;i++)hsh=(hsh*31+nm.charCodeAt(i))>>>0;
-  return bustUrl("portraits/"+key+"-"+g+"-"+String(hsh%11+1).padStart(2,"0")+".jpg");
+  return bustUrl("portraits/"+key+"-"+g+"-"+String(hsh%50+1).padStart(2,"0")+".jpg");
 } /* v000.6.046 (Jason 2026-10-03): hsh%11 (not %50) — only 11 portraits exist per group. */
 function portraitSrc(name,entry){if(entry&&entry.pic)return bustUrl(entry.pic);if(typeof PORTRAITS_ALT!=="undefined"&&PORTRAITS_ALT[name]&&portraitPick(name,entry)==="alt")return bustUrl(PORTRAITS_ALT[name]);if(typeof PORTRAITS!=="undefined"&&PORTRAITS[name])return bustUrl(PORTRAITS[name]);if(entry&&entry.customPic)return bustUrl(entry.customPic);if(entry){var cp=crewPortraitFor(entry);if(cp)return cp;}return "";}
 function portraitVerCur(name,entry){return portraitPick(name,entry);}
