@@ -1008,7 +1008,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.113';
+const ART_BUST='v000.6.114';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -3553,14 +3553,6 @@ const MEMORIAL_LOST=[
 {name:"L'Rell",show:"DISCO",rank:"High Chancellor",species:"Klingon",cause:"Lost to history — Chancellor of the Klingon Empire",when:"2258"},
 {name:"Leland",show:"DISCO",rank:"Captain",species:"Human",cause:"Assimilated by Control",when:"2258"},
 {name:"Kovich",show:"DISCO",rank:"Agent",species:"Human",cause:"Lost to time — 32nd century",when:"3191"},
-{name:"Jay-Den Kraag",show:"SFA",rank:"Cadet",species:"Klingon",cause:"Lost to time — 32nd century",when:"3192"},
-{name:"Series Acclimation Mil",show:"SFA",rank:"Cadet",species:"Kasqian",cause:"Lost to time — 32nd century",when:"3192"},
-{name:"Darem Reymi",show:"SFA",rank:"Cadet",species:"Khionian",cause:"Lost to time — 32nd century",when:"3192"},
-{name:"Genesis Lythe",show:"SFA",rank:"Cadet",species:"Dar-Sha",cause:"Lost to time — 32nd century",when:"3192"},
-{name:"Tarima Sadal",show:"SFA",rank:"Cadet",species:"Betazoid",cause:"Lost to time — 32nd century",when:"3192"},
-{name:"Charles Vance",show:"SFA",rank:"Fleet Admiral",species:"Human",cause:"Lost to time — 32nd century",when:"3192"},
-{name:"Lura Thok",show:"SFA",rank:"Commander",species:"Klingon",cause:"Lost to time — 32nd century",when:"3192"},
-{name:"Nus Braka",show:"SFA",rank:"Warlord",species:"Klingon",cause:"Defeated at Starfleet Academy",when:"3191"},
 {name:"Dal R'El",show:"PRO",rank:"Cadet",species:"Augment",cause:"Temporal displacement — last seen 2384",when:"2384"},
 {name:"Gwyndala",show:"PRO",rank:"Cadet",species:"Vau N'Akat",cause:"Temporal displacement — last seen 2384",when:"2384"},
 {name:"Rok-Tahk",show:"PRO",rank:"Cadet",species:"Brikar",cause:"Temporal displacement — last seen 2384",when:"2384"},
@@ -3582,9 +3574,7 @@ const MEMORIAL_LOST=[
 {name:"Hugh Culber",show:"DISCO",rank:"Commander",species:"Human",cause:"Lost to time — jumped to the 32nd century",when:"3188"},
 {name:"Cleveland Booker",show:"DISCO",rank:"Courier",species:"Kwejian",cause:"Lost to time — jumped to the 32nd century",when:"3188"},
 {name:"Keyla Detmer",show:"DISCO",rank:"Lieutenant",species:"Human",cause:"Lost to time — jumped to the 32nd century",when:"3188"},
-{name:"Nahla Ake",show:"SFA",rank:"Captain",species:"Lanthanite",cause:"Lost to time — 32nd century",when:"3192"},
 {name:"B'Avi",show:"SFA",rank:"Cadet",species:"Vulcan",cause:"Died at Starfleet Academy",when:"32nd century",pic:"portraits/baked/b_avi_78bf38.jpg"},
-{name:"Jett Reno",show:"SFA",rank:"Commander",species:"Human",cause:"Lost to time — 32nd century",when:"3192"},
 {name:"Phlox",show:"ENT",rank:"Lieutenant Commander",species:"Denobulan",cause:"Lost to history \u2014 22nd century",when:"2150s"},
 {name:"Thy'lek Shran",show:"ENT",rank:"Captain",species:"Andorian",cause:"Lost to history \u2014 22nd century",when:"2150s"},
 /* v000.6.073 (Jason 2026-10-03): VOY tab - adult Naomi Wildman and Miral Paris pulled from the "Endgame" future. */
@@ -4150,6 +4140,17 @@ function migrateSave(g){
     if(g.ships){const _n=g.ships.length;g.ships=g.ships.filter(s=>!(s.status==="museum"&&s.name&&s.name.indexOf("Voyager")>=0));if(g.ships.length<_n)(g.log=g.log||[]).unshift({d:g.day||0,sd:g.stardate,cat:"build",text:"USS Voyager removed from the fleet museum."});}
   }catch(_e){}
   /* v000.6.096: Rename Kyle to Kyle Jokovich in existing saves. */
+  /* v000.6.114: Revive all Academy characters wrongly marked as lost (Jason 2026-10-03). */
+  try{
+    const _sfaNames=["Jay-Den Kraag","Series Acclimation Mil","Darem Reymi","Genesis Lythe","Tarima Sadal","Charles Vance","Lura Thok","Nus Braka","Nahla Ake","Jett Reno","Kyle Jokovich","Caleb Mir","Ocam Sadal","The Doctor (Academy)"];
+    (g.officers||[]).forEach(o=>{
+      if(_sfaNames.indexOf(o.name)>=0){
+        if(o.dead||o.status==="inactive"){o.dead=false;o.status="active";o.retired=false;if(o.post&&o.post.t==="gone")o.post={t:"pool"};}
+      }
+    });
+    // Remove from memorial
+    if(g.memorial)g.memorial=g.memorial.filter(m=>_sfaNames.indexOf(m.name)<0||m.name==="B'Avi");
+  }catch(_e){}
   /* v000.6.111: Revive Kyle/Caleb Mir wrongly marked as lost to time (Jason 2026-10-03). */
   try{
     (g.officers||[]).forEach(o=>{
@@ -17110,7 +17111,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.113 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.114 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
