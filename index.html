@@ -1008,7 +1008,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.102';
+const ART_BUST='v000.6.103';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -4150,7 +4150,16 @@ function migrateSave(g){
   /* v000.6.100: Remove Voyager from fleet museum (Jason 2026-10-03). */
   if(G.ships){const _n=G.ships.length;G.ships=G.ships.filter(s=>!(s.status==="museum"&&s.name&&s.name.indexOf("Voyager")>=0));if(G.ships.length<_n)log("build","USS Voyager removed from the fleet museum.");}
   /* v000.6.096: Rename Kyle to Kyle Jokovich in existing saves. */
-  (g.officers||[]).forEach(o=>{if(o.name==="Kyle")o.name="Kyle Jokovich";});
+  /* v000.6.103: Robust Kyle -> Kyle Jokovich rename (Jason 2026-10-03). Handles memorial + dedupes. */
+  try{
+    (g.officers||[]).forEach(o=>{if(o.name==="Kyle")o.name="Kyle Jokovich";});
+    (g.memorial||[]).forEach(m=>{if(m.name==="Kyle")m.name="Kyle Jokovich";});
+    const _kj=(g.officers||[]).filter(o=>o.name==="Kyle Jokovich");
+    if(_kj.length>1){ /* dedupe: keep the first, remove extras */
+      const _keep=_kj[0].id;
+      g.officers=g.officers.filter(o=>o.name!=="Kyle Jokovich"||o.id===_keep);
+    }
+  }catch(_e){}
   CANON_CREW.forEach(def=>{
     if(!(g.officers||[]).some(o=>o.name===def[0])&&!(g.memorial||[]).some(m=>m.name===def[0]))
       g.officers.push(MK(def));
@@ -17055,7 +17064,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.102 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.103 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
