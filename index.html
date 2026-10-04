@@ -1008,7 +1008,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.130';
+const ART_BUST='v000.6.131';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -16449,6 +16449,67 @@ function sdeckRoomFor(st,o){
     if(has("chef")||has("bart"))return "mess";
     return null;
   }
+  /* v000.6.131: Station-specific room assignments (Jason 2026-10-04) */
+  if(t==="medical"){
+    if(has("co")||has("xo"))return "triage";
+    if(has("surg")||has("med"))return "surgery";
+    if(has("pharm"))return "pharmacy";
+    if(has("ther"))return "physio";
+    if(has("patho")||has("mres"))return "research";
+    if(has("tri"))return "triage";
+    if(has("hnurse")||has("nurse"))return "triage";
+    if(has("doc"))return "surgery";
+    if(has("coun")||has("counm"))return "counseling";
+    if(D==="Medical")return "triage";
+    if(D==="Science")return "research";
+    if(D==="Security"||has("sec"))return "triage";
+    if(D==="Engineering"||has("eng"))return "pharmacy";
+    if(has("ops")||has("tac")||has("conn"))return "triage";
+    if(has("chef")||has("bart"))return "mess";
+    return "triage";
+  }
+  if(t==="research"){
+    if(has("co")||has("xo"))return "blackvault";
+    if(has("projlead"))return "blackvault";
+    if(has("clearoff"))return "blackvault";
+    if(has("temporal"))return "temporal";
+    if(has("arch"))return "archive";
+    if(D==="Science"||has("sci"))return "blackvault";
+    if(D==="Engineering"||has("eng"))return "signal";
+    if(D==="Security"||has("sec"))return "blackvault";
+    if(D==="Medical"||has("med"))return "bioweapon";
+    if(has("ops")||has("tac")||has("conn"))return "signal";
+    if(has("chef")||has("bart"))return "mess";
+    return "blackvault";
+  }
+  if(t==="shipyard"){
+    if(has("co")||has("xo"))return "drydock";
+    if(has("shipwright")||has("keelm"))return "keel";
+    if(has("weld"))return "fab";
+    if(has("drydockm"))return "drydock";
+    if(has("testpilot"))return "shakedown";
+    if(has("supplyc"))return "paint";
+    if(has("designl"))return "drydock";
+    if(D==="Engineering"||has("eng"))return "fab";
+    if(D==="Science"||has("sci"))return "drydock";
+    if(D==="Security"||has("sec"))return "drydock";
+    if(D==="Medical"||has("med"))return "mess";
+    if(has("ops")||has("tac")||has("conn"))return "drydock";
+    if(has("chef")||has("bart"))return "mess";
+    return "drydock";
+  }
+  if(t==="starbase"){
+    if(has("co")||has("xo"))return "ops";
+    if(has("dockm"))return "docking";
+    if(has("prom")||has("bar"))return "promenade";
+    if(has("ops")||has("tac")||has("conn"))return "ops";
+    if(D==="Engineering"||has("eng"))return "reactor";
+    if(D==="Medical"||has("med")||has("doc")||has("nurse"))return "sickbay";
+    if(D==="Science"||has("sci"))return "ops";
+    if(D==="Security"||has("sec"))return "security";
+    if(has("chef")||has("bart"))return "promenade";
+    return "ops";
+  }
   if(has("co")||has("xo"))return "ops";
   if(has("ops")||has("tac")||has("conn"))return "ops";
   if(D==="Engineering"||has("eng"))return "reactor";
@@ -16476,8 +16537,9 @@ function sdeckRoomImg(st,rid){
 function sdeckRoomMap(st){
   const crew=crewOfStation(st.id),map={};sdeckRooms(st).forEach(r=>map[r.id]=[]);
   const placed={};
+  const fallback=sdeckRooms(st)[0]?sdeckRooms(st)[0].id:null;
   crew.forEach(o=>{if(o.activityRoom&&o.activityPost==="station:"+st.id&&map[o.activityRoom]){map[o.activityRoom].push(o);placed[o.id]=1;}});
-  crew.forEach(o=>{if(placed[o.id])return;const rid=sdeckRoomFor(st,o);if(rid){map[rid].push(o);placed[o.id]=1;}});
+  crew.forEach(o=>{if(placed[o.id])return;let rid=sdeckRoomFor(st,o);if(rid&&!map[rid])rid=fallback;if(rid&&map[rid]){map[rid].push(o);placed[o.id]=1;}});
   const rest=crew.filter(o=>!placed[o.id]);
   rest.forEach(o=>{if(o.rel){const p=officer(o.rel.partner||o.rel);if(p&&!placed[p.id]&&p.post.t==="station"&&p.post.id===st.id){const slp0=sdeckSleepRoom(st);map[slp0].push(o);map[slp0].push(p);placed[o.id]=placed[p.id]=1;}}});
   const ssh=aliveShift();
@@ -17408,7 +17470,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.130 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.131 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
