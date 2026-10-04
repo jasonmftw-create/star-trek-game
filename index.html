@@ -1008,7 +1008,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.128';
+const ART_BUST='v000.6.129';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -12898,7 +12898,37 @@ const BILLETS=[
  ["med","Chief Medical Officer"],["doc","Doctor"],["nurse","Nurse"],["coun","Counselor"],
  ["chef","Chef"],["bart","Bartender"]
 ];
-function billetLabel(id){const b=BILLETS.find(x=>x[0]===id);return b?b[1]:id;}
+function billetLabel(id){const b=BILLETS.find(x=>x[0]===id);return b?b[1]:(STATION_BILLETS_EXTRA[id]||id);}
+/* v000.6.129: Station-specific positions (Jason 2026-10-04) */
+const STATION_BILLETS_EXTRA={
+ surg:"Chief Surgeon",pharm:"Chief Pharmacist",hnurse:"Head Nurse",ther:"Lead Therapist",patho:"Chief Pathologist",
+ mres:"Medical Research Lead",tri:"Triage Chief",counm:"Grief Counselor",
+ shipwright:"Master Shipwright",keelm:"Keel Master",weld:"Welding Chief",drydockm:"Drydock Master",
+ testpilot:"Shakedown Pilot",supplyc:"Supply Chief",designl:"Design Lead",
+ projlead:"Project Lead",clearoff:"Clearance Officer",arch:"Archive Keeper",temporal:"Temporal Agent",
+ secchief:"Security Chief",prom:"Promenade Director",dockm:"Dockmaster",bar:"Bar Owner"
+};
+const STATION_BILLET_SETS={
+ medical:["co","xo","surg","med","doc","nurse","hnurse","pharm","ther","patho","mres","tri","coun","counm","sec","ops"],
+ research:["co","xo","projlead","sci","clearoff","arch","temporal","sec","eng","ops","med"],
+ shipyard:["co","xo","shipwright","keelm","eng","weld","drydockm","testpilot","supplyc","designl","sec","ops"],
+ starbase:["co","xo","ops","sec","dockm","prom","bar","med","eng","sci","tac"],
+ sfcommand:["co","xo","ops","tac","sec","sci","med","eng"],
+ academy:["co","xo","sci","med","eng","sec","ops","coun"],
+};
+function stationBillets(st){
+  if(!st||!st.type)return BILLETS;
+  const set=STATION_BILLET_SETS[st.type];
+  if(!set)return BILLETS;
+  // Build list from BILLETS + EXTRA, in set order
+  const out=[];
+  set.forEach(id=>{
+    const b=BILLETS.find(x=>x[0]===id);
+    if(b)out.push(b);
+    else if(STATION_BILLETS_EXTRA[id])out.push([id,STATION_BILLETS_EXTRA[id]]);
+  });
+  return out;
+}
 const SENIOR_BILLETS=["co","xo","conn","ops","tac","sec","eng","sci","med"];
 const DIV_COLORS={Command:"#e5484d",Science:"#4cc9f0",Medical:"#4cc9f0",Engineering:"#ffb703",Security:"#ffb703",Operations:"#ffb703"};
 function divColor(d){return DIV_COLORS[d]||"#9a9ab0";}
@@ -12987,11 +13017,17 @@ function roleHolder(o,bid){
 function uiRolePicker(oid){
   const o=officer(oid);if(!o)return;
   const roles=o.roles||[];
+  // v000.6.129: Use station-specific billets if posted to a station
+  let billets=BILLETS;
+  if(o.post&&o.post.t==="station"){
+    const st=(G.stations||[]).find(s=>s.id===o.post.id);
+    if(st)billets=stationBillets(st);
+  }
   let h='<h2>Assign Positions</h2><div class="flavor">'+nameHtml(o)+'<div class="dim">'+esc(postName(o.post))+'</div></div>';
   h+='<p class="dim" style="margin:4px 0 8px;">Tap to toggle — a crew member can hold multiple positions.</p>';
   h+='<div class="cmdrGrid" style="grid-template-columns:repeat(2,1fr);">';
   h+='<div class="cmdrOpt'+(roles.length?"":" sel")+'" onclick="uiToggleRole(\''+oid+'\',\'\')"><div class="cmdrLbl" style="font-size:14px;padding:10px;">Clear all</div></div>';
-  BILLETS.forEach(b=>{
+  billets.forEach(b=>{
     const holder=roleHolder(o,b[0]),has=roles.indexOf(b[0])>=0;
     h+='<div class="cmdrOpt'+(has?" sel":"")+'" onclick="uiToggleRole(\''+oid+'\',\''+b[0]+'\')"><div class="cmdrLbl" style="font-size:14px;padding:10px;">'+(has?"✓ ":"")+b[1]+(holder?'<br><span class="dim" style="font-size:11px;">'+esc(holder.name)+'</span>':"")+'</div></div>';
   });
@@ -16174,6 +16210,214 @@ academy:{commons:"mess",sleep:"quarters",rooms:[
   lines:["A class of first-years materializes, wide-eyed, duffels in hand.",
    "The transporter chief runs the daily diagnostic with ritual precision.",
    "The pattern buffer board glows a reassuring green."]}
+]},
+medical:{commons:"mess",sleep:"quarters",rooms:[
+ {id:"triage",name:"Emergency Triage",img:"sickbay",frac:0.03,
+  blurb:"The front line of the station. Biobeds in rows, trauma teams on standby, and the controlled chaos of saving lives.",
+  lines:["A trauma team moves in practiced sync around a biobed, voices calm and clipped.",
+   "The triage board flashes with incoming cases from across the sector.",
+   "A nurse directs a hover-gurney with the ease of long practice."]},
+ {id:"surgery",name:"Surgical Suites",img:"sickbay",frac:0.14,
+  blurb:"Sterile fields, surgical holograms, and the quietest rooms on the station. What happens here stays between doctor and patient.",
+  lines:["Through the observation glass: a surgical hologram's hands move with inhuman precision.",
+   "The sterilization field hums its faint blue note.",
+   "A surgeon scrubs in, already running through the procedure in her head."]},
+ {id:"pharmacy",name:"Pharmacy & Replicators",img:"science",frac:0.25,
+  blurb:"Every drug in the Federation formulary, replicated to order. The pharmacists here know compounds you've never heard of.",
+  lines:["A pharmacist checks a replicated compound against the prescription, twice.",
+   "The replicator bank hums, spinning out hyposprays by the dozen.",
+   "Controlled substances are locked behind three separate authorizations. As they should be."]},
+ {id:"physio",name:"Physical Therapy",img:"holodeck",frac:0.36,
+  blurb:"Recovery is a journey. The therapists here walk it with every patient, one painful step at a time.",
+  lines:["A patient takes their first steps on a new leg, the therapist right beside them.",
+   "The rehab pool glows blue, its water doing half the work of healing.",
+   "Progress charts line the wall — every one a small victory."]},
+ {id:"research",name:"Medical Research Labs",img:"science",frac:0.47,
+  blurb:"Cures are born here. The researchers chase everything from the common cold to the rarest xenobiology.",
+  lines:["A researcher stares at a cellular scan like it owes them money.",
+   "The containment lab holds samples from a dozen worlds, each one a puzzle.",
+   "A breakthrough announcement just went up. The whole deck is buzzing."]},
+ {id:"counseling",name:"Counseling Center",img:"lounge",frac:0.58,
+  blurb:"The mind needs healing too. Quiet rooms, patient counselors, and no judgment.",
+  lines:["A counselor listens, really listens, while a patient finally says the hard thing.",
+   "The waiting area is designed for calm — soft light, real plants, no rush.",
+   "Group session just let out. The corridor hums with the particular quiet of people feeling better."]},
+ {id:"morgue",name:"Morgue & Pathology",img:"engineering",frac:0.69,
+  blurb:"The last stop. Treated with the same dignity as the first — every case teaches, every life mattered.",
+  lines:["The pathologist works in silence, respect in every movement.",
+   "Case files line the wall, each one a lesson for the next patient.",
+   "It's quiet here. The living do their grieving elsewhere."]},
+ {id:"mess",name:"Staff Replimat",img:"mess",frac:0.80,
+  blurb:"Doctors, nurses, and techs refueling between shifts. The coffee is strong and the stories are stronger.",
+  lines:["A surgical team debriefs over coffee, still in their scrubs.",
+   "The night shift is coming on, trading notes with the day shift.",
+   "Someone's telling the story of the Bolian with the plasma burn. Again."]},
+ {id:"quarters",name:"Medical Staff Quarters",img:"quarters",frac:0.91,
+  blurb:"Home for the healers. Small rooms, big hearts, and pagers that never quite stop.",
+  lines:["A doctor catches twenty minutes of sleep between pages, boots still on.",
+   "Photos of saved patients line one bulkhead — the real medals.",
+   "Through one open door: a nurse video-calling home, smiling tiredly."]}
+]},
+research:{commons:"mess",sleep:"quarters",rooms:[
+ {id:"blackvault",name:"Black Vault",img:"security",frac:0.03,
+  blurb:"What Starfleet doesn't want the galaxy to know — ever. The door is three meters of duranium and the guards don't blink.",
+  lines:["The vault door seals with a sound like a tomb closing.",
+   "A guard checks your credentials three times. You only have two of the required clearances.",
+   "Whatever's in there has its own power grid. It doesn't trust the station's."]},
+ {id:"temporal",name:"Temporal Research Wing",img:"science",frac:0.12,
+  blurb:"Time travel. The Department of Temporal Investigations has an office here — and a holding cell for people who haven't been born yet.",
+  lines:["A temporal mechanic calibrates a chroniton emitter, hands steady despite the implications.",
+   "The DTI agent watches everyone like they're already a timeline violation.",
+   "A clock on the wall runs backwards. Nobody will explain why."]},
+ {id:"section31",name:"Restricted Annex",img:"security",frac:0.21,
+  blurb:"This section doesn't officially exist. The personnel don't officially exist. You were never here.",
+  lines:["The corridor isn't on any station schematic. You checked.",
+   "A figure in black walks past without a sound. You decide not to have seen them.",
+   "The door has no label, no keypad, no handle. It opens anyway — for some people."]},
+ {id:"ai",name:"Synthetic Minds Lab",img:"holodeck",frac:0.30,
+  blurb:"Positronic matrices, holographic consciousness, and the question Starfleet banned after the Mars attack. Asked here anyway.",
+  lines:["A positronic brain pulses on the diagnostic bed, dreaming in mathematics.",
+   "The containment field flickers. Everyone pretends not to notice.",
+   "A researcher whispers to the matrix like it's a child. Maybe it is."]},
+ {id:"archive",name:"Classified Archive",img:"lounge",frac:0.39,
+  blurb:"Every redacted file, every buried project, every 'we were never here.' Twelve levels down. Nobody talks about thirteen.",
+  lines:["A historian pulls a file that's more redaction than text.",
+   "The archive AI redacts your search results in real time. It's learning what you want.",
+   "Data chips are checked out like library books. The late fees are... severe."]},
+ {id:"bioweapon",name:"Threat Assessment Lab",img:"sickbay",frac:0.48,
+  blurb:"They study the weapons so Starfleet doesn't have to use them. The samples are locked behind seven kinds of 'no.'",
+  lines:["Something in the containment tank pulses with a light that shouldn't exist.",
+   "A scientist in a hazmat suit handles a vial like it's a live grenade. It might be.",
+   "The research here saves lives by understanding how to end them. Nobody sleeps well."]},
+ {id:"cognito",name:"Cognitive Warfare Division",img:"ops",frac:0.57,
+  blurb:"Memories can be edited. Loyalties can be rewritten. This division knows how — and when not to.",
+  lines:["A technician adjusts a neural neutralizer, humming tunelessly.",
+   "The test subject remembers something that never happened. The test is working.",
+   "Ethics oversight visits monthly. The staff is always on their best behavior. Monthly."]},
+ {id:"signal",name:"Deep Signal Intercept",img:"engineering",frac:0.66,
+  blurb:"Every subspace whisper in the quadrant comes through here. Most of it is noise. Some of it isn't.",
+  lines:["An analyst flags a signal that's encrypted in a language that doesn't exist yet.",
+   "The intercept array turns slowly, listening to the whole quadrant hold its breath.",
+   "A message just decoded. The analyst goes pale and calls their supervisor. Then their supervisor's supervisor."]},
+ {id:"mess",name:"Cleared Personnel Mess",img:"mess",frac:0.75,
+  blurb:"Everyone here has clearance. Nobody talks about work. The silence is louder than the conversation.",
+  lines:["Two researchers sit in silence, both thinking about the thing they can't discuss.",
+   "The coffee is good. It's the only thing here that isn't classified.",
+   "A new arrival tries to make small talk. The table goes quiet. They learn."]},
+ {id:"quarters",name:"Secure Staff Quarters",img:"quarters",frac:0.84,
+  blurb:"Swept for bugs daily. The residents know; they sweep it themselves, just to be sure.",
+  lines:["A researcher checks their room for listening devices out of habit.",
+   "The walls are shielded. The dreams aren't.",
+   "Through one door: a PADD face-down, a mind still working. Some puzzles don't sleep."]},
+ {id:"airlock",name:"Disposal Airlock",img:"docking",frac:0.93,
+  blurb:"Some experiments don't get a burial. The airlock log is classified. The starfield outside is indifferent.",
+  lines:["The airlock cycles. Nothing is jettisoned officially.",
+   "A technician logs the cycle with hands that don't shake anymore.",
+   "The stars don't judge. That's why this is done in space."]}
+]},
+shipyard:{commons:"mess",sleep:"quarters",rooms:[
+ {id:"drydock",name:"Drydock Control",img:"ops",frac:0.03,
+  blurb:"The nerve center of construction. Every hull in the yard is a blip on the board — every blip, a thousand workers and a billion credits.",
+  lines:["The master board shows six hulls in various stages of undress, from keel to christening.",
+   "A controller vectors a workbee with the ease of long practice, threading it between assembly frames.",
+   "The drydock arms cradle a Sovereign-class saucer like a jewel in a setting."]},
+ {id:"keel",name:"Keel Laying Bay",img:"docking",frac:0.12,
+  blurb:"Where starships begin. The keel is laid here — the spine that everything else hangs on. Get it wrong and the ship never flies straight.",
+  lines:["A duranium keel, fresh from the fabricators, is being lowered into the assembly frame.",
+   "The master shipwright inspects the welds personally. This is the part that matters most.",
+   "Every ship has a keel-laying ceremony. The champagne is synthetic; the tradition is real."]},
+ {id:"fab",name:"Hull Fabrication",img:"engineering",frac:0.21,
+  blurb:"Industrial replicators the size of buildings weave hull plating molecule by molecule. If you can dream it, they can print it — in duranium.",
+  lines:["A replicator the size of a shuttle lays down ablative armor in perfect layers.",
+   "Sparks shower from a welding team fusing a hull section, working the night shift.",
+   "The smell of hot metal and ozone is the perfume of creation."]},
+ {id:"nacelle",name:"Nacelle Assembly",img:"reactor",frac:0.30,
+  blurb:"Warp nacelles are built here — the most temperamental part of any starship. Handle with care, prayer, and a level-five containment field.",
+  lines:["A warp coil is being wound with verterium cortenide, turn by perfect turn.",
+   "The nacelle on the stand hums at idle, eager to run.",
+   "A technician calibrates the plasma injectors with the focus of a bomb disposal expert."]},
+ {id:"bridge",name:"Bridge Module Fitting",img:"ops",frac:0.39,
+  blurb:"Bridges are built as complete modules, then dropped into the hull. The nerve center, pre-wired and ready.",
+  lines:["A bridge module hangs from the crane, its viewscreen dark for now.",
+   "Technicians run the pre-install diagnostics — every console, every circuit.",
+   "The captain's chair is already in place. Someone always sits in it first. Tradition."]},
+ {id:"engtest",name:"Warp Core Test Range",img:"reactor",frac:0.48,
+  blurb:"Warp cores are test-fired here — at a safe distance. The word 'safe' is doing a lot of work in that sentence.",
+  lines:["A warp core pulses on the test stand, contained by fields and fervent prayer.",
+   "The test crew watches from behind shielding that has strong opinions about radiation.",
+   "When the core hits full power, you feel it in your teeth three decks away."]},
+ {id:"saucer",name:"Saucer Separation Rig",img:"docking",frac:0.57,
+  blurb:"The saucer sep test rig. If the explosive bolts don't fire clean, the whole design goes back to the drawing board.",
+  lines:["A saucer section hangs above its stardrive, separation bolts armed for the test.",
+   "The countdown is called. Everyone holds their breath.",
+   "Clean sep. The cheer echoes off the bay walls."]},
+ {id:"paint",name:"Hull Coating Bay",img:"cargo",frac:0.66,
+  blurb:"Ablative armor, sensor-deflective coatings, and the registry letters. A ship isn't real until it has a name on the hull.",
+  lines:["A worker stencils 'NCC-' onto a fresh hull, the numbers still to come.",
+   "The coating team applies the final layer — it shimmers like oil on water.",
+   "The name is always painted last. It's bad luck to name her before she's ready."]},
+ {id:"shakedown",name:"Shakedown Control",img:"security",frac:0.75,
+  blurb:"New ships run their shakedown cruises from here. If something's going to break, better it breaks now than at warp nine.",
+  lines:["Telemetry streams in from the shakedown ship, every system nominal — so far.",
+   "The shakedown crew reports a vibration at impulse. The engineers are already on it.",
+   "She'll be ready for her captain soon. They always are, eventually."]},
+ {id:"mess",name:"Yard Workers' Mess",img:"mess",frac:0.84,
+  blurb:"Hearty food for the people who build starships. The portions are legendary; the stories are better.",
+  lines:["A shift just ended. The mess hall roars with relief and hunger.",
+   "An old-timer is telling the story of the Galaxy-class build. The details get better every time.",
+   "The coffee is strong enough to strip hull paint. Nobody complains."]},
+ {id:"obs",name:"Observation Gallery",img:"promenade",frac:0.93,
+  blurb:"Watch the ships take shape. Hulls, nacelles, and dreams — the best view in the yard.",
+  lines:["Through the viewport: a ship's skeleton, backlit by Mars.",
+   "Shipwrights bring their families here to show them what they build.",
+   "Every ship out there started as lines on a screen. Now it's almost real."]}
+]},
+starbase:{commons:"promenade",sleep:"quarters",rooms:[
+ {id:"ops",name:"Operations Center",img:"ops",frac:0.03,
+  blurb:"The nerve center. The big board tracks every docked ship, every cargo manifest, every blip within a light-year.",
+  lines:["The ops table glows with docking telemetry. Somewhere, a freighter captain is arguing about berth fees.",
+   "The duty officer tracks three conversations at once and misses nothing.",
+   "On the big board a tiny icon blinks: a shuttle running late, as shuttles do."]},
+ {id:"promenade",name:"Promenade",img:"promenade",frac:0.14,
+  blurb:"The beating heart of station life. Shops, cafes, and a hundred conversations in a dozen languages.",
+  lines:["A Bolian merchant haggles cheerfully over the price of replicated silk.",
+   "Children chase each other between the planters while their parents pretend not to watch.",
+   "The replimat's lunch rush is a beautiful, noisy chaos."]},
+ {id:"docking",name:"Docking Pylons",img:"docking",frac:0.25,
+  blurb:"Clamps, umbilicals, and the patient ballet of ships coming and going.",
+  lines:["A freighter eases into its berth with centimeters to spare. Nobody applauds; everybody noticed.",
+   "Dock workers in mag-boots guide a cargo pallet the size of a shuttle.",
+   "Through the viewports: running lights, welding sparks, and the slow turn of the stars."]},
+ {id:"security",name:"Security Office",img:"security",frac:0.36,
+  blurb:"Monitors, incident boards, and the quiet confidence of people who have seen every trick twice.",
+  lines:["The duty board lists seventeen open incidents. Sixteen are noise. One is interesting.",
+   "A deputy reviews docking footage at four times speed, missing nothing.",
+   "The incident map blooms with tiny flags, most of them harmless."]},
+ {id:"sickbay",name:"Station Infirmary",img:"sickbay",frac:0.47,
+  blurb:"Biobeds and hyposprays for the station's bumps and bruises. For the big stuff, there's McCoy.",
+  lines:["A nurse recalibrates a biobed with practiced ease.",
+   "The triage board is blessedly short today.",
+   "Someone is getting a lecture about mag-boot safety. Again."]},
+ {id:"cargo",name:"Cargo Bays",img:"cargo",frac:0.58,
+  blurb:"The station's pantry and warehouse. Everything the station needs comes through here.",
+  lines:["A container marked 'medical supplies' rattles suspiciously.",
+   "The cargo transporter cycles with its familiar shimmer-whine.",
+   "The quartermaster knows where everything is. Ask nicely."]},
+ {id:"reactor",name:"Power Core",img:"reactor",frac:0.69,
+  blurb:"Fusion reactors feeding the grid. The hum you feel in your teeth is the sound of home.",
+  lines:["The reactor columns pulse with contained starfire.",
+   "An engineer walks the catwalk, listening to the grid like a heartbeat.",
+   "Warning lights blink in slow rhythm. All nominal."]},
+ {id:"holosuite",name:"Holosuites",img:"holodeck",frac:0.80,
+  blurb:"Rented by the hour. What happens in the holosuite is logged, billed, and none of your business.",
+  lines:["The schedule board is booked through next week.",
+   "A technician polishes the arch emitters with loving care.",
+   "Muffled applause leaks from suite three."]},
+ {id:"quarters",name:"Habitat Ring",img:"quarters",frac:0.91,
+  blurb:"Home for thousands. Corridors of closed doors, each one a small private universe.",
+  lines:["Muffled music leaks from behind one door. Someone is off-shift.",
+   "A corridor of closed doors, each one a small private universe.",
+   "Through one open doorway: photos taped to a bulkhead, a whole life in twelve pictures."]}
 ]}
 };
 function sdeckRooms(st){const t=st&&STATION_ROOM_SETS[st.type];return t?t.rooms:STATION_ROOMS;}
@@ -17162,7 +17406,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.128 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.129 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
