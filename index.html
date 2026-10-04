@@ -1008,7 +1008,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.106';
+const ART_BUST='v000.6.107';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -11495,10 +11495,11 @@ function uiTemporalExtract(idx){
 }
 function uiTemporalExtractGo(idx){
   const e=MEMORIAL_LOST[idx];if(!e)return;
-  if((G.rescued&&G.rescued[e.name])||G.tempCd>0||G.prestige<TEMP_COST_PRES||G.dilithium<TEMP_COST_DIL){lostModal(idx);return;}
-  gainPres(-TEMP_COST_PRES);G.dilithium=Math.max(0,G.dilithium-TEMP_COST_DIL);G.tempCd=TEMP_CD;
+  const _q=G.qmode; /* v000.6.107: Q Mode bypasses cost, cooldown, and failure chance */
+  if((G.rescued&&G.rescued[e.name])||(!_q&&(G.tempCd>0||G.prestige<TEMP_COST_PRES||G.dilithium<TEMP_COST_DIL))){lostModal(idx);return;}
+  if(!_q){gainPres(-TEMP_COST_PRES);G.dilithium=Math.max(0,G.dilithium-TEMP_COST_DIL);G.tempCd=TEMP_CD;}
   sfx("temporal");
-  if(Math.random()<TEMP_ODDS){
+  if(_q||Math.random()<TEMP_ODDS){
     const def=LOST_CREW.find(d=>d[0]===(e.extractAs||e.name))||TRIBUTE_DEFS.find(d=>d[0]===e.name); /* v000.6.079: extractAs + tribute fallback */
     const off=MK(def);off.lostEra=e.show;off.temporal=e.when;
     awardAccolade(off,"Temporal extraction — rescued from "+e.when);
@@ -11588,10 +11589,11 @@ function uiFutureShipExtract(i){
 }
 function uiFutureShipExtractGo(i){
   const f=FUTURE_SHIPS[i];if(!f)return;
-  if((G.rescuedShips&&G.rescuedShips[f.id])||G.tempCd>0||G.prestige<TEMP_SHIP_COST_PRES||G.dilithium<TEMP_SHIP_COST_DIL){futureShipModal(i);return;}
-  gainPres(-TEMP_SHIP_COST_PRES);G.dilithium=Math.max(0,G.dilithium-TEMP_SHIP_COST_DIL);G.tempCd=TEMP_CD;
+  const _q=G.qmode; /* v000.6.107: Q Mode bypasses cost, cooldown, and failure chance */
+  if((G.rescuedShips&&G.rescuedShips[f.id])||(!_q&&(G.tempCd>0||G.prestige<TEMP_SHIP_COST_PRES||G.dilithium<TEMP_SHIP_COST_DIL))){futureShipModal(i);return;}
+  if(!_q){gainPres(-TEMP_SHIP_COST_PRES);G.dilithium=Math.max(0,G.dilithium-TEMP_SHIP_COST_DIL);G.tempCd=TEMP_CD;}
   sfx("temporal");
-  if(Math.random()<TEMP_ODDS){
+  if(_q||Math.random()<TEMP_ODDS){
     const c=SHIP_CLASSES[f.cls];
     const s={id:uid("s"),name:f.name,registry:f.reg||"",cls:f.cls,status:"active",daysLeft:0,damage:0,missionId:null,yardId:null,post:"sol",comp:c.comp,commSd:G.stardate,tours:1,future:1,futureEra:f.era,blurb:f.blurb};
     G.ships.push(s);
@@ -17076,7 +17078,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.106 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.107 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
