@@ -1008,7 +1008,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.124';
+const ART_BUST='v000.6.125';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -14898,10 +14898,19 @@ function uiDownloadSave(){ /* v000.6.123: download save as file */
   }catch(e){toast("Download failed: "+e.message);}
 }
 function uiImport(){
-  openModal('<h2>Import Save</h2><div class="flavor">Paste a previously exported save.</div>'+
+  openModal('<h2>Import Save</h2><div class="flavor">Paste a previously exported save, or upload a save file.</div>'+
+    '<input type="file" id="impFile" accept=".json" style="margin-bottom:8px" onchange="uiImportFile(this)">'+
     '<textarea id="impTxt"></textarea><div class="btnRow">'+
     '<button class="btn" onclick="try{importSave(document.getElementById(\'impTxt\').value);closeModal();render();toast(\'Save loaded.\');}catch(e){toast(\'Invalid save data.\')}">Load save</button>'+
     '<button class="btn ghost" onclick="closeModal()">Cancel</button></div>');
+}
+function uiImportFile(input){ /* v000.6.125: upload save file */
+  const f=input.files&&input.files[0];
+  if(!f)return;
+  const r=new FileReader();
+  r.onload=function(){document.getElementById("impTxt").value=r.result;toast("File loaded — tap Import.");};
+  r.onerror=function(){toast("Could not read file.");};
+  r.readAsText(f);
 }
 function uiReset(){
   openModal('<h2>New Game</h2><p>Abandon this timeline and start over at stardate 54973.4? Your current sector will be lost.</p>'+
@@ -17153,7 +17162,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.124 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.125 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
