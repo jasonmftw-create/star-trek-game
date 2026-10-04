@@ -1008,7 +1008,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.098';
+const ART_BUST='v000.6.099';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -9192,7 +9192,7 @@ function hudStat(k,v,c,sub){
 function setTab(t){
   if(t!==currentTab){sfx("door");navStack.push(currentTab);if(navStack.length>24)navStack.shift();}
   tabScrollY[currentTab]=window.scrollY||document.documentElement.scrollTop||0;
-  if(t!=="build")legacyFrom=null;
+  if(t!=="build"){legacyFrom=null;legacyFromFuture=-1;}
   currentTab=t;
   document.querySelectorAll(".tabBtn").forEach(b=>b.classList.toggle("active",b.dataset.tab===t));
   const v=$("view");
@@ -11062,6 +11062,12 @@ function renderBuild(){
       h+='<div class="card" style="border:1px solid var(--teal)"><h3>Legacy build</h3><p class="dim">Commissioning the successor to '+esc(ls.name)+' ('+esc(ls.registry)+'). She keeps the name \u2014 her registry takes the next letter: <b>'+esc(nextRegistry(ls.registry))+'</b>. Pick a class below \u2014 you can still edit the name and registry before the keel is laid.</p><div class="btnRow"><button class="btn small ghost" onclick="legacyFrom=null;render()">Cancel legacy</button></div></div>';
     }else legacyFrom=null;
   }
+  if(legacyFromFuture>=0){ /* v000.6.099: legacy from future ship */
+    const ff=FUTURE_SHIPS[legacyFromFuture];
+    if(ff){
+      h+='<div class="card" style="border:1px solid var(--teal)"><h3>Legacy build</h3><p class="dim">Commissioning the successor to '+esc(ff.name)+' ('+esc(ff.reg||"registry unrecorded")+') from '+esc(ff.when)+'. She keeps the name \u2014 her registry takes the next letter: <b>'+esc(nextRegistry(ff.reg||"NCC-0000"))+'</b>. Pick a class below \u2014 you can still edit the name and registry before the keel is laid.</p><div class="btnRow"><button class="btn small ghost" onclick="legacyFromFuture=-1;render()">Cancel legacy</button></div></div>';
+    }else legacyFromFuture=-1;
+  }
   h+='<div class="cmdsubseg" style="margin:0 0 10px;">'+
     '<button class="btn small'+(buildPage==="ships"?" on":"")+'" onclick="buildPage=\'ships\';render()">Starships</button>'+
     '<button class="btn small'+(buildPage==="stations"?" on":"")+'" onclick="buildPage=\'stations\';render()">Stations</button></div>';
@@ -11168,6 +11174,11 @@ function uiLegacyShip(id){
   legacyFrom=id;buildPage="ships";closeModal();setTab("build");
   toast("Choose a class for "+s.name+"'s successor.");
 }
+function uiLegacyShipFuture(i){ /* v000.6.099: legacy successor for a future (lost) ship */
+  const f=FUTURE_SHIPS[i];if(!f)return;
+  legacyFrom=null;legacyFromFuture=i;buildPage="ships";closeModal();setTab("build");
+  toast("Choose a class for "+f.name+"'s successor.");
+}
 function transferCrewCore(newId){ // v2.97: move a legacy predecessor's crew aboard; returns count
   const ns=ship(newId);if(!ns||!ns.legacyOf)return 0;
   const os=ship(ns.legacyOf);if(!os)return 0;
@@ -11195,6 +11206,7 @@ function uiBuildShip(cls){
   if(!u.ok||!yards.length||G.credits<c.cr||G.dilithium<c.dl)return;
   let sugN="USS "+pick(SHIP_NAME_POOL),sugR="NCC-"+ri(74000,89999);
   if(legacyFrom){const ls=ship(legacyFrom);if(ls&&(ls.mothballed||ls.status==="museum")){sugN=ls.name;sugR=nextRegistry(ls.registry);}}
+  if(legacyFromFuture>=0){const ff=FUTURE_SHIPS[legacyFromFuture];if(ff){sugN=ff.name;sugR=nextRegistry(ff.reg||"NCC-0000");}} /* v000.6.099 */
   openModal('<h2>Commission '+c.name+'-class</h2>'+shipPic(cls,true,'still',{bees:true})+'<div class="flavor">'+fmt(c.cr)+' CR · '+fmt(c.dl)+' DL · '+Math.ceil(c.days*buildTimeMod())+' days at '+esc(yards[0].name)+'</div>'+
     '<label>Ship name</label><input type="text" id="bnName" value="'+esc(sugN)+'">'+
     '<label>Registry</label><input type="text" id="bnReg" value="'+esc(sugR)+'">'+
@@ -11207,7 +11219,7 @@ function uiBuildShipGo(cls,yardId){
   const reg=$("bnReg").value.trim()||"NCC-"+ri(74000,89999);
   gainCR(-c.cr);gainDL(-c.dl);
   const days=Math.ceil(c.days*buildTimeMod());
-  const _lf=legacyFrom; // v2.42 lineage: offer crew transfer when commissioned
+  const _lf=legacyFrom;legacyFromFuture=-1; // v2.42 lineage: offer crew transfer when commissioned; v000.6.099: clear future legacy
   G.builds.push({id:uid("b"),kind:"ship",cls,name,registry:reg,daysLeft:days,total:days,yardId,legacyOf:_lf||null});
   log("build","Keel laid: "+name+" ("+reg+", "+c.name+"-class) at "+(station(yardId)||{name:"?"}).name+". ETA "+days+" days.");
   legacyFrom=null;closeModal();save();render();toast("Construction started.");
@@ -11529,6 +11541,7 @@ function futureShipModal(i){
       h+='<p><span class="badge bad">Requires '+TEMP_SHIP_COST_PRES+' prestige + '+TEMP_SHIP_COST_DIL+' dilithium</span></p>';
     else h+='<button class="btn" onclick="uiFutureShipExtract('+i+')">\u27F3 Initiate Temporal Extraction</button>';
   }
+  h+='<div style="margin-top:8px;"><button class="btn ghost" onclick="uiLegacyShipFuture('+i+')">Build Legacy Successor</button></div>'; /* v000.6.099 */
   h+='<div style="margin-top:8px;"><button class="btn ghost" onclick="closeModal()">Close</button></div>';
   openModal(h);
 }
@@ -11848,6 +11861,7 @@ let memTab="personnel";
 let buildPage="ships";
 let compTab="ships",compShip=null,compOff=null,compStn=null;
 let legacyFrom=null;
+let legacyFromFuture=-1; /* v000.6.099: legacy build from a future (lost) ship */
 let portraitTabForce=false;
 /* ================= CAPTAIN'S LOG ================= */
 function capLogAuto(t,b){
@@ -17028,7 +17042,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.098 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.099 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
