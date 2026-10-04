@@ -1008,7 +1008,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.127';
+const ART_BUST='v000.6.128';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -12025,7 +12025,7 @@ function portraitPick(name,entry){
 }
 const SPECIES_PKEY={"Human":"human","Klingon":"klingon","Vulcan":"vulcan","Romulan":"romulan","Liberated Borg":"borg","Ferengi":"ferengi","Andorian":"andorian","Android":"synth","Android / Synth":"synth","Tellarite":"tellarite","Trill":"trill","Hologram":"hologram","Talaxian":"talaxian","Ocampa":"ocampa","Hirogen":"hirogen","Kazon":"kazon","Jem'Hadar":"jemhadar","Vorta":"vorta","Changeling":"changeling"};
 function crewPoolUrls(key){
-  const out=[];const max=(key==="cmdr/human-m")?12:11;for(let i=1;i<=max;i++)out.push(bustUrl("portraits/"+key+"-"+String(i).padStart(2,"0")+".jpg"));
+  const out=[];const max=(key==="human-m")?12:11;for(let i=1;i<=max;i++)out.push(bustUrl("portraits/"+key+"-"+String(i).padStart(2,"0")+".jpg"));
   return out;
 } /* v000.6.045 (Jason 2026-10-03): Only 11 portraits exist per group (not 50) — fixes broken/duplicate placeholders in selectors. v000.6.127: human-m has 12 (Jason's photo). */
 function crewPortraitFor(o){
@@ -17162,7 +17162,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.127 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.128 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
