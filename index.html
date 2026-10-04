@@ -1008,7 +1008,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.125';
+const ART_BUST='v000.6.126';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -3814,7 +3814,7 @@ function MK(arr){
     rankLabel:rankLabel||null,affairCooldown:0,roles:[],loyal:ri(60,85),friends:[],rivals:[],request:null,promRec:false};
 }
 const CANON_NAMES=new Set(CANON_CREW.map(function(r){return r[0];}));
-function retireAge(o){if(o.traits&&o.traits.indexOf("Living Legend")>=0)return 9999;if(CANON_NAMES.has(o.name))return 9999;return o.species==="Vulcan"?180:70;}
+function retireAge(o){if(o.traits&&(o.traits.indexOf("Living Legend")>=0||o.traits.indexOf("Long-lived")>=0))return 9999;if(CANON_NAMES.has(o.name))return 9999;return o.species==="Vulcan"?180:70;}
 function reviveCanonRetired(g){(g.officers||[]).forEach(function(o){if(o.retired&&o.status!=="inactive"&&CANON_NAMES.has(o.name))o.retired=false;});}
 function svcPush(o,t,shipKey){if(!o)return;if(!o.svc)o.svc=[];o.svc.push({d:G.day,sd:G.stardate,t:t,ship:shipKey||null});if(o.svc.length>240)o.svc.splice(0,o.svc.length-240);}
 function shipHistPush(s,t){if(!s)return;if(!s.hist)s.hist=[];s.hist.push({d:G.day,sd:G.stardate,t:t});if(s.hist.length>240)s.hist.splice(0,s.hist.length-240);}
@@ -17162,7 +17162,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.125 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.126 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
