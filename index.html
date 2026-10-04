@@ -1008,7 +1008,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.121';
+const ART_BUST='v000.6.122';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -6338,9 +6338,16 @@ function uiAddAcademyDoctor(){ /* v000.6.112: Manual fix for missing Academy per
   const _reviveNames=["Jay-Den Kraag","Series Acclimation Mil","Darem Reymi","Genesis Lythe","Tarima Sadal","Charles Vance","Lura Thok","Nus Braka","Nahla Ake","Jett Reno"];
   _reviveNames.forEach(n=>{
     const o=G.officers.find(x=>x.name===n);
-    if(o&&(o.dead||o.status==="inactive")){
-      o.dead=false;o.status="active";o.retired=false;if(o.post&&o.post.t==="gone")o.post={t:"pool"};
-      if(G.memorial)G.memorial=G.memorial.filter(m=>m.name!==n);
+    if(o){
+      let _fixed=false;
+      if(o.dead||o.status==="inactive"){o.dead=false;o.status="active";_fixed=true;}
+      if(o.retired){o.retired=false;_fixed=true;}
+      if(o.post&&o.post.t==="gone"){o.post={t:"pool"};_fixed=true;}
+      if(o.stage!=="adult"){o.stage="adult";_fixed=true;}
+      if(_fixed){
+        if(G.memorial)G.memorial=G.memorial.filter(m=>m.name!==n);
+        log("personnel",n+" revived to active duty.");
+      }
     }
   });
   fixes.forEach(def=>{
@@ -17134,7 +17141,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.121 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.122 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
