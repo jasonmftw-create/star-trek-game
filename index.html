@@ -1008,7 +1008,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.104';
+const ART_BUST='v000.6.105';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -6309,10 +6309,9 @@ const COMPLETION_TOGGLE_ROW='<div class="card"><h3>Gameplay</h3>'+
 '<button class="btn small'+(ambientOn()?" on":"")+'" onclick="uiToggleAmbient()">'+(ambientOn()?"On":"Off")+'</button>'+
 '</span></div><div class="sub2 dim">Idle ships cruise between waypoints on their own. Any order you give overrides it at once.</div>';
 
-function uiAddAcademyDoctor(){ /* v000.6.103: Manual fix for missing Academy Doctor */
+function uiAddAcademyDoctor(){ /* v000.6.105: Manual fix for missing Academy Doctor (hardcoded def) */
   if(G.officers.some(o=>o.name==="The Doctor (Academy)")){toast("Academy Doctor is already in your crew.");return;}
-  const def=CANON_CREW.find(d=>d[0]==="The Doctor (Academy)");
-  if(!def){toast("Doctor definition not found.");return;}
+  const def=["The Doctor (Academy)", "Hologram", "M", 30, 4, "Medical", [70, 75, 60, 100, 80, 50], ["Surgeon", "EMH"], "pool", "Lt. Commander"];
   const off=MK(def);
   G.officers.push(off);
   log("personnel","The Doctor (Academy) reports for duty.");
@@ -17075,7 +17074,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.104 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.105 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
