@@ -1008,7 +1008,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.132';
+const ART_BUST='v000.6.133';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -12581,22 +12581,12 @@ function stnScene(type){return (typeof STN_SCENE!=="undefined"&&STN_SCENE[type])
 function stationArtKey(st){return (st&&STATION_ART_IDS[st.id])||(st&&st.type);}
 function stationPic(type,big){
   const src=(typeof STATION_PICS!=="undefined"&&STATION_PICS[type])?STATION_PICS[type]:"";
-  /* v000.6.030 (Jason 2026-10-02): Do what worked for ships — put the background DIRECTLY ON THE IMG via inline style, not on parent containers.
-     v000.6.132 (Jason 2026-10-04): Unique backgrounds per station art key. */
+  /* v000.6.030 (Jason 2026-10-02): Do what worked for ships — put the background DIRECTLY ON THE IMG via inline style, not on parent containers. The 4 Starbases get unique space backgrounds. */
   var _stnBg="";
-  const _bgMap={
-    "starbase":"radial-gradient(ellipse 65% 55% at 40% 45%, #1e3a5f, #0a1428 70%)",
-    "utopia":"radial-gradient(ellipse 60% 50% at 60% 40%, #7f1d1d, #1a0808 70%)",
-    "ds9":"radial-gradient(ellipse 60% 50% at 30% 40%, #5a3a1a, #1a0f08 70%)",
-    "daystrom":"radial-gradient(circle at 65% 35%, #1a1a2e, #0a0a14 75%)",
-    "medical":"radial-gradient(ellipse 60% 50% at 50% 40%, #0f4c4c, #081a1a 70%)",
-    "research":"radial-gradient(ellipse 65% 55% at 40% 45%, #2d1a4a, #120a20 70%)",
-    "shipyard":"radial-gradient(ellipse 60% 50% at 60% 40%, #4a1a1a, #1a0a0a 70%)",
-    "spacedock":"radial-gradient(circle at 65% 35%, #7dd3fc, #0ea5e9 35%, #041a2e 75%)",
-    "mckinley":"radial-gradient(ellipse 60% 50% at 40% 60%, #3a3a3a, #141414 70%)",
-    "jupiter":"radial-gradient(ellipse 70% 60% at 50% 40%, #8a5a2a, #2a1a0a 70%)"
-  };
-  if(_bgMap[type])_stnBg="background:"+_bgMap[type]+";";
+  if(type==="sb80")_stnBg="background:radial-gradient(ellipse 60% 50% at 30% 40%, #5a3a1a, #1a0f08 70%);";
+  else if(type==="sb25")_stnBg="background:radial-gradient(circle at 65% 35%, #7dd3fc, #0ea5e9 35%, #041a2e 75%);";
+  else if(type==="sb375")_stnBg="background:radial-gradient(ellipse 65% 55% at 40% 45%, #7f1d1d, #1a0808 70%);";
+  else if(type==="sb74")_stnBg="background:radial-gradient(ellipse 60% 50% at 60% 40%, #6d28d9, #150a25 70%);";
   const img=src?'<img class="'+(big?"shipPicBig stnBig":"shipPic stnThumb")+'" src="'+bustUrl(src)+'" alt="" style="'+_stnBg+'">':"";
   if(big&&img){var _moon=(stnScene(type)==="earth")?'<span class="scMoon" aria-hidden="true"></span>':"";
     return '<span class="stnScene sc-'+stnScene(type)+'"><span class="scBody" aria-hidden="true"></span>'+_moon+'<span class="scStars"></span>'+img+'</span>';}
@@ -17480,7 +17470,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.132 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.133 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
