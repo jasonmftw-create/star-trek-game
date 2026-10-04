@@ -1008,7 +1008,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.120';
+const ART_BUST='v000.6.121';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -6344,13 +6344,20 @@ function uiAddAcademyDoctor(){ /* v000.6.112: Manual fix for missing Academy per
     }
   });
   fixes.forEach(def=>{
-    if(!G.officers.some(o=>o.name===def[0])){
-      const off=MK(def);
-      G.officers.push(off);
-      // Remove from memorial if present
-      if(G.memorial)G.memorial=G.memorial.filter(m=>m.name!==def[0]);
-      log("personnel",def[0]+" reports for duty.");
-      added.push(def[0]);
+    try{
+      if(!G.officers.some(o=>o.name===def[0])){
+        const off=MK(def);
+        if(off&&off.name){
+          G.officers.push(off);
+          if(G.memorial)G.memorial=G.memorial.filter(m=>m.name!==def[0]);
+          log("personnel",def[0]+" reports for duty.");
+          added.push(def[0]);
+        }else{
+          added.push(def[0]+" (MK failed)");
+        }
+      }
+    }catch(e){
+      added.push(def[0]+" (error: "+(e.message||e)+")");
     }
   });
   // Also revive if dead
@@ -17127,7 +17134,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.120 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.121 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
