@@ -507,6 +507,43 @@ body{touch-action:pan-y;}
     radial-gradient(ellipse 90% 70% at 50% 110%, rgba(13,80,90,.6), transparent 75%);
   animation:nebDriftA 96s ease-in-out infinite alternate;}
 .sc-mccoy .scStars{opacity:1!important;}
+/* v000.6.135 (Jason 2026-10-04): Realistic unique scenes for all starbases */
+.sc-sb80{background:#0f0a08!important;}
+.sc-sb80 .scBody{inset:-10%;
+  background:
+    radial-gradient(ellipse 30% 20% at 20% 30%, rgba(160,120,80,.6), transparent 70%),
+    radial-gradient(ellipse 25% 18% at 60% 50%, rgba(140,100,70,.5), transparent 70%),
+    radial-gradient(ellipse 20% 15% at 80% 25%, rgba(180,140,90,.4), transparent 70%),
+    radial-gradient(ellipse 35% 25% at 40% 70%, rgba(120,90,60,.45), transparent 70%);}
+.sc-sb80 .scStars{opacity:1!important;}
+.sc-sb25{background:#041a2e!important;}
+.sc-sb25 .scBody{inset:auto;width:42%;aspect-ratio:1/1;left:8%;bottom:-14%;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%, #93c5fd, #3b82f6 40%, #1e40af 70%, #172554 100%);
+  box-shadow:0 0 50px rgba(147,197,253,.4);}
+.sc-sb25 .scStars{opacity:1!important;}
+.sc-sb375{background:#1a0808!important;}
+.sc-sb375 .scBody{inset:-14%;
+  background:
+    radial-gradient(ellipse 60% 45% at 40% 40%, rgba(220,60,60,.5), transparent 70%),
+    radial-gradient(ellipse 50% 55% at 70% 60%, rgba(180,40,40,.4), transparent 70%),
+    radial-gradient(ellipse 80% 60% at 50% 110%, rgba(100,20,20,.6), transparent 75%);
+  animation:nebDriftA 90s ease-in-out infinite alternate;}
+.sc-sb375 .scStars{opacity:1!important;}
+.sc-sb74{background:#150a25!important;}
+.sc-sb74 .scBody{inset:-14%;
+  background:
+    radial-gradient(ellipse 55% 42% at 60% 35%, rgba(139,92,246,.5), transparent 70%),
+    radial-gradient(ellipse 48% 55% at 30% 65%, rgba(109,40,217,.4), transparent 70%),
+    radial-gradient(ellipse 90% 70% at 50% -10%, rgba(76,29,149,.6), transparent 75%);
+  animation:nebDriftB 100s ease-in-out infinite alternate;}
+.sc-sb74 .scStars{opacity:1!important;}
+.sc-douglas{background:#0a1420!important;}
+.sc-douglas .scBody{inset:-14%;
+  background:
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(100,150,200,.35), transparent 70%),
+    radial-gradient(ellipse 30% 25% at 25% 25%, rgba(80,120,180,.3), transparent 70%);
+  animation:nebDriftA 110s ease-in-out infinite alternate;}
+.sc-douglas .scStars{opacity:1!important;}
 .sc-redneb{background:#1a0808!important;}
 .sc-purpleneb{background:#150a25!important;}
 .sc-asteroid .scBody{inset:-14%;background:
@@ -1022,7 +1059,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.134';
+const ART_BUST='v000.6.135';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -1147,7 +1184,7 @@ mercy:"ships/class/mercy_bf2ff2.jpg",harbinger:"ships/class/harbinger_7b52da.jpg
 const MUSEUM_ART={"mus-enta":"ships/museum/mus_enta_c11ddd.jpg","mus-bounty":"ships/museum/mus_bounty_75a00f.jpg","mus-newjersey":"ships/museum/mus_newjersey_acff7a.jpg","mus-nx01":"ships/museum/mus_nx01_021bb1.jpg","mus-entd":"ships/museum/mus_entd_137a0e.jpg","mus-stargazer":"ships/museum/mus_stargazer_0843f5.jpg","mus-excelsior":"ships/museum/mus_excelsior_490d1a.jpg","mus-kronos1":"ships/museum/mus_kronos1_c64adb.jpg","mus-rombop":"ships/museum/mus_rombop_651e26.jpg"};
 const STATION_PICS={"starbase":"ships/station/deepstation_stn.png","shipyard":"ships/station/shipyard_stn.png","medical":"ships/station/medical_stn.png","research":"ships/station/research_stn.png","ds9":"ships/station/ds9_stn.png","academy":"ships/station/academy_d5a9c7.jpg","sfcommand":"ships/station/sfcommand_19916f.jpg","douglas":"ships/station/douglas_3b16dc.jpg","sb80":"ships/station/sb80_4fdeae.jpg","sb25":"ships/station/sb25_6aae5c.jpg","jupiter":"ships/station/jupiter_stn.png","spacedock":"ships/station/spacedock_stn.png","mckinley":"ships/station/mckinley_stn.png","sb375":"ships/station/sb375_f071eb.jpg","sb74":"ships/station/sb74_fe3703.jpg","empoknor":"ships/station/empoknor_045f8f.jpg","utopia":"ships/station/utopia_stn.png","caretaker":"ships/station/caretaker_array.jpg","regula":"ships/station/regula.jpg","epsilon9":"ships/station/epsilon9.jpg",
 embassy:"ships/station/embassy_stn.png",
-gate:"ships/station/gate_stn.png",daystrom:"ships/station/daystrom_stn.png",ds92:"ships/station/ds92_stn.png",k7:"ships/station/k7_stn.png","unity":"ships/station/deepstation_stn.png","mccoy":"ships/station/medical_stn.png"};
+gate:"ships/station/gate_stn.png",daystrom:"ships/station/daystrom_stn.png",ds92:"ships/station/ds92_stn.png",k7:"ships/station/k7_stn.png","unity":"ships/station/deepstation_stn.png","mccoy":"ships/station/medical_stn.png","douglas":"ships/station/douglas_3b16dc.jpg","sb80":"ships/station/sb80_4fdeae.jpg","sb25":"ships/station/sb25_6aae5c.jpg","sb375":"ships/station/sb375_f071eb.jpg","sb74":"ships/station/sb74_fe3703.jpg"};
 const SHIP_CLASSES={
   nova:      {name:"Nova",      cr:8000,  dl:200,  days:30,  hull:60,  tac:30,  sci:85, speed:8.0, slots:8,  upkeep:40, comp:80},
   intrepid:  {name:"Intrepid",  cr:15000, dl:400,  days:60,  hull:75,  tac:55,  sci:90, speed:9.9, slots:12, upkeep:80, comp:140},
@@ -12585,7 +12622,7 @@ function shipPic(cls,big,state,opts){
 }
 function compArtFor(cls){const _icn=(typeof shipIconName==="function"&&typeof SHIP_ICON_META!=="undefined"&&typeof tacPlayerShape==="function")?shipIconName(tacPlayerShape(cls),cls):null;if(_icn&&SHIP_ICON_META[_icn])return bustUrl("ships/icons/"+_icn+".png");return bustUrl((typeof SHIP_PICS!=="undefined"&&SHIP_PICS[cls])?SHIP_PICS[cls]:"");
 }
-const STATION_ART_IDS={ds9:"ds9",utopia:"utopia",douglas:"starbase",sb80:"starbase",sb25:"starbase",jupiter:"jupiter",spacedock:"spacedock",mckinley:"mckinley",sb375:"starbase",sb74:"starbase",empoknor:"ds9",daystrom:"daystrom",unity:"unity",mccoy:"mccoy"};
+const STATION_ART_IDS={ds9:"ds9",utopia:"utopia",douglas:"douglas",sb80:"sb80",sb25:"sb25",jupiter:"jupiter",spacedock:"spacedock",mckinley:"mckinley",sb375:"sb375",sb74:"sb74",empoknor:"ds9",daystrom:"daystrom",unity:"unity",mccoy:"mccoy"};
 const STN_SCENE={jupiter:"jupiter",utopia:"mars",mckinley:"earth",ds9:"wormhole",
   starbase:"neb2",research:"neb2",sb80:"asteroid",spacedock:"neb2",gate:"neb2",empoknor:"neb2",
   shipyard:"neb1",academy:"neb1",sfcommand:"neb1",sb25:"blueplanet",sb375:"redneb",sb74:"purpleneb",regula:"neb1",embassy:"neb1",
@@ -17484,7 +17521,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.134 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.135 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
