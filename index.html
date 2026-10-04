@@ -1008,7 +1008,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.107';
+const ART_BUST='v000.6.108';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -11475,6 +11475,9 @@ function lostModal(idx){
   h+='<h4>Temporal Extraction</h4>';
   if(rescued){
     h+='<p><span class="badge">✓ Rescued — serving in your fleet</span></p>';
+  }else if(G.qmode){ /* v000.6.108: Q Mode — always allow extraction */
+    h+='<p class="dim">Q Mode: pull '+esc(e.name)+' from '+esc(e.when)+' at will — no cost, no cooldown, always succeeds.</p>';
+    h+='<button class="btn" onclick="uiTemporalExtract('+idx+')">⟳ Initiate Temporal Extraction (Q)</button>';
   }else{
     h+='<p class="dim">Starfleet Temporal Mechanics can pull '+esc(e.name)+' from '+esc(e.when)+' — at their prime — into 2378. Cost: '+TEMP_COST_PRES+' prestige + '+TEMP_COST_DIL+' dilithium. Success rate 85%. The array needs '+TEMP_CD+' days to recharge between extractions.</p>';
     if(G.tempCd>0)h+='<p><span class="badge bad">Array recharging — '+G.tempCd+'d remaining</span></p>';
@@ -11568,10 +11571,12 @@ function futureShipModal(i){
   h+='<h4>Temporal Extraction</h4>';
   if(got){
     h+='<p><span class="badge">\u2713 Recovered — serving in your fleet</span></p>';
+  }else if(G.qmode){ /* v000.6.108: Q Mode — always allow extraction */
+    h+='<p class="dim">Q Mode: pull '+esc(f.name)+' from '+esc(f.when)+' at will — no cost, no cooldown, always succeeds.</p>';
+    h+='<button class="btn" onclick="uiFutureShipExtract('+i+')">\u27F3 Initiate Temporal Extraction (Q)</button>';
   }else{
     h+='<p class="dim">Pull '+esc(f.name)+' from '+esc(f.when)+' into 2378. Cost: '+TEMP_SHIP_COST_PRES+' prestige + '+TEMP_SHIP_COST_DIL+' dilithium. Success rate 85%. Shares the temporal array — '+TEMP_CD+'-day recharge between extractions.</p>';
     if(G.tempCd>0)h+='<p><span class="badge bad">Array recharging — '+G.tempCd+'d remaining</span></p>';
-    
     else if(G.prestige<TEMP_SHIP_COST_PRES||G.dilithium<TEMP_SHIP_COST_DIL)
       h+='<p><span class="badge bad">Requires '+TEMP_SHIP_COST_PRES+' prestige + '+TEMP_SHIP_COST_DIL+' dilithium</span></p>';
     else h+='<button class="btn" onclick="uiFutureShipExtract('+i+')">\u27F3 Initiate Temporal Extraction</button>';
@@ -17078,7 +17083,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.107 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.108 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
