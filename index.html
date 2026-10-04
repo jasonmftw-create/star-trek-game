@@ -1008,7 +1008,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.110';
+const ART_BUST='v000.6.111';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -3584,9 +3584,7 @@ const MEMORIAL_LOST=[
 {name:"Keyla Detmer",show:"DISCO",rank:"Lieutenant",species:"Human",cause:"Lost to time — jumped to the 32nd century",when:"3188"},
 {name:"Nahla Ake",show:"SFA",rank:"Captain",species:"Lanthanite",cause:"Lost to time — 32nd century",when:"3192"},
 {name:"B'Avi",show:"SFA",rank:"Cadet",species:"Vulcan",cause:"Died at Starfleet Academy",when:"32nd century",pic:"portraits/baked/b_avi_78bf38.jpg"},
-{name:"Caleb Mir",show:"SFA",rank:"Cadet",species:"Human",cause:"Lost to time — 32nd century",when:"3192"},
 {name:"Jett Reno",show:"SFA",rank:"Commander",species:"Human",cause:"Lost to time — 32nd century",when:"3192"},
-{name:"Kyle",show:"SFA",rank:"Cadet",species:"Human",cause:"Lost to time \u2014 32nd century",when:"3192"},
 {name:"Phlox",show:"ENT",rank:"Lieutenant Commander",species:"Denobulan",cause:"Lost to history \u2014 22nd century",when:"2150s"},
 {name:"Thy'lek Shran",show:"ENT",rank:"Captain",species:"Andorian",cause:"Lost to history \u2014 22nd century",when:"2150s"},
 /* v000.6.073 (Jason 2026-10-03): VOY tab - adult Naomi Wildman and Miral Paris pulled from the "Endgame" future. */
@@ -4152,6 +4150,15 @@ function migrateSave(g){
     if(g.ships){const _n=g.ships.length;g.ships=g.ships.filter(s=>!(s.status==="museum"&&s.name&&s.name.indexOf("Voyager")>=0));if(g.ships.length<_n)(g.log=g.log||[]).unshift({d:g.day||0,sd:g.stardate,cat:"build",text:"USS Voyager removed from the fleet museum."});}
   }catch(_e){}
   /* v000.6.096: Rename Kyle to Kyle Jokovich in existing saves. */
+  /* v000.6.111: Revive Kyle/Caleb Mir wrongly marked as lost to time (Jason 2026-10-03). */
+  try{
+    (g.officers||[]).forEach(o=>{
+      if(o.name==="Kyle"||o.name==="Kyle Jokovich"||o.name==="Caleb Mir"){
+        if(o.dead||o.status==="inactive"){o.dead=false;o.status="active";o.retired=false;if(o.post&&o.post.t==="gone")o.post={t:"pool"};}
+      }
+      if(o.name&&o.name.indexOf("Kyle")===0&&o.name!=="Kyle Jokovich")o.name="Kyle Jokovich";
+    });
+  }catch(_e){}
   /* v000.6.109: Aggressive Kyle -> Kyle Jokovich rename (Jason 2026-10-03). Matches any Kyle variant. */
   try{
     (g.officers||[]).forEach(o=>{if(o.name&&o.name.indexOf("Kyle")===0&&o.name!=="Kyle Jokovich")o.name="Kyle Jokovich";});
@@ -17083,7 +17090,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.110 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.111 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
