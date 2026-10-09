@@ -1008,7 +1008,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.142';
+const ART_BUST='v000.6.143';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -6669,41 +6669,42 @@ async function aiSend(oid){
    is confirmed by the player before it takes effect. */
 function aiNorm(s){return String(s||"").toLowerCase().replace(/[^a-z0-9 ]/g,"").replace(/\s+/g," ").trim();}
 function aiFindShip(name){
-  const n=aiNorm(name).replace(/^uss /,"");
+  const n=aiNorm(name).replace(/^uss /,""),ns=n.replace(/ /g,"");
   if(!n)return null;
   const cands=(G.ships||[]).filter(function(s){return s&&!s.mothballed;});
-  let f=cands.find(function(s){return aiNorm(s.name).replace(/^uss /,"")===n;});
-  if(!f&&n.length>2)f=cands.find(function(s){return aiNorm(s.name).replace(/^uss /,"").indexOf(n)>=0;});
+  const sn=function(s){return aiNorm(s.name).replace(/^uss /,"");};
+  let f=cands.find(function(s){return sn(s)===n||sn(s).replace(/ /g,"")===ns;});
+  if(!f&&n.length>2)f=cands.find(function(s){const x=sn(s);return x.indexOf(n)>=0||x.replace(/ /g,"").indexOf(ns)>=0;});
   return f||null;
-}
+} /* v000.6.143: space-insensitive name matching ("Earth Space Dock" = "Earth Spacedock") */
 function aiFindOfficer(name){
-  const n=aiNorm(name);
+  const n=aiNorm(name),ns=n.replace(/ /g,"");
   if(!n)return null;
   const cands=G.officers.filter(function(o){return o&&!o.dead&&!o.retired&&o.status==="active";});
-  let f=cands.find(function(o){return aiNorm(o.name)===n;});
-  if(!f&&n.length>2)f=cands.find(function(o){return aiNorm(o.name).indexOf(n)>=0;});
+  let f=cands.find(function(o){const x=aiNorm(o.name);return x===n||x.replace(/ /g,"")===ns;});
+  if(!f&&n.length>2)f=cands.find(function(o){const x=aiNorm(o.name);return x.indexOf(n)>=0||x.replace(/ /g,"").indexOf(ns)>=0;});
   return f||null;
 }
 function aiResolveDest(text){
-  const n=aiNorm(text);
+  const n=aiNorm(text),ns=n.replace(/ /g,"");
   if(!n)return null;
-  if(n==="home"||n==="earth"||n==="earth spacedock"||n==="spacedock")return {post:"sol",label:"Sol (Earth Spacedock)"};
-  for(const k in POST_LABELS){if(aiNorm(POST_LABELS[k])===n||k===n.replace(/ /g,""))return {post:k,label:POST_LABELS[k]};}
-  for(const k in POST_LABELS){if(n.length>2&&aiNorm(POST_LABELS[k]).indexOf(n)>=0)return {post:k,label:POST_LABELS[k]};}
+  if(n==="home"||n==="earth"||ns==="earthspacedock"||ns==="spacedock")return {post:"sol",label:"Sol (Earth Spacedock)"};
+  for(const k in POST_LABELS){const lk=aiNorm(POST_LABELS[k]);if(lk===n||lk.replace(/ /g,"")===ns||k===ns)return {post:k,label:POST_LABELS[k]};}
+  for(const k in POST_LABELS){const lk=aiNorm(POST_LABELS[k]);if(n.length>2&&(lk.indexOf(n)>=0||lk.replace(/ /g,"").indexOf(ns)>=0))return {post:k,label:POST_LABELS[k]};}
   const sts=(G.stations||[]).filter(function(s){return s&&s.status==="active";});
-  let st=sts.find(function(s){return aiNorm(s.name)===n;});
-  if(!st&&n.length>2)st=sts.find(function(s){return aiNorm(s.name).indexOf(n)>=0;});
+  let st=sts.find(function(s){const x=aiNorm(s.name);return x===n||x.replace(/ /g,"")===ns;});
+  if(!st&&n.length>2)st=sts.find(function(s){const x=aiNorm(s.name);return x.indexOf(n)>=0||x.replace(/ /g,"").indexOf(ns)>=0;});
   if(st&&st.post&&POST_LABELS[st.post])return {post:st.post,label:POST_LABELS[st.post]+" ("+st.name+")"};
   return null;
 }
 function aiResolvePosting(text){
-  const n=aiNorm(text);
+  const n=aiNorm(text),ns=n.replace(/ /g,"");
   if(n==="pool"||n==="unassigned")return {t:"pool"};
   if(n==="hq"||n==="starfleet command")return {t:"hq"};
   const s=aiFindShip(text);if(s)return {t:"ship",id:s.id};
   const sts=(G.stations||[]).filter(function(x){return x&&x.status==="active";});
-  let st=sts.find(function(x){return aiNorm(x.name)===n;});
-  if(!st&&n.length>2)st=sts.find(function(x){return aiNorm(x.name).indexOf(n)>=0;});
+  let st=sts.find(function(x){const xn=aiNorm(x.name);return xn===n||xn.replace(/ /g,"")===ns;});
+  if(!st&&n.length>2)st=sts.find(function(x){const xn=aiNorm(x.name);return xn.indexOf(n)>=0||xn.replace(/ /g,"").indexOf(ns)>=0;});
   if(st)return {t:"station",id:st.id};
   return null;
 }
@@ -17723,7 +17724,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.142 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.143 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
