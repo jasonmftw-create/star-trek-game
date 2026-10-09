@@ -1008,7 +1008,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.143';
+const ART_BUST='v000.6.144';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -12278,6 +12278,37 @@ function portraitPick(name,entry){
   return "main";
 }
 const SPECIES_PKEY={"Human":"human","Klingon":"klingon","Vulcan":"vulcan","Romulan":"romulan","Liberated Borg":"borg","Ferengi":"ferengi","Andorian":"andorian","Android":"synth","Android / Synth":"synth","Tellarite":"tellarite","Trill":"trill","Hologram":"hologram","Talaxian":"talaxian","Ocampa":"ocampa","Hirogen":"hirogen","Kazon":"kazon","Jem'Hadar":"jemhadar","Vorta":"vorta","Changeling":"changeling"};
+/* ================= v000.6.144: DIVISION UNIFORMS (Jason 2026-10-09) =================
+   Every portrait gets 3 division variants (_cmd red / _ops gold / _sci blue).
+   divApply() swaps the base portrait for the officer's division variant when
+   the variant exists (tracked in portraits/div-done.jsonl, one base key per
+   line); otherwise it falls back to the base portrait. */
+const DIV_DEPTS_CMD=["Command"],DIV_DEPTS_OPS=["Operations","Engineering","Security"],DIV_DEPTS_SCI=["Science","Medical"];
+function divOfDept(dept){
+  const d=String(dept||"");
+  if(DIV_DEPTS_OPS.indexOf(d)>=0)return "ops";
+  if(DIV_DEPTS_SCI.indexOf(d)>=0)return "sci";
+  return "cmd";
+}
+var DIV_DONE={};
+function divManifestLoad(){
+  try{
+    fetch("portraits/div-done.jsonl?v="+encodeURIComponent("v000.6.144"))
+      .then(function(r){return r.ok?r.text():"";})
+      .then(function(t){DIV_DONE={};String(t||"").split("\n").forEach(function(line){const k=line.trim();if(k)DIV_DONE[k]=1;});try{render();}catch(e){};})
+      .catch(function(){});
+  }catch(e){}
+}
+function divApply(url,entry){
+  if(!url||!entry||!entry.dept)return url;
+  const div=divOfDept(entry.dept);
+  const m=/portraits\/(?:baked\/)?([^?\/]+)\.jpg/i.exec(String(url));
+  if(!m)return url;
+  if(DIV_DONE[m[1]])return String(url).replace(/\.jpg(\?.*)?$/i,"_"+div+".jpg$1");
+  return url;
+}
+try{divManifestLoad();}catch(e){} /* v000.6.144: load division variant manifest at startup */
+
 function crewPoolUrls(key){
   const out=[];for(let i=1;i<=50;i++)out.push(bustUrl("portraits/"+key+"-"+String(i).padStart(2,"0")+".jpg"));
   return out;
@@ -12290,7 +12321,15 @@ function crewPortraitFor(o){
   for(let i=0;i<nm.length;i++)hsh=(hsh*31+nm.charCodeAt(i))>>>0;
   return bustUrl("portraits/"+key+"-"+g+"-"+String(hsh%50+1).padStart(2,"0")+".jpg");
 } /* v000.6.046 (Jason 2026-10-03): hsh%11 (not %50) — only 11 portraits exist per group. */
-function portraitSrc(name,entry){if(entry&&entry.pic)return bustUrl(entry.pic);if(typeof PORTRAITS_ALT!=="undefined"&&PORTRAITS_ALT[name]&&portraitPick(name,entry)==="alt")return bustUrl(PORTRAITS_ALT[name]);if(typeof PORTRAITS!=="undefined"&&PORTRAITS[name])return bustUrl(PORTRAITS[name]);if(entry&&entry.customPic)return bustUrl(entry.customPic);if(entry){var cp=crewPortraitFor(entry);if(cp)return cp;}return "";}
+function portraitSrc(name,entry){
+  let base="";
+  if(entry&&entry.pic)base=bustUrl(entry.pic);
+  else if(typeof PORTRAITS_ALT!=="undefined"&&PORTRAITS_ALT[name]&&portraitPick(name,entry)==="alt")base=bustUrl(PORTRAITS_ALT[name]);
+  else if(typeof PORTRAITS!=="undefined"&&PORTRAITS[name])base=bustUrl(PORTRAITS[name]);
+  else if(entry&&entry.customPic)base=bustUrl(entry.customPic);
+  else if(entry){var cp=crewPortraitFor(entry);if(cp)base=cp;}
+  return divApply(base,entry);
+} /* v000.6.144: division uniform variants */
 function portraitVerCur(name,entry){return portraitPick(name,entry);}
 function portraitToggleHtml(name,entry){
   const info=PORTRAIT_VER_INFO[name];if(!info)return "";
@@ -17724,7 +17763,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.143 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.144 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
