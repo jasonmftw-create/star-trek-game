@@ -1008,7 +1008,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.145';
+const ART_BUST='v000.6.146';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -12300,13 +12300,15 @@ function divManifestLoad(){
   }catch(e){}
 }
 function divApply(url,entry){
-  if(!url||!entry||!entry.dept)return url;
-  const div=divOfDept(entry.dept);
+  if(!url||!entry)return url;
+  let div=null;
+  try{if(typeof officerDivision==="function"){const od=officerDivision(entry);if(od==="command")div="cmd";else if(od==="operations")div="ops";else if(od==="sciences")div="sci";}}catch(e){}
+  if(!div)div=divOfDept(entry.dept);
   const m=/portraits\/(?:baked\/)?([^?\/]+)\.jpg/i.exec(String(url));
   if(!m)return url;
   if(DIV_DONE[m[1]])return String(url).replace(/\.jpg(\?.*)?$/i,"_"+div+".jpg$1");
   return url;
-}
+} /* v000.6.146: use officerDivision() so the division picker swaps variant images */
 try{divManifestLoad();}catch(e){} /* v000.6.144: load division variant manifest at startup */
 
 function crewPoolUrls(key){
@@ -12612,7 +12614,7 @@ function portraitIsUniformed(name,entry){
 }
 function divImgAttrs(o){
   var d=officerDivision(o);
-  if(d&&portraitIsUniformed(o.name,o)){var s=portraitSrc(o.name,o);return ' data-divsrc="'+s+'" data-div="'+d+'" data-divnat="'+(o.divNat||'')+'" data-divname="'+esc(o.name)+'" onload="divRecolorApply(this)"';} /* v000.6.064: data-divname keys the DIV_SHIRT_OVERRIDE map (officer name, stable across rebakes) */
+  if(d&&portraitIsUniformed(o.name,o)){var s=portraitSrc(o.name,o);if(/_(cmd|ops|sci)\.jpg/i.test(s))return "";return ' data-divsrc="'+s+'" data-div="'+d+'" data-divnat="'+(o.divNat||'')+'" data-divname="'+esc(o.name)+'" onload="divRecolorApply(this)"';} /* v000.6.064: data-divname keys the DIV_SHIRT_OVERRIDE map (officer name, stable across rebakes). v000.6.146: pre-generated division variant in use — no hue-shift. */
   return "";
 }
 function uiPortraitImgRefresh(img,name){
@@ -12620,7 +12622,7 @@ function uiPortraitImgRefresh(img,name){
   for(var i=0;i<offs.length;i++)if(offs[i].name===name){oe=offs[i];break;}
   var os=portraitSrc(name,oe||undefined);
   img.removeAttribute("data-divsrc");img.removeAttribute("data-div");img.removeAttribute("data-divnat");img.removeAttribute("onload");
-  if(oe){var d=officerDivision(oe);if(d&&portraitIsUniformed(name,oe)){img.setAttribute("data-divsrc",os);img.setAttribute("data-div",d);img.setAttribute("data-divnat",oe.divNat||"");img.setAttribute("onload","divRecolorApply(this)");}}
+  if(oe){var d=officerDivision(oe);if(d&&portraitIsUniformed(name,oe)&&!/_(cmd|ops|sci)\.jpg/i.test(os)){img.setAttribute("data-divsrc",os);img.setAttribute("data-div",d);img.setAttribute("data-divnat",oe.divNat||"");img.setAttribute("onload","divRecolorApply(this)");}} /* v000.6.146: pre-generated variant in use — no hue-shift */
   img.src=os;
 }
 function divisionPickerHtml(o){
@@ -17763,7 +17765,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.145 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.146 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
