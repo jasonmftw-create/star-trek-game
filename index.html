@@ -1008,7 +1008,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.141';
+const ART_BUST='v000.6.142';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -6803,7 +6803,7 @@ function aiOrdersBlock(o){
   s+='[[ORDER:COMMEND who="Officer Name" reason="brief reason"]]\n';
   const myShip=(o.post&&o.post.t==="ship")?ship(o.post.id):null;
   if(myShip)s+='Your ship: '+myShip.name+'. For NAV use ship="'+myShip.name+'" unless the commander names another vessel.\n';
-  s+='Rules: emit a tag ONLY for an explicit order given in this conversation — never for questions, status reports, or hypotheticals. Use full names exactly as listed in the fleet status above. If unsure of a name, ask instead of guessing. The commander confirms every order before it takes effect, so acknowledge naturally in your reply ("Aye, Admiral."). For a status report request, just answer from the facts above — no tag needed.';
+  s+='CRITICAL: when the commander gives an order, you MUST append the matching tag or nothing will happen in the game. Trigger phrases: "set course", "report to", "head to", "take us to", "lay in a course" = NAV; "promote", "demote" = PROMOTE/DEMOTE; "transfer", "reassign", "post" someone somewhere = REASSIGN; "make them/you first officer", "assign as" = BILLET; "discipline", "dress down", "deal with" someone = REPRIMAND; "praise", "recognize" = COMMEND. Example — commander says "take us to Vulcan": you reply "Aye, Admiral — laying in a course for Vulcan." then on its own line: [[ORDER:NAV ship="Ship Name" dest="Vulcan"]]. Rules: emit a tag ONLY for an explicit order given in this conversation — never for questions, status reports, or hypotheticals. Use full names exactly as listed in the fleet status above. If unsure of a name, ask instead of guessing. The commander confirms every order before it takes effect. For a status report request, just answer from the facts above — no tag needed.';
   return s+"\n";
 }
 /* tag parsing */
@@ -6892,6 +6892,7 @@ function aiConfirmOrders(oid){
   const outs=[];
   for(const od of orders){try{outs.push(aiExecuteOrder(o,od));}catch(e){outs.push("That order could not be carried out.");}}
   save();render();
+  try{toast(outs[0]||"Orders processed.");}catch(e){}
   const hist=aiChatHist(o);
   for(const t of outs)hist.push({r:"sys",t:t});
   aiTrimHist(o);save();
@@ -17722,7 +17723,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.141 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.142 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
