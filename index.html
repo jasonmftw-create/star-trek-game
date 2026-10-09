@@ -951,7 +951,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
 .deckCap{font-size:11px;opacity:.55;text-align:center;margin-bottom:8px;letter-spacing:.5px;}
 .aliveTick{font-size:12px;opacity:.8;font-style:italic;margin:6px 0;padding:7px 10px;border-left:2px solid var(--teal);background:rgba(255,255,255,.03);border-radius:0 8px 8px 0;}
 .aliveGreet{font-size:13px;margin:8px 0;padding:9px 12px;border:1px solid var(--gold);border-radius:10px;background:rgba(255,215,0,.06);}
-.aiChatLog{max-height:46vh;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:10px 2px;}.aiMsgU{align-self:flex-end;background:var(--teal);color:#04121a;border-radius:12px 12px 3px 12px;padding:8px 11px;max-width:86%;font-size:13px;line-height:1.45;}.aiMsgO{align-self:flex-start;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px 12px 12px 3px;padding:8px 11px;max-width:86%;font-size:13px;line-height:1.45;}.aiTyping{opacity:.55;}.aiChatBar{display:flex;gap:8px;margin:8px 0;}.aiChatBar input{flex:1;min-width:0;}
+.aiChatLog{max-height:46vh;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:10px 2px;}.aiMsgU{align-self:flex-end;background:var(--teal);color:#04121a;border-radius:12px 12px 3px 12px;padding:8px 11px;max-width:86%;font-size:13px;line-height:1.45;}.aiMsgO{align-self:flex-start;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px 12px 12px 3px;padding:8px 11px;max-width:86%;font-size:13px;line-height:1.45;}.aiTyping{opacity:.55;}.aiChatBar{display:flex;gap:8px;margin:8px 0;}.aiChatBar input{flex:1;min-width:0;}.aiDiv{align-self:center;font-size:11px;color:#8a93a6;margin:10px 0 4px;display:flex;align-items:center;gap:8px;width:100%;}.aiDiv:before,.aiDiv:after{content:"";flex:1;height:1px;background:rgba(255,255,255,.14);}.aiConfirm{align-self:stretch;background:rgba(255,255,255,.05);border:1px solid var(--teal);border-radius:10px;padding:10px 12px;margin-top:4px;}.aiConfirmT{font-size:12px;font-weight:700;margin-bottom:6px;color:var(--teal);}.aiOrdItem{font-size:12.5px;margin:2px 0;line-height:1.4;}.aiMsgO.aiSys{opacity:.88;border-style:dashed;font-size:12.5px;}
 
 /* visible affordance for long-press hints (v2.39): dotted underline = "long-press me" */
 [data-hint]{border-bottom:1px dotted #9fb2c3;cursor:help;}
@@ -1008,7 +1008,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.140';
+const ART_BUST='v000.6.141';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -6462,7 +6462,7 @@ async function uiTestAiKey(){
   catch(e){if(st)st.textContent="Test failed: "+aiErrMsg(e);}
 }
 function aiChatHist(o){if(!o.aiChat)o.aiChat=[];return o.aiChat;}
-function aiTrimHist(o){if(o.aiChat&&o.aiChat.length>20)o.aiChat=o.aiChat.slice(-20);}
+function aiTrimHist(o){if(o.aiChat&&o.aiChat.length>24)o.aiChat=o.aiChat.slice(-24);} /* v000.6.141: raised 20→24 for session dividers */
 function temporalOrigin(o){
   if(o.temporal)return o.temporal;
   if(o.accolades)for(const a of o.accolades){const m=/rescued from (.+)/.exec(String((a&&a.n)||""));if(m)return m[1];}
@@ -6480,6 +6480,8 @@ function aiSystemFor(o){
   let s="You are "+o.name+", a "+rankName(o)+" ("+o.species+", "+(o.gender==="M"?"male":o.gender==="F"?"female":"non-binary")+") serving as a "+o.dept+" officer in Starfleet, year 2379. ";
   s+="You are speaking privately with "+addr+", the fleet commander, your superior officer. ";
   try{const ctx=aiFleetContext(o);if(ctx)s+="\nCURRENT FLEET STATUS \u2014 these facts are authoritative, never contradict them:\n"+ctx+"\n";}catch(e){}
+  try{const fd=aiFleetDisposition();if(fd)s+="\nFLEET DISPOSITION \u2014 for status reports, authoritative:\n"+fd+"\n";}catch(e){}
+  try{const il=aiIncidentLines(o);if(il)s+="\nRECENT INCIDENTS \u2014 these happened to you or were handled by you; let them color your attitude, do not recite them unprompted:\n"+il+"\n";}catch(e){}
   try{const tx=temporalOrigin(o);if(tx)s+="TEMPORAL EXTRACTION \u2014 these facts are authoritative: you were pulled through time by the fleet commander's temporal array into the year 2379, from "+tx+". You remember your original life and era clearly, and you know you now serve in this century's Starfleet. Never deny your extraction, never claim your memories begin in 2379, and never pretend you were always here. If earlier in this conversation you denied being extracted, correct yourself now, plainly and in character. ";}catch(e){}
   try{if(o.post)s+="Your posting: "+postName(o.post)+". ";}catch(e){}
   try{const sit=officerSituationLine(o);if(sit)s+="WHERE YOU ARE RIGHT NOW \u2014 "+sit+" Let this color your opening exchange naturally and unprompted, the way a person mentions where they are calling from (\u201conce we're done here at DS9\u2026\u201d) \u2014 once, lightly, never as a status report. ";}catch(e){}
@@ -6490,12 +6492,13 @@ function aiSystemFor(o){
   if(rivals.length)s+="Rivals aboard: "+rivals.join(", ")+". ";
   if(acc)s+="Recent service record: "+acc+". ";
   s+="Morale "+o.morale+"/100, loyalty "+(o.loyal==null?70:o.loyal)+"/100. ";
+  try{s+=aiOrdersBlock(o);}catch(e){}
   s+="Rules: stay fully in character as "+o.name+", a Starfleet officer \u2014 never mention being an AI or language model. Reply in first person, 1 to 4 sentences of natural spoken dialogue. No stage directions, no asterisks, no narrated actions. Address the commander as \""+addr+"\" or simply \""+pTitle+"\" \u2014 never by first name or full civilian name. If asked about a ship, officer, posting, or mission not listed above, say you do not have that information; never invent names, ranks, or assignments, and never assume canon characters hold commands unless listed. Keep it Star Trek: professional, measured, warm when it fits. Never break character.";
   return s;
 }
 async function aiChatCall(o,userText){
   const key=String(G.aiKey||"").trim();if(!key)throw new Error("no-key");
-  const hist=aiChatHist(o).slice(-8).map(function(m){return {role:m.r==="u"?"user":"model",parts:[{text:String(m.t).slice(0,600)}]};});
+  const hist=aiChatHist(o).filter(function(m){return m.r!=="div"&&m.r!=="sys";}).slice(-8).map(function(m){return {role:m.r==="u"?"user":"model",parts:[{text:String(m.t).slice(0,600)}]};});
   hist.push({role:"user",parts:[{text:String(userText).slice(0,600)}]});
   const body={system_instruction:{parts:[{text:aiSystemFor(o)}]},contents:hist,generationConfig:{maxOutputTokens:220,temperature:0.9}};
   const models=aiModelList();let last=null;
@@ -6607,7 +6610,11 @@ function aiFleetContext(o){
   return bits.join("\n");
 }
 function aiChatHtml(o){
-  const log=aiChatHist(o).map(function(m){return '<div class="'+(m.r==="u"?"aiMsgU":"aiMsgO")+'">'+esc(m.t)+'</div>';}).join("");
+  const log=aiChatHist(o).map(function(m){
+    if(m.r==="div")return '<div class="aiDiv">'+esc(m.t||"New conversation")+'</div>';
+    if(m.r==="sys")return '<div class="aiMsgO aiSys">'+esc(m.t)+'</div>';
+    return '<div class="'+(m.r==="u"?"aiMsgU":"aiMsgO")+'">'+esc(m.t)+'</div>';
+  }).join("");
   let h='<!--AI_CHAT:'+o.id+'--><div class="pfaceWrap">'+faceImg(o,"pfaceBig")+'<div style="flex:1;min-width:0;"><h2>'+nameHtml(o)+'</h2><div class="flavor">'+esc(rankName(o))+' · '+esc(o.dept||"")+' — private channel</div></div></div>';
   const sitLine=officerSituationLine(o);
   h+='<div id="aiChatLog" class="aiChatLog">'+(log||'<div class="dim" style="text-align:center;padding:14px 6px;">'+(sitLine?esc(sitLine)+'<br>':"")+'Say hello — they\'ll answer from right where they are.</div>')+'</div>';
@@ -6624,6 +6631,8 @@ function aiTalk(oid){
     return;
   }
   const _prevHtml=$("modalBox").innerHTML,_prevBack=modalBack;
+  const _h=aiChatHist(o);
+  if(_h.length&&_h[_h.length-1].r!=="div"){_h.push({r:"div",t:"New conversation — Stardate "+G.stardate.toFixed(1)});aiTrimHist(o);save();}
   openModal(aiChatHtml(o));
   aiChatScroll();
   modalBack=function(){$("modalBox").innerHTML=_prevHtml;modalBack=_prevBack;};
@@ -6638,11 +6647,14 @@ async function aiSend(oid){
   if(log&&log.insertAdjacentHTML)log.insertAdjacentHTML("beforeend",'<div class="aiMsgU">'+esc(v)+'</div><div class="aiMsgO aiTyping" id="aiTyping">…</div>');
   aiChatScroll();
   try{
-    const reply=await aiChatCall(o,v);
-    hist.push({r:"o",t:reply});aiTrimHist(o);
+    const raw=await aiChatCall(o,v);
+    const orders=aiParseOrders(raw); /* v000.6.141: AI orders */
+    const clean=aiStripOrderTags(raw)||"Aye, Admiral.";
+    hist.push({r:"o",t:clean});aiTrimHist(o);
     o.morale=clamp(o.morale+1,0,100);
     save();
-    const ty=document.getElementById("aiTyping");if(ty)ty.outerHTML='<div class="aiMsgO">'+esc(reply)+'</div>';
+    const ty=document.getElementById("aiTyping");if(ty)ty.outerHTML='<div class="aiMsgO">'+esc(clean)+'</div>';
+    if(orders.length)aiShowConfirm(oid,orders);
   }catch(e){
     const fb=aiFallbackLine();
     hist.push({r:"o",t:fb});aiTrimHist(o);save();
@@ -6651,6 +6663,243 @@ async function aiSend(oid){
   }
   aiChatScroll();
 }
+/* ================= v000.6.141: AI ORDERS (Jason 2026-10-09) =================
+   Officers carry out spoken orders from the fleet commander: navigation,
+   personnel actions, reprimands/commendations (incident memory). Every order
+   is confirmed by the player before it takes effect. */
+function aiNorm(s){return String(s||"").toLowerCase().replace(/[^a-z0-9 ]/g,"").replace(/\s+/g," ").trim();}
+function aiFindShip(name){
+  const n=aiNorm(name).replace(/^uss /,"");
+  if(!n)return null;
+  const cands=(G.ships||[]).filter(function(s){return s&&!s.mothballed;});
+  let f=cands.find(function(s){return aiNorm(s.name).replace(/^uss /,"")===n;});
+  if(!f&&n.length>2)f=cands.find(function(s){return aiNorm(s.name).replace(/^uss /,"").indexOf(n)>=0;});
+  return f||null;
+}
+function aiFindOfficer(name){
+  const n=aiNorm(name);
+  if(!n)return null;
+  const cands=G.officers.filter(function(o){return o&&!o.dead&&!o.retired&&o.status==="active";});
+  let f=cands.find(function(o){return aiNorm(o.name)===n;});
+  if(!f&&n.length>2)f=cands.find(function(o){return aiNorm(o.name).indexOf(n)>=0;});
+  return f||null;
+}
+function aiResolveDest(text){
+  const n=aiNorm(text);
+  if(!n)return null;
+  if(n==="home"||n==="earth"||n==="earth spacedock"||n==="spacedock")return {post:"sol",label:"Sol (Earth Spacedock)"};
+  for(const k in POST_LABELS){if(aiNorm(POST_LABELS[k])===n||k===n.replace(/ /g,""))return {post:k,label:POST_LABELS[k]};}
+  for(const k in POST_LABELS){if(n.length>2&&aiNorm(POST_LABELS[k]).indexOf(n)>=0)return {post:k,label:POST_LABELS[k]};}
+  const sts=(G.stations||[]).filter(function(s){return s&&s.status==="active";});
+  let st=sts.find(function(s){return aiNorm(s.name)===n;});
+  if(!st&&n.length>2)st=sts.find(function(s){return aiNorm(s.name).indexOf(n)>=0;});
+  if(st&&st.post&&POST_LABELS[st.post])return {post:st.post,label:POST_LABELS[st.post]+" ("+st.name+")"};
+  return null;
+}
+function aiResolvePosting(text){
+  const n=aiNorm(text);
+  if(n==="pool"||n==="unassigned")return {t:"pool"};
+  if(n==="hq"||n==="starfleet command")return {t:"hq"};
+  const s=aiFindShip(text);if(s)return {t:"ship",id:s.id};
+  const sts=(G.stations||[]).filter(function(x){return x&&x.status==="active";});
+  let st=sts.find(function(x){return aiNorm(x.name)===n;});
+  if(!st&&n.length>2)st=sts.find(function(x){return aiNorm(x.name).indexOf(n)>=0;});
+  if(st)return {t:"station",id:st.id};
+  return null;
+}
+function aiResolveBillet(o,text){
+  const n=String(text||"").toLowerCase().trim();
+  if(!n)return null;
+  let billets=BILLETS;
+  if(o&&o.post&&o.post.t==="station"){const st=(G.stations||[]).find(function(s){return s.id===o.post.id;});if(st)billets=stationBillets(st);}
+  let f=billets.find(function(b){return b[0]===n;})||billets.find(function(b){return String(b[1]).toLowerCase()===n;});
+  if(!f&&n.length>2)f=billets.find(function(b){return String(b[1]).toLowerCase().indexOf(n)>=0;});
+  return f?f[0]:null;
+}
+/* quiet cores: same rules as the UI buttons, no modals/toasts */
+function aiOrderCourseCore(s,postKey){
+  if(!s||s.transit||s.status!=="active"||s.mothballed)return {ok:false,msg:"that ship can't take orders right now"};
+  if(postKey===(s.post||"sol"))return {ok:false,msg:"already on station there"};
+  const r=planTravel(s,s.post||"sol",postKey);
+  clearAmbient(s);
+  if(r.days<=0){s.post=postKey;log("command",s.name+" posted to "+POST_LABELS[postKey]+".");return {ok:true,msg:"posted to "+POST_LABELS[postKey],days:0};}
+  if(G.dilithium<r.dl)return {ok:false,msg:"need "+r.dl+" dilithium for the trip"};
+  G.dilithium-=r.dl;
+  s.transit={daysLeft:r.days,total:r.days,dest:postKey,via:r.via};
+  log("command",s.name+" has set course for "+POST_LABELS[postKey]+" — "+r.label+".");
+  return {ok:true,msg:"en route to "+POST_LABELS[postKey]+" — ETA "+r.days+" days ("+r.dl+" dilithium)",days:r.days};
+}
+function aiPromoteCore(o){
+  if(!o||o.rankLabel||o.rank>=9)return {ok:false,msg:"not eligible for promotion"};
+  const cost=o.promRec?Math.ceil(25*(o.rank+1)/2):25*(o.rank+1);
+  if(G.prestige<cost)return {ok:false,msg:"need "+cost+" prestige"};
+  gainPres(-cost);o.rank++;o.timeInGrade=0;o.morale=clamp(o.morale+10,0,100);o.promRec=false;
+  awardAccolade(o,"Promoted to "+RANKS[o.rank]);
+  svcPush(o,"Promoted to "+RANKS[o.rank],postKeyOf(o));
+  log("personnel","PROMOTED: "+fullName(o)+" — by order of the fleet commander.");
+  if(o.rank===9){
+    const _ok=o.post.t,_oid=o.post.id,_hadCo=(o.roles||[]).includes("co");
+    doTransferCore(o,{t:"station",id:"sfcommand"});
+    o.flag=null;o.flagProg=0;
+    if(_hadCo&&(_ok==="ship"||_ok==="station"))successionCheck(_ok,_oid);
+    log("personnel","FLAG RANK: "+fullName(o)+" has been promoted to Admiral and ordered to report to Starfleet Command for flag assignment.");
+  }
+  return {ok:true,msg:"promoted to "+RANKS[o.rank]};
+}
+function aiDemoteCore(o){
+  if(!o||o.rankLabel||o.rank<=0)return {ok:false,msg:"not eligible for demotion"};
+  o.rank--;o.timeInGrade=0;o.morale=clamp(o.morale-10,0,100);
+  if(o.rank<9&&o.flag){o.flag=null;o.flagProg=0;log("personnel",fullName(o)+" no longer holds flag rank — flag assignment rescinded.");}
+  awardAccolade(o,"Demoted to "+RANKS[o.rank]);
+  log("personnel","DEMOTED: "+fullName(o)+" — by order of the fleet commander.");
+  return {ok:true,msg:"demoted to "+RANKS[o.rank]};
+}
+function aiBilletCore(o,bid){
+  if(!o||!bid)return {ok:false,msg:"unknown position"};
+  if(!Array.isArray(o.roles))o.roles=[];
+  const holder=roleHolder(o,bid);
+  if(holder&&holder.id!==o.id){holder.roles=(holder.roles||[]).filter(function(r){return r!==bid;});log("personnel",fullName(holder)+" relieved of "+billetLabel(bid)+" duties.");}
+  if(o.roles.indexOf(bid)<0){o.roles.push(bid);log("personnel",fullName(o)+" assigned as "+billetLabel(bid)+" ("+postName(o.post)+").");}
+  return {ok:true,msg:"assigned as "+billetLabel(bid)};
+}
+/* incident memory: reprimands & commendations stick to the officer's record */
+function aiAddIncident(target,type,viaName,reason){
+  if(!target)return;
+  target.incidents=target.incidents||[];
+  target.incidents.push({type:type,via:viaName,reason:String(reason||"").slice(0,120),d:G.stardate.toFixed(1)});
+  if(target.incidents.length>6)target.incidents=target.incidents.slice(-6);
+  target.morale=clamp(target.morale+(type==="reprimand"?-8:8),0,100);
+  log("personnel",(type==="reprimand"?"REPRIMANDED: ":"COMMENDED: ")+fullName(target)+" — "+reason+" (via "+viaName+", by order of the fleet commander).");
+}
+function aiIncidentLines(o){
+  const out=[];
+  for(const i of (o.incidents||[]).slice(-3)){
+    if(i.type==="reprimand")out.push("- On stardate "+i.d+", "+i.via+" reprimanded you on the admiral's orders for: "+i.reason+".");
+    else if(i.type==="commend")out.push("- On stardate "+i.d+", "+i.via+" commended you on the admiral's orders for: "+i.reason+".");
+  }
+  for(const i of (o.incidentsDelivered||[]).slice(-2)){
+    out.push("- You recently "+(i.type==="reprimand"?("spoke with "+i.who+" about their conduct"):("commended "+i.who+(i.reason?(" for "+i.reason):"")))+", as the admiral asked (stardate "+i.d+").");
+  }
+  return out.join("\n");
+}
+function aiFleetDisposition(){
+  const ships=(G.ships||[]).filter(function(s){return s&&!s.mothballed&&s.status==="active";}).slice(0,12);
+  return ships.map(function(s){
+    let st;
+    if(s.transit)st="in transit to "+(POST_LABELS[s.transit.dest]||s.transit.dest)+", "+Math.ceil(s.transit.daysLeft)+"d left";
+    else if(s.missionId)st="on mission";
+    else if(s.status==="refit"||s.status==="repair")st=s.status==="refit"?"in refit":"under repair";
+    else st="holding";
+    return "- "+s.name+" ("+(((SHIP_CLASSES[s.cls]||{}).name)||s.cls)+"): "+st+", "+(POST_LABELS[s.post||"sol"]||"deep space");
+  }).join("\n");
+}
+function aiOrdersBlock(o){
+  let s="\nORDERS — the fleet commander may give you spoken orders in this conversation. When they do, reply in character AND append one tag per order at the very end, each on its own line, using this exact syntax:\n";
+  s+='[[ORDER:NAV ship="Ship Name" dest="Destination"]]\n';
+  s+='[[ORDER:PROMOTE who="Officer Name"]]\n[[ORDER:DEMOTE who="Officer Name"]]\n';
+  s+='[[ORDER:REASSIGN who="Officer Name" to="Ship or Station Name"]]\n';
+  s+='[[ORDER:BILLET who="Officer Name" as="Position"]]\n';
+  s+='[[ORDER:REPRIMAND who="Officer Name" reason="brief reason"]]\n';
+  s+='[[ORDER:COMMEND who="Officer Name" reason="brief reason"]]\n';
+  const myShip=(o.post&&o.post.t==="ship")?ship(o.post.id):null;
+  if(myShip)s+='Your ship: '+myShip.name+'. For NAV use ship="'+myShip.name+'" unless the commander names another vessel.\n';
+  s+='Rules: emit a tag ONLY for an explicit order given in this conversation — never for questions, status reports, or hypotheticals. Use full names exactly as listed in the fleet status above. If unsure of a name, ask instead of guessing. The commander confirms every order before it takes effect, so acknowledge naturally in your reply ("Aye, Admiral."). For a status report request, just answer from the facts above — no tag needed.';
+  return s+"\n";
+}
+/* tag parsing */
+function aiParseOrders(text){
+  const out=[];const re=/\[\[ORDER:([A-Z]+)((?:\s+[a-z]+="[^"]*")*)\]\]/g;let m;
+  while((m=re.exec(String(text||"")))){
+    const p={};const pr=/([a-z]+)="([^"]*)"/g;let k;
+    while((k=pr.exec(m[2])))p[k[1]]=k[2];
+    p.type=m[1];out.push(p);
+  }
+  return out;
+}
+function aiStripOrderTags(text){return String(text||"").replace(/\[\[ORDER:[^\]]*\]\]/g,"").trim();}
+function aiDescribeOrder(od){
+  const T=od.type;
+  if(T==="NAV"){
+    const s=od.ship?aiFindShip(od.ship):null;
+    const d=aiResolveDest(od.dest||"");
+    const sn=s?s.name:(od.ship||"your ship");
+    if(!d)return 'Lay in a course for '+sn+': unknown destination "'+od.dest+'"';
+    let extra="";
+    if(s){try{const r=planTravel(s,s.post||"sol",d.post);extra=r.days>0?(" ("+r.days+" days, "+r.dl+" dilithium)"):" (in range)";}catch(e){}}
+    return "Lay in a course: "+sn+" → "+d.label+extra;
+  }
+  if(T==="PROMOTE"){const o=aiFindOfficer(od.who||"");return o?("Promote "+fullName(o)+" to "+RANKS[Math.min(9,(o.rank||0)+1)]):('Promote "'+od.who+'" (officer not found)');}
+  if(T==="DEMOTE"){const o=aiFindOfficer(od.who||"");return o?("Demote "+fullName(o)+" to "+RANKS[Math.max(0,(o.rank||0)-1)]):('Demote "'+od.who+'" (officer not found)');}
+  if(T==="REASSIGN"){const o=aiFindOfficer(od.who||"");const np=aiResolvePosting(od.to||"");return "Reassign "+(o?fullName(o):('"'+od.who+'"'))+" to "+(np?postName(np):('"'+od.to+'"'));}
+  if(T==="BILLET"){const o=aiFindOfficer(od.who||"");return "Assign "+(o?fullName(o):('"'+od.who+'"'))+" as "+(od.as||"a position");}
+  if(T==="REPRIMAND"){const o=aiFindOfficer(od.who||"");return "Reprimand "+(o?fullName(o):('"'+od.who+'"'))+": "+(od.reason||"");}
+  if(T==="COMMEND"){const o=aiFindOfficer(od.who||"");return "Commend "+(o?fullName(o):('"'+od.who+'"'))+": "+(od.reason||"");}
+  return "Unknown order";
+}
+function aiExecuteOrder(spk,od){
+  const T=od.type;
+  if(T==="NAV"){
+    let s=od.ship?aiFindShip(od.ship):null;
+    if(!s&&spk&&spk.post&&spk.post.t==="ship")s=ship(spk.post.id);
+    if(!s)return "No ship found for that order.";
+    const d=aiResolveDest(od.dest||"");
+    if(!d)return 'Unknown destination: "'+od.dest+'".';
+    const r=aiOrderCourseCore(s,d.post);
+    if(r.ok&&r.days>0){try{sfx("warp");}catch(e){}}
+    return r.ok?(s.name+": "+r.msg+"."):("Could not lay in the course: "+r.msg+".");
+  }
+  if(T==="PROMOTE"||T==="DEMOTE"){
+    const o=aiFindOfficer(od.who||"");if(!o)return 'Could not find "'+od.who+'".';
+    const r=T==="PROMOTE"?aiPromoteCore(o):aiDemoteCore(o);
+    if(r.ok&&T==="PROMOTE"){try{sfx("promote");}catch(e){}}
+    return r.ok?(fullName(o)+" "+r.msg+"."):("Could not carry it out: "+r.msg+".");
+  }
+  if(T==="REASSIGN"){
+    const o=aiFindOfficer(od.who||"");if(!o)return 'Could not find "'+od.who+'".';
+    const np=aiResolvePosting(od.to||"");if(!np)return 'Unknown posting: "'+od.to+'".';
+    doTransferCore(o,np);
+    return fullName(o)+" reassigned to "+postName(np)+".";
+  }
+  if(T==="BILLET"){
+    const o=aiFindOfficer(od.who||"");if(!o)return 'Could not find "'+od.who+'".';
+    const bid=aiResolveBillet(o,od.as||"");if(!bid)return 'Unknown position: "'+od.as+'".';
+    const r=aiBilletCore(o,bid);
+    return r.ok?(fullName(o)+" "+r.msg+"."):("Could not carry it out: "+r.msg+".");
+  }
+  if(T==="REPRIMAND"||T==="COMMEND"){
+    const o=aiFindOfficer(od.who||"");if(!o)return 'Could not find "'+od.who+'".';
+    const reason=String(od.reason||"conduct unbecoming").slice(0,120);
+    const via=spk?spk.name:"the admiral";
+    aiAddIncident(o,T==="REPRIMAND"?"reprimand":"commend",via,reason);
+    if(spk){spk.incidentsDelivered=spk.incidentsDelivered||[];spk.incidentsDelivered.push({type:T==="REPRIMAND"?"reprimand":"commend",who:o.name,reason:reason,d:G.stardate.toFixed(1)});if(spk.incidentsDelivered.length>6)spk.incidentsDelivered=spk.incidentsDelivered.slice(-6);}
+    return fullName(o)+(T==="REPRIMAND"?" has been reprimanded: ":" has been commended: ")+reason+".";
+  }
+  return "Unknown order.";
+}
+/* confirmation UI */
+var aiPending={};
+function aiShowConfirm(oid,orders){
+  aiPending[oid]=orders;
+  const log=document.getElementById("aiChatLog");if(!log)return;
+  const items=orders.map(function(od){return '<div class="aiOrdItem">• '+esc(aiDescribeOrder(od))+'</div>';}).join("");
+  log.insertAdjacentHTML("beforeend",'<div class="aiConfirm" id="aiConfirm"><div class="aiConfirmT">Orders awaiting your confirmation</div>'+items+'<div class="btnRow" style="margin-top:6px;"><button class="btn teal small" onclick="aiConfirmOrders(\''+oid+'\')">Confirm</button><button class="btn ghost small" onclick="aiCancelOrders(\''+oid+'\')">Cancel</button></div></div>');
+  aiChatScroll();
+}
+function aiCancelOrders(oid){delete aiPending[oid];const b=document.getElementById("aiConfirm");if(b)b.remove();}
+function aiConfirmOrders(oid){
+  const o=officer(oid);const orders=aiPending[oid]||[];delete aiPending[oid];
+  const b=document.getElementById("aiConfirm");if(b)b.remove();
+  const outs=[];
+  for(const od of orders){try{outs.push(aiExecuteOrder(o,od));}catch(e){outs.push("That order could not be carried out.");}}
+  save();render();
+  const hist=aiChatHist(o);
+  for(const t of outs)hist.push({r:"sys",t:t});
+  aiTrimHist(o);save();
+  const log=document.getElementById("aiChatLog");
+  if(log)log.insertAdjacentHTML("beforeend",outs.map(function(t){return '<div class="aiMsgO aiSys">'+esc(t)+'</div>';}).join(""));
+  aiChatScroll();
+}
+
 /* ---- AI flavor layer (v2.8): eulogies, award citations, event narration ----
    Frugal by design: one short call each, only when the player is looking at
    the moment (a death, an award tap, an event interrupt on screen). Every
@@ -17473,7 +17722,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.140 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.141 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
