@@ -310,6 +310,17 @@ body{touch-action:pan-y;}
   padding:12px;margin-bottom:10px;}
 .card h3{margin:0 0 8px;color:var(--peach);font-size:16px;letter-spacing:2px;text-transform:uppercase;}
 .card.onmission{border:2px solid var(--violet);box-shadow:0 0 14px rgba(153,153,255,.35);}
+/* v000.6.147 Fleet Dashboard */
+.dashGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0;}
+.dashTile{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:10px;
+  padding:10px 6px;text-align:center;cursor:pointer;min-height:64px;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;}
+.dashTile .v{font-size:24px;font-weight:700;color:var(--peach);line-height:1.1;}
+.dashTile .k{font-size:11px;color:var(--dim);margin-top:2px;letter-spacing:.5px;text-transform:uppercase;}
+.dashTile.warn .v{color:var(--red);}
+.dashTile.warn{border-color:rgba(255,80,80,.4);}
+.dashTile.good .v{color:var(--green);}
+.dashSec{margin:10px 0 2px;font-size:12px;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;}
 .card h4{margin:10px 0 6px;color:var(--teal);font-size:15px;letter-spacing:1px;text-transform:uppercase;}
 .row{display:flex;align-items:center;gap:10px;padding:12px 8px;border-bottom:1px solid var(--line);}
 .row:last-child{border-bottom:none;}
@@ -1008,7 +1019,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.146';
+const ART_BUST='v000.6.147';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -10729,6 +10740,89 @@ function renderNeedsAttention(){
   h+='</div>';
   return h;
 }
+/* v000.6.147 Fleet Dashboard — at-a-glance fleet status */
+function dashShipGroups(){
+  const ships=(G.ships||[]).filter(s=>!s.mothballed&&!s.abandoned&&s.status!=="museum");
+  return {
+    all:ships,
+    mission:ships.filter(s=>s.missionId||s.status==="mission"),
+    ready:ships.filter(s=>s.status==="active"&&!s.missionId&&!s.leave),
+    leave:ships.filter(s=>s.leave>0),
+    damaged:ships.filter(s=>(s.damage||0)>0&&s.status!=="repair"),
+    repair:ships.filter(s=>s.status==="repair"),
+    weary:ships.filter(s=>(s.fatigue||0)>=70&&!s.leave),
+    nocaptain:ships.filter(s=>s.status==="active"&&!s.missionId&&shipWarnings(s).some(w=>w.indexOf("No captain")>=0)),
+    undercrewed:ships.filter(s=>s.status==="active"&&shipWarnings(s).some(w=>w.indexOf("Under-crewed")>=0))
+  };
+}
+function dashCrewGroups(){
+  const act=(G.officers||[]).filter(o=>o.status==="active"&&!o.dead&&!o.retired&&o.stage==="adult");
+  return {
+    injured:act.filter(o=>o.health==="injured"),
+    lowmorale:act.filter(o=>(o.morale||50)<30),
+    lowloyal:act.filter(o=>(o.loyal==null?70:o.loyal)<30)
+  };
+}
+function dashTile(n,label,fn,warn){
+  return '<div class="dashTile'+(warn&&n>0?" warn":"")+'" onclick="'+fn+'"><div class="v">'+n+'</div><div class="k">'+label+'</div></div>';
+}
+function renderFleetDashboard(){
+  const sg=dashShipGroups(),cg=dashCrewGroups();
+  const total=sg.all.length;
+  let h='<div class="card"><h3>Fleet Dashboard</h3>';
+  h+='<div class="dashSec">Ships — '+total+' active</div><div class="dashGrid">';
+  h+=dashTile(sg.mission.length,"On Mission","uiDashShips('mission')");
+  h+=dashTile(sg.ready.length,"Ready","uiDashShips('ready')");
+  h+=dashTile(sg.leave.length,"On Leave","uiDashShips('leave')");
+  h+=dashTile(sg.damaged.length,"Damaged","uiDashShips('damaged')",true);
+  h+=dashTile(sg.repair.length,"Repairing","uiDashShips('repair')");
+  h+=dashTile(sg.weary.length,"Weary","uiDashShips('weary')",true);
+  h+='</div>';
+  h+='<div class="dashSec">Crew</div><div class="dashGrid">';
+  h+=dashTile(cg.injured.length,"Injured","uiDashCrew('injured')",true);
+  h+=dashTile(cg.lowmorale.length,"Low Morale","uiDashCrew('lowmorale')",true);
+  h+=dashTile(cg.lowloyal.length,"Low Loyalty","uiDashCrew('lowloyal')",true);
+  h+='</div>';
+  if(sg.nocaptain.length||sg.undercrewed.length){
+    h+='<div class="dashSec">Readiness</div>';
+    if(sg.nocaptain.length)h+='<div class="kv" style="cursor:pointer" onclick="uiDashShips(\'nocaptain\')"><span class="k" style="color:var(--red)">'+sg.nocaptain.length+' ship'+(sg.nocaptain.length>1?"s":"")+' with no captain</span><span class="v">▸</span></div>';
+    if(sg.undercrewed.length)h+='<div class="kv" style="cursor:pointer" onclick="uiDashShips(\'undercrewed\')"><span class="k" style="color:var(--red)">'+sg.undercrewed.length+' under-crewed ship'+(sg.undercrewed.length>1?"s":"")+'</span><span class="v">▸</span></div>';
+  }
+  h+='</div>';
+  return h;
+}
+const DASH_SHIP_TITLES={mission:"Ships on mission",ready:"Ready ships",leave:"Ships on shore leave",damaged:"Damaged ships",repair:"Ships under repair",weary:"Weary crews",nocaptain:"Ships with no captain",undercrewed:"Under-crewed ships"};
+function uiDashShips(f){
+  const list=dashShipGroups()[f]||[];
+  let h='<h2>'+(DASH_SHIP_TITLES[f]||"Ships")+'</h2><div class="flavor">'+list.length+' ship'+(list.length===1?"":"s")+'</div>';
+  list.forEach(s=>{
+    h+='<div class="row" style="cursor:pointer" onclick="uiDashShipGo(\''+s.id+'\')">'+
+      '<div class="grow"><div class="nm">'+esc(s.name)+'</div>'+
+      '<div class="sub2">'+esc(shipStatusLabel(s))+((s.fatigue||0)>=70?' · Weary':"")+'</div></div>'+
+      '<span style="color:var(--dim)">▸</span></div>';
+  });
+  h+='<div class="btnRow"><button class="btn ghost" onclick="closeModal()">Close</button></div>';
+  openModal(h);
+}
+function uiDashShipGo(id){
+  const _prevHtml=$("modalBox").innerHTML,_prevBack=modalBack;
+  shipModal(id);
+  modalBack=function(){$("modalBox").innerHTML=_prevHtml;modalBack=_prevBack;};
+}
+const DASH_CREW_TITLES={injured:"Injured officers",lowmorale:"Low morale",lowloyal:"Low loyalty"};
+function uiDashCrew(f){
+  const list=(dashCrewGroups()[f]||[]).sort((a,b)=>((f==="lowmorale"?(a.morale||0):f==="lowloyal"?(a.loyal||70):(a.healDays||0))-(f==="lowmorale"?(b.morale||0):f==="lowloyal"?(b.loyal||70):(b.healDays||0))));
+  let h='<h2>'+(DASH_CREW_TITLES[f]||"Officers")+'</h2><div class="flavor">'+list.length+' officer'+(list.length===1?"":"s")+'</div>';
+  list.forEach(o=>{
+    const detail=f==="injured"?"Injured — "+(o.healDays||"?")+" days recovery":f==="lowmorale"?"Morale "+(o.morale||0):"Loyalty "+(o.loyal==null?70:o.loyal);
+    h+='<div class="row" style="cursor:pointer" onclick="officerModal(\''+o.id+'\')">'+faceImg(o,"pfaceSm")+
+      '<div class="grow"><div class="nm">'+nameHtml(o)+'</div>'+
+      '<div class="sub2">'+esc(rankName(o))+' · '+esc(o.dept||"")+' · '+detail+'</div></div>'+
+      '<span style="color:var(--dim)">▸</span></div>';
+  });
+  h+='<div class="btnRow"><button class="btn ghost" onclick="closeModal()">Close</button></div>';
+  openModal(h);
+}
 function renderCommand(){
   const d=dailyIncome();
   const missions=G.missions.map(m=>{
@@ -10783,7 +10877,7 @@ function renderCommand(){
   if(cmdSub==="research")h+=cmdSubPills()+renderResearchCard();
   else if(cmdSub==="inst")h+=cmdSubPills()+cmdrInstitutions();
   else if(cmdSub==="rec")h+=cmdSubPills()+recCard;
-  else h+=renderNeedsAttention()+cmdrCard+cmdSubPills()+sectorCard+nemesisCard()+opsCard+sprojCardHTML(); // v4.2 sector projects
+  else h+=renderNeedsAttention()+renderFleetDashboard()+cmdrCard+cmdSubPills()+sectorCard+nemesisCard()+opsCard+sprojCardHTML(); // v4.2 sector projects — v000.6.147: fleet dashboard
   return h;
 }
 
@@ -17765,7 +17859,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.146 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.147 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
