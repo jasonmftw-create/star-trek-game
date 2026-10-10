@@ -4588,7 +4588,7 @@ function tickDay(){
   if(G.tempCd>0)G.tempCd--;
   economyTick(); buildTick(); researchTick(); refitTick(); missionTick(); transitTick(); ambientTick(); patrolTick(); sprojTick();
   if(typeof admiraltyTick==="function")admiraltyTick(); // v2.13: admiral projects upkeep + payoffs
-  healTick(); dockedTick(); leaveTick(); fatigueTick(); ageTick(); romanceTick(); familyTick(); crewTick();
+  healTick(); dockedTick(); shipLeaveTick(); fatigueTick(); ageTick(); romanceTick(); familyTick(); crewTick();
   randomEventTick(); scriptedTick(); rankCheckTick(); battleTick(); codexTick(); socialTick(); arcTick(); holoTick(); holidayTick(); ordersTick();
   if(G.shipOps&&G.shipOps.length)G.shipOps=G.shipOps.filter(function(m){return ship(m.shipId);});
   logDigestTick(); // v000.6.149 daily digest
@@ -6191,7 +6191,7 @@ function healTick(){
 }
 /* Daily servicing for ships docked at stations (v2.10). */
 /* v000.6.158: shore leave rest runs for ALL ships on leave, docked or orbiting a planet */
-function leaveTick(){
+function shipLeaveTick(){
   G.ships.forEach(function(s){
     if(!s||!(s.leave>0))return;
     s.leave--;
