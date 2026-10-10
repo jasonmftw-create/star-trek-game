@@ -1023,7 +1023,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.151';
+const ART_BUST='v000.6.152';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -12125,6 +12125,43 @@ function lostModal(idx){
   portraitTabForce=false;
   openModal(h);
 }
+/* v000.6.152: Q-mode mass temporal extraction — all candidates at once */
+function uiTemporalExtractAll(){
+  if(!G.qmode){toast("Only Q can do that.");return;}
+  const todo=MEMORIAL_LOST.filter(e=>{
+    const _extractName=e.extractAs||e.name;
+    const _alreadyHave=G.officers.some(o=>o.name===_extractName&&!o.dead);
+    return !(G.rescued&&G.rescued[e.name]&&_alreadyHave);
+  });
+  if(!todo.length){toast("Everyone is already here.");return;}
+  openModal('<h2>Mass Temporal Extraction</h2><p>Pull <b>'+todo.length+' souls</b> from across time into 2378 at their prime?</p>'+
+    '<p class="dim">Q mode: no cost, no cooldown, no failures.</p>'+
+    '<div class="btnRow"><button class="btn" onclick="uiTemporalExtractAllGo()">Do it, Q</button>'+
+    '<button class="btn ghost" onclick="closeModal()">Cancel</button></div>');
+}
+function uiTemporalExtractAllGo(){
+  closeModal();
+  let n=0;const names=[];
+  MEMORIAL_LOST.forEach(e=>{
+    const _extractName=e.extractAs||e.name;
+    const _alreadyHave=G.officers.some(o=>o.name===_extractName&&!o.dead);
+    if(G.rescued&&G.rescued[e.name]&&_alreadyHave)return;
+    const def=LOST_CREW.find(d=>d[0]===_extractName)||TRIBUTE_DEFS.find(d=>d[0]===e.name);
+    if(!def)return;
+    const off=MK(def);off.lostEra=e.show;off.temporal=e.when;
+    awardAccolade(off,"Temporal extraction \u2014 rescued from "+e.when);
+    G.officers.push(off);
+    (G.rescued=G.rescued||{})[e.name]=1;
+    names.push(fullName(off));n++;
+  });
+  sfx("temporal");
+  log("personnel","\u27f3 MASS TEMPORAL EXTRACTION: "+n+" officers pulled from across time at their prime and report for duty.");
+  interruptQueue.push({title:"Across Time",sub:"Q \u00b7 Stardate "+sdStr(G.stardate),
+    html:'<p>Q snaps his fingers. <b>'+n+' officers</b> step out of time and into your fleet.</p>'+
+    (names.length?'<div class="hr"></div><p class="dim">'+esc(names.slice(0,12).join(", "))+(names.length>12?" and "+(names.length-12)+" more":"")+'</p>':""),
+    buttons:[{t:"Magnificent"}]});
+  save();render();pumpModals();
+}
 function uiTemporalExtract(idx){
   const e=MEMORIAL_LOST[idx];if(!e)return;
   openModal('<h2>Temporal Extraction</h2><p>Pull <b>'+esc(e.name)+'</b> ('+esc(e.rank)+') from '+esc(e.when)+' into 2378 at their prime?</p>'+
@@ -12525,7 +12562,7 @@ function renderMemorial(){
     const fallenRows=showFallen?MEMORIAL_STATIC.map(sentry).join("")+offs.map((m,i)=>entry(m,m.rank+" · "+m.species,"lost",i)).join(""):"";
     const lostTitle=showFallen?("◷ Temporal Anomalies ("+(offs.length+MEMORIAL_STATIC.length+MEMORIAL_LOST.length)+")"):("◷ Temporal Anomalies — "+LOST_SHOWS.filter(s=>s[0]===lostShow)[0][1]+" ("+lostList.length+" of "+MEMORIAL_LOST.length+")");
     portraitTabForce=true;
-    h+='<div class="card" data-seccard="lost"><h3>'+lostTitle+'</h3>'+lostPills+fallenRows+lostList.map(o=>lostEntry(o.l,o.i,"lost")).join("")+'</div>';
+    h+='<div class="card" data-seccard="lost"><h3>'+lostTitle+'</h3>'+(G.qmode?'<div class="btnRow" style="margin:8px 0;"><button class="btn small violet" onclick="uiTemporalExtractAll()">\u27f3 Extract All (Q)</button></div>':"")+lostPills+fallenRows+lostList.map(o=>lostEntry(o.l,o.i,"lost")).join("")+'</div>';
     portraitTabForce=false;
   }
   h+='</div><div id="memListNoRes" style="display:none;"><div class="card"><p class="dim">No matching entries in the memorial.</p></div></div>';
@@ -18092,7 +18129,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.151 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.152 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
