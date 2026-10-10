@@ -1451,7 +1451,7 @@ function uiPlanetaryLeavePicker(id){
     h+='<button class="btn small teal" onclick="uiGrantPlanetaryLeave(\''+id+'\','+i+')">'+esc(d)+'</button>';
   });
   h+='</div><div class="btnRow"><button class="btn small" onclick="shipModal(\''+id+'\')">Cancel</button></div>';
-  showModal(h);
+  openModal(h);
 }
 function uiGrantPlanetaryLeave(id,idx){
   const s=ship(id);if(!s)return;
