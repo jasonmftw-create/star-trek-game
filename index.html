@@ -321,6 +321,10 @@ body{touch-action:pan-y;}
 .dashTile.warn{border-color:rgba(255,80,80,.4);}
 .dashTile.good .v{color:var(--green);}
 .dashSec{margin:10px 0 2px;font-size:12px;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;}
+/* v000.6.149 banter + digest */
+.banter{background:rgba(153,153,255,.07);border-left:3px solid var(--violet);border-radius:0 8px 8px 0;
+  padding:8px 10px;margin:6px 0;font-size:14px;line-height:1.65;}
+.banter .who{color:var(--peach);font-weight:700;}
 .card h4{margin:10px 0 6px;color:var(--teal);font-size:15px;letter-spacing:1px;text-transform:uppercase;}
 .row{display:flex;align-items:center;gap:10px;padding:12px 8px;border-bottom:1px solid var(--line);}
 .row:last-child{border-bottom:none;}
@@ -1019,7 +1023,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.148';
+const ART_BUST='v000.6.149';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -4321,6 +4325,33 @@ function doAdvance(n){
   pumpModals();
   pumpCompletions();
 }
+/* v000.6.149 Captain log daily digest - auto summary of the day */
+function logDigestTick(){
+  if(G.lastDigestDay===G.day)return;
+  G.lastDigestDay=G.day;
+  const today=(G.log||[]).filter(l=>l.d===G.day);
+  if(!today.length)return;
+  const byCat={};
+  today.forEach(l=>{(byCat[l.cat]=byCat[l.cat]||[]).push(l);});
+  const secs=[];
+  const msn=(byCat.mission||[]).concat(byCat.combat||[]);
+  if(msn.length){
+    const wins=msn.filter(l=>/Critical Success/.test(l.text)||(/Success/.test(l.text)&&!/Partial/.test(l.text))).length;
+    secs.push("Missions: "+msn.length+" resolved ("+wins+" successful). "+
+      msn.slice(0,3).map(l=>l.text.split(".")[0]).join(" | "));
+  }
+  if(byCat.build&&byCat.build.length)
+    secs.push("Construction: "+byCat.build.slice(0,2).map(l=>l.text.split(".")[0]).join(" | "));
+  if(byCat.event&&byCat.event.length)
+    secs.push("Notable: "+byCat.event.slice(0,2).map(l=>l.text.split(".")[0]).join(" | "));
+  const per=(byCat.personnel||[]).concat(byCat.romance||[]).concat(byCat.family||[]);
+  if(per.length)
+    secs.push("Crew: "+per.slice(0,2).map(l=>l.text.split(".")[0]).join(" | "));
+  if(!secs.length)return;
+  const body="Captain log supplemental.\n"+secs.map(s=>"\u2022 "+s).join("\n");
+  (G.captainsLog=G.captainsLog||[]).push({d:G.day,sd:G.stardate,t:"Daily Digest",b:body,auto:true});
+  if(G.captainsLog.length>300)G.captainsLog.splice(0,G.captainsLog.length-300);
+}
 function tickDay(){
   G.day++; G.stardate+=1.0; // TNG scale: 1000 units per year
   if(G.tempCd>0)G.tempCd--;
@@ -4329,6 +4360,7 @@ function tickDay(){
   healTick(); dockedTick(); fatigueTick(); ageTick(); romanceTick(); familyTick(); crewTick();
   randomEventTick(); scriptedTick(); rankCheckTick(); battleTick(); codexTick(); socialTick(); arcTick(); holoTick(); holidayTick(); ordersTick();
   if(G.shipOps&&G.shipOps.length)G.shipOps=G.shipOps.filter(function(m){return ship(m.shipId);});
+  logDigestTick(); // v000.6.149 daily digest
 }
 /* ================= v4.1 CREW LIFE — orders of the day =================
    Captains and station commanders issue multi-day department orders; the chief
@@ -4841,13 +4873,14 @@ function relationTick(){
 function socialMissionMod(crew){
   if(!crew||!crew.length)return 0;
   const loyalAvg=avg(crew.map(o=>o.loyal||70));
-  let mod=(loyalAvg-70)*0.06,fp=0,rp=0;
+  let mod=(loyalAvg-70)*0.06,fp=0,rp=0,pp=0;
   for(let i=0;i<crew.length;i++)for(let j=i+1;j<crew.length;j++){
     const a=crew[i],b=crew[j];
-    if(((a.friends||[]).indexOf(b.id)>=0)||((b.friends||[]).indexOf(a.id)>=0))fp++;
+    if(a.rel&&a.rel.partner===b.id&&(REL_STAGE_RANK[a.rel.stage]||0)>=1)pp+=((REL_STAGE_RANK[a.rel.stage]||0)>=3?2:1); // v000.6.149: partners serving together
+    else if(((a.friends||[]).indexOf(b.id)>=0)||((b.friends||[]).indexOf(a.id)>=0))fp++;
     else if(((a.rivals||[]).indexOf(b.id)>=0)||((b.rivals||[]).indexOf(a.id)>=0))rp++;
   }
-  return mod+Math.min(6,fp*2)-Math.min(9,rp*3);
+  return mod+Math.min(6,fp*2)-Math.min(9,rp*3)+Math.min(4,pp);
 }
 /* ---------- story arcs ---------- */
 function arcOff(a){return a.data.oid?officer(a.data.oid):null;}
@@ -5702,6 +5735,81 @@ function doTransferCore(o,np){
 }
 
 /* ---------- mission resolution ---------- */
+/* v000.6.149 Crew banter — overheard exchanges in the mission report */
+function firstName(o){const p=String(o.name||"?").split(" ");return p.length>1?p[p.length-1]:p[0];} // v000.6.149: bridge chatter uses surnames
+const BANTER={
+partner_good:[
+ ['"We make a hell of a team."','"We always have."'],
+ ['"Remind me to tell you how brilliant that was. Over dinner."','"I\'ll hold you to that."'],
+ ['"You had my back out there."','"Always."'],
+ ['"Starfleet should bottle whatever this is."','"They tried. It only works with you."']],
+partner_bad:[
+ ['"Are you alright? You took a hit back there."','"I\'m fine. Just... stay close."'],
+ ['"That could have gone worse."','"It could have gone better too. We\'ll get them next time."'],
+ ['"Hey. We walked away. That counts."','"Because of you."']],
+friend_good:[
+ ['"Drinks are on me tonight."','"You said that last time too."'],
+ ['"Did you see their faces?"','"I saw yours. Priceless."'],
+ ['"Textbook. They\'ll teach this at the Academy."','"They\'d better spell my name right."']],
+friend_bad:[
+ ['"Well. That happened."','"The debrief is going to be fun."'],
+ ['"Remind me never to let you pick the approach vector again."','"Remind me never to let you navigate again. We\'re even."'],
+ ['"On the bright side, the hull held."','"Mostly. Don\'t look at deck five."']],
+rival_good:[
+ ['"Don\'t think this changes anything."','"Wouldn\'t dream of it."'],
+ ['"You flew well today."','"Don\'t get used to saying that."'],
+ ['"Credit where it\'s due. This once."','"I\'m framing that sentence."']],
+rival_bad:[
+ ['"I told you that wouldn\'t work."','"Your idea wasn\'t exactly stellar either."'],
+ ['"We survive this and I\'m still filing that complaint."','"Get in line."']],
+captain_good:[
+ '"Fine work, all of you. Starfleet will hear about this one."',
+ '"That\'s how it\'s done. Take the rest of the shift to savor it."'],
+captain_bad:[
+ '"We lick our wounds, we learn, and we go again. Dismissed."',
+ '"Nobody died on my bridge today. That\'s the win I\'m taking."'],
+crew_any:[
+ ['"Another day, another miracle."','"Speak for yourself. I planned it."'],
+ ['"You ever get used to this?"','"No. That\'s the job."'],
+ ['"I\'m putting in for hazard pay."','"You\'re Starfleet. There is no hazard pay."'],
+ ['"Bridge to sickbay: my nerves are shot."','"Sickbay to bridge: so is everyone\'s."']]
+};
+function missionBanter(s,crew,outcome){
+  if(!crew||crew.length<2)return "";
+  const good=(outcome==="Critical Success"||outcome==="Success");
+  const bad=(outcome==="Failure"||outcome==="Disaster");
+  const mood=good?"good":bad?"bad":"any";
+  const officers=crew.slice().sort((a,b)=>b.rank-a.rank);
+  const captain=officers.find(o=>o.rank>=5)||officers.find(o=>o.rank===4)||null;
+  const pairs=[];
+  for(let i=0;i<crew.length;i++)for(let j=i+1;j<crew.length;j++){
+    const a=crew[i],b=crew[j];let type="crew";
+    if(a.rel&&a.rel.partner===b.id&&(REL_STAGE_RANK[a.rel.stage]||0)>=1)type="partner";
+    else if(((a.friends||[]).indexOf(b.id)>=0)||((b.friends||[]).indexOf(a.id)>=0))type="friend";
+    else if(((a.rivals||[]).indexOf(b.id)>=0)||((b.rivals||[]).indexOf(a.id)>=0))type="rival";
+    pairs.push({a:a,b:b,type:type});
+  }
+  const prio={partner:0,friend:1,rival:2,crew:3};
+  pairs.sort((x,y)=>prio[x.type]-prio[y.type]);
+  let html="";
+  // captain addresses the crew
+  if(captain&&crew.length>=3){
+    const line=pick(BANTER["captain_"+mood]||BANTER.captain_good);
+    html+='<div class="banter"><span class="who">'+esc(firstName(captain))+' (addressing the bridge):</span> '+esc(line)+'</div>';
+  }
+  // up to 2 pair exchanges
+  const used=new Set();let n=0;
+  for(const p of pairs){
+    if(n>=2)break;
+    if(used.has(p.a.id)||used.has(p.b.id))continue;
+    const pool=BANTER[p.type+"_"+mood]||BANTER.crew_any;
+    const ex=pick(pool);
+    html+='<div class="banter"><span class="who">'+esc(firstName(p.a))+':</span> '+esc(ex[0])+'<br><span class="who">'+esc(firstName(p.b))+':</span> '+esc(ex[1])+'</div>';
+    used.add(p.a.id);used.add(p.b.id);n++;
+  }
+  if(!html)return "";
+  return '<div class="hr"></div><p class="dim" style="margin:4px 0;">Overheard aboard '+esc(s.name)+':</p>'+html;
+}
 function resolveMission(m){
   if(m.kind==="shuttle")return resolveShuttleMission(m);
   const t=MISSION_DECK.find(x=>x.id===m.tIdx); const s=ship(m.shipId);
@@ -5763,7 +5871,7 @@ function resolveMission(m){
   interruptQueue.push({title:t.name+" — Mission Report",
     sub:s.name+" · "+t.type+" · Stardate "+sdStr(G.stardate),
     html:'<div class="bigTitle" style="font-size:18px;">'+outcome.toUpperCase()+'</div>'+
-      '<p>'+esc(detail)+'</p><div class="hr"></div>'+
+      '<p>'+esc(detail)+'</p>'+missionBanter(s,crew,outcome)+'<div class="hr"></div>'+
       '<div class="kv"><span class="k">Success chance</span><span class="v">'+Math.round(chance)+'%</span></div>'+
       '<div class="kv"><span class="k">Credits</span><span class="v">+'+fmt(cr)+'</span></div>'+
       '<div class="kv"><span class="k">Dilithium</span><span class="v">+'+fmt(dl)+'</span></div>'+
@@ -17863,7 +17971,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.148 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.149 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
