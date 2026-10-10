@@ -1023,7 +1023,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.154';
+const ART_BUST='v000.6.155';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -4068,7 +4068,7 @@ function migrateSave(g){
   if(g.research){if(g.research.done)for(const _k in _CLSMAP)if(g.research.done[_k]){g.research.done[_CLSMAP[_k]]=true;delete g.research.done[_k];}if(g.research.active&&_CLSMAP[g.research.active.key])g.research.active.key=_CLSMAP[g.research.active.key];}
   (g.stations||[]).forEach(st=>{if(st.comp==null)st.comp=STATION_DEFS[st.type]?STATION_DEFS[st.type].comp:100;});
   (g.ships||[]).forEach(s=>{if(s.crewOrder===undefined)s.crewOrder=null;if(s.orderCd==null)s.orderCd=0;}); // v4.1 crew-life orders
-  (g.ships||[]).forEach(s=>{if(s.refitT==null)s.refitT=0;if(s.refitTo==null)s.refitTo=0;if(s.patrol==null)s.patrol=false;}); // v4.2 refit tiers + auto-patrol
+  (g.ships||[]).forEach(s=>{if(s.refitT==null)s.refitT=0;if(s.refitTo==null)s.refitTo=0;if(s.patrol==null)s.patrol=true;}); // v4.2 refit tiers + auto-patrol
   (g.stations||[]).forEach(st=>{if(st.upg==null)st.upg=0;}); // v4.2 station upgrades
   (g.officers||[]).forEach(o=>{if(DIVISIONS.indexOf(o.division)<0)o.division=officerDivision(o)||"operations";}); // v4.4 assignable divisions
   (g.officers||[]).forEach(o=>{if(o.divNat==null)o.divNat=officerDivNat(o);}); // v5.2 natural division (audit 2026-10-03)
@@ -4354,7 +4354,7 @@ function logDigestTick(){
   (G.captainsLog=G.captainsLog||[]).push({d:G.day,sd:G.stardate,t:"Daily Digest",b:body,auto:true});
   if(G.captainsLog.length>300)G.captainsLog.splice(0,G.captainsLog.length-300);
 }
-/* ================= v000.6.154 — FIVE-FEATURE SET =================
+/* ================= v000.6.155 — FIVE-FEATURE SET =================
    1. Shore leave (officers actually go away)  2. Memorial services
    3. Officer ambitions  4. Flagship life  5. Letters from deep space
    All deterministic, zero AI calls. */
@@ -4538,7 +4538,7 @@ function tickDay(){
   randomEventTick(); scriptedTick(); rankCheckTick(); battleTick(); codexTick(); socialTick(); arcTick(); holoTick(); holidayTick(); ordersTick();
   if(G.shipOps&&G.shipOps.length)G.shipOps=G.shipOps.filter(function(m){return ship(m.shipId);});
   logDigestTick(); // v000.6.149 daily digest
-  leaveTick();ambitionTick();flagshipTick();lettersTick(); // v000.6.154
+  leaveTick();ambitionTick();flagshipTick();lettersTick(); // v000.6.155
 }
 /* ================= v4.1 CREW LIFE — orders of the day =================
    Captains and station commanders issue multi-day department orders; the chief
@@ -6015,7 +6015,7 @@ function resolveMission(m){
   const deptAvg=deptCrew.length?avg(deptCrew.map(o=>o.stats[t.capSkill])):30;
   const moraleAvg=crew.length?avg(crew.map(o=>o.morale)):50;
   let chance=50+(shipStat-t.diff)*0.6+capSkill*0.25+deptAvg*0.1+(moraleAvg-70)*0.1+rnd(-15,15);
-  chance=clamp(chance+socialMissionMod(crew)+flagshipBonus(s),5,98); // v000.6.154 flagship
+  chance=clamp(chance+socialMissionMod(crew)+flagshipBonus(s),5,98); // v000.6.155 flagship
   const roll=rnd(0,100);
   let outcome,cr=t.cr,dl=t.dl,pres=t.pres,detail="";
   if(t.type==="Science"&&hasStation("research"))cr=Math.round(cr*(1.25+0.10*stUpg("research"))); // v4.2 research upgrades
@@ -6192,7 +6192,7 @@ function killOfficer(o,cause){
   G.ledger.lost++;
   G.officers.forEach(x=>{if(x.friends)x.friends=x.friends.filter(id=>id!==o.id);if(x.rivals)x.rivals=x.rivals.filter(id=>id!==o.id);});
   log("combat","† "+fullName(o)+" — "+cause+". Their name is added to the Memorial Wall.");
-  try{memorialService(o);}catch(e){} // v000.6.154
+  try{memorialService(o);}catch(e){} // v000.6.155
   if(_wasCo&&(_pk==="ship"||_pk==="station"))successionCheck(_pk,_pid); // v2.11: XO steps up
 }
 /* ---------- romance & family ---------- */
@@ -6599,7 +6599,7 @@ function uiToggleBattles(){try{localStorage.setItem("stfc_battles",battlesOn()?"
 function ambientOn(){try{const v=localStorage.getItem("stfc_ambient");return v===null?true:v==="1";}catch(e){return true;}}
 function uiToggleAmbient(){try{localStorage.setItem("stfc_ambient",ambientOn()?"0":"1");}catch(e){}render();toast("Ambient fleet movement "+(ambientOn()?"enabled — idle ships will cruise on their own.":"disabled — ships hold position."));}
 function clearAmbient(s){if(s&&s.ambient)s.ambient=null;}
-function ambientEligible(s){return s.status==="active"&&!s.mothballed&&!s.transit&&!s.missionId&&!s.dock&&!s.cruise&&!s.abandoned&&!s.routeFor;}
+function ambientEligible(s){return s.status==="active"&&!s.mothballed&&!s.transit&&!s.missionId&&!s.dock&&!s.cruise&&!s.abandoned&&!s.routeFor&&s.patrol!==false;} /* v000.6.155: ship patrol toggle is the master switch — off means hold position, no ambient either */
 function ambientTick(){
   if(!ambientOn())return;
   const posts=Object.keys(POST_LABELS);
@@ -11289,7 +11289,7 @@ function renderCommand(){
   if(cmdSub==="research")h+=cmdSubPills()+renderResearchCard();
   else if(cmdSub==="inst")h+=cmdSubPills()+cmdrInstitutions();
   else if(cmdSub==="rec")h+=cmdSubPills()+recCard;
-  else h+=renderNeedsAttention()+renderFleetDashboard()+cmdrCard+renderFlagshipCard()+renderLettersCard()+cmdSubPills()+sectorCard+nemesisCard()+opsCard+sprojCardHTML(); // v000.6.154 // v4.2 sector projects — v000.6.147: fleet dashboard
+  else h+=renderNeedsAttention()+renderFleetDashboard()+cmdrCard+renderFlagshipCard()+renderLettersCard()+cmdSubPills()+sectorCard+nemesisCard()+opsCard+sprojCardHTML(); // v000.6.155 // v4.2 sector projects — v000.6.147: fleet dashboard
   return h;
 }
 
@@ -13508,7 +13508,7 @@ function officerModal(id){
     h+='<div class="kv" data-hint="How committed this officer is to your command, 0 to 100. Below 30 they grow miserable and lose morale daily; at 15 or less they may resign. Hold meetings to rebuild trust."><span class="k">Loyalty</span><span class="v">'+o.loyal+'/100</span></div>'+bar("LOY",o.loyal);
     h+='<div class="kv"><span class="k">Health</span><span class="v">'+(o.health==="healthy"?"Healthy":"Injured ("+Math.ceil(o.healDays)+"d)")+'</span></div>';
     if(o.onLeave)h+='<div class="kv"><span class="k">Shore leave</span><span class="v">On leave \u2014 '+esc(o.onLeave.where)+' ('+Math.max(0,o.onLeave.until-G.day)+'d left)</span></div>';
-    h+=ambitionHtml(o); // v000.6.154
+    h+=ambitionHtml(o); // v000.6.155
     h+='<div class="kv"><span class="k">Missions</span><span class="v">'+o.missions.s+'/'+o.missions.t+' successful</span></div>';
     h+='<div class="kv"><span class="k">Time in grade</span><span class="v">'+Math.floor(o.timeInGrade)+' days</span></div>';
   } else {
@@ -13550,7 +13550,7 @@ function officerModal(id){
     const mLast=(G.meetings||{})[o.id];const mCd=mLast!==undefined&&G.stardate-mLast<MEET_CD;
     _cmd+='<button class="btn small teal" '+(mCd?"disabled":"")+' onclick="uiRequestMeeting(\''+o.id+'\')">Request meeting'+(mCd?" ("+Math.ceil(MEET_CD-(G.stardate-mLast))+"d)":"")+'</button>';
     _cmd+='<button class="btn small violet" onclick="uiCounsel(\''+o.id+'\')">Counseling</button>';
-    if(!o.onLeave)_cmd+='<button class="btn small teal" onclick="uiGrantLeave(\''+o.id+'\')">Grant shore leave</button>'; // v000.6.154
+    if(!o.onLeave)_cmd+='<button class="btn small teal" onclick="uiGrantLeave(\''+o.id+'\')">Grant shore leave</button>'; // v000.6.155
     _cmd+='<button class="btn small violet" onclick="uiAwardPicker(\''+o.id+'\')">Award honor</button>';
     if(o.rankLabel&&/civilian/i.test(o.rankLabel))
       _cmd+='<button class="btn small peach" onclick="uiCommission(\''+o.id+'\',\'civ\')">Grant field commission</button>';
@@ -15201,7 +15201,7 @@ function shipModal(id){
     h+='<div class="kv"><span class="k">In repair</span><span class="v">'+esc(_ry?_ry.name:"Shipyard")+' — '+s.daysLeft+'d left</span></div><div class="prog"><i style="width:'+Math.round((1-s.daysLeft/_rtot)*100)+'%"></i></div>';}
   if(c.special)h+='<p class="dim">'+esc(c.special)+'</p>';
   h+=refitTierHTML(s); // v4.2 refit tiers
-  if(s.status==="active"&&!s.missionId&&!s.transit&&!s.dock&&!s.mothballed)h+='<div class="kv"><span class="k">Auto-patrol</span><span class="v"><button class="btn small'+(s.patrol?" on":"")+'" onclick="uiToggleShipPatrol(\''+s.id+'\')">'+(s.patrol?"On":"Off")+'</button></span></div><p class="dim">When idle, she flies routine patrol legs on her own (+150 CR per circuit, small skirmish risk). Enable the fleet toggle in Settings first — any order you give overrides instantly.</p>';
+  if(s.status==="active"&&!s.missionId&&!s.transit&&!s.dock&&!s.mothballed)h+='<div class="kv"><span class="k">Auto-patrol</span><span class="v"><button class="btn small'+(s.patrol?" on":"")+'" onclick="uiToggleShipPatrol(\''+s.id+'\')">'+(s.patrol?"On":"Off")+'</button></span></div><p class="dim">Master switch for this ship. When on, she cruises on her own when idle (ambient movement + patrol circuits if the fleet toggle is on). When off, she holds position — no autonomous movement at all. Any order you give overrides instantly.</p>';
   if(typeof shipCrewN==="function"){
     const _cc=shipCompMax(s),_cn=shipCrewN(s),_uc=shipUndercrewed(s);
     h+='<div class="kv"><span class="k">Crew</span><span class="v">'+_cn+' / '+_cc+(_uc?' <span class="badge" style="background:var(--red);color:#fff;font-weight:bold;">UNDERCREWED</span>':"")+'</span></div>';
@@ -18311,7 +18311,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.154 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.155 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
