@@ -1023,7 +1023,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.152';
+const ART_BUST='v000.6.153';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -4352,6 +4352,181 @@ function logDigestTick(){
   (G.captainsLog=G.captainsLog||[]).push({d:G.day,sd:G.stardate,t:"Daily Digest",b:body,auto:true});
   if(G.captainsLog.length>300)G.captainsLog.splice(0,G.captainsLog.length-300);
 }
+/* ================= v000.6.153 — FIVE-FEATURE SET =================
+   1. Shore leave (officers actually go away)  2. Memorial services
+   3. Officer ambitions  4. Flagship life  5. Letters from deep space
+   All deterministic, zero AI calls. */
+
+/* ---------- 1. SHORE LEAVE ---------- */
+const LEAVE_SPOTS=["Risa","Earth","Vulcan","Andor","Betazed","Bajor","Trill","Deep Space 9","Starbase Unity","Pacifica"];
+const LEAVE_STORIES=[
+  "{n} learned to surf the hard way on {w} \u2014 and loved it.",
+  "{n} spent three days in a {w} meditation retreat. Remarkably centered now.",
+  "{n} took second in a parrises squares tournament on {w}.",
+  "{n} tried every restaurant on the {w} promenade. Has opinions now.",
+  "{n} hiked the {w} highlands and came back with a rock collection.",
+  "{n} spent the whole leave reading in a {w} caf\u00e9. Blissful.",
+  "{n} took up sailing on {w}. Already talking about buying a boat.",
+  "{n} volunteered at a {w} relief shelter. Came back humbled and happy.",
+  "{n} finally beat their sibling at velocity on {w}. Gloating ensued.",
+  "{n} learned to cook {w} cuisine. The mess hall has been warned."
+];
+function grantLeaveCore(o){
+  const days=5+Math.floor(Math.random()*6),where=pick(LEAVE_SPOTS);
+  o.onLeave={until:G.day+days,where:where};
+  o.status="leave";
+  o.morale=clamp(o.morale+12,0,100);o.loyal=clamp((o.loyal==null?70:o.loyal)+6,0,100);
+  awardAccolade(o,"Granted shore leave \u2014 "+where);
+  log("personnel",fullName(o)+" departs on shore leave to "+where+" ("+days+" days).");
+  return where;
+}
+function uiGrantLeave(oid){
+  const o=officer(oid);if(!o||o.dead||o.retired||o.stage!=="adult")return;
+  if(o.onLeave){toast("Already on leave.");return;}
+  const where=grantLeaveCore(o);
+  toast(o.name.split(" ").slice(-1)+" is on leave \u2014 "+where+".");
+  save();officerModal(oid);render();
+}
+function leaveTick(){
+  G.officers.forEach(o=>{
+    if(!o.onLeave)return;
+    if(o.morale<100)o.morale=clamp(o.morale+2,0,100);
+    if(G.day>=o.onLeave.until){
+      const where=o.onLeave.where;o.onLeave=null;o.status="active";
+      o.morale=clamp(o.morale+5,0,100);o.loyal=clamp((o.loyal==null?70:o.loyal)+3,0,100);
+      let story="";
+      if(Math.random()<0.35)story=" "+pick(LEAVE_STORIES).replace("{n}",o.name.split(" ")[0]).replace("{w}",where);
+      log("personnel",fullName(o)+" returns from shore leave on "+where+", rested and ready."+story);
+    }
+  });
+}
+
+/* ---------- 2. MEMORIAL SERVICES ---------- */
+const EULOGIES=[
+  '"{n} never left anyone behind. Not once. That is how I will remember them."',
+  '"They say the stars are cold. {n} proved otherwise, every single day."',
+  '"I served with {n} for {y} years. I never once doubted they had my back."',
+  '"{n} believed in this uniform the way most people believe in gravity \u2014 completely, without thinking about it."',
+  '"The {s} is quieter today. It will be quieter every day, because {n} is gone."',
+  '"{n} laughed easily and worked hard. I cannot think of a better epitaph."',
+  '"To {n}: fair winds, following seas, and stars to steer by."'
+];
+function memorialService(o){
+  const attendees=[];
+  const p=o.rel?officer(o.rel.partner):null;
+  if(p&&!p.dead&&!p.retired)attendees.push({o:p,rel:"partner"});
+  (o.friends||[]).forEach(id=>{const f=officer(id);if(f&&!f.dead&&!f.retired&&!attendees.some(a=>a.o===f))attendees.push({o:f,rel:"friend"});});
+  const speaker=attendees.length?attendees[0].o:null;
+  const yrs=Math.max(1,Math.floor((o.timeInGrade||0)/365)+1);
+  const shipName=o.post&&o.post.t==="ship"?((ship(o.post.id)||{name:"fleet"}).name):"fleet";
+  const eulogy=pick(EULOGIES).replace("{n}",o.name.split(" ")[0]).replace("{y}",String(yrs)).replace("{s}",shipName);
+  attendees.forEach(a=>{a.o.morale=clamp(a.o.morale-8,0,100);});
+  log("personnel","\u271d Memorial service for "+fullName(o)+(speaker?" \u2014 "+fullName(speaker)+" spoke.":"."));
+  interruptQueue.push({title:"Memorial Service",sub:fullName(o)+" \u00b7 Stardate "+sdStr(G.stardate),
+    html:'<p class="dim">The crew gathers. '+(speaker?esc(fullName(speaker))+" steps forward.":"A moment of silence.")+'</p>'+
+    '<p style="font-style:italic;">'+esc(eulogy)+'</p>'+
+    (attendees.length?'<div class="hr"></div><p class="dim">In attendance: '+esc(attendees.map(a=>a.o.name.split(" ")[0]).join(", "))+'</p>':"")+
+    '<div class="kv"><span class="k">Mourning</span><span class="v">Attendees \u22128 morale</span></div>',
+    buttons:[{t:"We remember"}]});
+}
+
+/* ---------- 3. OFFICER AMBITIONS ---------- */
+const AMBITION_TYPES=["rank","skill","family","explorer","decorated"];
+const AMBITION_LABEL={rank:"Make captain",skill:"Master their craft",family:"Start a family",explorer:"See the galaxy",decorated:"Earn distinction"};
+function ensureAmbition(o){
+  if(o.ambition||o.stage!=="adult"||o.dead||o.retired)return;
+  o.ambition={type:pick(AMBITION_TYPES),done:false};
+}
+function ambitionStatus(o){
+  const a=o.ambition;if(!a)return null;
+  let cur=0,target=1,label=AMBITION_LABEL[a.type]||a.type;
+  if(a.type==="rank"){cur=o.rank;target=7;}
+  else if(a.type==="skill"){const vs=[o.stats.cmd,o.stats.sci,o.stats.eng,o.stats.med,o.stats.dip,o.stats.tac];cur=Math.round(Math.max.apply(null,vs));target=90;}
+  else if(a.type==="family"){cur=(o.rel?1:0)+(o.kids?o.kids.length:0);target=2;label=o.rel?"Grow the family":"Find love, start a family";}
+  else if(a.type==="explorer"){cur=o.missions?o.missions.t:0;target=50;label="Fly 50 missions";}
+  else if(a.type==="decorated"){cur=o.medals?o.medals.length:0;target=3;label="Earn 3 honors";}
+  return {cur:cur,target:target,label:label,done:a.done||cur>=target};
+}
+function ambitionTick(){
+  G.officers.forEach(o=>{
+    if(o.stage!=="adult"||o.dead||o.retired)return;
+    ensureAmbition(o);
+    const st=ambitionStatus(o);
+    if(st&&st.done&&!o.ambition.done){
+      o.ambition.done=true;
+      o.morale=clamp(o.morale+10,0,100);o.loyal=clamp((o.loyal==null?70:o.loyal)+5,0,100);
+      awardAccolade(o,"Achieved a lifelong ambition: "+st.label);
+      log("personnel",fullName(o)+" has achieved a lifelong ambition: "+st.label+". The crew celebrates.");
+      toast(o.name.split(" ").slice(-1)+" achieved their ambition!");
+    }
+  });
+}
+function ambitionHtml(o){
+  const st=ambitionStatus(o);if(!st)return "";
+  const pct=Math.min(100,Math.round(100*st.cur/st.target));
+  return '<div class="kv"><span class="k">Ambition</span><span class="v">'+esc(st.label)+(st.done?' <span class="badge good">Achieved</span>':"")+'</span></div>'+
+    (st.done?"":'<div class="prog"><i style="width:'+pct+'%"></i></div><div class="sub2 dim">'+st.cur+" / "+st.target+'</div>');
+}
+
+/* ---------- 4. FLAGSHIP LIFE ---------- */
+function flagshipTick(){
+  const fl=typeof flagshipId==="function"?flagshipId():null;if(!fl)return;
+  crewOfShip(fl).forEach(o=>{
+    if(o.morale<100)o.morale=clamp(o.morale+1,0,100);
+  });
+}
+function flagshipBonus(s){
+  try{if(typeof flagshipId==="function"&&flagshipId()===s.id)return 3;}catch(e){}
+  return 0;
+}
+function renderFlagshipCard(){
+  const fl=typeof flagshipId==="function"?flagshipId():null;
+  if(!fl)return '<div class="card"><h3>Flagship</h3><p class="dim">No flagship designated. Tap the \u2606 on any ship to make her your flagship \u2014 you sail aboard, and her crew serves with pride.</p></div>';
+  const s=ship(fl),crew=crewOfShip(fl);
+  return '<div class="card"><h3>Flagship</h3><div class="row" style="cursor:pointer" onclick="shipModal(\''+fl+'\')">'+
+    '<div class="grow"><div class="nm">'+esc(s.name)+'</div><div class="sub2">'+crew.length+' crew \u00b7 +3 mission rolls \u00b7 crew +1 morale/day</div></div>'+
+    '<span style="color:var(--dim)">\u25b8</span></div></div>';
+}
+
+/* ---------- 5. LETTERS FROM DEEP SPACE ---------- */
+const LETTER_TPLS=[
+  "Day {d} of {m}. {c} writes: \u201cThe crew is holding up well. {n} has taken to playing old Earth jazz in the mess at 0200. Nobody minds.\u201d",
+  "Day {d} of {m}. {c} writes: \u201cWe saw something out here I cannot properly describe. The science team is ecstatic. I am cautiously optimistic.\u201d",
+  "Day {d} of {m}. {c} writes: \u201cMorale is good. Tell my {r} I miss them, and that I have not forgotten the anniversary.\u201d",
+  "Day {d} of {m}. {c} writes: \u201cMinor systems hiccup yesterday \u2014 engineering had it sorted before I finished my coffee. This crew is remarkable.\u201d",
+  "Day {d} of {m}. {c} writes: \u201cWe held a small ceremony for a crewman\u2019s birthday in shuttlebay two. You would have laughed at the cake.\u201d",
+  "Day {d} of {m}. {c} writes: \u201cLong stretches of nothing, then everything at once. That is deep space for you. We are ready for whatever is next.\u201d",
+  "Day {d} of {m}. {c} writes: \u201c{n} and {n2} have started a chess tournament. The whole deck is involved. I am told I am seeded last.\u201d",
+  "Day {d} of {m}. {c} writes: \u201cAll quiet. The stars out here are worth the silence.\u201d"
+];
+function lettersTick(){
+  (G.ships||[]).forEach(s=>{
+    if(s.status!=="mission")return;
+    if(Math.random()>0.12)return;
+    const crew=crewOfShip(s.id);if(!crew.length)return;
+    const co=(typeof effShipCO==="function"?effShipCO(s).o:null)||crew[0];
+    const m=(G.missions||[]).find(function(x){return x.shipId===s.id;});
+    const mName=m?"our "+(m.name||"mission"):"this patrol";
+    const daysLeft=m?Math.max(1,m.daysLeft):7;
+    const others=crew.filter(function(x){return x!==co;});
+    const txt=pick(LETTER_TPLS)
+      .replace("{d}",String(Math.max(1,20-daysLeft))).replace("{m}",mName)
+      .replace("{c}",co.name.split(" ")[0])
+      .replace("{n}",others.length?others[0].name.split(" ")[0]:"the crew")
+      .replace("{n2}",others.length>1?others[1].name.split(" ")[0]:"everyone")
+      .replace("{r}",co.rel?"partner":"family");
+    (G.letters=G.letters||[]).push({from:co.name,ship:s.name,day:G.day,sd:G.stardate,text:txt});
+    if(G.letters.length>30)G.letters.splice(0,G.letters.length-30);
+    log("letters","\u2709 Letter from "+co.name.split(" ")[0]+" aboard "+s.name+": \u201c"+txt+"\u201d");
+  });
+}
+function renderLettersCard(){
+  const ls=(G.letters||[]).slice(-3).reverse();
+  if(!ls.length)return "";
+  return '<div class="card"><h3>\u2709 Letters from Deep Space</h3>'+ls.map(function(l){
+    return '<div style="margin:8px 0;"><div class="sub2 dim">'+esc(l.from)+" \u00b7 "+esc(l.ship)+" \u00b7 Stardate "+sdStr(l.sd)+'</div><p style="font-style:italic;margin:4px 0;">\u201c'+esc(l.text)+'\u201d</p></div>';
+  }).join("")+'</div>';
+}
 function tickDay(){
   G.day++; G.stardate+=1.0; // TNG scale: 1000 units per year
   if(G.tempCd>0)G.tempCd--;
@@ -4361,6 +4536,7 @@ function tickDay(){
   randomEventTick(); scriptedTick(); rankCheckTick(); battleTick(); codexTick(); socialTick(); arcTick(); holoTick(); holidayTick(); ordersTick();
   if(G.shipOps&&G.shipOps.length)G.shipOps=G.shipOps.filter(function(m){return ship(m.shipId);});
   logDigestTick(); // v000.6.149 daily digest
+  leaveTick();ambitionTick();flagshipTick();lettersTick(); // v000.6.153
 }
 /* ================= v4.1 CREW LIFE — orders of the day =================
    Captains and station commanders issue multi-day department orders; the chief
@@ -5704,7 +5880,7 @@ function meetReqResolve(how){
       o.loyal=clamp(o.loyal+8,0,100);o.morale=clamp(o.morale+5,0,100);
       awardAccolade(o,"Recommended for promotion by the Commander");resp="I won't let you down, Commander.";}
     else if(r.type==="leave"){o.morale=clamp(o.morale+12,0,100);o.loyal=clamp(o.loyal+6,0,100);
-      awardAccolade(o,"Granted shore leave");resp="You have no idea how much I needed to hear that.";}
+      const _w=grantLeaveCore(o);resp="You have no idea how much I needed to hear that. "+o.name.split(" ")[0]+" ships out to "+_w+" in the morning.";}
     else{o.morale=clamp(o.morale+6,0,100);o.loyal=clamp(o.loyal+6,0,100);resp="That means more than you know.";}
     log("personnel","You approved "+fullName(o)+"'s request: "+reqShort(r)+".");
   }else{
@@ -5837,7 +6013,7 @@ function resolveMission(m){
   const deptAvg=deptCrew.length?avg(deptCrew.map(o=>o.stats[t.capSkill])):30;
   const moraleAvg=crew.length?avg(crew.map(o=>o.morale)):50;
   let chance=50+(shipStat-t.diff)*0.6+capSkill*0.25+deptAvg*0.1+(moraleAvg-70)*0.1+rnd(-15,15);
-  chance=clamp(chance+socialMissionMod(crew),5,98);
+  chance=clamp(chance+socialMissionMod(crew)+flagshipBonus(s),5,98); // v000.6.153 flagship
   const roll=rnd(0,100);
   let outcome,cr=t.cr,dl=t.dl,pres=t.pres,detail="";
   if(t.type==="Science"&&hasStation("research"))cr=Math.round(cr*(1.25+0.10*stUpg("research"))); // v4.2 research upgrades
@@ -6014,6 +6190,7 @@ function killOfficer(o,cause){
   G.ledger.lost++;
   G.officers.forEach(x=>{if(x.friends)x.friends=x.friends.filter(id=>id!==o.id);if(x.rivals)x.rivals=x.rivals.filter(id=>id!==o.id);});
   log("combat","† "+fullName(o)+" — "+cause+". Their name is added to the Memorial Wall.");
+  try{memorialService(o);}catch(e){} // v000.6.153
   if(_wasCo&&(_pk==="ship"||_pk==="station"))successionCheck(_pk,_pid); // v2.11: XO steps up
 }
 /* ---------- romance & family ---------- */
@@ -11110,7 +11287,7 @@ function renderCommand(){
   if(cmdSub==="research")h+=cmdSubPills()+renderResearchCard();
   else if(cmdSub==="inst")h+=cmdSubPills()+cmdrInstitutions();
   else if(cmdSub==="rec")h+=cmdSubPills()+recCard;
-  else h+=renderNeedsAttention()+renderFleetDashboard()+cmdrCard+cmdSubPills()+sectorCard+nemesisCard()+opsCard+sprojCardHTML(); // v4.2 sector projects — v000.6.147: fleet dashboard
+  else h+=renderNeedsAttention()+renderFleetDashboard()+cmdrCard+renderFlagshipCard()+renderLettersCard()+cmdSubPills()+sectorCard+nemesisCard()+opsCard+sprojCardHTML(); // v000.6.153 // v4.2 sector projects — v000.6.147: fleet dashboard
   return h;
 }
 
@@ -13328,6 +13505,8 @@ function officerModal(id){
     h+='<div class="kv" data-hint="How happy this officer is, 0 to 100. High morale boosts mission success. Shore leave, meetings, weddings and reunions raise it; injuries, transfers and disasters lower it."><span class="k">Morale</span><span class="v">'+o.morale+'/100</span></div>'+bar("MOR",o.morale);
     h+='<div class="kv" data-hint="How committed this officer is to your command, 0 to 100. Below 30 they grow miserable and lose morale daily; at 15 or less they may resign. Hold meetings to rebuild trust."><span class="k">Loyalty</span><span class="v">'+o.loyal+'/100</span></div>'+bar("LOY",o.loyal);
     h+='<div class="kv"><span class="k">Health</span><span class="v">'+(o.health==="healthy"?"Healthy":"Injured ("+Math.ceil(o.healDays)+"d)")+'</span></div>';
+    if(o.onLeave)h+='<div class="kv"><span class="k">Shore leave</span><span class="v">On leave \u2014 '+esc(o.onLeave.where)+' ('+Math.max(0,o.onLeave.until-G.day)+'d left)</span></div>';
+    h+=ambitionHtml(o); // v000.6.153
     h+='<div class="kv"><span class="k">Missions</span><span class="v">'+o.missions.s+'/'+o.missions.t+' successful</span></div>';
     h+='<div class="kv"><span class="k">Time in grade</span><span class="v">'+Math.floor(o.timeInGrade)+' days</span></div>';
   } else {
@@ -13369,6 +13548,7 @@ function officerModal(id){
     const mLast=(G.meetings||{})[o.id];const mCd=mLast!==undefined&&G.stardate-mLast<MEET_CD;
     _cmd+='<button class="btn small teal" '+(mCd?"disabled":"")+' onclick="uiRequestMeeting(\''+o.id+'\')">Request meeting'+(mCd?" ("+Math.ceil(MEET_CD-(G.stardate-mLast))+"d)":"")+'</button>';
     _cmd+='<button class="btn small violet" onclick="uiCounsel(\''+o.id+'\')">Counseling</button>';
+    if(!o.onLeave)_cmd+='<button class="btn small teal" onclick="uiGrantLeave(\''+o.id+'\')">Grant shore leave</button>'; // v000.6.153
     _cmd+='<button class="btn small violet" onclick="uiAwardPicker(\''+o.id+'\')">Award honor</button>';
     if(o.rankLabel&&/civilian/i.test(o.rankLabel))
       _cmd+='<button class="btn small peach" onclick="uiCommission(\''+o.id+'\',\'civ\')">Grant field commission</button>';
@@ -18129,7 +18309,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.152 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.153 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
