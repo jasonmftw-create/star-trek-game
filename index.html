@@ -1023,7 +1023,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.157';
+const ART_BUST='v000.6.158';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -1439,7 +1439,7 @@ function uiGrantShoreLeave(id){
   toast("Shore leave granted — 7 days.");
   save();render();
 }
-/* v000.6.157: planetary shore leave — whole crew rests at a planet destination */
+/* v000.6.158: planetary shore leave — whole crew rests at a planet destination */
 function uiPlanetaryLeavePicker(id){
   const s=ship(id);if(!s)return;
   const post=s.post||"sol";
@@ -4383,7 +4383,7 @@ function logDigestTick(){
   (G.captainsLog=G.captainsLog||[]).push({d:G.day,sd:G.stardate,t:"Daily Digest",b:body,auto:true});
   if(G.captainsLog.length>300)G.captainsLog.splice(0,G.captainsLog.length-300);
 }
-/* ================= v000.6.157 — FIVE-FEATURE SET =================
+/* ================= v000.6.158 — FIVE-FEATURE SET =================
    1. Shore leave (officers actually go away)  2. Memorial services
    3. Officer ambitions  4. Flagship life  5. Letters from deep space
    All deterministic, zero AI calls. */
@@ -4588,11 +4588,11 @@ function tickDay(){
   if(G.tempCd>0)G.tempCd--;
   economyTick(); buildTick(); researchTick(); refitTick(); missionTick(); transitTick(); ambientTick(); patrolTick(); sprojTick();
   if(typeof admiraltyTick==="function")admiraltyTick(); // v2.13: admiral projects upkeep + payoffs
-  healTick(); dockedTick(); fatigueTick(); ageTick(); romanceTick(); familyTick(); crewTick();
+  healTick(); dockedTick(); leaveTick(); fatigueTick(); ageTick(); romanceTick(); familyTick(); crewTick();
   randomEventTick(); scriptedTick(); rankCheckTick(); battleTick(); codexTick(); socialTick(); arcTick(); holoTick(); holidayTick(); ordersTick();
   if(G.shipOps&&G.shipOps.length)G.shipOps=G.shipOps.filter(function(m){return ship(m.shipId);});
   logDigestTick(); // v000.6.149 daily digest
-  leaveTick();ambitionTick();flagshipTick();lettersTick(); // v000.6.157
+  leaveTick();ambitionTick();flagshipTick();lettersTick(); // v000.6.158
 }
 /* ================= v4.1 CREW LIFE — orders of the day =================
    Captains and station commanders issue multi-day department orders; the chief
@@ -6069,7 +6069,7 @@ function resolveMission(m){
   const deptAvg=deptCrew.length?avg(deptCrew.map(o=>o.stats[t.capSkill])):30;
   const moraleAvg=crew.length?avg(crew.map(o=>o.morale)):50;
   let chance=50+(shipStat-t.diff)*0.6+capSkill*0.25+deptAvg*0.1+(moraleAvg-70)*0.1+rnd(-15,15);
-  chance=clamp(chance+socialMissionMod(crew)+flagshipBonus(s),5,98); // v000.6.157 flagship
+  chance=clamp(chance+socialMissionMod(crew)+flagshipBonus(s),5,98); // v000.6.158 flagship
   const roll=rnd(0,100);
   let outcome,cr=t.cr,dl=t.dl,pres=t.pres,detail="";
   if(t.type==="Science"&&hasStation("research"))cr=Math.round(cr*(1.25+0.10*stUpg("research"))); // v4.2 research upgrades
@@ -6190,17 +6190,21 @@ function healTick(){
     if(o.healDays<=0){o.health="healthy";o.healDays=0;log("personnel",fullName(o)+" has been cleared for duty.");}}});
 }
 /* Daily servicing for ships docked at stations (v2.10). */
+/* v000.6.158: shore leave rest runs for ALL ships on leave, docked or orbiting a planet */
+function leaveTick(){
+  G.ships.forEach(function(s){
+    if(!s||!(s.leave>0))return;
+    s.leave--;
+    s.fatigue=Math.max(0,(s.fatigue||0)-20);
+    crewOfShip(s.id).forEach(function(o){if(o.morale<100)o.morale=Math.min(100,o.morale+1);});
+    if(s.leave===0){s.leaveWhere=null;log("command",s.name+" returns from shore leave — rested and ready for duty.");}
+  });
+}
 function dockedTick(){
   G.ships.forEach(function(s){
     if(!s||!s.dock)return;
     const st=station(s.dock);
     if(!st||st.status!=="active"||st.mothballed||!DOCK_DEFS[st.type]){s.dock=null;return;}
-    if(s.leave>0){ // v2.41 shore leave: 7 days of rest
-      s.leave--;
-      s.fatigue=Math.max(0,(s.fatigue||0)-20);
-      crewOfShip(s.id).forEach(function(o){if(o.morale<100)o.morale=Math.min(100,o.morale+1);});
-      if(s.leave===0){s.leaveWhere=null;log("command",s.name+" returns from shore leave — rested and ready for duty.");}
-    }
     const d=DOCK_DEFS[st.type],max=shipCompMax(s),cur=shipCrewN(s),_ut=st.upg||0; // v4.2 station upgrades
     const _rep=d.rep+4*_ut,_heal=d.heal+2*_ut,_mor=d.morale+1*_ut;
     if(d.crew>0&&cur<max)s.crew=Math.min(max,cur+Math.max(2,Math.round((max-cur)*d.crew)));
@@ -6246,7 +6250,7 @@ function killOfficer(o,cause){
   G.ledger.lost++;
   G.officers.forEach(x=>{if(x.friends)x.friends=x.friends.filter(id=>id!==o.id);if(x.rivals)x.rivals=x.rivals.filter(id=>id!==o.id);});
   log("combat","† "+fullName(o)+" — "+cause+". Their name is added to the Memorial Wall.");
-  try{memorialService(o);}catch(e){} // v000.6.157
+  try{memorialService(o);}catch(e){} // v000.6.158
   if(_wasCo&&(_pk==="ship"||_pk==="station"))successionCheck(_pk,_pid); // v2.11: XO steps up
 }
 /* ---------- romance & family ---------- */
@@ -6653,7 +6657,7 @@ function uiToggleBattles(){try{localStorage.setItem("stfc_battles",battlesOn()?"
 function ambientOn(){try{const v=localStorage.getItem("stfc_ambient");return v===null?true:v==="1";}catch(e){return true;}}
 function uiToggleAmbient(){try{localStorage.setItem("stfc_ambient",ambientOn()?"0":"1");}catch(e){}render();toast("Ambient fleet movement "+(ambientOn()?"enabled — idle ships will cruise on their own.":"disabled — ships hold position."));}
 function clearAmbient(s){if(s&&s.ambient)s.ambient=null;}
-function ambientEligible(s){return s.status==="active"&&!s.mothballed&&!s.transit&&!s.missionId&&!s.dock&&!s.cruise&&!s.abandoned&&!s.routeFor&&s.patrol!==false;} /* v000.6.157: ship patrol toggle is the master switch — off means hold position, no ambient either */
+function ambientEligible(s){return s.status==="active"&&!s.mothballed&&!s.transit&&!s.missionId&&!s.dock&&!s.cruise&&!s.abandoned&&!s.routeFor&&s.patrol!==false;} /* v000.6.158: ship patrol toggle is the master switch — off means hold position, no ambient either */
 function ambientTick(){
   if(!ambientOn())return;
   const posts=Object.keys(POST_LABELS);
@@ -11343,7 +11347,7 @@ function renderCommand(){
   if(cmdSub==="research")h+=cmdSubPills()+renderResearchCard();
   else if(cmdSub==="inst")h+=cmdSubPills()+cmdrInstitutions();
   else if(cmdSub==="rec")h+=cmdSubPills()+recCard;
-  else h+=renderNeedsAttention()+renderFleetDashboard()+cmdrCard+renderFlagshipCard()+renderLettersCard()+cmdSubPills()+sectorCard+nemesisCard()+opsCard+sprojCardHTML(); // v000.6.157 // v4.2 sector projects — v000.6.147: fleet dashboard
+  else h+=renderNeedsAttention()+renderFleetDashboard()+cmdrCard+renderFlagshipCard()+renderLettersCard()+cmdSubPills()+sectorCard+nemesisCard()+opsCard+sprojCardHTML(); // v000.6.158 // v4.2 sector projects — v000.6.147: fleet dashboard
   return h;
 }
 
@@ -13562,7 +13566,7 @@ function officerModal(id){
     h+='<div class="kv" data-hint="How committed this officer is to your command, 0 to 100. Below 30 they grow miserable and lose morale daily; at 15 or less they may resign. Hold meetings to rebuild trust."><span class="k">Loyalty</span><span class="v">'+o.loyal+'/100</span></div>'+bar("LOY",o.loyal);
     h+='<div class="kv"><span class="k">Health</span><span class="v">'+(o.health==="healthy"?"Healthy":"Injured ("+Math.ceil(o.healDays)+"d)")+'</span></div>';
     if(o.onLeave)h+='<div class="kv"><span class="k">Shore leave</span><span class="v">On leave \u2014 '+esc(o.onLeave.where)+' ('+Math.max(0,o.onLeave.until-G.day)+'d left)</span></div>';
-    h+=ambitionHtml(o); // v000.6.157
+    h+=ambitionHtml(o); // v000.6.158
     h+='<div class="kv"><span class="k">Missions</span><span class="v">'+o.missions.s+'/'+o.missions.t+' successful</span></div>';
     h+='<div class="kv"><span class="k">Time in grade</span><span class="v">'+Math.floor(o.timeInGrade)+' days</span></div>';
   } else {
@@ -13604,7 +13608,7 @@ function officerModal(id){
     const mLast=(G.meetings||{})[o.id];const mCd=mLast!==undefined&&G.stardate-mLast<MEET_CD;
     _cmd+='<button class="btn small teal" '+(mCd?"disabled":"")+' onclick="uiRequestMeeting(\''+o.id+'\')">Request meeting'+(mCd?" ("+Math.ceil(MEET_CD-(G.stardate-mLast))+"d)":"")+'</button>';
     _cmd+='<button class="btn small violet" onclick="uiCounsel(\''+o.id+'\')">Counseling</button>';
-    if(!o.onLeave)_cmd+='<button class="btn small teal" onclick="uiGrantLeave(\''+o.id+'\')">Grant shore leave</button>'; // v000.6.157
+    if(!o.onLeave)_cmd+='<button class="btn small teal" onclick="uiGrantLeave(\''+o.id+'\')">Grant shore leave</button>'; // v000.6.158
     _cmd+='<button class="btn small violet" onclick="uiAwardPicker(\''+o.id+'\')">Award honor</button>';
     if(o.rankLabel&&/civilian/i.test(o.rankLabel))
       _cmd+='<button class="btn small peach" onclick="uiCommission(\''+o.id+'\',\'civ\')">Grant field commission</button>';
@@ -18367,7 +18371,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.157 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.158 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
