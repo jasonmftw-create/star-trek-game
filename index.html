@@ -1023,7 +1023,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.150';
+const ART_BUST='v000.6.151';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -6600,6 +6600,27 @@ function temporalOrigin(o){
   if(typeof G!=="undefined"&&G.rescued&&G.rescued[o.name])return "another time";
   return null;
 }
+/* v000.6.151: commander bonds through AI chat — zero extra AI calls, tag rides the same response */
+function aiBondBlock(o){
+  const b=cmdrBonds()[o.id];
+  let s="\nCOMMANDER BOND \u2014 ";
+  if(b)s+="your personal bond with the commander: "+cmdrBondLabel(b)+". Let this color your warmth and familiarity naturally. ";
+  else s+="you have no special personal bond with the commander yet. ";
+  s+="If this conversation turns genuinely personal \u2014 the commander confiding in you, real warmth or vulnerability on either side, a true moment of connection beyond duty \u2014 append [[BOND:+1]] to the very end of your reply, after your dialogue. At most once per reply, and only when the moment is real; routine duty talk never earns it.";
+  return s;
+}
+function aiParseBonds(text){return /\[\[BOND:\+1\]\]/.test(String(text||""))?1:0;}
+function aiStripBondTags(text){return String(text||"").replace(/\[\[BOND:[^\]]*\]\]/g,"").trim();}
+function aiApplyChatBond(o){
+  if(!o||o.dead||o.retired||o.stage!=="adult")return;
+  G.chatBondDay=G.chatBondDay||{day:-1,counts:{}};
+  if(G.chatBondDay.day!==G.day)G.chatBondDay={day:G.day,counts:{}};
+  const used=G.chatBondDay.counts[o.id]||0;
+  if(used>=2)return; // max 2 chat bond points per officer per day
+  G.chatBondDay.counts[o.id]=used+1;
+  cmdrBondGain(o,1);
+  toast("Your bond with "+o.name.split(" ")[0]+" deepens.");
+}
 function aiSystemFor(o){
   const addr=aiAddrName(),pTitle=aiAddrTitle();
   const partner=o.rel?officer(o.rel.partner):null;
@@ -6623,6 +6644,7 @@ function aiSystemFor(o){
   if(acc)s+="Recent service record: "+acc+". ";
   s+="Morale "+o.morale+"/100, loyalty "+(o.loyal==null?70:o.loyal)+"/100. ";
   try{s+=aiOrdersBlock(o);}catch(e){}
+  try{s+=aiBondBlock(o);}catch(e){}
   s+="Rules: stay fully in character as "+o.name+", a Starfleet officer \u2014 never mention being an AI or language model. Reply in first person, 1 to 4 sentences of natural spoken dialogue. No stage directions, no asterisks, no narrated actions. Address the commander as \""+addr+"\" or simply \""+pTitle+"\" \u2014 never by first name or full civilian name. If asked about a ship, officer, posting, or mission not listed above, say you do not have that information; never invent names, ranks, or assignments, and never assume canon characters hold commands unless listed. Keep it Star Trek: professional, measured, warm when it fits. Never break character.";
   return s;
 }
@@ -6779,9 +6801,11 @@ async function aiSend(oid){
   try{
     const raw=await aiChatCall(o,v);
     const orders=aiParseOrders(raw); /* v000.6.141: AI orders */
-    const clean=aiStripOrderTags(raw)||"Aye, Admiral.";
+    const bondHit=aiParseBonds(raw); /* v000.6.151: chat bonds */
+    const clean=aiStripBondTags(aiStripOrderTags(raw))||"Aye, Admiral.";
     hist.push({r:"o",t:clean});aiTrimHist(o);
     o.morale=clamp(o.morale+1,0,100);
+    if(bondHit)aiApplyChatBond(o); /* v000.6.151 */
     save();
     const ty=document.getElementById("aiTyping");if(ty)ty.outerHTML='<div class="aiMsgO">'+esc(clean)+'</div>';
     if(orders.length)aiShowConfirm(oid,orders);
@@ -18068,7 +18092,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.150 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.151 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
