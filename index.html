@@ -1023,7 +1023,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.149';
+const ART_BUST='v000.6.150';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -5606,9 +5606,10 @@ function socialTick(){
   G.officers.forEach(o=>{
     if(o.status!=="active"||o.dead||o.retired||o.stage!=="adult")return;
     if(o.loyal<30)o.morale=clamp(o.morale-1,0,100);
-    if(o.loyal<=15&&Math.random()<0.02){
+    if(o.loyal<=15&&Math.random()<0.02&&!o.cmdrClose){ // v000.6.150: close bonds never resign
       svcPush(o,"Resigned their commission \u2014 left Starfleet",postKeyOf(o));o.retired=true;o.status="inactive";o.roles=[];o.post={t:"gone"};o.shuttle=null;
       if(o.rel){const p=officer(o.rel.partner);if(p)p.rel=null;o.rel=null;}
+      cmdrBondEnd(o.id,"resigned"); // v000.6.150
       log("personnel",fullName(o)+" has resigned their commission and left Starfleet. Morale across the fleet dips.");
       moraleAll(-3);
     }
@@ -5807,6 +5808,16 @@ function missionBanter(s,crew,outcome){
     html+='<div class="banter"><span class="who">'+esc(firstName(p.a))+':</span> '+esc(ex[0])+'<br><span class="who">'+esc(firstName(p.b))+':</span> '+esc(ex[1])+'</div>';
     used.add(p.a.id);used.add(p.b.id);n++;
   }
+  // v000.6.150: the commander's own bonds surface in chatter
+  const bonded=crew.find(o=>cmdrBonds()[o.id]);
+  if(bonded&&crew.length>=2){
+    const other=crew.find(o=>o.id!==bonded.id);
+    const b=cmdrBonds()[bonded.id];
+    const ex=b.kind==="romance"
+      ?['"The commander sends their love."','"Tell them we said hello back."']
+      :['"The commander owes me a drink after this one."','"Don\'t they owe all of us?"'];
+    html+='<div class="banter"><span class="who">'+esc(firstName(bonded))+':</span> '+esc(ex[0])+'<br><span class="who">'+esc(firstName(other))+':</span> '+esc(ex[1])+'</div>';
+  }
   if(!html)return "";
   return '<div class="hr"></div><p class="dim" style="margin:4px 0;">Overheard aboard '+esc(s.name)+':</p>'+html;
 }
@@ -5995,7 +6006,7 @@ function breakBond(o){
 function killOfficer(o,cause){
   if(o.dead)return;
   const _pk=o.post.t,_pid=o.post.id,_wasCo=(o.roles||[]).includes("co"); // v2.11 succession
-  svcPush(o,"Died in service \u2014 "+cause,postKeyOf(o));o.dead=true;breakBond(o);o.post={t:"gone"};o.health="healthy";o.shuttle=null;
+  svcPush(o,"Died in service \u2014 "+cause,postKeyOf(o));o.dead=true;breakBond(o);cmdrBondEnd(o.id,"lost in service");o.post={t:"gone"};o.health="healthy";o.shuttle=null; // v000.6.150
   const _me={kind:"officer",name:o.name,rank:rankName(o),species:o.species,cause,sd:G.stardate,
     def:[o.name,o.species,o.gender,o.age,o.rank,o.dept,[o.stats.cmd,o.stats.sci,o.stats.eng,o.stats.med,o.stats.dip,o.stats.tac],(o.traits||[]).slice(),"pool",o.rankLabel||null,o.stage||"adult"]};
   G.memorial.unshift(_me);
@@ -10472,6 +10483,7 @@ function meetFinish(how){
       if(MEET.detailRevealed){o.morale=clamp(o.morale+2,0,100);awardAccolade(o,"Shared personal history with the Commander");}}
     (G.meetings=G.meetings||{})[o.id]=G.stardate;
     log("personnel","Private meeting with "+fullName(o)+" in the ready room.");
+    if(MEET.path==="personal"||MEET.path==="know")cmdrBondGain(o,MEET.path==="know"?2:1); // v000.6.150 bonds
     save();render();
   }
   MEET=null;
@@ -10628,6 +10640,90 @@ function cmdrDraftDone(){
 }
 function uiCmdrRandomName(){const el=document.getElementById("cmdrName");if(el)el.value=randomCmdrName();}
 function uiCmdrSaveName(){const el=document.getElementById("cmdrName");const v=el?el.value.trim():"";G.commander.name=v;save();render();if(v)log("personnel","Fleet Commander "+v+" has taken command of the sector.");}
+/* v000.6.150 Commander bonds — the player character builds friendships and romances */
+function cmdrBonds(){G.cmdrBonds=G.cmdrBonds||{};return G.cmdrBonds;}
+const CMDR_BOND_LABEL={friend:["Friend","Close friend"],romance:["Interested","Dating","Engaged","Married"]};
+function cmdrBondLabel(b){return (CMDR_BOND_LABEL[b.kind]||[])[b.stage]||b.kind;}
+function cmdrBondGain(o,pts){
+  if(!o||o.dead||o.retired||o.stage!=="adult")return;
+  const bonds=cmdrBonds();
+  let b=bonds[o.id];
+  if(!b){b=bonds[o.id]={kind:"friend",stage:0,pts:0};}
+  // commander's romance partner is exclusive; friends are unlimited
+  b.pts+=pts;
+  cmdrBondCheck(o,b);
+  save();
+}
+function cmdrBondCheck(o,b){
+  if(b.kind==="friend"){
+    if(b.stage===0&&b.pts>=3){
+      b.stage=1;b.pts=0;
+      o.loyal=clamp((o.loyal==null?70:o.loyal)+8,0,100);o.morale=clamp(o.morale+5,0,100);
+      log("personnel","You and "+fullName(o)+" have become friends.");
+      interruptQueue.push({title:"A friendship forms",sub:fullName(o)+" · Stardate "+sdStr(G.stardate),
+        html:'<p>You and <b>'+esc(fullName(o))+'</b> have grown close beyond the chain of command. They count you as a friend.</p><div class="kv"><span class="k">Loyalty</span><span class="v">+8</span></div><div class="kv"><span class="k">Morale</span><span class="v">+5</span></div>',
+        buttons:[{t:"Continue"}]});
+    }else if(b.stage===1&&b.pts>=6){
+      b.stage=2;b.pts=0;o.cmdrClose=true;
+      o.loyal=clamp((o.loyal==null?70:o.loyal)+5,0,100);o.morale=clamp(o.morale+5,0,100);
+      log("personnel",fullName(o)+" is now one of your closest confidants.");
+      // offer romance if both are unattached
+      const free=!o.rel&&!Object.keys(cmdrBonds()).some(id=>cmdrBonds()[id].kind==="romance");
+      interruptQueue.push({title:"A close bond",sub:fullName(o)+" · Stardate "+sdStr(G.stardate),
+        html:'<p><b>'+esc(fullName(o))+'</b> is now one of your closest confidants. They would never leave your side.</p><div class="kv"><span class="k">Loyalty</span><span class="v">+5</span></div><div class="kv"><span class="k">Morale</span><span class="v">+5</span></div>'+
+        (free?'<div class="hr"></div><p>There is something more here, if you want it.</p>':""),
+        buttons:free?[{t:"Pursue romance",fn:"cmdrBondStartRomance('"+o.id+"')"},{t:"Stay friends"}]:[{t:"Continue"}]});
+    }
+  }else if(b.kind==="romance"){
+    const need=[4,6,6][b.stage]||99;
+    if(b.pts>=need&&b.stage<3){
+      b.stage++;b.pts=0;
+      const labels=["interested","dating","engaged","married"];
+      if(b.stage===1){o.loyal=clamp((o.loyal==null?70:o.loyal)+10,0,100);o.morale=clamp(o.morale+8,0,100);}
+      else if(b.stage===2){o.loyal=clamp((o.loyal==null?70:o.loyal)+5,0,100);o.morale=clamp(o.morale+5,0,100);}
+      else{o.loyal=100;o.morale=clamp(o.morale+10,0,100);o.cmdrClose=true;G.ledger.marriages++;}
+      log("romance","You and "+fullName(o)+" are now "+labels[b.stage]+".");
+      interruptQueue.push({title:labels[b.stage][0].toUpperCase()+labels[b.stage].slice(1),sub:fullName(o)+" · Stardate "+sdStr(G.stardate),
+        html:'<p>You and <b>'+esc(fullName(o))+'</b> are now <b>'+labels[b.stage]+'</b>.</p>'+
+        (b.stage===3?'<p class="dim">Bound together, whatever the stars hold.</p>':""),
+        buttons:[{t:"Continue"}]});
+    }
+  }
+}
+function cmdrBondStartRomance(oid){
+  const o=officer(oid);if(!o)return;
+  if(o.rel){toast("They are already in a relationship.");return;}
+  if(Object.keys(cmdrBonds()).some(id=>id!==oid&&cmdrBonds()[id].kind==="romance")){toast("You are already committed to someone.");return;}
+  closeModal();
+  cmdrBonds()[oid]={kind:"romance",stage:0,pts:0};
+  o.morale=clamp(o.morale+3,0,100);
+  log("romance","Something has begun between you and "+fullName(o)+".");
+  save();render();
+}
+function cmdrBondEnd(oid,why){
+  const b=cmdrBonds()[oid];if(!b)return;
+  const o=officer(oid);
+  delete cmdrBonds()[oid];
+  if(o){o.cmdrClose=false;
+    if(b.kind==="romance")o.morale=clamp(o.morale-10,0,100);
+    log("personnel","Your "+(b.kind==="romance"?"relationship":"friendship")+" with "+fullName(o)+" has ended ("+why+").");
+  }
+  save();
+}
+function renderCmdrBonds(){
+  const bonds=cmdrBonds(),ids=Object.keys(bonds);
+  if(!ids.length)return '<div class="card"><h3>Personal Bonds</h3><p class="dim">No close personal bonds yet. Get to know your officers in the ready room — ask how they are settling in, or say you would like to know them better.</p></div>';
+  let h='<div class="card"><h3>Personal Bonds</h3>';
+  ids.forEach(id=>{
+    const o=officer(id);if(!o)return;
+    const b=bonds[id];
+    h+='<div class="row" style="cursor:pointer" onclick="officerModal(\''+id+'\')">'+faceImg(o,"pfaceSm")+
+      '<div class="grow"><div class="nm">'+nameHtml(o)+'</div>'+
+      '<div class="sub2">'+esc(rankName(o))+' · '+esc(cmdrBondLabel(b))+'</div></div>'+
+      '<span style="color:var(--dim)">\u25b8</span></div>';
+  });
+  return h+'</div>';
+}
 function renderCommander(){
   const c=G.commander,g=c.gender;
   let h='<div class="card"><div class="pfaceWrap">'+cmdrImg("pfaceBig")+
@@ -10641,6 +10737,7 @@ function renderCommander(){
     '<div class="row" onclick="openCmdrAppearance()" style="cursor:pointer;">'+cmdrImg("pface")+
     '<div class="grow"><div class="nm">'+(g==="m"?"Male":"Female")+' · '+esc(cmdrSpeciesLabel(c.species))+'</div>'+
     '<div class="sub2">Portrait '+((c.portrait||0)+1)+' of 11 · <span style="color:var(--orange)">Tap to change</span></div></div></div></div>';
+  h+=renderCmdrBonds();
   return h;
 }
 
@@ -17971,7 +18068,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.149 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.150 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
