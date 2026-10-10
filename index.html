@@ -1019,7 +1019,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.147';
+const ART_BUST='v000.6.148';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -10631,6 +10631,7 @@ function cmdrInstitutions(){
   return h;
 }
 let notifOpen=false,notifFilter="all";
+let dashOpen=true; // v000.6.148 fleet dashboard collapsed state
 const NOTIF_CATS=[["aud","Audience"],["idle","Fleet"],["builds","Construction"],["req","Command"],["loyal","Morale"]];
 function recentlyMet(o){const m=(G.meetings||{})[o.id];return m!==undefined&&G.stardate-m<MEET_CD;}
 function notifList(){
@@ -10766,10 +10767,13 @@ function dashCrewGroups(){
 function dashTile(n,label,fn,warn){
   return '<div class="dashTile'+(warn&&n>0?" warn":"")+'" onclick="'+fn+'"><div class="v">'+n+'</div><div class="k">'+label+'</div></div>';
 }
+function uiToggleDash(){dashOpen=!dashOpen;render();}
 function renderFleetDashboard(){
   const sg=dashShipGroups(),cg=dashCrewGroups();
   const total=sg.all.length;
-  let h='<div class="card"><h3>Fleet Dashboard</h3>';
+  let h='<div class="card"><h3 style="cursor:pointer" onclick="uiToggleDash()">Fleet Dashboard <span style="float:right;color:var(--dim)">'+(dashOpen?"\u25b4":"\u25be")+'</span></h3>';
+  if(!dashOpen){h+='</div>';return h;}
+  h+='<div>';
   h+='<div class="dashSec">Ships — '+total+' active</div><div class="dashGrid">';
   h+=dashTile(sg.mission.length,"On Mission","uiDashShips('mission')");
   h+=dashTile(sg.ready.length,"Ready","uiDashShips('ready')");
@@ -10788,7 +10792,7 @@ function renderFleetDashboard(){
     if(sg.nocaptain.length)h+='<div class="kv" style="cursor:pointer" onclick="uiDashShips(\'nocaptain\')"><span class="k" style="color:var(--red)">'+sg.nocaptain.length+' ship'+(sg.nocaptain.length>1?"s":"")+' with no captain</span><span class="v">▸</span></div>';
     if(sg.undercrewed.length)h+='<div class="kv" style="cursor:pointer" onclick="uiDashShips(\'undercrewed\')"><span class="k" style="color:var(--red)">'+sg.undercrewed.length+' under-crewed ship'+(sg.undercrewed.length>1?"s":"")+'</span><span class="v">▸</span></div>';
   }
-  h+='</div>';
+  h+='</div></div>';
   return h;
 }
 const DASH_SHIP_TITLES={mission:"Ships on mission",ready:"Ready ships",leave:"Ships on shore leave",damaged:"Damaged ships",repair:"Ships under repair",weary:"Weary crews",nocaptain:"Ships with no captain",undercrewed:"Under-crewed ships"};
@@ -17859,7 +17863,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.147 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.148 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
