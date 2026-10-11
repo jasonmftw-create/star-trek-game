@@ -1023,7 +1023,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.158';
+const ART_BUST='v000.6.159';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -1439,7 +1439,7 @@ function uiGrantShoreLeave(id){
   toast("Shore leave granted — 7 days.");
   save();render();
 }
-/* v000.6.158: planetary shore leave — whole crew rests at a planet destination */
+/* v000.6.159: planetary shore leave — whole crew rests at a planet destination */
 function uiPlanetaryLeavePicker(id){
   const s=ship(id);if(!s)return;
   const post=s.post||"sol";
@@ -3807,6 +3807,45 @@ const ORIGINAL_CREW=[
  ["Dorian Kade","Human","M",29,2,"Operations",[68,72,70,55,62,60],["Test Pilot"],"pool"],
  ["Luca Moreau","Human","M",27,1,"Science",[62,75,68,60,78,55],[],"pool"]
 ];
+/* v000.6.159: backstories for all original characters (Jason 2026-10-10) */
+const ORIGINAL_BACKSTORIES={
+"Dara Voss":"Survived the Battle of Wolf 359 as a young lieutenant aboard the Saratoga. The experience forged her into a commander who never asks her crew to face what she would not face herself.",
+"Sovar":"A Vulcan xenolinguist who spent a decade on the Federation's first-contact teams before requesting a science posting. His logic is impeccable; his bedside manner is a work in progress.",
+"Thessa sh'Zhar":"Andorian engineer from a long line of ice-miners. She talks to starship engines the way her grandmother talked to glaciers — with respect, patience, and the occasional shout.",
+"Joran Bel":"Bajoran field medic who served in the resistance camps during the Occupation. He has seen the worst of war and dedicated his life to mending what it breaks.",
+"Mira Kwan":"Tactical prodigy who wrote her Academy thesis on Dominion War fleet maneuvers. Her strategies are brilliant; her poker face is terrible.",
+"K'Ragh":"Klingon warrior who chose Starfleet over the Empire after serving as an exchange officer. He still sings Klingon opera in the Jeffries tubes when he thinks no one is listening.",
+"T'Pell":"Vulcan exobiologist who has catalogued over 400 new species. She finds most humanoids illogical but has a secret fondness for Earth's cats.",
+"Felix Harrow":"Hotshot test pilot from the Academy's elite flight program. He once outran a Romulan warbird in a shuttlecraft and has been insufferable about it ever since — but he can fly anything with wings, nacelles, or sheer audacity.",
+"Adaeze Osei":"Human engineer who grew up in the orbital shipyards above Mars. She can diagnose a warp core malfunction by sound alone and has strong opinions about plasma conduit maintenance.",
+"Mek'Tar":"Young Klingon security officer, the first in his family to join Starfleet. He is earnest, honorable, and still learning that not every problem is solved with a bat'leth.",
+"Samuel Okoro":"Seasoned diplomat who negotiated three ceasefires before his fortieth birthday. He believes every conflict has a solution if you listen long enough — and he is usually right.",
+"Rina Teller":"Joined Trill who carries the memories of six lifetimes. Her previous hosts were a poet, a botanist, a starship captain, a chef, a diplomat, and a professional velocity player. She is never boring at dinner.",
+"Gron Tov":"Tellarite starship designer who argues about everything — it is how his people show affection. His engine modifications are unorthodox, ugly, and 12% more efficient than standard.",
+"Yara Mbeki":"Human surgeon who did her residency in a Cardassian war zone. Her hands are steady, her humor is dark, and her patients adore her.",
+"Elias Vance":"Wolf 359 survivor who spent two years in rehabilitation before returning to duty. He does not talk about the battle, but he never leaves a crewmate behind.",
+"Duvak":"Vulcan physician who finds human emotions fascinating from a clinical distance. His bedside manner has improved 4.7% since joining Starfleet, by his own calculation.",
+"Petra Illyan":"Diplomat from a family of Federation ambassadors. She can defuse a hostage situation with a well-timed anecdote and has never lost a negotiation she cared about winning.",
+"Tovin":"Vulcan scientist specializing in temporal mechanics. He finds time travel logically straightforward and gets quietly exasperated when others do not.",
+"Asha Rao":"Human doctor who left a prestigious research post to serve on starships. She wanted to heal people, not papers, and has never regretted it.",
+"Korva":"Klingon security chief who earned her command stripes in the Dominion War. Her battle cry has been known to make Jem'Hadar hesitate.",
+"Del Venn":"Bolian operations officer with a photographic memory for star charts. He is unfailingly cheerful, which annoys exactly the right people.",
+"Sera Jalis":"Bajoran engineer who helped rebuild Deep Space 9 after the Dominion War. She knows every conduit on that station by heart and most of them by nickname.",
+"Jin Park":"Human scientist who grew up on a deep-space research station. He is more comfortable in zero-g than in a crowd and talks to his experiments.",
+"Mara Kade":"Betazoid empath who serves as ship's counselor. She senses emotions whether she wants to or not, which makes poker night deeply unfair.",
+"Rurik Stahl":"Wolf 359 veteran who transferred to security after the battle. He is quiet, watchful, and the person you want beside you in a firefight.",
+"Thalen Vex":"Andorian engineer with a specialty in shield harmonics. His antennae twitch when he is excited, which is often.",
+"Carol Freeman":"Captain of the Cerritos, known for running a tight ship with a warm heart. She has a reputation for getting her crew out of impossible situations with minimal paperwork.",
+"Jack Ransom":"First officer of the Cerritos. Charming, athletic, and deeply committed to Starfleet ideals — though his confidence occasionally writes checks his away team cannot cash.",
+"Shaxs":"Bajoran security officer and veteran of the resistance. Fierce, loyal, and prone to enthusiastic displays of force that worry his commanding officers and delight his crew.",
+"T'Ana":"Caitian doctor with a famously foul mouth and a heart of gold. Her bedside manner is atrocious; her surgical skills are unmatched.",
+"Beckett Mariner":"Brilliant, rebellious ensign who could have been a captain by now if she followed half the rules she breaks. Her instincts are usually right; her methods are usually against regulations.",
+"Brad Boimler":"By-the-book ensign who knows every regulation by heart. Anxious, earnest, and far more capable than he gives himself credit for.",
+"D'Vana Tendi":"Orion science officer and unabashed Starfleet enthusiast. Her excitement about her work is infectious, and her knowledge of xenobiology is encyclopedic.",
+"Sam Rutherford":"Human engineer with a cybernetic implant. Brilliant, kind, and perpetually tinkering with something — usually improving it, occasionally exploding it.",
+"Dorian Kade":"Test pilot with a need for speed and a gift for it. He treats every flight like a performance and every landing like a personal challenge.",
+"Luca Moreau":"Young science officer with a naturalist's curiosity. He catalogues everything, asks endless questions, and has already published two papers on exoplanet atmospheres."
+};
 const AUX_CREW=[
  ["T'Lara","Vulcan","F",21,0,"Science",[55,85,60,55,50,50],[],"pool","Cadet"],
  ["Marcus Webb","Human","M",19,0,"Operations",[60,60,65,50,55,55],[],"pool","Cadet"],
@@ -3866,6 +3905,8 @@ function svcPush(o,t,shipKey){if(!o)return;if(!o.svc)o.svc=[];o.svc.push({d:G.da
 function shipHistPush(s,t){if(!s)return;if(!s.hist)s.hist=[];s.hist.push({d:G.day,sd:G.stardate,t:t});if(s.hist.length>240)s.hist.splice(0,s.hist.length-240);}
 function postKeyOf(o){return (o&&o.post&&(o.post.t==="ship"||o.post.t==="station"))?o.post.t+":"+(o.post.id||""):null;}
 function ensureRecords(g){
+  /* v000.6.159: backfill original character backstories on existing saves */
+  try{(g.officers||[]).forEach(function(o){if(!o.backstory&&typeof ORIGINAL_BACKSTORIES!=="undefined"&&ORIGINAL_BACKSTORIES[o.name])o.backstory=ORIGINAL_BACKSTORIES[o.name];});}catch(e){}
   (g.officers||[]).forEach(function(o){if(o.svc)return;o.svc=[];
     let t;if(o.dead)t="Service record (archive begins)";else if(o.post&&o.post.t==="pool")t="Unassigned \u2014 awaiting posting";else if(o.post&&(o.post.t==="ship"||o.post.t==="station"||o.post.t==="hq"))t="Posted \u2014 "+postName(o.post)+((o.roles&&o.roles.length)?" \u00b7 "+o.roles.map(billetLabel).join(", "):"");else t="Service record (archive begins)";
     o.svc.push({d:g.day||0,sd:g.stardate,t:t,ship:postKeyOf(o)});});
@@ -3976,7 +4017,9 @@ function newGameState(){
     ledger:{missions:0,crits:0,shipsBuilt:0,stationsBuilt:0,marriages:0,births:0,lost:0,events:0},
     flags:{},dlIncome:0,day:0,tempCd:0,rescued:{},research:{active:null,done:{}},portraitVer:{},qmode:false,qtheme:"full",captainsLog:[],arcs:[],contacts:[],
     commander:{name:"",gender:"m",species:"human",portrait:0}};
-  G0.officers=CANON_CREW.concat(ORIGINAL_CREW,AUX_CREW).map(MK);   {const _cb={"Carol Freeman":["co"],"Jack Ransom":["xo"],"Shaxs":["sec"],"T'Ana":["med"]};G0.officers.forEach(o=>{if(_cb[o.name])o.roles=_cb[o.name].slice();});}   seedCanonBonds(G0);
+  G0.officers=CANON_CREW.concat(ORIGINAL_CREW,AUX_CREW).map(MK);
+  /* v000.6.159: apply original character backstories */
+  try{G0.officers.forEach(function(o){if(ORIGINAL_BACKSTORIES[o.name]&&!o.backstory)o.backstory=ORIGINAL_BACKSTORIES[o.name];});}catch(e){}   {const _cb={"Carol Freeman":["co"],"Jack Ransom":["xo"],"Shaxs":["sec"],"T'Ana":["med"]};G0.officers.forEach(o=>{if(_cb[o.name])o.roles=_cb[o.name].slice();});}   seedCanonBonds(G0);
   G=G0;
   G.ships.forEach(s=>{s.comp=SHIP_CLASSES[s.cls].comp;});
   G.stations.forEach(st=>{st.comp=STATION_DEFS[st.type].comp;});
@@ -4383,7 +4426,7 @@ function logDigestTick(){
   (G.captainsLog=G.captainsLog||[]).push({d:G.day,sd:G.stardate,t:"Daily Digest",b:body,auto:true});
   if(G.captainsLog.length>300)G.captainsLog.splice(0,G.captainsLog.length-300);
 }
-/* ================= v000.6.158 — FIVE-FEATURE SET =================
+/* ================= v000.6.159 — FIVE-FEATURE SET =================
    1. Shore leave (officers actually go away)  2. Memorial services
    3. Officer ambitions  4. Flagship life  5. Letters from deep space
    All deterministic, zero AI calls. */
@@ -4592,7 +4635,7 @@ function tickDay(){
   randomEventTick(); scriptedTick(); rankCheckTick(); battleTick(); codexTick(); socialTick(); arcTick(); holoTick(); holidayTick(); ordersTick();
   if(G.shipOps&&G.shipOps.length)G.shipOps=G.shipOps.filter(function(m){return ship(m.shipId);});
   logDigestTick(); // v000.6.149 daily digest
-  leaveTick();ambitionTick();flagshipTick();lettersTick(); // v000.6.158
+  leaveTick();ambitionTick();flagshipTick();lettersTick(); // v000.6.159
 }
 /* ================= v4.1 CREW LIFE — orders of the day =================
    Captains and station commanders issue multi-day department orders; the chief
@@ -6069,7 +6112,7 @@ function resolveMission(m){
   const deptAvg=deptCrew.length?avg(deptCrew.map(o=>o.stats[t.capSkill])):30;
   const moraleAvg=crew.length?avg(crew.map(o=>o.morale)):50;
   let chance=50+(shipStat-t.diff)*0.6+capSkill*0.25+deptAvg*0.1+(moraleAvg-70)*0.1+rnd(-15,15);
-  chance=clamp(chance+socialMissionMod(crew)+flagshipBonus(s),5,98); // v000.6.158 flagship
+  chance=clamp(chance+socialMissionMod(crew)+flagshipBonus(s),5,98); // v000.6.159 flagship
   const roll=rnd(0,100);
   let outcome,cr=t.cr,dl=t.dl,pres=t.pres,detail="";
   if(t.type==="Science"&&hasStation("research"))cr=Math.round(cr*(1.25+0.10*stUpg("research"))); // v4.2 research upgrades
@@ -6190,7 +6233,7 @@ function healTick(){
     if(o.healDays<=0){o.health="healthy";o.healDays=0;log("personnel",fullName(o)+" has been cleared for duty.");}}});
 }
 /* Daily servicing for ships docked at stations (v2.10). */
-/* v000.6.158: shore leave rest runs for ALL ships on leave, docked or orbiting a planet */
+/* v000.6.159: shore leave rest runs for ALL ships on leave, docked or orbiting a planet */
 function shipLeaveTick(){
   G.ships.forEach(function(s){
     if(!s||!(s.leave>0))return;
@@ -6250,7 +6293,7 @@ function killOfficer(o,cause){
   G.ledger.lost++;
   G.officers.forEach(x=>{if(x.friends)x.friends=x.friends.filter(id=>id!==o.id);if(x.rivals)x.rivals=x.rivals.filter(id=>id!==o.id);});
   log("combat","† "+fullName(o)+" — "+cause+". Their name is added to the Memorial Wall.");
-  try{memorialService(o);}catch(e){} // v000.6.158
+  try{memorialService(o);}catch(e){} // v000.6.159
   if(_wasCo&&(_pk==="ship"||_pk==="station"))successionCheck(_pk,_pid); // v2.11: XO steps up
 }
 /* ---------- romance & family ---------- */
@@ -6657,7 +6700,7 @@ function uiToggleBattles(){try{localStorage.setItem("stfc_battles",battlesOn()?"
 function ambientOn(){try{const v=localStorage.getItem("stfc_ambient");return v===null?true:v==="1";}catch(e){return true;}}
 function uiToggleAmbient(){try{localStorage.setItem("stfc_ambient",ambientOn()?"0":"1");}catch(e){}render();toast("Ambient fleet movement "+(ambientOn()?"enabled — idle ships will cruise on their own.":"disabled — ships hold position."));}
 function clearAmbient(s){if(s&&s.ambient)s.ambient=null;}
-function ambientEligible(s){return s.status==="active"&&!s.mothballed&&!s.transit&&!s.missionId&&!s.dock&&!s.cruise&&!s.abandoned&&!s.routeFor&&s.patrol!==false;} /* v000.6.158: ship patrol toggle is the master switch — off means hold position, no ambient either */
+function ambientEligible(s){return s.status==="active"&&!s.mothballed&&!s.transit&&!s.missionId&&!s.dock&&!s.cruise&&!s.abandoned&&!s.routeFor&&s.patrol!==false;} /* v000.6.159: ship patrol toggle is the master switch — off means hold position, no ambient either */
 function ambientTick(){
   if(!ambientOn())return;
   const posts=Object.keys(POST_LABELS);
@@ -6952,6 +6995,19 @@ function aiFleetContext(o){
           if(e&&e.o)line+="Your commanding officer is "+rankName(e.o)+" "+e.o.name+(e.acting?" (acting)":"")+". ";
           const crew=crewOfShip(s.id);const xo=crew.find(function(x){return (x.roles||[]).indexOf("xo")>=0;});
           if(xo&&(!e||!e.o||xo.id!==e.o.id))line+="The executive officer is "+rankName(xo)+" "+xo.name+". ";}
+        /* v000.6.159: COs know their crew */
+        try{
+          let crew=[];
+          if(o.post&&o.post.t==="ship"){const s=ship(o.post.id);if(s)crew=crewOfShip(s.id);}
+          else if(o.post&&o.post.t==="station"){const st=station(o.post.id);if(st)crew=crewOfStation(st.id);}
+          const isCO=crew.some(function(c){return c.id===o.id;})&&typeof effShipCO==="function"&&(
+            (o.post.t==="ship"&&effShipCO(ship(o.post.id))&&effShipCO(ship(o.post.id)).o&&effShipCO(ship(o.post.id)).o.id===o.id)||
+            (o.post.t==="station"&&effStationCO(station(o.post.id))&&effStationCO(station(o.post.id)).o&&effStationCO(station(o.post.id)).o.id===o.id));
+          if(isCO&&crew.length>1){
+            const names=crew.filter(function(c){return c.id!==o.id&&!c.dead;}).slice(0,12).map(function(c){return c.name+" ("+rankName(c)+", "+(c.dept||"?")+")";});
+            if(names.length)bits.push("YOUR CREW ("+crew.length+" total) — these officers serve under your command: "+names.join("; ")+(crew.length>13?" — plus "+(crew.length-13)+" more":""));
+          }
+        }catch(e){}
         bits.push("YOUR POSTING: "+line.trim());
       }
     }else if(o.post&&o.post.t==="station"){
@@ -11347,7 +11403,7 @@ function renderCommand(){
   if(cmdSub==="research")h+=cmdSubPills()+renderResearchCard();
   else if(cmdSub==="inst")h+=cmdSubPills()+cmdrInstitutions();
   else if(cmdSub==="rec")h+=cmdSubPills()+recCard;
-  else h+=renderNeedsAttention()+renderFleetDashboard()+cmdrCard+renderFlagshipCard()+renderLettersCard()+cmdSubPills()+sectorCard+nemesisCard()+opsCard+sprojCardHTML(); // v000.6.158 // v4.2 sector projects — v000.6.147: fleet dashboard
+  else h+=renderNeedsAttention()+renderFleetDashboard()+cmdrCard+renderFlagshipCard()+renderLettersCard()+cmdSubPills()+sectorCard+nemesisCard()+opsCard+sprojCardHTML(); // v000.6.159 // v4.2 sector projects — v000.6.147: fleet dashboard
   return h;
 }
 
@@ -13566,7 +13622,7 @@ function officerModal(id){
     h+='<div class="kv" data-hint="How committed this officer is to your command, 0 to 100. Below 30 they grow miserable and lose morale daily; at 15 or less they may resign. Hold meetings to rebuild trust."><span class="k">Loyalty</span><span class="v">'+o.loyal+'/100</span></div>'+bar("LOY",o.loyal);
     h+='<div class="kv"><span class="k">Health</span><span class="v">'+(o.health==="healthy"?"Healthy":"Injured ("+Math.ceil(o.healDays)+"d)")+'</span></div>';
     if(o.onLeave)h+='<div class="kv"><span class="k">Shore leave</span><span class="v">On leave \u2014 '+esc(o.onLeave.where)+' ('+Math.max(0,o.onLeave.until-G.day)+'d left)</span></div>';
-    h+=ambitionHtml(o); // v000.6.158
+    h+=ambitionHtml(o); // v000.6.159
     h+='<div class="kv"><span class="k">Missions</span><span class="v">'+o.missions.s+'/'+o.missions.t+' successful</span></div>';
     h+='<div class="kv"><span class="k">Time in grade</span><span class="v">'+Math.floor(o.timeInGrade)+' days</span></div>';
   } else {
@@ -13608,7 +13664,7 @@ function officerModal(id){
     const mLast=(G.meetings||{})[o.id];const mCd=mLast!==undefined&&G.stardate-mLast<MEET_CD;
     _cmd+='<button class="btn small teal" '+(mCd?"disabled":"")+' onclick="uiRequestMeeting(\''+o.id+'\')">Request meeting'+(mCd?" ("+Math.ceil(MEET_CD-(G.stardate-mLast))+"d)":"")+'</button>';
     _cmd+='<button class="btn small violet" onclick="uiCounsel(\''+o.id+'\')">Counseling</button>';
-    if(!o.onLeave)_cmd+='<button class="btn small teal" onclick="uiGrantLeave(\''+o.id+'\')">Grant shore leave</button>'; // v000.6.158
+    if(!o.onLeave)_cmd+='<button class="btn small teal" onclick="uiGrantLeave(\''+o.id+'\')">Grant shore leave</button>'; // v000.6.159
     _cmd+='<button class="btn small violet" onclick="uiAwardPicker(\''+o.id+'\')">Award honor</button>';
     if(o.rankLabel&&/civilian/i.test(o.rankLabel))
       _cmd+='<button class="btn small peach" onclick="uiCommission(\''+o.id+'\',\'civ\')">Grant field commission</button>';
@@ -18371,7 +18427,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.158 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.159 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
