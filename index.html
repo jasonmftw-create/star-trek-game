@@ -1023,7 +1023,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.161';
+const ART_BUST='v000.6.162';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -1439,7 +1439,7 @@ function uiGrantShoreLeave(id){
   toast("Shore leave granted — 7 days.");
   save();render();
 }
-/* v000.6.161: planetary shore leave — whole crew rests at a planet destination */
+/* v000.6.162: planetary shore leave — whole crew rests at a planet destination */
 function uiPlanetaryLeavePicker(id){
   const s=ship(id);if(!s)return;
   const post=s.post||"sol";
@@ -3807,7 +3807,7 @@ const ORIGINAL_CREW=[
  ["Dorian Kade","Human","M",29,2,"Operations",[68,72,70,55,62,60],["Test Pilot"],"pool"],
  ["Luca Moreau","Human","M",27,1,"Science",[62,75,68,60,78,55],[],"pool"]
 ];
-/* v000.6.161: backstories for all original characters (Jason 2026-10-10) */
+/* v000.6.162: backstories for all original characters (Jason 2026-10-10) */
 const ORIGINAL_BACKSTORIES={
 "Dara Voss":"Survived the Battle of Wolf 359 as a young lieutenant aboard the Saratoga. The experience forged her into a commander who never asks her crew to face what she would not face herself.",
 "Sovar":"A Vulcan xenolinguist who spent a decade on the Federation's first-contact teams before requesting a science posting. His logic is impeccable; his bedside manner is a work in progress.",
@@ -3905,7 +3905,7 @@ function svcPush(o,t,shipKey){if(!o)return;if(!o.svc)o.svc=[];o.svc.push({d:G.da
 function shipHistPush(s,t){if(!s)return;if(!s.hist)s.hist=[];s.hist.push({d:G.day,sd:G.stardate,t:t});if(s.hist.length>240)s.hist.splice(0,s.hist.length-240);}
 function postKeyOf(o){return (o&&o.post&&(o.post.t==="ship"||o.post.t==="station"))?o.post.t+":"+(o.post.id||""):null;}
 function ensureRecords(g){
-  /* v000.6.161: backfill original character backstories on existing saves */
+  /* v000.6.162: backfill original character backstories on existing saves */
   try{(g.officers||[]).forEach(function(o){if(!o.backstory&&typeof ORIGINAL_BACKSTORIES!=="undefined"&&ORIGINAL_BACKSTORIES[o.name])o.backstory=ORIGINAL_BACKSTORIES[o.name];});}catch(e){}
   (g.officers||[]).forEach(function(o){if(o.svc)return;o.svc=[];
     let t;if(o.dead)t="Service record (archive begins)";else if(o.post&&o.post.t==="pool")t="Unassigned \u2014 awaiting posting";else if(o.post&&(o.post.t==="ship"||o.post.t==="station"||o.post.t==="hq"))t="Posted \u2014 "+postName(o.post)+((o.roles&&o.roles.length)?" \u00b7 "+o.roles.map(billetLabel).join(", "):"");else t="Service record (archive begins)";
@@ -4018,7 +4018,7 @@ function newGameState(){
     flags:{},dlIncome:0,day:0,tempCd:0,rescued:{},research:{active:null,done:{}},portraitVer:{},qmode:false,qtheme:"full",captainsLog:[],arcs:[],contacts:[],
     commander:{name:"",gender:"m",species:"human",portrait:0}};
   G0.officers=CANON_CREW.concat(ORIGINAL_CREW,AUX_CREW).map(MK);
-  /* v000.6.161: apply original character backstories */
+  /* v000.6.162: apply original character backstories */
   try{G0.officers.forEach(function(o){if(ORIGINAL_BACKSTORIES[o.name]&&!o.backstory)o.backstory=ORIGINAL_BACKSTORIES[o.name];});}catch(e){}   {const _cb={"Carol Freeman":["co"],"Jack Ransom":["xo"],"Shaxs":["sec"],"T'Ana":["med"]};G0.officers.forEach(o=>{if(_cb[o.name])o.roles=_cb[o.name].slice();});}   seedCanonBonds(G0);
   G=G0;
   G.ships.forEach(s=>{s.comp=SHIP_CLASSES[s.cls].comp;});
@@ -4426,7 +4426,7 @@ function logDigestTick(){
   (G.captainsLog=G.captainsLog||[]).push({d:G.day,sd:G.stardate,t:"Daily Digest",b:body,auto:true});
   if(G.captainsLog.length>300)G.captainsLog.splice(0,G.captainsLog.length-300);
 }
-/* ================= v000.6.161 — FIVE-FEATURE SET =================
+/* ================= v000.6.162 — FIVE-FEATURE SET =================
    1. Shore leave (officers actually go away)  2. Memorial services
    3. Officer ambitions  4. Flagship life  5. Letters from deep space
    All deterministic, zero AI calls. */
@@ -4635,7 +4635,7 @@ function tickDay(){
   randomEventTick(); scriptedTick(); rankCheckTick(); battleTick(); codexTick(); socialTick(); arcTick(); holoTick(); holidayTick(); ordersTick();
   if(G.shipOps&&G.shipOps.length)G.shipOps=G.shipOps.filter(function(m){return ship(m.shipId);});
   logDigestTick(); // v000.6.149 daily digest
-  leaveTick();ambitionTick();flagshipTick();lettersTick(); // v000.6.161
+  leaveTick();ambitionTick();flagshipTick();lettersTick(); // v000.6.162
 }
 /* ================= v4.1 CREW LIFE — orders of the day =================
    Captains and station commanders issue multi-day department orders; the chief
@@ -6112,7 +6112,7 @@ function resolveMission(m){
   const deptAvg=deptCrew.length?avg(deptCrew.map(o=>o.stats[t.capSkill])):30;
   const moraleAvg=crew.length?avg(crew.map(o=>o.morale)):50;
   let chance=50+(shipStat-t.diff)*0.6+capSkill*0.25+deptAvg*0.1+(moraleAvg-70)*0.1+rnd(-15,15);
-  chance=clamp(chance+socialMissionMod(crew)+flagshipBonus(s),5,98); // v000.6.161 flagship
+  chance=clamp(chance+socialMissionMod(crew)+flagshipBonus(s),5,98); // v000.6.162 flagship
   const roll=rnd(0,100);
   let outcome,cr=t.cr,dl=t.dl,pres=t.pres,detail="";
   if(t.type==="Science"&&hasStation("research"))cr=Math.round(cr*(1.25+0.10*stUpg("research"))); // v4.2 research upgrades
@@ -6233,7 +6233,7 @@ function healTick(){
     if(o.healDays<=0){o.health="healthy";o.healDays=0;log("personnel",fullName(o)+" has been cleared for duty.");}}});
 }
 /* Daily servicing for ships docked at stations (v2.10). */
-/* v000.6.161: shore leave rest runs for ALL ships on leave, docked or orbiting a planet */
+/* v000.6.162: shore leave rest runs for ALL ships on leave, docked or orbiting a planet */
 function shipLeaveTick(){
   G.ships.forEach(function(s){
     if(!s||!(s.leave>0))return;
@@ -6293,7 +6293,7 @@ function killOfficer(o,cause){
   G.ledger.lost++;
   G.officers.forEach(x=>{if(x.friends)x.friends=x.friends.filter(id=>id!==o.id);if(x.rivals)x.rivals=x.rivals.filter(id=>id!==o.id);});
   log("combat","† "+fullName(o)+" — "+cause+". Their name is added to the Memorial Wall.");
-  try{memorialService(o);}catch(e){} // v000.6.161
+  try{memorialService(o);}catch(e){} // v000.6.162
   if(_wasCo&&(_pk==="ship"||_pk==="station"))successionCheck(_pk,_pid); // v2.11: XO steps up
 }
 /* ---------- romance & family ---------- */
@@ -6700,7 +6700,7 @@ function uiToggleBattles(){try{localStorage.setItem("stfc_battles",battlesOn()?"
 function ambientOn(){try{const v=localStorage.getItem("stfc_ambient");return v===null?true:v==="1";}catch(e){return true;}}
 function uiToggleAmbient(){try{localStorage.setItem("stfc_ambient",ambientOn()?"0":"1");}catch(e){}render();toast("Ambient fleet movement "+(ambientOn()?"enabled — idle ships will cruise on their own.":"disabled — ships hold position."));}
 function clearAmbient(s){if(s&&s.ambient)s.ambient=null;}
-function ambientEligible(s){return s.status==="active"&&!s.mothballed&&!s.transit&&!s.missionId&&!s.dock&&!s.cruise&&!s.abandoned&&!s.routeFor&&s.patrol!==false;} /* v000.6.161: ship patrol toggle is the master switch — off means hold position, no ambient either */
+function ambientEligible(s){return s.status==="active"&&!s.mothballed&&!s.transit&&!s.missionId&&!s.dock&&!s.cruise&&!s.abandoned&&!s.routeFor&&s.patrol!==false;} /* v000.6.162: ship patrol toggle is the master switch — off means hold position, no ambient either */
 function ambientTick(){
   if(!ambientOn())return;
   const posts=Object.keys(POST_LABELS);
@@ -6925,12 +6925,12 @@ function aiSystemFor(o){
   s+="Morale "+o.morale+"/100, loyalty "+(o.loyal==null?70:o.loyal)+"/100. ";
   try{s+=aiOrdersBlock(o);}catch(e){}
   try{s+=aiBondBlock(o);}catch(e){}
-  s+="Rules: stay fully in character as "+o.name+", a Starfleet officer \u2014 never mention being an AI or language model. Reply in first person, 1 to 4 sentences of natural spoken dialogue. No stage directions, no asterisks, no narrated actions. Address the commander as \""+addr+"\" or simply \""+pTitle+"\" \u2014 never by first name or full civilian name. If asked about a ship, officer, posting, or mission not listed above, say you do not have that information; never invent names, ranks, or assignments, and never assume canon characters hold commands unless listed. Keep it Star Trek: professional, measured, warm when it fits. Never break character.";
+  s+="Rules: stay fully in character as "+o.name+", a Starfleet officer \u2014 never mention being an AI or language model. Reply in first person, 1 to 4 sentences of natural spoken dialogue. IMPORTANT: pay close attention to the conversation history above. If the commander references something from earlier in the conversation, engage with it directly — do not deflect with a generic greeting or change the subject. If you genuinely do not have the context, ask about it naturally in character. Never respond to a follow-up question as if it were a new conversation. No stage directions, no asterisks, no narrated actions. Address the commander as \""+addr+"\" or simply \""+pTitle+"\" \u2014 never by first name or full civilian name. If asked about a ship, officer, posting, or mission not listed above, say you do not have that information; never invent names, ranks, or assignments, and never assume canon characters hold commands unless listed. Keep it Star Trek: professional, measured, warm when it fits. Never break character.";
   return s;
 }
 async function aiChatCall(o,userText){
   const key=String(G.aiKey||"").trim();if(!key)throw new Error("no-key");
-  const hist=aiChatHist(o).filter(function(m){return m.r!=="div"&&m.r!=="sys";}).slice(-8).map(function(m){return {role:m.r==="u"?"user":"model",parts:[{text:String(m.t).slice(0,600)}]};});
+  const hist=aiChatHist(o).filter(function(m){return m.r!=="div"&&m.r!=="sys";}).slice(-14).map(function(m){return {role:m.r==="u"?"user":"model",parts:[{text:String(m.t).slice(0,600)}]};}); /* v000.6.162: 8→14 for better conversational memory */
   hist.push({role:"user",parts:[{text:String(userText).slice(0,600)}]});
   const body={system_instruction:{parts:[{text:aiSystemFor(o)}]},contents:hist,generationConfig:{maxOutputTokens:220,temperature:0.9}};
   const models=aiModelList();let last=null;
@@ -6995,7 +6995,7 @@ function aiFleetContext(o){
           if(e&&e.o)line+="Your commanding officer is "+rankName(e.o)+" "+e.o.name+(e.acting?" (acting)":"")+". ";
           const crew=crewOfShip(s.id);const xo=crew.find(function(x){return (x.roles||[]).indexOf("xo")>=0;});
           if(xo&&(!e||!e.o||xo.id!==e.o.id))line+="The executive officer is "+rankName(xo)+" "+xo.name+". ";}
-        /* v000.6.161: COs know their crew */
+        /* v000.6.162: COs know their crew */
         try{
           let crew=[];
           if(o.post&&o.post.t==="ship"){const s=ship(o.post.id);if(s)crew=crewOfShip(s.id);}
@@ -7052,7 +7052,7 @@ function aiFleetContext(o){
     if(dmg)c.push(dmg+" damaged ship"+(dmg>1?"s":"")+" needing repair");
     if(c.length)bits.push("CURRENT FLEET CONCERNS: "+c.join("; "));
   }catch(e){}
-  /* v000.6.161: tiered officer awareness (Jason 2026-10-10) — fame scales with rank */
+  /* v000.6.162: tiered officer awareness (Jason 2026-10-10) — fame scales with rank */
   try{
     const me=o.id;
     const myPostKey=postKeyOf(o);
@@ -11448,7 +11448,7 @@ function renderCommand(){
   if(cmdSub==="research")h+=cmdSubPills()+renderResearchCard();
   else if(cmdSub==="inst")h+=cmdSubPills()+cmdrInstitutions();
   else if(cmdSub==="rec")h+=cmdSubPills()+recCard;
-  else h+=renderNeedsAttention()+renderFleetDashboard()+cmdrCard+renderFlagshipCard()+renderLettersCard()+cmdSubPills()+sectorCard+nemesisCard()+opsCard+sprojCardHTML(); // v000.6.161 // v4.2 sector projects — v000.6.147: fleet dashboard
+  else h+=renderNeedsAttention()+renderFleetDashboard()+cmdrCard+renderFlagshipCard()+renderLettersCard()+cmdSubPills()+sectorCard+nemesisCard()+opsCard+sprojCardHTML(); // v000.6.162 // v4.2 sector projects — v000.6.147: fleet dashboard
   return h;
 }
 
@@ -13667,7 +13667,7 @@ function officerModal(id){
     h+='<div class="kv" data-hint="How committed this officer is to your command, 0 to 100. Below 30 they grow miserable and lose morale daily; at 15 or less they may resign. Hold meetings to rebuild trust."><span class="k">Loyalty</span><span class="v">'+o.loyal+'/100</span></div>'+bar("LOY",o.loyal);
     h+='<div class="kv"><span class="k">Health</span><span class="v">'+(o.health==="healthy"?"Healthy":"Injured ("+Math.ceil(o.healDays)+"d)")+'</span></div>';
     if(o.onLeave)h+='<div class="kv"><span class="k">Shore leave</span><span class="v">On leave \u2014 '+esc(o.onLeave.where)+' ('+Math.max(0,o.onLeave.until-G.day)+'d left)</span></div>';
-    h+=ambitionHtml(o); // v000.6.161
+    h+=ambitionHtml(o); // v000.6.162
     h+='<div class="kv"><span class="k">Missions</span><span class="v">'+o.missions.s+'/'+o.missions.t+' successful</span></div>';
     h+='<div class="kv"><span class="k">Time in grade</span><span class="v">'+Math.floor(o.timeInGrade)+' days</span></div>';
   } else {
@@ -13709,7 +13709,7 @@ function officerModal(id){
     const mLast=(G.meetings||{})[o.id];const mCd=mLast!==undefined&&G.stardate-mLast<MEET_CD;
     _cmd+='<button class="btn small teal" '+(mCd?"disabled":"")+' onclick="uiRequestMeeting(\''+o.id+'\')">Request meeting'+(mCd?" ("+Math.ceil(MEET_CD-(G.stardate-mLast))+"d)":"")+'</button>';
     _cmd+='<button class="btn small violet" onclick="uiCounsel(\''+o.id+'\')">Counseling</button>';
-    if(!o.onLeave)_cmd+='<button class="btn small teal" onclick="uiGrantLeave(\''+o.id+'\')">Grant shore leave</button>'; // v000.6.161
+    if(!o.onLeave)_cmd+='<button class="btn small teal" onclick="uiGrantLeave(\''+o.id+'\')">Grant shore leave</button>'; // v000.6.162
     _cmd+='<button class="btn small violet" onclick="uiAwardPicker(\''+o.id+'\')">Award honor</button>';
     if(o.rankLabel&&/civilian/i.test(o.rankLabel))
       _cmd+='<button class="btn small peach" onclick="uiCommission(\''+o.id+'\',\'civ\')">Grant field commission</button>';
@@ -18472,7 +18472,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.161 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.162 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
