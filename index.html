@@ -122,14 +122,14 @@
 }
 /* ===== Splash screen ===== */
 #splash{position:fixed;inset:0;z-index:200000;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s ease;cursor:pointer;overflow:hidden;}
-#splash.gone{opacity:0;pointer-events:none;display:none;} /* v000.6.359: room theme buttons */
+#splash.gone{opacity:0;pointer-events:none;display:none;} /* v000.6.360: room theme buttons */
 #modalBox[data-room-theme="verdant"] .btn{background:#2d5a2d!important;border-color:#8fbc8f!important;color:#e0f0e0!important;}
 #modalBox[data-room-theme="verdant"] .btn.teal{background:#3a7a3a!important;color:#fff!important;}
 #modalBox[data-room-theme="cozy"] .btn{background:#5a3a1a!important;border-color:#d4a574!important;color:#f0e0c0!important;}
 #modalBox[data-room-theme="trophy"] .btn{background:#2a3a6a!important;border-color:#ffd700!important;color:#f0e8c0!important;}
 #modalBox[data-room-theme="personal"] .btn{background:#5a2a4a!important;border-color:#ff9ff3!important;color:#f0d0e8!important;}
 #modalBox[data-room-theme="minimal"] .btn{background:#3a3a3a!important;border-color:#888!important;color:#e0e0e0!important;}
-/* v000.6.359: prevent ghost clicks */
+/* v000.6.360: prevent ghost clicks */
 #splashStars{position:absolute;inset:0;width:100%;height:100%;}
 #splashLogo{position:relative;width:min(78vw,440px);aspect-ratio:13/8;background-position:center;background-size:contain;background-repeat:no-repeat;filter:drop-shadow(0 0 26px rgba(255,215,106,.35));}
 #splashHint{position:relative;margin-top:28px;animation:splashBlink 1.8s ease-in-out infinite;}
@@ -341,7 +341,7 @@ body{touch-action:pan-y;}
 .dashTile.warn{border-color:rgba(255,80,80,.4);}
 .dashTile.good .v{color:var(--green);}
 .tickWrap{overflow:hidden;white-space:nowrap;position:relative;}
-/* v000.6.359: quarters/office themes */
+/* v000.6.360: quarters/office themes */
 .theme-cozy{--theme-bg:#2a1f14;--theme-accent:#d4a574;}
 .theme-minimal{--theme-bg:#1a1a1a;--theme-accent:#888;}
 .theme-trophy{--theme-bg:#1a2340;--theme-accent:#ffd700;}
@@ -349,7 +349,7 @@ body{touch-action:pan-y;}
 .theme-standard{--theme-bg:var(--panel2);--theme-accent:var(--orange);}
 .tickScroll{display:inline-block;white-space:nowrap;padding-left:100%;animation:tickMove 25s linear infinite;}
 @keyframes tickMove{0%{transform:translateX(0);}100%{transform:translateX(-100%);}}
-/* v000.6.359 ticker (static for now) */
+/* v000.6.360 ticker (static for now) */
 .dashTile.zero{opacity:.45;}
 .dashSec{margin:8px 0 2px;font-size:11px;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;}
 /* v000.6.149 banter + digest */
@@ -821,10 +821,21 @@ body{touch-action:pan-y;}
 .shipHero{margin:10px 0 4px;}
 .shipHero .btn{width:100%;padding:13px;font-size:16px;letter-spacing:2px;}
 .btn.heroGold{background:linear-gradient(180deg,#ffe9a8,#e8b93c);color:#0b0b12;font-weight:800;border:1px solid #a67c1a;}
+/* v000.6.360: DS9 custom station theme — Cardassian ochre + teal (Jason's mockup) */
+#modalBox.ds9Theme{background:#0a0c0f;border:3px solid #c97b2d;border-radius:24px;box-shadow:0 0 0 5px #101216,0 0 0 7px #57807c,inset 0 0 0 2px rgba(201,123,45,.30),0 18px 50px rgba(0,0,0,.75);}
+#modalBox.ds9Theme h2{color:#f2d06b;letter-spacing:2px;text-transform:uppercase;text-align:center;font-weight:800;}
+#modalBox.ds9Theme h3,#modalBox.ds9Theme h4{color:#e0a458;letter-spacing:1px;text-transform:uppercase;}
+#modalBox.ds9Theme .flavor{color:#8fc1bb;text-align:center;letter-spacing:.5px;}
+#modalBox.ds9Theme .kv .k{color:#c97b2d;}
+#modalBox.ds9Theme .btn{border-radius:20px;border-color:#c97b2d;color:#f5e3b0;background:rgba(201,123,45,.10);}
+#modalBox.ds9Theme .btn.heroGold{background:linear-gradient(180deg,#f0b34a,#cf8226);color:#180f02;border-color:#f0b34a;font-weight:800;letter-spacing:1px;}
+#modalBox.ds9Theme .btn.teal{border-color:#57807c;color:#a8d8d2;background:rgba(87,128,124,.15);}
+#modalBox.ds9Theme .btn.peach{border-color:#b45f2d;color:#f0c9a8;background:rgba(180,95,45,.12);}
+#modalBox.ds9Theme .card{background:rgba(201,123,45,.05);border-color:rgba(201,123,45,.45);border-radius:16px;}
 .flagStar{cursor:pointer;color:var(--gold);font-size:28px;margin-left:10px;padding:4px 8px;border:1px solid var(--gold);border-radius:8px;}
 .flagStar:not(.on){opacity:.5;}
 .flagStar:not(.on):after{content:" Set flagship";font-size:12px;letter-spacing:1px;}
-/* v000.6.359: bigger star with label */
+/* v000.6.360: bigger star with label */
 .shipSecLbl{font-size:11px;letter-spacing:2px;opacity:.6;margin:14px 0 6px;text-transform:uppercase;}
 .opsGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .opsGrid .btn{width:100%;margin:0;}
@@ -863,7 +874,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
   font-size:17px;line-height:1.6;display:flex;flex-direction:column;}
 #modalBox .btnRow{position:sticky;bottom:0;background:var(--panel2);padding-top:10px;margin-top:auto;}
 #modalBox .btnRow.sysRow{position:static;background:none;padding-top:0;margin-top:0;}
-/* v000.6.359: sticky modal buttons so they're always reachable */
+/* v000.6.360: sticky modal buttons so they're always reachable */
 #modalBox h2{color:var(--peach);margin:0 0 6px;font-size:19px;letter-spacing:2px;text-transform:uppercase;}
 #modalBox .flavor{color:var(--dim);font-style:italic;font-size:15px;margin-bottom:12px;}
 #modalBox .dim{font-size:14px;}
@@ -1067,7 +1078,7 @@ window.onerror=function(msg,src,line,col,err){
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.359';
+const ART_BUST='v000.6.360';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -1468,7 +1479,7 @@ function fatigueTick(){
   G.ships.forEach(function(s){
     if(!s||s.mothballed||s.status==="museum")return;
     if(s.fatigue==null)s.fatigue=0;
-    if(s.status==="active"&&!s.dock&&!(s.leave>0))s.fatigue=Math.min(100,s.fatigue+(s.missionId?2:1)); /* v000.6.359: no fatigue gain while on planetary leave */
+    if(s.status==="active"&&!s.dock&&!(s.leave>0))s.fatigue=Math.min(100,s.fatigue+(s.missionId?2:1)); /* v000.6.360: no fatigue gain while on planetary leave */
     if(s.fatigue>=70&&s.status==="active")crewOfShip(s.id).forEach(function(o){if(o.morale>0)o.morale=Math.max(0,o.morale-1);});
   });
 }
@@ -1484,7 +1495,7 @@ function uiGrantShoreLeave(id){
   toast("Shore leave granted — 7 days.");
   save();render();
 }
-/* v000.6.359: planetary shore leave — whole crew rests at a planet destination */
+/* v000.6.360: planetary shore leave — whole crew rests at a planet destination */
 function uiPlanetaryLeavePicker(id){
   const s=ship(id);if(!s)return;
   const post=s.post||"sol";
@@ -3852,7 +3863,7 @@ const ORIGINAL_CREW=[
  ["Dorian Kade","Human","M",29,2,"Operations",[68,72,70,55,62,60],["Test Pilot"],"pool"],
  ["Luca Moreau","Human","M",27,1,"Science",[62,75,68,60,78,55],[],"pool"]
 ];
-/* v000.6.359: backstories for all original characters (Jason 2026-10-10) */
+/* v000.6.360: backstories for all original characters (Jason 2026-10-10) */
 const ORIGINAL_BACKSTORIES={
 "Dara Voss":"Survived the Battle of Wolf 359 as a young lieutenant aboard the Saratoga. The experience forged her into a commander who never asks her crew to face what she would not face herself.",
 "Sovar":"A Vulcan xenolinguist who spent a decade on the Federation's first-contact teams before requesting a science posting. His logic is impeccable; his bedside manner is a work in progress.",
@@ -3950,7 +3961,7 @@ function svcPush(o,t,shipKey){if(!o)return;if(!o.svc)o.svc=[];o.svc.push({d:G.da
 function shipHistPush(s,t){if(!s)return;if(!s.hist)s.hist=[];s.hist.push({d:G.day,sd:G.stardate,t:t});if(s.hist.length>240)s.hist.splice(0,s.hist.length-240);}
 function postKeyOf(o){return (o&&o.post&&(o.post.t==="ship"||o.post.t==="station"))?o.post.t+":"+(o.post.id||""):null;}
 function ensureRecords(g){
-  /* v000.6.359: dedupe memorial on load */
+  /* v000.6.360: dedupe memorial on load */
   try{
     if(g.memorial){
       const seen=new Set();g.memorial=g.memorial.filter(function(m){
@@ -4074,7 +4085,7 @@ function newGameState(){
     flags:{},dlIncome:0,day:0,tempCd:0,rescued:{},research:{active:null,done:{}},portraitVer:{},qmode:false,qtheme:"full",captainsLog:[],arcs:[],contacts:[],
     commander:{name:"",gender:"m",species:"human",portrait:0}};
   G0.officers=CANON_CREW.concat(ORIGINAL_CREW,AUX_CREW).map(MK);
-  /* v000.6.359: apply original character backstories */
+  /* v000.6.360: apply original character backstories */
   try{G0.officers.forEach(function(o){if(ORIGINAL_BACKSTORIES[o.name]&&!o.backstory)o.backstory=ORIGINAL_BACKSTORIES[o.name];});}catch(e){}   {const _cb={"Carol Freeman":["co"],"Jack Ransom":["xo"],"Shaxs":["sec"],"T'Ana":["med"]};G0.officers.forEach(o=>{if(_cb[o.name])o.roles=_cb[o.name].slice();});}   seedCanonBonds(G0);
   G=G0;
   G.ships.forEach(s=>{s.comp=shipClass(s).comp||100;});
@@ -4110,7 +4121,7 @@ function newGameState(){
 
 /* ---------- save / load ---------- */
 function save(){try{const _s=JSON.stringify(G);localStorage.setItem(SAVE_KEY,_s);bkWrite(_s);}catch(e){
-  /* v000.6.359: warn on storage quota exceeded (was silent) */
+  /* v000.6.360: warn on storage quota exceeded (was silent) */
   if(e&&e.name==="QuotaExceededError"){toast("Save failed — storage full. Export your save!");try{log("command","WARNING: Save failed — browser storage full.");}catch(_){}}
 }}
 function load(){try{const s=localStorage.getItem(SAVE_KEY);
@@ -4118,7 +4129,7 @@ function load(){try{const s=localStorage.getItem(SAVE_KEY);
   const bk=bkNewest();
   if(bk){try{const m2=migrateSave(bk.g);if(m2){restoredBackup=true;restoredBackupDay=bk.day;return m2;}}catch(e){}}
   return null;}
-function exportSave(){const _g=JSON.parse(JSON.stringify(G));delete _g.aiKey;return JSON.stringify(_g);} /* v000.6.359: strip AI key from exports */
+function exportSave(){const _g=JSON.parse(JSON.stringify(G));delete _g.aiKey;return JSON.stringify(_g);} /* v000.6.360: strip AI key from exports */
 function importSave(txt){const g=JSON.parse(txt);if(!g||typeof g.stardate!=="number")throw new Error("bad save");
   G=migrateSave(g);save();}
 
@@ -4164,7 +4175,7 @@ function uiRestoreBackup(){
 
 /* ---------- lookups ---------- */
 function officer(id){return G.officers.find(o=>o.id===id);}
-/* v000.6.359: Player location — physically being somewhere */
+/* v000.6.360: Player location — physically being somewhere */
 function playerLocation(){
   if(!G.location) return null;
   if(G.location.type==='ship') return ship(G.location.id);
@@ -4177,7 +4188,7 @@ function playerLocationName(){
   if(G.location.type==='ship') return shipNameG(l);
   return l.name;
 }
-/* v000.6.359: Person icon for location indicator */
+/* v000.6.360: Person icon for location indicator */
 const HERE_ICON='<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-3px;"><circle cx="12" cy="8" r="4"/><path d="M12 13c-5 0-8 2.5-8 6v1h16v-1c0-3.5-3-6-8-6z"/></svg>';
 function uiTravel(){
   let h='<h2>Travel</h2><p class="dim">Where do you want to go? You are currently aboard <b>'+esc(playerLocationName())+'</b>.</p>';
@@ -4252,7 +4263,7 @@ function migrateSave(g){
   if(!(g.stations||[]).some(st=>st.id==="academy")){
     g.stations.push({id:"academy",name:"Starfleet Academy",type:"academy",status:"active",daysLeft:0,post:"sol",comp:STATION_DEFS.academy.comp});
   }
-  /* v000.6.359: decommissioned stations STAY gone (Empok Nor kept resurrecting) */
+  /* v000.6.360: decommissioned stations STAY gone (Empok Nor kept resurrecting) */
   g.deadStations=g.deadStations||[];
   const _stName2Id={"Douglas Station":"douglas","Starbase 80":"sb80","Starbase 25":"sb25","Jupiter Station":"jupiter","Earth Spacedock":"spacedock","McKinley Station":"mckinley","Starbase 375":"sb375","Starbase 74":"sb74","Empok Nor":"empoknor","Starfleet Command":"sfcommand","Deep Space 9":"ds9"};
   (g.memorial||[]).forEach(m=>{if(m.kind==="station"&&(m.lost==="decommissioned"||m.lost==="destroyed")){const _id=_stName2Id[m.name];if(_id&&g.deadStations.indexOf(_id)<0)g.deadStations.push(_id);}});
@@ -4503,7 +4514,7 @@ function log(cat,text){
 function avg(a){return a.length?a.reduce((x,y)=>x+y,0)/a.length:0;}
 
 function doAdvance(n){
-  /* v000.6.359: preserve pending interrupts across day skips (was wiping them) */
+  /* v000.6.360: preserve pending interrupts across day skips (was wiping them) */
   for(let i=0;i<n;i++) tickDay();
   save(); render();
   const el=$("stardateTick"); if(el){el.classList.remove("tick");void el.offsetWidth;el.classList.add("tick");}
@@ -4537,7 +4548,7 @@ function logDigestTick(){
   (G.captainsLog=G.captainsLog||[]).push({d:G.day,sd:G.stardate,t:"Daily Digest",b:body,auto:true});
   if(G.captainsLog.length>300)G.captainsLog.splice(0,G.captainsLog.length-300);
 }
-/* ================= v000.6.359 — FIVE-FEATURE SET =================
+/* ================= v000.6.360 — FIVE-FEATURE SET =================
    1. Shore leave (officers actually go away)  2. Memorial services
    3. Officer ambitions  4. Flagship life  5. Letters from deep space
    All deterministic, zero AI calls. */
@@ -4691,7 +4702,7 @@ function flagshipBonus(s){
 }
 function renderFlagshipCard(){
   const fl=typeof flagshipId==="function"?flagshipId():null;
-  /* v000.6.359: flagship discoverability redesign */
+  /* v000.6.360: flagship discoverability redesign */
   if(!fl)return '<div class="card"><h3>Flagship</h3><p class="dim">No flagship designated — this is where you sail, with your office and quarters aboard.</p><div class="btnRow"><button class="btn teal" onclick="setTab(\'ships\')">Choose Your Flagship</button></div><p class="dim" style="font-size:13px;margin-top:8px;">Tap any ship on the Ships tab, then tap the \u2606 star in its profile.</p></div>';
   const s=ship(fl),crew=crewOfShip(fl);
   return '<div class="card"><h3>\u2605 Flagship</h3><div class="row" style="cursor:pointer" onclick="shipModal(\''+fl+'\')">'+
@@ -4749,7 +4760,7 @@ function tickDay(){
   randomEventTick(); scriptedTick(); rankCheckTick(); battleTick(); codexTick(); socialTick(); arcTick(); holoTick(); holidayTick(); ordersTick();
   if(G.shipOps&&G.shipOps.length)G.shipOps=G.shipOps.filter(function(m){return ship(m.shipId);});
   logDigestTick(); // v000.6.149 daily digest
-  leaveTick();ambitionTick();flagshipTick();lettersTick(); // v000.6.359
+  leaveTick();ambitionTick();flagshipTick();lettersTick(); // v000.6.360
 }
 /* ================= v4.1 CREW LIFE — orders of the day =================
    Captains and station commanders issue multi-day department orders; the chief
@@ -6226,7 +6237,7 @@ function resolveMission(m){
   const deptAvg=deptCrew.length?avg(deptCrew.map(o=>o.stats[t.capSkill])):30;
   const moraleAvg=crew.length?avg(crew.map(o=>o.morale)):50;
   let chance=50+(shipStat-t.diff)*0.6+capSkill*0.25+deptAvg*0.1+(moraleAvg-70)*0.1+rnd(-15,15);
-  chance=clamp(chance+socialMissionMod(crew)+flagshipBonus(s),5,98); // v000.6.359 flagship
+  chance=clamp(chance+socialMissionMod(crew)+flagshipBonus(s),5,98); // v000.6.360 flagship
   const roll=rnd(0,100);
   let outcome,cr=t.cr,dl=t.dl,pres=t.pres,detail="";
   if(t.type==="Science"&&hasStation("research"))cr=Math.round(cr*(1.25+0.10*stUpg("research"))); // v4.2 research upgrades
@@ -6347,7 +6358,7 @@ function healTick(){
     if(o.healDays<=0){o.health="healthy";o.healDays=0;log("personnel",fullName(o)+" has been cleared for duty.");}}});
 }
 /* Daily servicing for ships docked at stations (v2.10). */
-/* v000.6.359: shore leave rest runs for ALL ships on leave, docked or orbiting a planet */
+/* v000.6.360: shore leave rest runs for ALL ships on leave, docked or orbiting a planet */
 function shipLeaveTick(){
   G.ships.forEach(function(s){
     if(!s||!(s.leave>0))return;
@@ -6407,7 +6418,7 @@ function killOfficer(o,cause){
   G.ledger.lost++;
   G.officers.forEach(x=>{if(x.friends)x.friends=x.friends.filter(id=>id!==o.id);if(x.rivals)x.rivals=x.rivals.filter(id=>id!==o.id);});
   log("combat","† "+fullName(o)+" — "+cause+". Their name is added to the Memorial Wall.");
-  try{memorialService(o);}catch(e){} // v000.6.359
+  try{memorialService(o);}catch(e){} // v000.6.360
   if(_wasCo&&(_pk==="ship"||_pk==="station"))successionCheck(_pk,_pid); // v2.11: XO steps up
 }
 /* ---------- romance & family ---------- */
@@ -6631,7 +6642,7 @@ function rankCheckTick(){
 /* ---------- modal queue ---------- */
 function pumpModals(){
   if(!interruptQueue.length){render();return;}
-  /* v000.6.359: assistant mode — auto-handle routine interrupts (Jason 2026-10-10) */
+  /* v000.6.360: assistant mode — auto-handle routine interrupts (Jason 2026-10-10) */
   if(G.assistantMode){
     while(interruptQueue.length){
       const peek=interruptQueue[0];
@@ -6641,7 +6652,7 @@ function pumpModals(){
       if(!routine)break;
       const item=interruptQueue.shift();
       try{if(item.buttons[0].fn)item.buttons[0].fn();}catch(e){}
-      /* v000.6.359: batch instead of spamming log */
+      /* v000.6.360: batch instead of spamming log */
       if(!window._assistBatch)window._assistBatch=[];
       window._assistBatch.push(item.title||"notification");
     }
@@ -6656,7 +6667,7 @@ function pumpModals(){
 }
 function showInterrupt(item){
   closeSheet();
-  /* v000.6.359: ensure clean modal state (prevent stacking) */
+  /* v000.6.360: ensure clean modal state (prevent stacking) */
   $("modalRoot").classList.remove("open");
   const _aiTok=++aiEvToken; // v2.8: invalidates any pending event narration for a previous modal
   const box=$("modalBox");
@@ -6673,9 +6684,9 @@ function showInterrupt(item){
   if(item.evId&&aiHasKey()&&!aiEvBusy){aiEvBusy=true;aiNarrateEvent(item,_aiTok).finally(()=>{aiEvBusy=false});}
 }
 let modalBack=null; // optional BACK-button destination while a modal is open
-/* v000.6.359: modal return tracking for office/quarters */
+/* v000.6.360: modal return tracking for office/quarters */
 let modalReturnFn=null;
-function openModal(html){modalBack=null;$("modalBox").innerHTML=html;$("modalRoot").classList.add("open");}
+function openModal(html){modalBack=null;const _mb=$("modalBox");_mb.classList.remove("ds9Theme");_mb.innerHTML=html;$("modalRoot").classList.add("open");}
 /* hardware BACK (v2.39): one history entry guards the app. System BACK re-pushes the
    guard and unwinds exactly one UI layer via goBack(); with nothing open the entry
    dies so the next BACK exits the app instead of trapping the user. */
@@ -6699,7 +6710,7 @@ document.addEventListener("keydown",function(e){
 function closeModal(force){
   // block shade-click dismissal while story interrupts are queued
   if(force&&interruptQueue.length)return;
-  /* v000.6.359: return to office/quarters if set */
+  /* v000.6.360: return to office/quarters if set */
   if(modalReturnFn){const fn=modalReturnFn;modalReturnFn=null;fn();return;}
   modalBack=null;
   $("modalRoot").classList.remove("open");
@@ -6841,7 +6852,7 @@ function uiToggleBattles(){try{localStorage.setItem("stfc_battles",battlesOn()?"
 function ambientOn(){try{const v=localStorage.getItem("stfc_ambient");return v===null?true:v==="1";}catch(e){return true;}}
 function uiToggleAmbient(){try{localStorage.setItem("stfc_ambient",ambientOn()?"0":"1");}catch(e){}render();toast("Ambient fleet movement "+(ambientOn()?"enabled — idle ships will cruise on their own.":"disabled — ships hold position."));}
 function clearAmbient(s){if(s&&s.ambient)s.ambient=null;}
-function ambientEligible(s){return s.status==="active"&&!s.mothballed&&!s.transit&&!s.missionId&&!s.dock&&!s.cruise&&!s.abandoned&&!s.routeFor&&s.patrol!==false;} /* v000.6.359: ship patrol toggle is the master switch — off means hold position, no ambient either */
+function ambientEligible(s){return s.status==="active"&&!s.mothballed&&!s.transit&&!s.missionId&&!s.dock&&!s.cruise&&!s.abandoned&&!s.routeFor&&s.patrol!==false;} /* v000.6.360: ship patrol toggle is the master switch — off means hold position, no ambient either */
 function ambientTick(){
   if(!ambientOn())return;
   const posts=Object.keys(POST_LABELS);
@@ -6937,7 +6948,7 @@ function renderSettings(){
     [["full","Full Continuum"],["badge","Badge only"],["off","Off"]].map(function(o){return '<button class="btn small'+(G.qtheme===o[0]?" on":"")+'" onclick="uiSetQTheme(\''+o[0]+'\')">'+o[1]+'</button>';}).join("")+
     '</div></span></div><p class="dim">Full Continuum: gold Q theme, glowing sigil in the header, drifting Continuum haze, and rotating Q quips. Badge only: just the sigil. Off: Q Mode with no visual change.</p></div>';
   if(G.qmode)h+=renderQCard();
-  /* v000.6.359: assistant mode */
+  /* v000.6.360: assistant mode */
   h+='<div class="card"><h3>Flag Assistant</h3><p class="dim">When skipping days, your assistant automatically handles routine notifications (informational popups with no decisions). Anything needing your actual choice will still pop up.</p><div class="btnRow"><button class="btn'+(G.assistantMode?" on":"")+'" onclick="G.assistantMode=!G.assistantMode;save();render()">'+(G.assistantMode?"Assistant: ON":"Assistant: OFF")+'</button></div></div>';
   h+='<div class="card"><h3>Fix Missing Personnel</h3><p class="dim">If Academy personnel (Doctor, Kyle Jokovich, Caleb Mir, Ocam Sadal) are missing from Personnel, tap below to add them.</p><div class="btnRow"><button class="btn" onclick="uiAddAcademyDoctor()">Fix Academy Personnel</button></div></div>'; /* v000.6.113 */
   h+='<div class="card"><h3>Display Theme</h3><p class="dim">Reskin the entire LCARS interface. Applies instantly.</p><div class="btnRow">'+
@@ -7034,12 +7045,12 @@ function aiBondBlock(o){
   return s;
 }
 function aiParseBonds(text){return /\[\[BOND:\+1\]\]/.test(String(text||""))?1:0;}
-/* v000.6.359: AI can advance commander romance via tags (Jason 2026-10-10) */
+/* v000.6.360: AI can advance commander romance via tags (Jason 2026-10-10) */
 function aiParseRomance(text){
   const m=/\[\[ROMANCE:(dating|engaged|married|end)\]\]/i.exec(String(text||""));
   return m?m[1].toLowerCase():null;
 }
-/* v000.6.359: breakup via chat */
+/* v000.6.360: breakup via chat */
 function aiApplyBreakup(o){
   if(!o||o.dead)return false;
   const b=cmdrBonds()[o.id];
@@ -7064,7 +7075,7 @@ function aiApplyRomance(o,stage){
   b.kind="romance";b.stage=stageMap[stage]||1;b.pts=0;
   log("romance","You and "+fullName(o)+" are now "+stage+".");
 }
-/* v000.6.359: persistent chat memories (Jason 2026-10-10) */
+/* v000.6.360: persistent chat memories (Jason 2026-10-10) */
 function aiMemoryBlock(o){
   const mems=(o.memories||[]).slice(-10);
   let s="\nPERSONAL MEMORIES \u2014 things that happened between you and the commander that you remember: ";
@@ -7128,7 +7139,7 @@ function aiSystemFor(o){
   try{s+=aiBondBlock(o);}catch(e){}
   try{s+=aiMemoryBlock(o);}catch(e){}
   s+="Rules: stay fully in character as "+o.name+", a Starfleet officer — never mention being an AI or language model. Reply in first person, 1 to 4 sentences of natural spoken dialogue. IMPORTANT: the last user message is what you are responding to — always prioritize it. No stage directions, no asterisks, no narrated actions. ";
-  /* v000.6.359: relationship formality */
+  /* v000.6.360: relationship formality */
   try{
     const _b=(typeof cmdrBonds==="function"?cmdrBonds()[o.id]:null);
     if(_b&&((_b.kind==="romance"&&_b.stage>=2)||(_b.kind==="friend"&&_b.stage>=2))){
@@ -7141,7 +7152,7 @@ function aiSystemFor(o){
     }
   }catch(e){s+="Address the commander as \""+addr+"\". ";}
   s+="If asked about something not listed above, say you do not have that information; never invent names or assignments. Keep it Star Trek: professional, measured, warm when it fits. Never break character.";
-  /* v000.6.359: partner address — first name ONLY, no rank, ever */
+  /* v000.6.360: partner address — first name ONLY, no rank, ever */
   try{
     const _cb2=(typeof cmdrBonds==="function"?cmdrBonds()[o.id]:null);
     if(_cb2&&_cb2.kind==="romance"){
@@ -7153,7 +7164,7 @@ function aiSystemFor(o){
 }
 async function aiChatCall(o,userText){
   const key=String(G.aiKey||"").trim();if(!key)throw new Error("no-key");
-  /* v000.6.359: fresh chats — memories via system prompt only, no old transcripts */
+  /* v000.6.360: fresh chats — memories via system prompt only, no old transcripts */
   const hist=[];
   hist.push({role:"user",parts:[{text:String(userText).slice(0,600)}]});
   const body={system_instruction:{parts:[{text:aiSystemFor(o)}]},contents:hist,generationConfig:{maxOutputTokens:220,temperature:0.9}};
@@ -7182,17 +7193,17 @@ function aiFallbackLine(){
 function officerSituationLine(o){
   try{
     let sit="";
-    /* v000.6.359: subspace calls */
+    /* v000.6.360: subspace calls */
     if(o.meeting&&o.meeting.subspace){
       sit="Priority subspace call with the commander. You are at your post, NOT in person.";
       return sit;
     }
-    /* v000.6.359: quarters — off-duty private time with partner */
+    /* v000.6.360: quarters — off-duty private time with partner */
     if(o.meeting&&o.meeting.quarters){
       sit="You are in the commander's private quarters, off duty, spending free time together as partners. This is personal time, NOT work — do NOT mention duty, your post, getting back to work, or anything official. Talk about anything personal: your day, feelings, dreams, each other. Be warm, relaxed, intimate.";
       return sit;
     }
-    /* v000.6.359: meeting overrides location (any room) */
+    /* v000.6.360: meeting overrides location (any room) */
     if(o.meeting&&o.meeting.withCommander&&o.meeting.loc){
       if(o.meeting.loc==='holodeck'){
         const prog=(typeof DECK_HOLO_PROGS!=="undefined"&&o.meeting.prog?DECK_HOLO_PROGS.find(x=>x.id===o.meeting.prog):null);
@@ -7241,7 +7252,7 @@ function aiFleetContext(o){
           if(e&&e.o)line+="Your commanding officer is "+rankName(e.o)+" "+e.o.name+(e.acting?" (acting)":"")+". ";
           const crew=crewOfShip(s.id);const xo=crew.find(function(x){return (x.roles||[]).indexOf("xo")>=0;});
           if(xo&&(!e||!e.o||xo.id!==e.o.id))line+="The executive officer is "+rankName(xo)+" "+xo.name+". ";}
-        /* v000.6.359: COs know their crew */
+        /* v000.6.360: COs know their crew */
         try{
           let crew=[];
           if(o.post&&o.post.t==="ship"){const s=ship(o.post.id);if(s)crew=crewOfShip(s.id);}
@@ -7298,7 +7309,7 @@ function aiFleetContext(o){
     if(dmg)c.push(dmg+" damaged ship"+(dmg>1?"s":"")+" needing repair");
     if(c.length)bits.push("CURRENT FLEET CONCERNS: "+c.join("; "));
   }catch(e){}
-  /* v000.6.359: tiered officer awareness (Jason 2026-10-10) — fame scales with rank */
+  /* v000.6.360: tiered officer awareness (Jason 2026-10-10) — fame scales with rank */
   try{
     const me=o.id;
     const myPostKey=postKeyOf(o);
@@ -7353,7 +7364,7 @@ function aiChatHtml(o,video){
   }).join("");
   let h='<!--AI_CHAT:'+o.id+'-->';
   if(video){
-    // Video call UI — compact for keyboard (v000.6.359)
+    // Video call UI — compact for keyboard (v000.6.360)
     h+='<div class="meetScene meetSceneChat"><img class="scene" src="'+(typeof MEET_SCENE!=="undefined"?MEET_SCENE:"ships/meet-scene.jpg")+'" alt="">'+meetFaceHtml(o);
     h+='<div class="meetPlate">'+esc(rankName(o))+' '+esc(o.name)+'</div></div>';
   }else{
@@ -7367,10 +7378,10 @@ function aiChatHtml(o,video){
   return h;
 }
 function aiChatScroll(){const el=document.getElementById("aiChatLog");if(el)el.scrollTop=el.scrollHeight;}
-var aiCtxFresh=false; /* v000.6.359: entry points set this so aiTalk keeps their context */
+var aiCtxFresh=false; /* v000.6.360: entry points set this so aiTalk keeps their context */
 function aiTalk(oid,video){
   const o=officer(oid);if(!o||o.dead)return;
-  /* v000.6.359: plain Talk clears any stale meeting context (old mess-hall meetings leaked in) */
+  /* v000.6.360: plain Talk clears any stale meeting context (old mess-hall meetings leaked in) */
   if(!aiCtxFresh&&o.meeting){o.meeting.withCommander=false;o.meeting.loc=null;o.meeting.roomName=null;o.meeting.quarters=false;o.meeting.subspace=false;}
   aiCtxFresh=false;
   if(!aiHasKey()){
@@ -7379,7 +7390,7 @@ function aiTalk(oid,video){
   }
   const _prevHtml=$("modalBox").innerHTML,_prevBack=modalBack;
   const _h=aiChatHist(o);
-  // Always start fresh (v000.6.359)
+  // Always start fresh (v000.6.360)
   _h.push({r:"div",t:"New conversation — Stardate "+G.stardate.toFixed(1)});aiTrimHist(o);save();
   openModal(aiChatHtml(o,video));
   aiChatScroll();
@@ -7398,15 +7409,15 @@ async function aiSend(oid){
     const raw=await aiChatCall(o,v);
     const orders=aiParseOrders(raw); /* v000.6.141: AI orders */
     const bondHit=aiParseBonds(raw); /* v000.6.151: chat bonds */
-    const romanceHit=aiParseRomance(raw); /* v000.6.359: chat romance */
-    const memHits=aiParseMemories(raw); /* v000.6.359: chat memories */
+    const romanceHit=aiParseRomance(raw); /* v000.6.360: chat romance */
+    const memHits=aiParseMemories(raw); /* v000.6.360: chat memories */
     const clean=aiStripBondTags(aiStripOrderTags(raw.replace(/\[\[MEMORY:[^\]]+\]\]/g,"").replace(/\[\[ROMANCE:[^\]]+\]\]/gi,"")))||"Aye, Admiral.";
     hist.push({r:"o",t:clean});aiTrimHist(o);
     o.morale=clamp(o.morale+1,0,100);
     if(bondHit)aiApplyChatBond(o); /* v000.6.151 */
-    if(romanceHit==="end"){if(aiApplyBreakup(o)){hist.push({r:"sys",t:"The relationship has ended."});aiTrimHist(o);}} /* v000.6.359 */
-    else if(romanceHit)aiApplyRomance(o,romanceHit); /* v000.6.359 */
-    if(memHits.length)aiApplyMemories(o,memHits); /* v000.6.359 */
+    if(romanceHit==="end"){if(aiApplyBreakup(o)){hist.push({r:"sys",t:"The relationship has ended."});aiTrimHist(o);}} /* v000.6.360 */
+    else if(romanceHit)aiApplyRomance(o,romanceHit); /* v000.6.360 */
+    if(memHits.length)aiApplyMemories(o,memHits); /* v000.6.360 */
     save();
     const ty=document.getElementById("aiTyping");if(ty)ty.outerHTML='<div class="aiMsgO">'+esc(clean)+'</div>';
     if(orders.length)aiShowConfirm(oid,orders);
@@ -7473,14 +7484,14 @@ function aiResolveBillet(o,text){
   return f?f[0]:null;
 }
 /* quiet cores: same rules as the UI buttons, no modals/toasts */
-/* v000.6.359: Spore Jump for Crossfield-class (Jason 2026-10-10) */
+/* v000.6.360: Spore Jump for Crossfield-class (Jason 2026-10-10) */
 function sporeNavigator(s){
   if(!s||s.cls!=="crossfield")return null;
   const crew=crewOfShip(s.id);
   return crew.find(function(o){return (o.roles||[]).indexOf("spore")>=0;})||null;
 }
 function canSporeJump(s){
-  if(!s||s.cls.indexOf("crossfield")!==0)return {ok:false,msg:"not a Crossfield-class ship"}; /* v000.6.359: include crossfield32 */
+  if(!s||s.cls.indexOf("crossfield")!==0)return {ok:false,msg:"not a Crossfield-class ship"}; /* v000.6.360: include crossfield32 */
   if(s.transit)return {ok:false,msg:"already in transit"};
   if(s.status!=="active"||s.mothballed)return {ok:false,msg:"ship not active"};
   const nav=sporeNavigator(s);
@@ -7859,7 +7870,7 @@ async function dmDebriefAsync(outcome,pres,destLabelStr,logLines){
 
 /* ---------- 2. COUNSELOR SESSIONS ---------- */
 var COUNS=null;
-/* v000.6.359: session counselor comes from the OFFICER'S OWN ship/station first:
+/* v000.6.360: session counselor comes from the OFFICER'S OWN ship/station first:
    its counselor, else its chief medical officer / a doctor aboard. Fleet-wide is only a fallback. */
 function sessionCounselorFor(o){
   const samePost=function(x){return x.id!==o.id&&o.post&&x.post&&x.post.t===o.post.t&&x.post.id===o.post.id;};
@@ -7901,7 +7912,7 @@ function coSay(who,text){
   const log=document.getElementById("coLog");if(!log)return;
   const cls=who==="u"?"aiMsgU":"aiMsgO";
   const pre=who==="o"?('<b>'+esc(COUNS.o.name.split(" ")[0])+":</b> "):who==="c"?('<b>'+esc(COUNS.c.name.split(" ")[0])+":</b> "):"";
-  if(COUNS&&COUNS.hist)COUNS.hist.push({who:who,text:String(text)}); /* v000.6.359: session transcript */
+  if(COUNS&&COUNS.hist)COUNS.hist.push({who:who,text:String(text)}); /* v000.6.360: session transcript */
   log.insertAdjacentHTML("beforeend",'<div class="'+cls+'">'+pre+esc(text)+'</div>');
   log.scrollTop=log.scrollHeight;
 }
@@ -7954,7 +7965,7 @@ function uiCounsel(oid){
     coSay("c",pick(COUNS_OPEN));coSay("o","\"Honestly? It helps just to say it out loud. Thank you for listening, Counselor.\"");coSay("c",pick(COUNS_CLOSE));
   }
 }
-/* v000.6.359: session transcript so nobody repeats themselves */
+/* v000.6.360: session transcript so nobody repeats themselves */
 function coTranscript(){
   if(!COUNS||!COUNS.hist||!COUNS.hist.length)return "(the session has just begun)";
   return COUNS.hist.slice(-10).map(function(m){
@@ -7962,7 +7973,7 @@ function coTranscript(){
     return n+": "+m.text;
   }).join("\n");
 }
-/* v000.6.359: the counselor speaks ONLY when asked (Let-counselor-talk button) */
+/* v000.6.360: the counselor speaks ONLY when asked (Let-counselor-talk button) */
 function coSend(){
   if(!COUNS)return;
   const inp=document.getElementById("coIn");const v=inp?inp.value.trim():"";if(!v)return;
@@ -11416,7 +11427,7 @@ function cmdrBondEnd(oid,why){
   }
   save();
 }
-/* v000.6.359: player-facing bond ending (button) */
+/* v000.6.360: player-facing bond ending (button) */
 function uiCmdrBondEndConfirm(oid){
   const o=officer(oid);if(!o)return;
   const b=cmdrBonds()[oid];if(!b)return;
@@ -11558,7 +11569,7 @@ function cmdrInstitutions(){
   }catch(e){return '<div class="card"><p class="dim">Institutions unavailable: '+esc(String(e.message||e))+'</p></div>';}
 }
 let notifOpen=false,notifFilter="all";
-let dashOpen=false; // v000.6.359: default closed
+let dashOpen=false; // v000.6.360: default closed
 const NOTIF_CATS=[["aud","Audience"],["idle","Fleet"],["builds","Construction"],["req","Command"],["loyal","Morale"]];
 function recentlyMet(o){const m=(G.meetings||{})[o.id];return m!==undefined&&G.stardate-m<MEET_CD;}
 function notifList(){
@@ -11700,7 +11711,7 @@ function renderFleetDashboard(){
   const total=sg.all.length;
   let h='<div class="card"><h3 style="cursor:pointer" onclick="uiToggleDash()">Fleet Dashboard <span style="float:right;color:var(--dim)">'+(dashOpen?"\u25b4":"\u25be")+'</span></h3>';
   if(!dashOpen){
-    /* v000.6.359: ticker */
+    /* v000.6.360: ticker */
     var _m=sg.mission.length, _r=sg.ready.length;
     var _txt=_m+' on mission \u2014 '+_r+' ready';
     if(sg.damaged.length)_txt+=' \u2014 '+sg.damaged.length+' damaged';
@@ -11817,7 +11828,7 @@ function renderCommand(){
   if(cmdSub==="research")h+=cmdSubPills()+renderResearchCard();
   else if(cmdSub==="inst")h+=cmdSubPills()+cmdrInstitutions();
   else if(cmdSub==="rec")h+=cmdSubPills()+recCard;
-  else h+=renderNeedsAttention()+renderFleetDashboard()+cmdrCard+renderFlagshipCard()+renderLettersCard()+cmdSubPills()+sectorCard+nemesisCard()+opsCard+sprojCardHTML(); // v000.6.359 // v4.2 sector projects — v000.6.147: fleet dashboard
+  else h+=renderNeedsAttention()+renderFleetDashboard()+cmdrCard+renderFlagshipCard()+renderLettersCard()+cmdSubPills()+sectorCard+nemesisCard()+opsCard+sprojCardHTML(); // v000.6.360 // v4.2 sector projects — v000.6.147: fleet dashboard
   return h;
 }
 
@@ -11876,7 +11887,7 @@ function renderShips(){
     if(isMus)return false;
     return shipQuad==="all"||postQuadOf(s)===shipQuad;
   }).sort((a,b)=>{
-    /* v000.6.359: current location at top */
+    /* v000.6.360: current location at top */
     const _loc=(typeof G!=="undefined"&&G.location?G.location:null);
     const _la=_loc&&_loc.type==='ship'&&a.id===_loc.id?0:1,_lb=_loc&&_loc.type==='ship'&&b.id===_loc.id?0:1;
     if(_la!==_lb)return _la-_lb;
@@ -11946,7 +11957,7 @@ function museumCard(s){
 /* ---------- STATIONS tab ---------- */
 function renderStations(){
   let rows="";
-  /* v000.6.359: current location at top */
+  /* v000.6.360: current location at top */
   const _loc2=(typeof G!=="undefined"&&G.location?G.location:null);
   const _sorted=G.stations.slice().sort((a,b)=>{
     const _a=_loc2&&_loc2.type==='station'&&a.id===_loc2.id?0:1;
@@ -11974,9 +11985,9 @@ function renderStations(){
 let persFilter="all";
 let persShow="all";
 let persRank="all";
-let persSpecies="all"; /* v000.6.359: species filter */
-let persDivision="all"; /* v000.6.359: division filter */
-let persSort="rank"; /* v000.6.359: sort option */
+let persSpecies="all"; /* v000.6.360: species filter */
+let persDivision="all"; /* v000.6.360: division filter */
+let persSort="rank"; /* v000.6.360: sort option */
 /* In-place list search: hides non-matching rows without re-rendering, so the
    search input (and the on-screen keyboard) is never disturbed while typing. */
 function liveSearch(input,listId,countId){
@@ -12023,7 +12034,7 @@ function renderPersonnel(){
     const _showCounts={};list.forEach(o=>{const _s=officerShow(o);if(_s)_showCounts[_s]=(_showCounts[_s]||0)+1;});
     showPills='<div class="cmdsubseg" style="margin:8px 0 0;">'+PERS_SHOWS.map(s=>'<button class="btn small'+(persShow===s[0]?" on":"")+'" onclick="persShow=\''+s[0]+'\';render()">'+s[1]+' ('+(s[0]==="all"?list.length:(_showCounts[s[0]]||0))+')</button>').join("")+'</div>';
     if(persShow!=="all")list=list.filter(o=>officerShow(o)===persShow);
-    /* v000.6.359: sort options */
+    /* v000.6.360: sort options */
     const _sortFn={
       rank:(a,b)=>b.rank-a.rank||a.name.localeCompare(b.name),
       nameFirst:(a,b)=>a.name.split(" ")[0].localeCompare(b.name.split(" ")[0])||a.name.localeCompare(b.name),
@@ -12042,14 +12053,14 @@ function renderPersonnel(){
     if(persRank==="civ")list=list.filter(o=>o.rankLabel==="Civilian");
     else if(persRank==="cadet")list=list.filter(o=>o.rankLabel==="Cadet");
     else if(persRank!=="all")list=list.filter(o=>o.rank===persRank);
-    /* v000.6.359: species filter pills */
+    /* v000.6.360: species filter pills */
     const _spCounts={};list.forEach(o=>{const _sp=o.species||"Unknown";_spCounts[_sp]=(_spCounts[_sp]||0)+1;});
     const _spList=Object.keys(_spCounts).sort((a,b)=>_spCounts[b]-_spCounts[a]||a.localeCompare(b));
     speciesPills='<div class="cmdsubseg" style="margin:8px 0 0;">'+
       '<button class="btn small'+(persSpecies==="all"?" on":"")+'" onclick="persSpecies=\'all\';render()">All ('+list.length+')</button>'+
       _spList.map(sp=>'<button class="btn small'+(persSpecies===sp?" on":"")+'" onclick="persSpecies=\''+sp.replace(/\'/g,"\\'")+'\';render()">'+esc(sp)+' ('+_spCounts[sp]+')</button>').join("")+'</div>';
     if(persSpecies!=="all")list=list.filter(o=>(o.species||"Unknown")===persSpecies);
-    /* v000.6.359: division filter pills */
+    /* v000.6.360: division filter pills */
     const _divCounts={};list.forEach(o=>{const _d=o.division||"operations";_divCounts[_d]=(_divCounts[_d]||0)+1;});
     const _divList=["command","operations","sciences"].filter(d=>_divCounts[d]);
     divisionPills='<div class="cmdsubseg" style="margin:8px 0 0;">'+
@@ -12758,7 +12769,7 @@ function uiDecommissionGo(kind,id){
     const tgt=G.stations.find(x=>x.status==="active"&&x.id!==st.id);
     G.shuttles.forEach(x=>{if(x.host==="station"&&x.hid===st.id&&x.status==="docked"&&tgt){x.hid=tgt.id;}});
     G.shuttles=G.shuttles.filter(x=>!(x.host==="station"&&x.hid===st.id));
-    G.deadStations=G.deadStations||[];if(G.deadStations.indexOf(st.id)<0)G.deadStations.push(st.id); /* v000.6.359: never resurrect */
+    G.deadStations=G.deadStations||[];if(G.deadStations.indexOf(st.id)<0)G.deadStations.push(st.id); /* v000.6.360: never resurrect */
     G.stations.splice(i,1);
     G.memorial.unshift({kind:"station",name:st.name,sub:STATION_DEFS[st.type].name,lost:"decommissioned",cause:"Decommissioned — struck from active service",sd:G.stardate});
     log("system",st.name+" has been decommissioned. Its name joins the Memorial.");
@@ -13438,7 +13449,7 @@ function postingOptions(sel){
 }
 const PORTRAIT_VER_INFO={"Christopher Pike":{main:"SNW",alt:"TOS"},"Spock":{main:"TOS",alt:"SNW"},"Nyota Uhura":{main:"TOS",alt:"SNW"},"Christine Chapel":{main:"TOS",alt:"SNW"},"Una Chin-Riley":{main:"SNW",alt:"TOS"},"Joseph M'Benga":{main:"SNW",alt:"TOS"},"Montgomery Scott":{main:"TOS",alt:"SNW"},"Felix Harrow":{main:"Short hair",alt:"Long hair"},"Leland":{main:"Messy hair",alt:"Formal hair"}};
 /* v000.6.075 (Jason 2026-10-03): SNW Spock portrait (Ethan Peck promo, FC uniform) — Jason supplied the image after the generator refused. */
-const PORTRAITS_ALT={"Spock":"portraits/baked/spock_snw_670626.jpg","Nyota Uhura":"portraits/baked/nyota_uhura_47ab23_alt.jpg","Felix Harrow":"portraits/baked/felix_harrow_2d78ab_alt.jpg","Leland":"portraits/baked/leland_a0bf9d_alt.jpg"}; /* v000.6.359: Felix long hair alt; v000.6.359: Leland formal hair alt */
+const PORTRAITS_ALT={"Spock":"portraits/baked/spock_snw_670626.jpg","Nyota Uhura":"portraits/baked/nyota_uhura_47ab23_alt.jpg","Felix Harrow":"portraits/baked/felix_harrow_2d78ab_alt.jpg","Leland":"portraits/baked/leland_a0bf9d_alt.jpg"}; /* v000.6.360: Felix long hair alt; v000.6.360: Leland formal hair alt */
 function portraitPick(name,entry){
   if(typeof PORTRAIT_VER_INFO!=="undefined"&&PORTRAIT_VER_INFO[name]){
     if(typeof portraitTabForce!=="undefined"&&portraitTabForce&&typeof lostShow!=="undefined"&&(lostShow==="TOS"||lostShow==="SNW")){
@@ -13467,7 +13478,7 @@ function divOfDept(dept){
 var DIV_DONE={};
 function divManifestLoad(){
   try{
-    fetch("portraits/div-done.jsonl?v="+encodeURIComponent(ART_BUST)) /* v000.6.359: use current version, not hardcoded */
+    fetch("portraits/div-done.jsonl?v="+encodeURIComponent(ART_BUST)) /* v000.6.360: use current version, not hardcoded */
       .then(function(r){return r.ok?r.text():"";})
       .then(function(t){DIV_DONE={};String(t||"").split("\n").forEach(function(line){const k=line.trim();if(k)DIV_DONE[k]=1;});try{render();}catch(e){};})
       .catch(function(){});
@@ -13809,7 +13820,7 @@ function uiDivision(id,div,btn){
   var o=officer(id);
   if(!o||DIVISIONS.indexOf(div)<0)return;
   o.division=div;save();render();officerModal(id);
-  toast(o.name.split(" ")[0]+" — "+DIV_LABEL[div]+" uniform"); /* v000.6.359: feedback */
+  toast(o.name.split(" ")[0]+" — "+DIV_LABEL[div]+" uniform"); /* v000.6.360: feedback */
 }
 
 /* --- runtime uniform recolor: dominant-band hue shift, skin-safe --- */
@@ -14126,7 +14137,7 @@ function officerModal(id){
   if(o.traits.length)h+='<div style="margin:6px 0;">'+o.traits.map(t=>'<span class="badge violet">'+esc(t)+'</span>').join("")+'</div>';
   if(o.medals.length)h+='<div style="margin:6px 0;">'+o.medals.map(m=>'<span class="badge rank medal">'+esc(m)+'</span>').join("")+'</div>';
   if(o.backstory)h+='<h4>Backstory</h4><p class="dim" style="margin:4px 0;">'+esc(o.backstory)+'</p>';
-  /* v000.6.359: show chat memories */
+  /* v000.6.360: show chat memories */
   if(o.memories&&o.memories.length)h+='<h4>Memories</h4>'+o.memories.slice(-10).reverse().map(function(m){return '<p class="dim" style="margin:4px 0;">\u2022 '+esc(m.t)+' <span style="opacity:0.6;">('+esc(m.d)+')</span></p>';}).join("");
   if(o.accolades&&o.accolades.length){
     const sorted=o.accolades.slice().sort((a,b)=>{
@@ -14142,7 +14153,7 @@ function officerModal(id){
     h+='<div class="kv" data-hint="How committed this officer is to your command, 0 to 100. Below 30 they grow miserable and lose morale daily; at 15 or less they may resign. Hold meetings to rebuild trust."><span class="k">Loyalty</span><span class="v">'+o.loyal+'/100</span></div>'+bar("LOY",o.loyal);
     h+='<div class="kv"><span class="k">Health</span><span class="v">'+(o.health==="healthy"?"Healthy":"Injured ("+Math.ceil(o.healDays)+"d)")+'</span></div>';
     if(o.onLeave)h+='<div class="kv"><span class="k">Shore leave</span><span class="v">On leave \u2014 '+esc(o.onLeave.where)+' ('+Math.max(0,o.onLeave.until-G.day)+'d left)</span></div>';
-    h+=ambitionHtml(o); // v000.6.359
+    h+=ambitionHtml(o); // v000.6.360
     h+='<div class="kv"><span class="k">Missions</span><span class="v">'+o.missions.s+'/'+o.missions.t+' successful</span></div>';
     h+='<div class="kv"><span class="k">Time in grade</span><span class="v">'+Math.floor(o.timeInGrade)+' days</span></div>';
   } else {
@@ -14151,7 +14162,7 @@ function officerModal(id){
   if(o.rel&&partner){
     h+='<div class="kv"><span class="k">Relationship</span><span class="v" style="color:var(--pink)">'+o.rel.stage+' — <a href="#" onclick="officerModal(\''+partner.id+'\');return false;" style="color:var(--pink)">'+esc(partner.name)+'</a></span></div>';
   }
-  /* v000.6.359: show commander relationship (Jason 2026-10-10) */
+  /* v000.6.360: show commander relationship (Jason 2026-10-10) */
   try{
     const _cb=(typeof cmdrBonds==="function"?cmdrBonds():{})[o.id];
     if(_cb){
@@ -14194,7 +14205,7 @@ function officerModal(id){
     const mLast=(G.meetings||{})[o.id];const mCd=mLast!==undefined&&G.stardate-mLast<MEET_CD;
     _cmd+='<button class="btn small teal" '+(mCd?"disabled":"")+' onclick="uiRequestMeeting(\''+o.id+'\')">Request meeting'+(mCd?" ("+Math.ceil(MEET_CD-(G.stardate-mLast))+"d)":"")+'</button>';
     _cmd+='<button class="btn small violet" onclick="uiCounsel(\''+o.id+'\')">Counseling</button>';
-    if(!o.onLeave)_cmd+='<button class="btn small teal" onclick="uiGrantLeave(\''+o.id+'\')">Grant shore leave</button>'; // v000.6.359
+    if(!o.onLeave)_cmd+='<button class="btn small teal" onclick="uiGrantLeave(\''+o.id+'\')">Grant shore leave</button>'; // v000.6.360
     _cmd+='<button class="btn small violet" onclick="uiAwardPicker(\''+o.id+'\')">Award honor</button>';
     if(o.rankLabel&&/civilian/i.test(o.rankLabel))
       _cmd+='<button class="btn small peach" onclick="uiCommission(\''+o.id+'\',\'civ\')">Grant field commission</button>';
@@ -14382,7 +14393,7 @@ const BILLETS=[
  ["sec","Chief of Security"],["eng","Chief Engineer"],["sci","Chief Science Officer"],
  ["med","Chief Medical Officer"],["doc","Doctor"],["nurse","Nurse"],["coun","Counselor"],
  ["chef","Chef"],["bart","Bartender"],
- ["spore","Spore Navigator"] /* v000.6.359: Crossfield spore drive (Jason 2026-10-10) */
+ ["spore","Spore Navigator"] /* v000.6.360: Crossfield spore drive (Jason 2026-10-10) */
 ];
 function billetLabel(id){const b=BILLETS.find(x=>x[0]===id);return b?b[1]:(STATION_BILLETS_EXTRA[id]||id);}
 /* v000.6.129: Station-specific positions (Jason 2026-10-04) */
@@ -15128,7 +15139,7 @@ function postOptions(cur){
 /* Ship docking (v2.10): only stations in DOCK_DEFS offer berths. */
 function dockOptions(s){
   const cur=s.dock||"",here=s.post||"sol";
-  /* v000.6.359: show all dockable stations; distance checked on select */
+  /* v000.6.360: show all dockable stations; distance checked on select */
   const elig=G.stations.filter(st=>st.status==="active"&&!st.mothballed&&DOCK_DEFS[st.type]);
   const _isHere=st=>(st.post||"sol")===here||st.id===here;
   const sorted=elig.slice().sort((a,b)=>{
@@ -15250,7 +15261,7 @@ function shipPlotQuad(s){
 const WORM_ALPHA=["bajor","ds9"],WORM_GAMMA=["gamma","founders","dominion","idran"];
 function transitTick(){
   for(const s of G.ships){
-    if(s&&s.sporeCooldown>0)s.sporeCooldown--; /* v000.6.359: spore drive recharge */
+    if(s&&s.sporeCooldown>0)s.sporeCooldown--; /* v000.6.360: spore drive recharge */
     if(!s||!s.transit)continue;
     s.transit.daysLeft--;
     if(s.transit.daysLeft>0)continue;
@@ -15787,7 +15798,7 @@ function uiSetRoute(sid,v){
   if(v)log("event",s.name+" takes up the "+v+" trade route — commerce, and goodwill, follow her.");
   save();shipModal(sid);render();
 }
-/* v000.6.359: Commander quarters on flagship (Jason 2026-10-10) */
+/* v000.6.360: Commander quarters on flagship (Jason 2026-10-10) */
 function cmdrPartner(){
   const bonds=cmdrBonds();
   for(const oid in bonds){
@@ -15807,7 +15818,7 @@ function cmdrPartners(){
 function cmdrQuartersShared(){
   const fid=flagshipId();
   if(!fid)return null;
-  // any partner posted to the flagship shares quarters (v000.6.359: multiple partners)
+  // any partner posted to the flagship shares quarters (v000.6.360: multiple partners)
   const ps=cmdrPartners();
   for(let i=0;i<ps.length;i++){const p=ps[i];if(p.post&&p.post.t==="ship"&&p.post.id===fid)return p;}
   return null;
@@ -15827,7 +15838,7 @@ function uiQuarters(){
   }else{
     h+='<p class="dim">Your private quarters aboard the flagship.</p>';
   }
-  /* v000.6.359: theme banner */
+  /* v000.6.360: theme banner */
   (function(){
     var _theme=(G.quarters&&G.quarters.theme)||'standard';
     var _img={standard:'portraits/baked/quarters_standard.jpg',cozy:'portraits/baked/quarters_cozy.jpg',minimal:'portraits/baked/quarters_minimal.jpg',personal:'portraits/baked/quarters_personal.jpg',verdant:'portraits/baked/quarters_verdant.jpg'}[_theme];
@@ -15838,7 +15849,7 @@ function uiQuarters(){
     h+='<button class="btn teal" onclick="uiQuartersEvening()">Spend the evening together</button>';
     h+='<button class="btn" onclick="uiQuartersPartnerChat()">Chat with '+esc(partner.name.split(" ")[0])+'</button>';
   }else{
-    /* v000.6.359: partner not aboard — offer subspace call */
+    /* v000.6.360: partner not aboard — offer subspace call */
     var _pb=cmdrBondPartner();
     if(_pb){
       h+='<button class="btn teal" onclick="uiQuartersPartnerCall()">Call '+esc(_pb.name)+'</button>';
@@ -15862,7 +15873,7 @@ function uiQuarters(){
     _box.setAttribute('data-room-theme',_theme);
   }
 }
-/* v000.6.359: off-duty partner chat in quarters */
+/* v000.6.360: off-duty partner chat in quarters */
 function uiQuartersPartnerChat(){
   const partner=cmdrQuartersShared();if(!partner){toast("Your partner isn't aboard.");return;}
   if(!partner.meeting)partner.meeting={};
@@ -15894,7 +15905,7 @@ function uiQuartersEvening(){
   save();render();
   openModal('<h2>A Quiet Evening</h2><p>'+esc(scene)+'</p><div class="btnRow"><button class="btn" onclick="closeModal()">Continue</button></div>');
 }
-/* v000.6.359: office/quarters themes */
+/* v000.6.360: office/quarters themes */
 var OFFICE_THEMES = {
   standard: ["Starfleet Standard", "Clean, regulation, everything in its place."],
   cozy: ["Warm & Personal", "Soft lighting, personal touches, lived-in comfort."],
@@ -15949,14 +15960,14 @@ function uiSetQuartersTheme(k) {
   save();
   uiCustomizeQuarters();
 }
-/* v000.6.359: Commander office on flagship (Jason 2026-10-10) — ship-specific */
+/* v000.6.360: Commander office on flagship (Jason 2026-10-10) — ship-specific */
 function uiOffice(){
   const fid=flagshipId();
   if(!fid){toast("Designate a flagship first.");return;}
   const s=ship(fid);
   const crew=crewOfShip(fid).filter(o=>!o.dead&&o.status==="active");
   let h='<h2>Your Office</h2>';
-  /* v000.6.359: office banner */
+  /* v000.6.360: office banner */
   var _otheme=(G.office&&G.office.theme)||'standard';
   var _oimg={standard:'portraits/baked/office_standard.jpg',cozy:'portraits/baked/office_cozy.jpg',minimal:'portraits/baked/office_minimal.jpg',trophy:'portraits/baked/office_trophy.jpg',verdant:'portraits/baked/office_verdant.jpg'}[_otheme];
   if(_oimg){h+='<img src="'+_oimg+'" style="width:100%;height:140px;object-fit:cover;border-radius:8px;margin-bottom:12px;display:block;">';}
@@ -15998,7 +16009,7 @@ function uiOffice(){
     _box.setAttribute('data-room-theme',_theme);
   }
 }
-/* v000.6.359: office activities */
+/* v000.6.360: office activities */
 function uiOfficeReports(){
   // Show recent log entries
   const entries=(G.log||[]).slice(-8).reverse();
@@ -16019,7 +16030,7 @@ function uiOfficeLog(){
 }
 function uiOfficeMeeting(oid){
   const o=officer(oid);if(!o)return;
-  /* v000.6.359: once-per-day cooldown */
+  /* v000.6.360: once-per-day cooldown */
   if(o._lastMeeting===G.day){toast("You've already met with "+o.name+" today.");return;}
   o._lastMeeting=G.day;
   const fid=flagshipId();
@@ -16044,7 +16055,7 @@ function uiQuartersRest(){
   log("personnel","You rest in your quarters aboard the flagship.");
   save();render();closeModal();toast("Rested.");
 }
-/* v000.6.359: more quarters activities */
+/* v000.6.360: more quarters activities */
 
 function uiQuartersCall(){
   const k='qCall'+G.day;
@@ -16070,7 +16081,7 @@ function uiQuartersMeditate(){
   }
   save();uiQuarters();
 }
-/* v000.6.359: retro gaming + partner activities */
+/* v000.6.360: retro gaming + partner activities */
 function uiQuartersGames(){
   const k='qGames'+G.day;
   if(G.flags[k]){toast("You've already played today.");return;}
@@ -16091,7 +16102,7 @@ function uiQuartersGames(){
   }
   save();uiQuarters();
 }
-/* v000.6.359: call partner when apart */
+/* v000.6.360: call partner when apart */
 function uiQuartersPartnerCall(){
   const k='qPCall'+G.day;
   if(G.flags[k]){toast("You've already called today.");return;}
@@ -16121,7 +16132,7 @@ function uiQuartersRead(){
   }
   save();uiQuarters();
 }
-/* v000.6.359: Ship interiors — Phase 1 (Galaxy bridge proof of concept) */
+/* v000.6.360: Ship interiors — Phase 1 (Galaxy bridge proof of concept) */
 const SHIP_BRIDGES={
   galaxy:'interiors/bridge_galaxy.jpg',
   defiant:'interiors/bridge_defiant.jpg',
@@ -16182,7 +16193,7 @@ function shipModal(id){
   const s=ship(id);if(!s)return;let c=shipClass(s);if(!c)c=SHIP_CLASSES["constitution"]||{name:"Unknown",slots:5};const crew=crewOfShip(s.id);const isFl=flagshipId()===s.id;const isTv=trainingShipId()===s.id;
   const _eff=effShipCO(s),co=_eff.o,xo=_eff.acting?null:shipXO(s.id,co);
   let h='<h2>'+(isFl?'<span class="flagGlyph">'+CMDR_GLYPH+'</span>':"")+esc(shipNameG(s))+(s.status!=="museum"?'<span class="flagStar'+(isFl?" on":"")+'" onclick="uiSetFlagship(\''+s.id+'\')" title="'+(isFl?"Stand down flagship":"Set as flagship")+'">'+(isFl?"\u2605":"\u2606")+'</span>':"")+(isFl?' <span class="badge" style="background:var(--gold);color:#0b0b12;font-weight:bold;">FLAGSHIP</span>':"")+(G.location&&G.location.type==='ship'&&G.location.id===s.id?'<span style="color:var(--teal);margin-left:6px;" title="You are here"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-2px;"><circle cx="12" cy="8" r="4"/><path d="M12 13c-5 0-8 2.5-8 6v1h16v-1c0-3.5-3-6-8-6z"/></svg></span>':"")+(isTv?' <span class="badge" style="background:var(--teal);color:#0b0b12;font-weight:bold;">TRAINING VESSEL</span>':"")+'</h2><div class="flavor">'+esc(s.registry)+' · '+c.name+'-class · '+shipStatusLabel(s)+'</div>'+shipArtFor(s,true);
-  /* v000.6.359: quarters button on flagship */
+  /* v000.6.360: quarters button on flagship */
   if(isFl)h+='<div class="btnRow"><button class="btn small teal" onclick="uiOffice()">Your Office</button><button class="btn small teal" onclick="uiQuarters()">Your Quarters</button></div>';
 
   if(s.status==="museum"&&MUSEUM_ART[s.id])h+='<div class="musPhoto"><img src="'+MUSEUM_ART[s.id]+'" alt="" loading="lazy"><div>Archive photograph \u00B7 Fleet Museum collection</div></div>';
@@ -16193,7 +16204,7 @@ function shipModal(id){
     const _canEnter=G.location&&G.location.type==='ship'&&G.location.id===s.id;
     const _isHere=!_canEnter;
     h+='<div class="shipHero"><button class="btn heroGold" '+(_canEnter?'onclick="deckEnter(\''+s.id+'\')"':'disabled style="opacity:.35;" title="Travel here first"')+'>Enter ship</button>'+(_canEnter?"":'<div class="dim" style="font-size:11px;margin-top:4px;">Travel here to enter</div>')+'</div>';
-    /* v000.6.359: Board button — come aboard this ship */
+    /* v000.6.360: Board button — come aboard this ship */
     if(_isHere){
       h+='<div class="btnRow" style="margin-top:8px;"><button class="btn small teal" style="border-radius:20px;" onclick="boardLocation(\'ship\',\''+s.id+'\')">Come Aboard</button></div>';
     }
@@ -16214,7 +16225,7 @@ function shipModal(id){
     }
     if(s.status==="active"&&!s.mothballed&&!s.dock){
       h+='<div class="kv"><span class="k">Orders</span><span class="v">'+sheetPick('Set course',postOptions(s.post||"sol"),(function(_sid){return function(v){orderCourse(_sid,v);};})(s.id))+'</span></div>';
-      /* v000.6.359: Spore Jump UI for Crossfield-class */
+      /* v000.6.360: Spore Jump UI for Crossfield-class */
       if(s.cls.indexOf("crossfield")===0){
         const _sj=canSporeJump(s);
         const _nav=sporeNavigator(s);
@@ -16325,7 +16336,7 @@ function stationModal(id){
   if(sdeckCanEnter(st)){
     const _canEnterSt=G.location&&G.location.type==='station'&&G.location.id===st.id;
     h+='<div class="shipHero"><button class="btn heroGold" '+(_canEnterSt?'onclick="sdeckEnter(\''+st.id+'\')"':'disabled style="opacity:.35;" title="Travel here first"')+'>Enter station</button>'+(_canEnterSt?"":'<div class="dim" style="font-size:11px;margin-top:4px;">Travel here to enter</div>')+'</div>';
-    /* v000.6.359: Board button */
+    /* v000.6.360: Board button */
     if(!_canEnterSt){
       h+='<div class="btnRow" style="margin-top:8px;"><button class="btn small teal" style="border-radius:20px;" onclick="boardLocation(\'station\',\''+st.id+'\')">Come Aboard</button></div>';
     }
@@ -16410,6 +16421,8 @@ h+='<div class="btnRow"><button class="btn small teal" onclick="uiCrewAssign(\'s
     '<button class="btn small ghost" onclick="closeModal()">Close</button></div>';
   h+=finalOrdersStationHTML(st,co);
   openModal(h);
+  /* v000.6.360: DS9 custom look */
+  if(st.id==='ds9'||st.name==='Deep Space 9'){const _mb=$("modalBox");if(_mb)_mb.classList.add("ds9Theme");}
 }
 function shuttleModal(id){
   const sh=shuttle(id);if(!sh)return;const st=SHUTTLE_TYPES[sh.type],hs=shuttleHost(sh);
@@ -16894,7 +16907,7 @@ const TUT_STEPS=[
    b:"Open the <b>MISSIONS</b> tab, pick a mission, and tap <b>LAUNCH MISSION</b>.<br><br>Success depends on the ship, its captain, crew, and morale."},
   {t:"Step 4 — Advance time",
    b:"Tap <b>+1 DAY</b> (or +7) at the top. Missions fly, ships build, events strike — the sector lives while the clock runs.<br><br>That's it. The <b>Captain's Manual</b> on the Command tab has the full guide whenever you want it.<br><br>Good hunting, Commander. <i>Qapla'!</i>"}
-]; /* v000.6.359: actionable tutorial */
+]; /* v000.6.360: actionable tutorial */
 let TUT={i:0};
 function tutHtml(){
   const s=TUT_STEPS[TUT.i],last=TUT.i===TUT_STEPS.length-1;
@@ -17217,8 +17230,8 @@ const DECK_ERA_NAMES={future:"Far Future",snw:"Strange New Worlds",ent:"Enterpri
 voy:"Voyager",pic:"Picard",klingon:"Klingon",romulan:"Romulan"};
 function deckEra(s){return DECK_ERA[(s&&s.cls)||""]||"tng";}
 function deckEraName(s){return DECK_ERA_NAMES[deckEra(s)]||"Starfleet";}
-/* v000.6.359: Meet Someone system — first-person meetings */
-/* v000.6.359: Meeting rooms from actual location */
+/* v000.6.360: Meet Someone system — first-person meetings */
+/* v000.6.360: Meeting rooms from actual location */
 function getMeetRooms(){
   const loc=(typeof G!=="undefined"?G.location:null);
   if(!loc)return [];
@@ -17239,7 +17252,7 @@ function getMeetRooms(){
 function getMeetRoomImg(roomId,imgKey){
   // Use same image logic as deck
   const loc=(typeof G!=="undefined"?G.location:null);
-  /* v000.6.359: DS9 Operations photo in meetings too */
+  /* v000.6.360: DS9 Operations photo in meetings too */
   if(roomId==='ops'&&loc&&loc.type==='station'){
     const _st=(typeof station==="function"?station(loc.id):null);
     if(_st&&(_st.id==='ds9'||_st.name==='Deep Space 9'))return 'interiors/ops_ds9.jpg';
@@ -17249,7 +17262,7 @@ function getMeetRoomImg(roomId,imgKey){
   return 'interiors/'+img;
 }
 
-/* v000.6.359: Location-gated meetings */
+/* v000.6.360: Location-gated meetings */
 function meetSubspace(oid){
   const o=officer(oid);if(!o)return;
   // Mark as subspace call for AI context
@@ -17259,7 +17272,7 @@ function meetSubspace(oid){
   o.meeting.withCommander=false;
   if(typeof aiTalk==="function")aiTalk(oid,true);
 }
-/* v000.6.359: Board a ship/station — set as player location */
+/* v000.6.360: Board a ship/station — set as player location */
 function boardLocation(type,id){
   if(typeof G==="undefined")return;
   G.location={type:type,id:id};
@@ -17296,7 +17309,7 @@ function uiMeetSomeone(oid){
   let h='<h2>Meet '+esc(firstName(o))+'</h2>';
   h+='<div class="flavor">'+esc(fullName(o))+' · '+esc(rankName(o))+'</div>';
   if(!atLoc){
-    // Remote — compact layout (v000.6.359)
+    // Remote — compact layout (v000.6.360)
     h+='<p class="dim">'+esc(firstName(o))+' is at <b>'+esc(oLoc)+'</b> — not your location.</p>';
     h+='<div class="btnRow" style="gap:8px;"><button class="btn small violet" style="border-radius:20px;flex:1;" onclick="meetSubspace(\''+oid+'\')">Priority Message</button><button class="btn small ghost" style="border-radius:20px;flex:1;" onclick="uiTravel()">Travel There</button></div>';
     h+='<p class="dim" style="font-size:11px;margin-top:8px;">Subspace message opens chat. Travel to '+esc(oLoc)+' for in-person meetings.</p>';
@@ -17321,7 +17334,7 @@ function uiMeetSomeone(oid){
   h+='<div class="btnRow"><button class="btn ghost" onclick="officerModal(\''+oid+'\')">Back</button></div>';
   openModal(h);
 }
-/* v000.6.359: Meet in a specific room */
+/* v000.6.360: Meet in a specific room */
 function meetRoom(oid,roomId){
   const o=officer(oid);if(!o)return;
   const rooms=(typeof getMeetRooms==="function"?getMeetRooms():[]);
@@ -17407,7 +17420,7 @@ function uiDoMeet(oid,loc){
   o.morale=clamp((o.morale||70)+2,0,100);
   log("personnel","You met with "+o.name+" ("+loc+"). "+scene);
   save();
-  // Holodeck goes straight to program picker (v000.6.359)
+  // Holodeck goes straight to program picker (v000.6.360)
   if(loc==='holodeck'){
     holoRunTogether(oid);
     return;
@@ -17430,7 +17443,7 @@ function endMeeting(oid){
   save();officerModal(oid);toast(o.name+" returned to duty.");
 }
 function holoRunTogether(oid){
-  // Pick program — purple pills like deck UI (v000.6.359)
+  // Pick program — purple pills like deck UI (v000.6.360)
   const o=officer(oid);
   let h='<h2>Holodeck Program</h2>';
   h+='<div style="position:relative;width:100%;aspect-ratio:16/9;border-radius:8px;overflow:hidden;background:#000;margin-bottom:12px;">';
@@ -17447,7 +17460,7 @@ function holoRunTogether(oid){
   h+='<div class="btnRow"><button class="btn ghost" onclick="endMeeting(\''+oid+'\')">Back</button></div>';
   openModal(h);
 }
-/* v000.6.359: Meeting holodeck matches solo UI */
+/* v000.6.360: Meeting holodeck matches solo UI */
 function holoTogetherGo(oid,pid){
   const o=officer(oid);if(!o)return;
   if(o.meeting)o.meeting.prog=pid;
@@ -17475,7 +17488,7 @@ function holoTogetherGo(oid,pid){
   openModal(h);
 }
 function meetHoloEnd(oid){
-  // Fade program image out to reveal blank holodeck underneath, then close (v000.6.359)
+  // Fade program image out to reveal blank holodeck underneath, then close (v000.6.360)
   if(typeof holoPowerDown==="function")holoPowerDown();
   const wrap=document.getElementById('meetHoloWrap');
   if(wrap){
@@ -17492,7 +17505,7 @@ function meetHoloEnd(oid){
     if(typeof endMeeting==="function")endMeeting(oid);
   }
 }
-/* v000.6.359: Track used choices, no re-animation */
+/* v000.6.360: Track used choices, no re-animation */
 if(typeof MEET_HOLO_USED==="undefined")var MEET_HOLO_USED={};
 function meetHoloChoice(oid,pid,i){
   const o=officer(oid);if(!o)return;
@@ -17531,7 +17544,7 @@ function meetHoloChat(oid,pid){
   aiCtxFresh=true;
   if(typeof aiTalk==="function")aiTalk(oid);
 }
-/* v000.6.359: Room activities — give locations a purpose */
+/* v000.6.360: Room activities — give locations a purpose */
 function deckRoomActivity(s,rid){
   const sid=s.id,day=G.day;
   const once=k=>{const fk='room_'+k+'_'+day+'_'+sid;if(G.flags[fk]){toast("Already done today.");return true;}G.flags[fk]=1;return false;};
@@ -17578,7 +17591,7 @@ function deckActMess(sid){
   log("personnel","Shared a meal with the crew.");
   save();if(typeof deckRefresh==="function")deckRefresh();toast("+2 morale.");
 }
-/* v000.6.359: Holodeck recreational programs with fade + sound */
+/* v000.6.360: Holodeck recreational programs with fade + sound */
 const HOLO_FUN=[
   {id:'beach',name:'Beach Resort',desc:'Tropical sunset. Waves, sand, relaxation.',fx:'+3 morale, -5 fatigue'},
   {id:'forest',name:'Forest Retreat',desc:'Ancient redwoods. Quiet, green, peaceful.',fx:'+2 morale, -10 fatigue'},
@@ -17688,7 +17701,7 @@ function deckActBridge(sid){
 }
 function deckRoomImg(s,rid){
   const era=deckEra(s);
-  /* v000.6.359: use Jason's room photos */
+  /* v000.6.360: use Jason's room photos */
   if(rid==='sickbay'){
     const img=era==='future'?'sickbay_32c':(era==='pic'?'sickbay_modern':'sickbay_tng');
     return '<img class="deckRoomImg" src="interiors/'+img+'.jpg" alt="Sickbay" loading="lazy" onerror="this.style.display=\'none\'">'+
@@ -17746,9 +17759,9 @@ function deckRoomImg(s,rid){
     return '<img class="deckRoomImg" src="interiors/'+img+'.jpg" alt="Science Lab" loading="lazy" onerror="this.style.display=\'none\'">'+
       '<div class="deckCap">Science Lab</div>';
   }
-  /* v000.6.359: use Jason's class-specific bridge photos */
+  /* v000.6.360: use Jason's class-specific bridge photos */
   if(rid==='bridge'){
-    /* v000.6.359: 32nd century bridge for future-era ships */
+    /* v000.6.360: 32nd century bridge for future-era ships */
     if(deckEra(s)==='future'){
       return '<img class="deckRoomImg" src="interiors/bridge_32c.jpg" alt="32nd century bridge" loading="lazy" onerror="this.style.display=\'none\'">'+
         '<div class="deckCap">32nd Century Bridge</div>';
@@ -17756,7 +17769,7 @@ function deckRoomImg(s,rid){
     const c=shipClass(s);
     const key=(c.key||c.name||'').toLowerCase();
     const bridges={galaxy:'bridge_galaxy',defiant:'bridge_defiant',intrepid:'bridge_intrepid',constitution:'bridge_constitution',crossfield:'bridge_crossfield',sovereign:'bridge_sovereign',dauntless:'bridge_dauntless'};
-    /* v000.6.359: map similar classes to closest bridge */
+    /* v000.6.360: map similar classes to closest bridge */
     const bridgeMap={nebula:'galaxy',olympic:'galaxy',mercy:'galaxy',
       akira:'sovereign',saber:'sovereign',norway:'sovereign',steamrunner:'sovereign',
       excelsior:'constitution',constellation:'constitution',nx:'constitution',nxrefit:'constitution',
@@ -17820,7 +17833,7 @@ function deckAlert(s){
 function deckAlertLabel(s){const a=deckAlert(s);return a==="red"?'<span class="deckCond red">RED ALERT</span>':a==="yellow"?'<span class="deckCond yellow">YELLOW ALERT</span>':'<span class="deckCond green">ALL SYSTEMS NOMINAL</span>';}
 
 /* ---- enter / exit / back ---- */
-function deckCanEnter(s){return s&&(s.status==="active"||s.status==="damaged"||s.status==="refit"||s.status==="repair"||s.status==="mission")&&!s.mothballed&&s.status!=="museum";} /* v000.6.359: allow entering ships on missions */
+function deckCanEnter(s){return s&&(s.status==="active"||s.status==="damaged"||s.status==="refit"||s.status==="repair"||s.status==="mission")&&!s.mothballed&&s.status!=="museum";} /* v000.6.360: allow entering ships on missions */
 function deckEnter(sid){
   const s=ship(sid);if(!s||!deckCanEnter(s))return;
   closeModal();closeSheet();
@@ -17907,7 +17920,7 @@ function deckRoomHtml(s,rid){
   h+='<div class="deckSec">'+esc(def.name)+' · Deck '+deckOfRoom(s,def)+'</div>';
   h+=deckRoomImg(s,rid);
   if(rid==='holodeck'){
-    // Inline program picker (v000.6.359) — pill buttons, expands below photo
+    // Inline program picker (v000.6.360) — pill buttons, expands below photo
     h+='<div id="deckHoloPicker" style="display:none;margin:8px 0;">';
     h+='<div class="dim" style="margin-bottom:8px;">Choose a program:</div>';
     h+='<div style="display:flex;flex-wrap:wrap;gap:8px;">';
@@ -18079,8 +18092,8 @@ const DECK_GOSSIP=[
 function deckGossip(){
   openModal('<h2>Mess Hall Gossip</h2><p><i>"Did you hear…"</i></p><p>'+esc(pick(DECK_GOSSIP))+'</p><div class="btnRow"><button class="btn" onclick="closeModal()">Back to your coffee</button></div>');
 }
-/* v000.6.359: Deck holodeck — inline program picker with image transition */
-/* v000.6.359: Interactive holodeck scenarios */
+/* v000.6.360: Deck holodeck — inline program picker with image transition */
+/* v000.6.360: Interactive holodeck scenarios */
 const DECK_HOLO_PROGS=[
   {id:'beach',name:'Paradise Resort',desc:'White sand, warm water, zero responsibilities.',img:'holo_beach.jpg',
    choices:[
@@ -18176,7 +18189,7 @@ function deckHoloToggle(){
   el.style.display=isHidden?'block':'none';
   if(btn)btn.style.display=isHidden?'none':'block';
 }
-/* v000.6.359: Robust two-layer crossfade */
+/* v000.6.360: Robust two-layer crossfade */
 function deckHoloXfade(newSrc){
   const wrap=document.getElementById('deckHoloWrap');
   if(!wrap)return;
@@ -18225,7 +18238,7 @@ function deckHoloXfade(newSrc){
   };
   pre.src=newSrc;
 }
-/* v000.6.359: deck holodeck choices grey out and stay (like meeting holodeck) */
+/* v000.6.360: deck holodeck choices grey out and stay (like meeting holodeck) */
 function deckHoloRenderDlg(lastText){
   const progIdx=(typeof DECK!=="undefined"&&DECK.holoProg!=null?DECK.holoProg:0);
   const p=DECK_HOLO_PROGS[progIdx];if(!p)return;
@@ -18280,7 +18293,7 @@ function deckHoloChoice(i){
   const who=meetO?firstName(meetO):null;
   if(typeof log==="function")log("personnel","Holodeck ("+p.name+"): "+c.t+(who?" with "+who:"")+". ("+c.fx+")");
   if(typeof save==="function")save();
-  // v000.6.359: grey the used choice out and keep the program running
+  // v000.6.360: grey the used choice out and keep the program running
   if(typeof DECK!=="undefined"){if(!DECK.holoUsed)DECK.holoUsed={};DECK.holoUsed[i]=1;}
   deckHoloRenderDlg(c.t+'. ('+(c.fx||'')+')');
   if(typeof toast==="function")toast(c.fx);
@@ -19227,7 +19240,7 @@ function sdeckSectionOf(st,room){const n=sdeckCount(st);return 1+Math.round(room
 /* station -> on-screen era for interior set photos (stations are Starfleet facilities) */
 function sdeckEra(st){return (st&&st.id==="ds9")?"ds9":"tng";}
 function sdeckEraName(st){return DECK_ERA_NAMES[sdeckEra(st)]||"Starfleet";}
-/* v000.6.359: Station room activities */
+/* v000.6.360: Station room activities */
 function sdeckRoomActivity(st,rid){
   const sid=st.id;
   let h='';
@@ -19288,12 +19301,12 @@ function sdeckActCargo(sid){
 }
 function sdeckRoomImg(st,rid){
   const era=sdeckEra(st),def=sdeckRoomDef(st,rid),img=(def&&def.img)||rid;
-  /* v000.6.359: DS9 gets its own Operations photo (Jason-supplied) */
+  /* v000.6.360: DS9 gets its own Operations photo (Jason-supplied) */
   if(rid==='ops'&&st&&(st.id==='ds9'||st.name==='Deep Space 9')){
     return '<img class="deckRoomImg" src="interiors/ops_ds9.jpg" alt="Ops" loading="lazy" onerror="this.style.display=\'none\'">'+
       '<div class="deckCap">Operations Center</div>';
   }
-  /* v000.6.359: Jason's ops photos */
+  /* v000.6.360: Jason's ops photos */
   if(rid==='ops'){
     const jimg=era==='future'?'ops_32c':(era==='pic'?'ops_modern':'ops_tng');
     return '<img class="deckRoomImg" src="interiors/'+jimg+'.jpg" alt="Ops" loading="lazy" onerror="this.style.display=\'none\'">'+
@@ -19320,7 +19333,7 @@ function sdeckRoomImg(st,rid){
       '<div class="deckCap">Infirmary</div>';
   }
   if(rid==='quarters'){
-    /* v000.6.359: medical station recovery quarters */
+    /* v000.6.360: medical station recovery quarters */
     const stType=(st.type||st.kind||'').toLowerCase();
     if(stType.includes('medical')||stType.includes('mccoy')){
       const jimg=era==='future'?'medq_32c':(era==='pic'?'medq_modern':'medq_tng');
@@ -20322,7 +20335,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.359 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.360 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
