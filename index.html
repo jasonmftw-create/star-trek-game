@@ -5123,7 +5123,7 @@ function economyTick(){
     +75*stUpg("starbase")+(G.corridorInc||0)+(G.habitatInc||0); // v4.2: station upgrades + sector projects pay out
   let upkeep=0;
   G.ships.forEach(s=>{if(s.status!=="museum"&&!s.mothballed)upkeep+=Math.round(SHIP_CLASSES[s.cls].upkeep*ECONO.upkeepMult);});
-  G.stations.forEach(st=>{if(st.status==="active"&&!st.mothballed)upkeep+=STATION_DEFS[st.type].upkeep;});
+  G.stations.forEach(st=>{if(st.status==="active"&&!st.mothballed){const _d=STATION_DEFS[st.type];if(_d&&_d.upkeep)upkeep+=_d.upkeep;}});
   G.credits+=income-upkeep;
   let _sbPres=0;(G.stations||[]).forEach(st=>{if(st.type==="starbase"&&st.status==="active"&&!st.mothballed&&(st.upg||0)>=2)_sbPres+=(st.upg||0)-1;}); // v4.2: starbase prestige from tier 2+
   gainPres(2*activeStations("starbase").length+3*activeStations("embassy").length+_sbPres+stUpg("embassy")+2*G.ships.filter(s=>s.status==="active"&&s.cls==="ambassador"&&!s.transit&&s.post&&s.post!=="sol"&&["alpha","beta","gamma","delta"].indexOf(s.post)<0).length);
@@ -11373,7 +11373,7 @@ function dailyIncome(){
     +75*stUpg("starbase")+(G.corridorInc||0)+(G.habitatInc||0); // v4.2
   let up=0;
   G.ships.forEach(s=>{const _c=SHIP_CLASSES[s.cls];if(_c&&_c.upkeep)up+=_c.upkeep;});
-  G.stations.forEach(st=>{if(st.status==="active")up+=STATION_DEFS[st.type].upkeep;});
+  G.stations.forEach(st=>{if(st.status==="active"){const _d=STATION_DEFS[st.type];if(_d&&_d.upkeep)up+=_d.upkeep;}});
   return {inc,up,net:inc-up};
 }
 const HOLO_PROGRAMS=[
