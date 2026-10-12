@@ -122,14 +122,14 @@
 }
 /* ===== Splash screen ===== */
 #splash{position:fixed;inset:0;z-index:200000;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s ease;cursor:pointer;overflow:hidden;}
-#splash.gone{opacity:0;pointer-events:none;display:none;} /* v000.6.331: room theme buttons */
+#splash.gone{opacity:0;pointer-events:none;display:none;} /* v000.6.332: room theme buttons */
 #modalBox[data-room-theme="verdant"] .btn{background:#2d5a2d!important;border-color:#8fbc8f!important;color:#e0f0e0!important;}
 #modalBox[data-room-theme="verdant"] .btn.teal{background:#3a7a3a!important;color:#fff!important;}
 #modalBox[data-room-theme="cozy"] .btn{background:#5a3a1a!important;border-color:#d4a574!important;color:#f0e0c0!important;}
 #modalBox[data-room-theme="trophy"] .btn{background:#2a3a6a!important;border-color:#ffd700!important;color:#f0e8c0!important;}
 #modalBox[data-room-theme="personal"] .btn{background:#5a2a4a!important;border-color:#ff9ff3!important;color:#f0d0e8!important;}
 #modalBox[data-room-theme="minimal"] .btn{background:#3a3a3a!important;border-color:#888!important;color:#e0e0e0!important;}
-/* v000.6.331: prevent ghost clicks */
+/* v000.6.332: prevent ghost clicks */
 #splashStars{position:absolute;inset:0;width:100%;height:100%;}
 #splashLogo{position:relative;width:min(78vw,440px);aspect-ratio:13/8;background-position:center;background-size:contain;background-repeat:no-repeat;filter:drop-shadow(0 0 26px rgba(255,215,106,.35));}
 #splashHint{position:relative;margin-top:28px;animation:splashBlink 1.8s ease-in-out infinite;}
@@ -341,7 +341,7 @@ body{touch-action:pan-y;}
 .dashTile.warn{border-color:rgba(255,80,80,.4);}
 .dashTile.good .v{color:var(--green);}
 .tickWrap{overflow:hidden;white-space:nowrap;position:relative;}
-/* v000.6.331: quarters/office themes */
+/* v000.6.332: quarters/office themes */
 .theme-cozy{--theme-bg:#2a1f14;--theme-accent:#d4a574;}
 .theme-minimal{--theme-bg:#1a1a1a;--theme-accent:#888;}
 .theme-trophy{--theme-bg:#1a2340;--theme-accent:#ffd700;}
@@ -349,7 +349,7 @@ body{touch-action:pan-y;}
 .theme-standard{--theme-bg:var(--panel2);--theme-accent:var(--orange);}
 .tickScroll{display:inline-block;white-space:nowrap;padding-left:100%;animation:tickMove 25s linear infinite;}
 @keyframes tickMove{0%{transform:translateX(0);}100%{transform:translateX(-100%);}}
-/* v000.6.331 ticker (static for now) */
+/* v000.6.332 ticker (static for now) */
 .dashTile.zero{opacity:.45;}
 .dashSec{margin:8px 0 2px;font-size:11px;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;}
 /* v000.6.149 banter + digest */
@@ -824,7 +824,7 @@ body{touch-action:pan-y;}
 .flagStar{cursor:pointer;color:var(--gold);font-size:28px;margin-left:10px;padding:4px 8px;border:1px solid var(--gold);border-radius:8px;}
 .flagStar:not(.on){opacity:.5;}
 .flagStar:not(.on):after{content:" Set flagship";font-size:12px;letter-spacing:1px;}
-/* v000.6.331: bigger star with label */
+/* v000.6.332: bigger star with label */
 .shipSecLbl{font-size:11px;letter-spacing:2px;opacity:.6;margin:14px 0 6px;text-transform:uppercase;}
 .opsGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .opsGrid .btn{width:100%;margin:0;}
@@ -863,7 +863,7 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
   font-size:17px;line-height:1.6;display:flex;flex-direction:column;}
 #modalBox .btnRow{position:sticky;bottom:0;background:var(--panel2);padding-top:10px;margin-top:auto;}
 #modalBox .btnRow.sysRow{position:static;background:none;padding-top:0;margin-top:0;}
-/* v000.6.331: sticky modal buttons so they're always reachable */
+/* v000.6.332: sticky modal buttons so they're always reachable */
 #modalBox h2{color:var(--peach);margin:0 0 6px;font-size:19px;letter-spacing:2px;text-transform:uppercase;}
 #modalBox .flavor{color:var(--dim);font-style:italic;font-size:15px;margin-bottom:12px;}
 #modalBox .dim{font-size:14px;}
@@ -1067,7 +1067,7 @@ window.onerror=function(msg,src,line,col,err){
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.331';
+const ART_BUST='v000.6.332';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -1467,7 +1467,7 @@ function fatigueTick(){
   G.ships.forEach(function(s){
     if(!s||s.mothballed||s.status==="museum")return;
     if(s.fatigue==null)s.fatigue=0;
-    if(s.status==="active"&&!s.dock&&!(s.leave>0))s.fatigue=Math.min(100,s.fatigue+(s.missionId?2:1)); /* v000.6.331: no fatigue gain while on planetary leave */
+    if(s.status==="active"&&!s.dock&&!(s.leave>0))s.fatigue=Math.min(100,s.fatigue+(s.missionId?2:1)); /* v000.6.332: no fatigue gain while on planetary leave */
     if(s.fatigue>=70&&s.status==="active")crewOfShip(s.id).forEach(function(o){if(o.morale>0)o.morale=Math.max(0,o.morale-1);});
   });
 }
@@ -1483,7 +1483,7 @@ function uiGrantShoreLeave(id){
   toast("Shore leave granted — 7 days.");
   save();render();
 }
-/* v000.6.331: planetary shore leave — whole crew rests at a planet destination */
+/* v000.6.332: planetary shore leave — whole crew rests at a planet destination */
 function uiPlanetaryLeavePicker(id){
   const s=ship(id);if(!s)return;
   const post=s.post||"sol";
@@ -3851,7 +3851,7 @@ const ORIGINAL_CREW=[
  ["Dorian Kade","Human","M",29,2,"Operations",[68,72,70,55,62,60],["Test Pilot"],"pool"],
  ["Luca Moreau","Human","M",27,1,"Science",[62,75,68,60,78,55],[],"pool"]
 ];
-/* v000.6.331: backstories for all original characters (Jason 2026-10-10) */
+/* v000.6.332: backstories for all original characters (Jason 2026-10-10) */
 const ORIGINAL_BACKSTORIES={
 "Dara Voss":"Survived the Battle of Wolf 359 as a young lieutenant aboard the Saratoga. The experience forged her into a commander who never asks her crew to face what she would not face herself.",
 "Sovar":"A Vulcan xenolinguist who spent a decade on the Federation's first-contact teams before requesting a science posting. His logic is impeccable; his bedside manner is a work in progress.",
@@ -3949,7 +3949,7 @@ function svcPush(o,t,shipKey){if(!o)return;if(!o.svc)o.svc=[];o.svc.push({d:G.da
 function shipHistPush(s,t){if(!s)return;if(!s.hist)s.hist=[];s.hist.push({d:G.day,sd:G.stardate,t:t});if(s.hist.length>240)s.hist.splice(0,s.hist.length-240);}
 function postKeyOf(o){return (o&&o.post&&(o.post.t==="ship"||o.post.t==="station"))?o.post.t+":"+(o.post.id||""):null;}
 function ensureRecords(g){
-  /* v000.6.331: dedupe memorial on load */
+  /* v000.6.332: dedupe memorial on load */
   try{
     if(g.memorial){
       const seen=new Set();g.memorial=g.memorial.filter(function(m){
@@ -4073,7 +4073,7 @@ function newGameState(){
     flags:{},dlIncome:0,day:0,tempCd:0,rescued:{},research:{active:null,done:{}},portraitVer:{},qmode:false,qtheme:"full",captainsLog:[],arcs:[],contacts:[],
     commander:{name:"",gender:"m",species:"human",portrait:0}};
   G0.officers=CANON_CREW.concat(ORIGINAL_CREW,AUX_CREW).map(MK);
-  /* v000.6.331: apply original character backstories */
+  /* v000.6.332: apply original character backstories */
   try{G0.officers.forEach(function(o){if(ORIGINAL_BACKSTORIES[o.name]&&!o.backstory)o.backstory=ORIGINAL_BACKSTORIES[o.name];});}catch(e){}   {const _cb={"Carol Freeman":["co"],"Jack Ransom":["xo"],"Shaxs":["sec"],"T'Ana":["med"]};G0.officers.forEach(o=>{if(_cb[o.name])o.roles=_cb[o.name].slice();});}   seedCanonBonds(G0);
   G=G0;
   G.ships.forEach(s=>{s.comp=SHIP_CLASSES[s.cls].comp;});
@@ -4109,7 +4109,7 @@ function newGameState(){
 
 /* ---------- save / load ---------- */
 function save(){try{const _s=JSON.stringify(G);localStorage.setItem(SAVE_KEY,_s);bkWrite(_s);}catch(e){
-  /* v000.6.331: warn on storage quota exceeded (was silent) */
+  /* v000.6.332: warn on storage quota exceeded (was silent) */
   if(e&&e.name==="QuotaExceededError"){toast("Save failed — storage full. Export your save!");try{log("command","WARNING: Save failed — browser storage full.");}catch(_){}}
 }}
 function load(){try{const s=localStorage.getItem(SAVE_KEY);
@@ -4117,7 +4117,7 @@ function load(){try{const s=localStorage.getItem(SAVE_KEY);
   const bk=bkNewest();
   if(bk){try{const m2=migrateSave(bk.g);if(m2){restoredBackup=true;restoredBackupDay=bk.day;return m2;}}catch(e){}}
   return null;}
-function exportSave(){const _g=JSON.parse(JSON.stringify(G));delete _g.aiKey;return JSON.stringify(_g);} /* v000.6.331: strip AI key from exports */
+function exportSave(){const _g=JSON.parse(JSON.stringify(G));delete _g.aiKey;return JSON.stringify(_g);} /* v000.6.332: strip AI key from exports */
 function importSave(txt){const g=JSON.parse(txt);if(!g||typeof g.stardate!=="number")throw new Error("bad save");
   G=migrateSave(g);save();}
 
@@ -4163,7 +4163,7 @@ function uiRestoreBackup(){
 
 /* ---------- lookups ---------- */
 function officer(id){return G.officers.find(o=>o.id===id);}
-/* v000.6.331: Player location — physically being somewhere */
+/* v000.6.332: Player location — physically being somewhere */
 function playerLocation(){
   if(!G.location) return null;
   if(G.location.type==='ship') return ship(G.location.id);
@@ -4176,7 +4176,7 @@ function playerLocationName(){
   if(G.location.type==='ship') return shipNameG(l);
   return l.name;
 }
-/* v000.6.331: Person icon for location indicator */
+/* v000.6.332: Person icon for location indicator */
 const HERE_ICON='<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-3px;"><circle cx="12" cy="8" r="4"/><path d="M12 13c-5 0-8 2.5-8 6v1h16v-1c0-3.5-3-6-8-6z"/></svg>';
 function uiTravel(){
   let h='<h2>Travel</h2><p class="dim">Where do you want to go? You are currently aboard <b>'+esc(playerLocationName())+'</b>.</p>';
@@ -4487,7 +4487,7 @@ function log(cat,text){
 function avg(a){return a.length?a.reduce((x,y)=>x+y,0)/a.length:0;}
 
 function doAdvance(n){
-  /* v000.6.331: preserve pending interrupts across day skips (was wiping them) */
+  /* v000.6.332: preserve pending interrupts across day skips (was wiping them) */
   for(let i=0;i<n;i++) tickDay();
   save(); render();
   const el=$("stardateTick"); if(el){el.classList.remove("tick");void el.offsetWidth;el.classList.add("tick");}
@@ -4521,7 +4521,7 @@ function logDigestTick(){
   (G.captainsLog=G.captainsLog||[]).push({d:G.day,sd:G.stardate,t:"Daily Digest",b:body,auto:true});
   if(G.captainsLog.length>300)G.captainsLog.splice(0,G.captainsLog.length-300);
 }
-/* ================= v000.6.331 — FIVE-FEATURE SET =================
+/* ================= v000.6.332 — FIVE-FEATURE SET =================
    1. Shore leave (officers actually go away)  2. Memorial services
    3. Officer ambitions  4. Flagship life  5. Letters from deep space
    All deterministic, zero AI calls. */
@@ -4675,7 +4675,7 @@ function flagshipBonus(s){
 }
 function renderFlagshipCard(){
   const fl=typeof flagshipId==="function"?flagshipId():null;
-  /* v000.6.331: flagship discoverability redesign */
+  /* v000.6.332: flagship discoverability redesign */
   if(!fl)return '<div class="card"><h3>Flagship</h3><p class="dim">No flagship designated — this is where you sail, with your office and quarters aboard.</p><div class="btnRow"><button class="btn teal" onclick="setTab(\'ships\')">Choose Your Flagship</button></div><p class="dim" style="font-size:13px;margin-top:8px;">Tap any ship on the Ships tab, then tap the \u2606 star in its profile.</p></div>';
   const s=ship(fl),crew=crewOfShip(fl);
   return '<div class="card"><h3>\u2605 Flagship</h3><div class="row" style="cursor:pointer" onclick="shipModal(\''+fl+'\')">'+
@@ -4733,7 +4733,7 @@ function tickDay(){
   randomEventTick(); scriptedTick(); rankCheckTick(); battleTick(); codexTick(); socialTick(); arcTick(); holoTick(); holidayTick(); ordersTick();
   if(G.shipOps&&G.shipOps.length)G.shipOps=G.shipOps.filter(function(m){return ship(m.shipId);});
   logDigestTick(); // v000.6.149 daily digest
-  leaveTick();ambitionTick();flagshipTick();lettersTick(); // v000.6.331
+  leaveTick();ambitionTick();flagshipTick();lettersTick(); // v000.6.332
 }
 /* ================= v4.1 CREW LIFE — orders of the day =================
    Captains and station commanders issue multi-day department orders; the chief
@@ -6210,7 +6210,7 @@ function resolveMission(m){
   const deptAvg=deptCrew.length?avg(deptCrew.map(o=>o.stats[t.capSkill])):30;
   const moraleAvg=crew.length?avg(crew.map(o=>o.morale)):50;
   let chance=50+(shipStat-t.diff)*0.6+capSkill*0.25+deptAvg*0.1+(moraleAvg-70)*0.1+rnd(-15,15);
-  chance=clamp(chance+socialMissionMod(crew)+flagshipBonus(s),5,98); // v000.6.331 flagship
+  chance=clamp(chance+socialMissionMod(crew)+flagshipBonus(s),5,98); // v000.6.332 flagship
   const roll=rnd(0,100);
   let outcome,cr=t.cr,dl=t.dl,pres=t.pres,detail="";
   if(t.type==="Science"&&hasStation("research"))cr=Math.round(cr*(1.25+0.10*stUpg("research"))); // v4.2 research upgrades
@@ -6331,7 +6331,7 @@ function healTick(){
     if(o.healDays<=0){o.health="healthy";o.healDays=0;log("personnel",fullName(o)+" has been cleared for duty.");}}});
 }
 /* Daily servicing for ships docked at stations (v2.10). */
-/* v000.6.331: shore leave rest runs for ALL ships on leave, docked or orbiting a planet */
+/* v000.6.332: shore leave rest runs for ALL ships on leave, docked or orbiting a planet */
 function shipLeaveTick(){
   G.ships.forEach(function(s){
     if(!s||!(s.leave>0))return;
@@ -6391,7 +6391,7 @@ function killOfficer(o,cause){
   G.ledger.lost++;
   G.officers.forEach(x=>{if(x.friends)x.friends=x.friends.filter(id=>id!==o.id);if(x.rivals)x.rivals=x.rivals.filter(id=>id!==o.id);});
   log("combat","† "+fullName(o)+" — "+cause+". Their name is added to the Memorial Wall.");
-  try{memorialService(o);}catch(e){} // v000.6.331
+  try{memorialService(o);}catch(e){} // v000.6.332
   if(_wasCo&&(_pk==="ship"||_pk==="station"))successionCheck(_pk,_pid); // v2.11: XO steps up
 }
 /* ---------- romance & family ---------- */
@@ -6615,7 +6615,7 @@ function rankCheckTick(){
 /* ---------- modal queue ---------- */
 function pumpModals(){
   if(!interruptQueue.length){render();return;}
-  /* v000.6.331: assistant mode — auto-handle routine interrupts (Jason 2026-10-10) */
+  /* v000.6.332: assistant mode — auto-handle routine interrupts (Jason 2026-10-10) */
   if(G.assistantMode){
     while(interruptQueue.length){
       const peek=interruptQueue[0];
@@ -6625,7 +6625,7 @@ function pumpModals(){
       if(!routine)break;
       const item=interruptQueue.shift();
       try{if(item.buttons[0].fn)item.buttons[0].fn();}catch(e){}
-      /* v000.6.331: batch instead of spamming log */
+      /* v000.6.332: batch instead of spamming log */
       if(!window._assistBatch)window._assistBatch=[];
       window._assistBatch.push(item.title||"notification");
     }
@@ -6640,7 +6640,7 @@ function pumpModals(){
 }
 function showInterrupt(item){
   closeSheet();
-  /* v000.6.331: ensure clean modal state (prevent stacking) */
+  /* v000.6.332: ensure clean modal state (prevent stacking) */
   $("modalRoot").classList.remove("open");
   const _aiTok=++aiEvToken; // v2.8: invalidates any pending event narration for a previous modal
   const box=$("modalBox");
@@ -6657,7 +6657,7 @@ function showInterrupt(item){
   if(item.evId&&aiHasKey()&&!aiEvBusy){aiEvBusy=true;aiNarrateEvent(item,_aiTok).finally(()=>{aiEvBusy=false});}
 }
 let modalBack=null; // optional BACK-button destination while a modal is open
-/* v000.6.331: modal return tracking for office/quarters */
+/* v000.6.332: modal return tracking for office/quarters */
 let modalReturnFn=null;
 function openModal(html){modalBack=null;$("modalBox").innerHTML=html;$("modalRoot").classList.add("open");}
 /* hardware BACK (v2.39): one history entry guards the app. System BACK re-pushes the
@@ -6683,7 +6683,7 @@ document.addEventListener("keydown",function(e){
 function closeModal(force){
   // block shade-click dismissal while story interrupts are queued
   if(force&&interruptQueue.length)return;
-  /* v000.6.331: return to office/quarters if set */
+  /* v000.6.332: return to office/quarters if set */
   if(modalReturnFn){const fn=modalReturnFn;modalReturnFn=null;fn();return;}
   modalBack=null;
   $("modalRoot").classList.remove("open");
@@ -6825,7 +6825,7 @@ function uiToggleBattles(){try{localStorage.setItem("stfc_battles",battlesOn()?"
 function ambientOn(){try{const v=localStorage.getItem("stfc_ambient");return v===null?true:v==="1";}catch(e){return true;}}
 function uiToggleAmbient(){try{localStorage.setItem("stfc_ambient",ambientOn()?"0":"1");}catch(e){}render();toast("Ambient fleet movement "+(ambientOn()?"enabled — idle ships will cruise on their own.":"disabled — ships hold position."));}
 function clearAmbient(s){if(s&&s.ambient)s.ambient=null;}
-function ambientEligible(s){return s.status==="active"&&!s.mothballed&&!s.transit&&!s.missionId&&!s.dock&&!s.cruise&&!s.abandoned&&!s.routeFor&&s.patrol!==false;} /* v000.6.331: ship patrol toggle is the master switch — off means hold position, no ambient either */
+function ambientEligible(s){return s.status==="active"&&!s.mothballed&&!s.transit&&!s.missionId&&!s.dock&&!s.cruise&&!s.abandoned&&!s.routeFor&&s.patrol!==false;} /* v000.6.332: ship patrol toggle is the master switch — off means hold position, no ambient either */
 function ambientTick(){
   if(!ambientOn())return;
   const posts=Object.keys(POST_LABELS);
@@ -6921,7 +6921,7 @@ function renderSettings(){
     [["full","Full Continuum"],["badge","Badge only"],["off","Off"]].map(function(o){return '<button class="btn small'+(G.qtheme===o[0]?" on":"")+'" onclick="uiSetQTheme(\''+o[0]+'\')">'+o[1]+'</button>';}).join("")+
     '</div></span></div><p class="dim">Full Continuum: gold Q theme, glowing sigil in the header, drifting Continuum haze, and rotating Q quips. Badge only: just the sigil. Off: Q Mode with no visual change.</p></div>';
   if(G.qmode)h+=renderQCard();
-  /* v000.6.331: assistant mode */
+  /* v000.6.332: assistant mode */
   h+='<div class="card"><h3>Flag Assistant</h3><p class="dim">When skipping days, your assistant automatically handles routine notifications (informational popups with no decisions). Anything needing your actual choice will still pop up.</p><div class="btnRow"><button class="btn'+(G.assistantMode?" on":"")+'" onclick="G.assistantMode=!G.assistantMode;save();render()">'+(G.assistantMode?"Assistant: ON":"Assistant: OFF")+'</button></div></div>';
   h+='<div class="card"><h3>Fix Missing Personnel</h3><p class="dim">If Academy personnel (Doctor, Kyle Jokovich, Caleb Mir, Ocam Sadal) are missing from Personnel, tap below to add them.</p><div class="btnRow"><button class="btn" onclick="uiAddAcademyDoctor()">Fix Academy Personnel</button></div></div>'; /* v000.6.113 */
   h+='<div class="card"><h3>Display Theme</h3><p class="dim">Reskin the entire LCARS interface. Applies instantly.</p><div class="btnRow">'+
@@ -7018,7 +7018,7 @@ function aiBondBlock(o){
   return s;
 }
 function aiParseBonds(text){return /\[\[BOND:\+1\]\]/.test(String(text||""))?1:0;}
-/* v000.6.331: AI can advance commander romance via tags (Jason 2026-10-10) */
+/* v000.6.332: AI can advance commander romance via tags (Jason 2026-10-10) */
 function aiParseRomance(text){
   const m=/\[\[ROMANCE:(dating|engaged|married)\]\]/i.exec(String(text||""));
   return m?m[1].toLowerCase():null;
@@ -7026,7 +7026,7 @@ function aiParseRomance(text){
 function aiApplyRomance(o,stage){
   if(!o||o.dead)return;
   const bonds=cmdrBonds();
-  /* v000.6.331: block if already committed to someone else */
+  /* v000.6.332: block if already committed to someone else */
   if(Object.keys(bonds).some(id=>id!==o.id&&bonds[id].kind==="romance")){toast("You are already committed to someone.");return;}
   let b=bonds[o.id];
   if(!b){b=bonds[o.id]={kind:"friend",stage:0,pts:0};}
@@ -7042,7 +7042,7 @@ function aiApplyRomance(o,stage){
   b.kind="romance";b.stage=stageMap[stage]||1;b.pts=0;
   log("romance","You and "+fullName(o)+" are now "+stage+".");
 }
-/* v000.6.331: persistent chat memories (Jason 2026-10-10) */
+/* v000.6.332: persistent chat memories (Jason 2026-10-10) */
 function aiMemoryBlock(o){
   const mems=(o.memories||[]).slice(-10);
   let s="\nPERSONAL MEMORIES \u2014 things that happened between you and the commander that you remember: ";
@@ -7106,7 +7106,7 @@ function aiSystemFor(o){
   try{s+=aiBondBlock(o);}catch(e){}
   try{s+=aiMemoryBlock(o);}catch(e){}
   s+="Rules: stay fully in character as "+o.name+", a Starfleet officer — never mention being an AI or language model. Reply in first person, 1 to 4 sentences of natural spoken dialogue. IMPORTANT: the last user message is what you are responding to — always prioritize it. No stage directions, no asterisks, no narrated actions. ";
-  /* v000.6.331: relationship formality */
+  /* v000.6.332: relationship formality */
   try{
     const _b=(typeof cmdrBonds==="function"?cmdrBonds()[o.id]:null);
     if(_b&&((_b.kind==="romance"&&_b.stage>=2)||(_b.kind==="friend"&&_b.stage>=2))){
@@ -7123,7 +7123,7 @@ function aiSystemFor(o){
 }
 async function aiChatCall(o,userText){
   const key=String(G.aiKey||"").trim();if(!key)throw new Error("no-key");
-  /* v000.6.331: fresh chats — memories via system prompt only, no old transcripts */
+  /* v000.6.332: fresh chats — memories via system prompt only, no old transcripts */
   const hist=[];
   hist.push({role:"user",parts:[{text:String(userText).slice(0,600)}]});
   const body={system_instruction:{parts:[{text:aiSystemFor(o)}]},contents:hist,generationConfig:{maxOutputTokens:220,temperature:0.9}};
@@ -7152,14 +7152,14 @@ function aiFallbackLine(){
 function officerSituationLine(o){
   try{
     let sit="";
-    /* v000.6.331: subspace calls */
+    /* v000.6.332: subspace calls */
     if(o.meeting&&o.meeting.subspace){
       sit="Priority subspace call with the commander. You are at your post, NOT in person.";
       // Clear after use
       o.meeting.subspace=false;
       return sit;
     }
-    /* v000.6.331: meeting overrides location (any room) */
+    /* v000.6.332: meeting overrides location (any room) */
     if(o.meeting&&o.meeting.withCommander&&o.meeting.loc){
       if(o.meeting.loc==='holodeck'){
         const prog=(typeof DECK_HOLO_PROGS!=="undefined"&&o.meeting.prog?DECK_HOLO_PROGS.find(x=>x.id===o.meeting.prog):null);
@@ -7208,7 +7208,7 @@ function aiFleetContext(o){
           if(e&&e.o)line+="Your commanding officer is "+rankName(e.o)+" "+e.o.name+(e.acting?" (acting)":"")+". ";
           const crew=crewOfShip(s.id);const xo=crew.find(function(x){return (x.roles||[]).indexOf("xo")>=0;});
           if(xo&&(!e||!e.o||xo.id!==e.o.id))line+="The executive officer is "+rankName(xo)+" "+xo.name+". ";}
-        /* v000.6.331: COs know their crew */
+        /* v000.6.332: COs know their crew */
         try{
           let crew=[];
           if(o.post&&o.post.t==="ship"){const s=ship(o.post.id);if(s)crew=crewOfShip(s.id);}
@@ -7265,7 +7265,7 @@ function aiFleetContext(o){
     if(dmg)c.push(dmg+" damaged ship"+(dmg>1?"s":"")+" needing repair");
     if(c.length)bits.push("CURRENT FLEET CONCERNS: "+c.join("; "));
   }catch(e){}
-  /* v000.6.331: tiered officer awareness (Jason 2026-10-10) — fame scales with rank */
+  /* v000.6.332: tiered officer awareness (Jason 2026-10-10) — fame scales with rank */
   try{
     const me=o.id;
     const myPostKey=postKeyOf(o);
@@ -7320,7 +7320,7 @@ function aiChatHtml(o,video){
   }).join("");
   let h='<!--AI_CHAT:'+o.id+'-->';
   if(video){
-    // Video call UI — compact for keyboard (v000.6.331)
+    // Video call UI — compact for keyboard (v000.6.332)
     h+='<div class="meetScene meetSceneChat"><img class="scene" src="'+(typeof MEET_SCENE!=="undefined"?MEET_SCENE:"ships/meet-scene.jpg")+'" alt="">'+meetFaceHtml(o);
     h+='<div class="meetPlate">'+esc(rankName(o))+' '+esc(o.name)+'</div></div>';
   }else{
@@ -7342,7 +7342,7 @@ function aiTalk(oid,video){
   }
   const _prevHtml=$("modalBox").innerHTML,_prevBack=modalBack;
   const _h=aiChatHist(o);
-  // Always start fresh (v000.6.331)
+  // Always start fresh (v000.6.332)
   _h.push({r:"div",t:"New conversation — Stardate "+G.stardate.toFixed(1)});aiTrimHist(o);save();
   openModal(aiChatHtml(o,video));
   aiChatScroll();
@@ -7361,14 +7361,14 @@ async function aiSend(oid){
     const raw=await aiChatCall(o,v);
     const orders=aiParseOrders(raw); /* v000.6.141: AI orders */
     const bondHit=aiParseBonds(raw); /* v000.6.151: chat bonds */
-    const romanceHit=aiParseRomance(raw); /* v000.6.331: chat romance */
-    const memHits=aiParseMemories(raw); /* v000.6.331: chat memories */
+    const romanceHit=aiParseRomance(raw); /* v000.6.332: chat romance */
+    const memHits=aiParseMemories(raw); /* v000.6.332: chat memories */
     const clean=aiStripBondTags(aiStripOrderTags(raw.replace(/\[\[MEMORY:[^\]]+\]\]/g,"").replace(/\[\[ROMANCE:[^\]]+\]\]/gi,"")))||"Aye, Admiral.";
     hist.push({r:"o",t:clean});aiTrimHist(o);
     o.morale=clamp(o.morale+1,0,100);
     if(bondHit)aiApplyChatBond(o); /* v000.6.151 */
-    if(romanceHit)aiApplyRomance(o,romanceHit); /* v000.6.331 */
-    if(memHits.length)aiApplyMemories(o,memHits); /* v000.6.331 */
+    if(romanceHit)aiApplyRomance(o,romanceHit); /* v000.6.332 */
+    if(memHits.length)aiApplyMemories(o,memHits); /* v000.6.332 */
     save();
     const ty=document.getElementById("aiTyping");if(ty)ty.outerHTML='<div class="aiMsgO">'+esc(clean)+'</div>';
     if(orders.length)aiShowConfirm(oid,orders);
@@ -7435,14 +7435,14 @@ function aiResolveBillet(o,text){
   return f?f[0]:null;
 }
 /* quiet cores: same rules as the UI buttons, no modals/toasts */
-/* v000.6.331: Spore Jump for Crossfield-class (Jason 2026-10-10) */
+/* v000.6.332: Spore Jump for Crossfield-class (Jason 2026-10-10) */
 function sporeNavigator(s){
   if(!s||s.cls!=="crossfield")return null;
   const crew=crewOfShip(s.id);
   return crew.find(function(o){return (o.roles||[]).indexOf("spore")>=0;})||null;
 }
 function canSporeJump(s){
-  if(!s||s.cls.indexOf("crossfield")!==0)return {ok:false,msg:"not a Crossfield-class ship"}; /* v000.6.331: include crossfield32 */
+  if(!s||s.cls.indexOf("crossfield")!==0)return {ok:false,msg:"not a Crossfield-class ship"}; /* v000.6.332: include crossfield32 */
   if(s.transit)return {ok:false,msg:"already in transit"};
   if(s.status!=="active"||s.mothballed)return {ok:false,msg:"ship not active"};
   const nav=sporeNavigator(s);
@@ -11458,7 +11458,7 @@ function cmdrInstitutions(){
   }catch(e){return '<div class="card"><p class="dim">Institutions unavailable: '+esc(String(e.message||e))+'</p></div>';}
 }
 let notifOpen=false,notifFilter="all";
-let dashOpen=false; // v000.6.331: default closed
+let dashOpen=false; // v000.6.332: default closed
 const NOTIF_CATS=[["aud","Audience"],["idle","Fleet"],["builds","Construction"],["req","Command"],["loyal","Morale"]];
 function recentlyMet(o){const m=(G.meetings||{})[o.id];return m!==undefined&&G.stardate-m<MEET_CD;}
 function notifList(){
@@ -11600,7 +11600,7 @@ function renderFleetDashboard(){
   const total=sg.all.length;
   let h='<div class="card"><h3 style="cursor:pointer" onclick="uiToggleDash()">Fleet Dashboard <span style="float:right;color:var(--dim)">'+(dashOpen?"\u25b4":"\u25be")+'</span></h3>';
   if(!dashOpen){
-    /* v000.6.331: ticker */
+    /* v000.6.332: ticker */
     var _m=sg.mission.length, _r=sg.ready.length;
     var _txt=_m+' on mission \u2014 '+_r+' ready';
     if(sg.damaged.length)_txt+=' \u2014 '+sg.damaged.length+' damaged';
@@ -11717,7 +11717,7 @@ function renderCommand(){
   if(cmdSub==="research")h+=cmdSubPills()+renderResearchCard();
   else if(cmdSub==="inst")h+=cmdSubPills()+cmdrInstitutions();
   else if(cmdSub==="rec")h+=cmdSubPills()+recCard;
-  else h+=renderNeedsAttention()+renderFleetDashboard()+cmdrCard+renderFlagshipCard()+renderLettersCard()+cmdSubPills()+sectorCard+nemesisCard()+opsCard+sprojCardHTML(); // v000.6.331 // v4.2 sector projects — v000.6.147: fleet dashboard
+  else h+=renderNeedsAttention()+renderFleetDashboard()+cmdrCard+renderFlagshipCard()+renderLettersCard()+cmdSubPills()+sectorCard+nemesisCard()+opsCard+sprojCardHTML(); // v000.6.332 // v4.2 sector projects — v000.6.147: fleet dashboard
   return h;
 }
 
@@ -11776,7 +11776,7 @@ function renderShips(){
     if(isMus)return false;
     return shipQuad==="all"||postQuadOf(s)===shipQuad;
   }).sort((a,b)=>{
-    /* v000.6.331: current location at top */
+    /* v000.6.332: current location at top */
     const _loc=(typeof G!=="undefined"&&G.location?G.location:null);
     const _la=_loc&&_loc.type==='ship'&&a.id===_loc.id?0:1,_lb=_loc&&_loc.type==='ship'&&b.id===_loc.id?0:1;
     if(_la!==_lb)return _la-_lb;
@@ -11843,7 +11843,7 @@ function museumCard(s){
 /* ---------- STATIONS tab ---------- */
 function renderStations(){
   let rows="";
-  /* v000.6.331: current location at top */
+  /* v000.6.332: current location at top */
   const _loc2=(typeof G!=="undefined"&&G.location?G.location:null);
   const _sorted=G.stations.slice().sort((a,b)=>{
     const _a=_loc2&&_loc2.type==='station'&&a.id===_loc2.id?0:1;
@@ -11871,7 +11871,7 @@ function renderStations(){
 let persFilter="all";
 let persShow="all";
 let persRank="all";
-let persSpecies="all"; /* v000.6.331: species filter */
+let persSpecies="all"; /* v000.6.332: species filter */
 /* In-place list search: hides non-matching rows without re-rendering, so the
    search input (and the on-screen keyboard) is never disturbed while typing. */
 function liveSearch(input,listId,countId){
@@ -11929,7 +11929,7 @@ function renderPersonnel(){
     if(persRank==="civ")list=list.filter(o=>o.rankLabel==="Civilian");
     else if(persRank==="cadet")list=list.filter(o=>o.rankLabel==="Cadet");
     else if(persRank!=="all")list=list.filter(o=>o.rank===persRank);
-    /* v000.6.331: species filter pills */
+    /* v000.6.332: species filter pills */
     const _spCounts={};list.forEach(o=>{const _sp=o.species||"Unknown";_spCounts[_sp]=(_spCounts[_sp]||0)+1;});
     const _spList=Object.keys(_spCounts).sort((a,b)=>_spCounts[b]-_spCounts[a]||a.localeCompare(b));
     speciesPills='<div class="cmdsubseg" style="margin:8px 0 0;">'+
@@ -13162,7 +13162,17 @@ function histStnCard(v,i){
     '<button class="shipDetBtn" id="stnDetBtn-'+key+'" onclick="toggleStnDet(\''+key+'\',event)">'+(detOpen?'Details \u25b4':'Details \u25be')+'</button></div>'+
     '<div class="shipDet'+(detOpen?' open':'')+'" id="stnDet-'+key+'">'+
     '<div class="sub2">'+esc(v.cls)+'</div><div class="sub2 dim">'+esc(v.fate)+'</div>'+
+    histStnExtractBtn(i)+
     '</div></div>';
+}
+function histStnExtractBtn(i){
+  try{
+    const _got=(G.stations||[]).some(function(s){return s.histIdx===i;});
+    if(_got)return '<div class="sub2"><span class="badge">\u2713 Recovered</span></div>';
+    if(G.qmode)return '<div class="btnRow"><button class="btn small" onclick="uiHistStnExtract('+i+')">\u27F3 Extraction (Q)</button></div>';
+    if(G.tempCd>0)return '<div class="sub2 dim">Array recharging</div>';
+    return '<div class="btnRow"><button class="btn small" onclick="uiHistStnExtract('+i+')">\u27F3 Extraction</button></div>';
+  }catch(e){return '';}
 }
 function renderMemorial(){
   const offs=(G.memorial||[]).filter(m=>!m.kind||m.kind==="officer");
@@ -13259,7 +13269,7 @@ function postingOptions(sel){
 }
 const PORTRAIT_VER_INFO={"Christopher Pike":{main:"SNW",alt:"TOS"},"Spock":{main:"TOS",alt:"SNW"},"Nyota Uhura":{main:"TOS",alt:"SNW"},"Christine Chapel":{main:"TOS",alt:"SNW"},"Una Chin-Riley":{main:"SNW",alt:"TOS"},"Joseph M'Benga":{main:"SNW",alt:"TOS"},"Montgomery Scott":{main:"TOS",alt:"SNW"},"Felix Harrow":{main:"Short hair",alt:"Long hair"},"Leland":{main:"Messy hair",alt:"Formal hair"}};
 /* v000.6.075 (Jason 2026-10-03): SNW Spock portrait (Ethan Peck promo, FC uniform) — Jason supplied the image after the generator refused. */
-const PORTRAITS_ALT={"Spock":"portraits/baked/spock_snw_670626.jpg","Nyota Uhura":"portraits/baked/nyota_uhura_47ab23_alt.jpg","Felix Harrow":"portraits/baked/felix_harrow_2d78ab_alt.jpg","Leland":"portraits/baked/leland_a0bf9d_alt.jpg"}; /* v000.6.331: Felix long hair alt; v000.6.331: Leland formal hair alt */
+const PORTRAITS_ALT={"Spock":"portraits/baked/spock_snw_670626.jpg","Nyota Uhura":"portraits/baked/nyota_uhura_47ab23_alt.jpg","Felix Harrow":"portraits/baked/felix_harrow_2d78ab_alt.jpg","Leland":"portraits/baked/leland_a0bf9d_alt.jpg"}; /* v000.6.332: Felix long hair alt; v000.6.332: Leland formal hair alt */
 function portraitPick(name,entry){
   if(typeof PORTRAIT_VER_INFO!=="undefined"&&PORTRAIT_VER_INFO[name]){
     if(typeof portraitTabForce!=="undefined"&&portraitTabForce&&typeof lostShow!=="undefined"&&(lostShow==="TOS"||lostShow==="SNW")){
@@ -13288,7 +13298,7 @@ function divOfDept(dept){
 var DIV_DONE={};
 function divManifestLoad(){
   try{
-    fetch("portraits/div-done.jsonl?v="+encodeURIComponent(ART_BUST)) /* v000.6.331: use current version, not hardcoded */
+    fetch("portraits/div-done.jsonl?v="+encodeURIComponent(ART_BUST)) /* v000.6.332: use current version, not hardcoded */
       .then(function(r){return r.ok?r.text():"";})
       .then(function(t){DIV_DONE={};String(t||"").split("\n").forEach(function(line){const k=line.trim();if(k)DIV_DONE[k]=1;});try{render();}catch(e){};})
       .catch(function(){});
@@ -13630,7 +13640,7 @@ function uiDivision(id,div,btn){
   var o=officer(id);
   if(!o||DIVISIONS.indexOf(div)<0)return;
   o.division=div;save();render();officerModal(id);
-  toast(o.name.split(" ")[0]+" — "+DIV_LABEL[div]+" uniform"); /* v000.6.331: feedback */
+  toast(o.name.split(" ")[0]+" — "+DIV_LABEL[div]+" uniform"); /* v000.6.332: feedback */
 }
 
 /* --- runtime uniform recolor: dominant-band hue shift, skin-safe --- */
@@ -13947,7 +13957,7 @@ function officerModal(id){
   if(o.traits.length)h+='<div style="margin:6px 0;">'+o.traits.map(t=>'<span class="badge violet">'+esc(t)+'</span>').join("")+'</div>';
   if(o.medals.length)h+='<div style="margin:6px 0;">'+o.medals.map(m=>'<span class="badge rank medal">'+esc(m)+'</span>').join("")+'</div>';
   if(o.backstory)h+='<h4>Backstory</h4><p class="dim" style="margin:4px 0;">'+esc(o.backstory)+'</p>';
-  /* v000.6.331: show chat memories */
+  /* v000.6.332: show chat memories */
   if(o.memories&&o.memories.length)h+='<h4>Memories</h4>'+o.memories.slice(-10).reverse().map(function(m){return '<p class="dim" style="margin:4px 0;">\u2022 '+esc(m.t)+' <span style="opacity:0.6;">('+esc(m.d)+')</span></p>';}).join("");
   if(o.accolades&&o.accolades.length){
     const sorted=o.accolades.slice().sort((a,b)=>{
@@ -13963,7 +13973,7 @@ function officerModal(id){
     h+='<div class="kv" data-hint="How committed this officer is to your command, 0 to 100. Below 30 they grow miserable and lose morale daily; at 15 or less they may resign. Hold meetings to rebuild trust."><span class="k">Loyalty</span><span class="v">'+o.loyal+'/100</span></div>'+bar("LOY",o.loyal);
     h+='<div class="kv"><span class="k">Health</span><span class="v">'+(o.health==="healthy"?"Healthy":"Injured ("+Math.ceil(o.healDays)+"d)")+'</span></div>';
     if(o.onLeave)h+='<div class="kv"><span class="k">Shore leave</span><span class="v">On leave \u2014 '+esc(o.onLeave.where)+' ('+Math.max(0,o.onLeave.until-G.day)+'d left)</span></div>';
-    h+=ambitionHtml(o); // v000.6.331
+    h+=ambitionHtml(o); // v000.6.332
     h+='<div class="kv"><span class="k">Missions</span><span class="v">'+o.missions.s+'/'+o.missions.t+' successful</span></div>';
     h+='<div class="kv"><span class="k">Time in grade</span><span class="v">'+Math.floor(o.timeInGrade)+' days</span></div>';
   } else {
@@ -13972,7 +13982,7 @@ function officerModal(id){
   if(o.rel&&partner){
     h+='<div class="kv"><span class="k">Relationship</span><span class="v" style="color:var(--pink)">'+o.rel.stage+' — <a href="#" onclick="officerModal(\''+partner.id+'\');return false;" style="color:var(--pink)">'+esc(partner.name)+'</a></span></div>';
   }
-  /* v000.6.331: show commander relationship (Jason 2026-10-10) */
+  /* v000.6.332: show commander relationship (Jason 2026-10-10) */
   try{
     const _cb=(typeof cmdrBonds==="function"?cmdrBonds():{})[o.id];
     if(_cb){
@@ -14014,7 +14024,7 @@ function officerModal(id){
     const mLast=(G.meetings||{})[o.id];const mCd=mLast!==undefined&&G.stardate-mLast<MEET_CD;
     _cmd+='<button class="btn small teal" '+(mCd?"disabled":"")+' onclick="uiRequestMeeting(\''+o.id+'\')">Request meeting'+(mCd?" ("+Math.ceil(MEET_CD-(G.stardate-mLast))+"d)":"")+'</button>';
     _cmd+='<button class="btn small violet" onclick="uiCounsel(\''+o.id+'\')">Counseling</button>';
-    if(!o.onLeave)_cmd+='<button class="btn small teal" onclick="uiGrantLeave(\''+o.id+'\')">Grant shore leave</button>'; // v000.6.331
+    if(!o.onLeave)_cmd+='<button class="btn small teal" onclick="uiGrantLeave(\''+o.id+'\')">Grant shore leave</button>'; // v000.6.332
     _cmd+='<button class="btn small violet" onclick="uiAwardPicker(\''+o.id+'\')">Award honor</button>';
     if(o.rankLabel&&/civilian/i.test(o.rankLabel))
       _cmd+='<button class="btn small peach" onclick="uiCommission(\''+o.id+'\',\'civ\')">Grant field commission</button>';
@@ -14202,7 +14212,7 @@ const BILLETS=[
  ["sec","Chief of Security"],["eng","Chief Engineer"],["sci","Chief Science Officer"],
  ["med","Chief Medical Officer"],["doc","Doctor"],["nurse","Nurse"],["coun","Counselor"],
  ["chef","Chef"],["bart","Bartender"],
- ["spore","Spore Navigator"] /* v000.6.331: Crossfield spore drive (Jason 2026-10-10) */
+ ["spore","Spore Navigator"] /* v000.6.332: Crossfield spore drive (Jason 2026-10-10) */
 ];
 function billetLabel(id){const b=BILLETS.find(x=>x[0]===id);return b?b[1]:(STATION_BILLETS_EXTRA[id]||id);}
 /* v000.6.129: Station-specific positions (Jason 2026-10-04) */
@@ -14948,7 +14958,7 @@ function postOptions(cur){
 /* Ship docking (v2.10): only stations in DOCK_DEFS offer berths. */
 function dockOptions(s){
   const cur=s.dock||"",here=s.post||"sol";
-  /* v000.6.331: show all dockable stations; distance checked on select */
+  /* v000.6.332: show all dockable stations; distance checked on select */
   const elig=G.stations.filter(st=>st.status==="active"&&!st.mothballed&&DOCK_DEFS[st.type]);
   const _isHere=st=>(st.post||"sol")===here||st.id===here;
   const sorted=elig.slice().sort((a,b)=>{
@@ -15070,7 +15080,7 @@ function shipPlotQuad(s){
 const WORM_ALPHA=["bajor","ds9"],WORM_GAMMA=["gamma","founders","dominion","idran"];
 function transitTick(){
   for(const s of G.ships){
-    if(s&&s.sporeCooldown>0)s.sporeCooldown--; /* v000.6.331: spore drive recharge */
+    if(s&&s.sporeCooldown>0)s.sporeCooldown--; /* v000.6.332: spore drive recharge */
     if(!s||!s.transit)continue;
     s.transit.daysLeft--;
     if(s.transit.daysLeft>0)continue;
@@ -15607,7 +15617,7 @@ function uiSetRoute(sid,v){
   if(v)log("event",s.name+" takes up the "+v+" trade route — commerce, and goodwill, follow her.");
   save();shipModal(sid);render();
 }
-/* v000.6.331: Commander quarters on flagship (Jason 2026-10-10) */
+/* v000.6.332: Commander quarters on flagship (Jason 2026-10-10) */
 function cmdrPartner(){
   const bonds=cmdrBonds();
   for(const oid in bonds){
@@ -15643,7 +15653,7 @@ function uiQuarters(){
   }else{
     h+='<p class="dim">Your private quarters aboard the flagship.</p>';
   }
-  /* v000.6.331: theme banner */
+  /* v000.6.332: theme banner */
   (function(){
     var _theme=(G.quarters&&G.quarters.theme)||'standard';
     var _img={standard:'portraits/baked/quarters_standard.jpg',cozy:'portraits/baked/quarters_cozy.jpg',minimal:'portraits/baked/quarters_minimal.jpg',personal:'portraits/baked/quarters_personal.jpg',verdant:'portraits/baked/quarters_verdant.jpg'}[_theme];
@@ -15653,7 +15663,7 @@ function uiQuarters(){
   if(partner){
     h+='<button class="btn teal" onclick="uiQuartersEvening()">Spend the evening together</button>';
   }else{
-    /* v000.6.331: partner not aboard — offer subspace call */
+    /* v000.6.332: partner not aboard — offer subspace call */
     var _pb=cmdrBondPartner();
     if(_pb){
       h+='<button class="btn teal" onclick="uiQuartersPartnerCall()">Call '+esc(_pb.name)+'</button>';
@@ -15698,7 +15708,7 @@ function uiQuartersEvening(){
   save();render();
   openModal('<h2>A Quiet Evening</h2><p>'+esc(scene)+'</p><div class="btnRow"><button class="btn" onclick="closeModal()">Continue</button></div>');
 }
-/* v000.6.331: office/quarters themes */
+/* v000.6.332: office/quarters themes */
 var OFFICE_THEMES = {
   standard: ["Starfleet Standard", "Clean, regulation, everything in its place."],
   cozy: ["Warm & Personal", "Soft lighting, personal touches, lived-in comfort."],
@@ -15753,14 +15763,14 @@ function uiSetQuartersTheme(k) {
   save();
   uiCustomizeQuarters();
 }
-/* v000.6.331: Commander office on flagship (Jason 2026-10-10) — ship-specific */
+/* v000.6.332: Commander office on flagship (Jason 2026-10-10) — ship-specific */
 function uiOffice(){
   const fid=flagshipId();
   if(!fid){toast("Designate a flagship first.");return;}
   const s=ship(fid);
   const crew=crewOfShip(fid).filter(o=>!o.dead&&o.status==="active");
   let h='<h2>Your Office</h2>';
-  /* v000.6.331: office banner */
+  /* v000.6.332: office banner */
   var _otheme=(G.office&&G.office.theme)||'standard';
   var _oimg={standard:'portraits/baked/office_standard.jpg',cozy:'portraits/baked/office_cozy.jpg',minimal:'portraits/baked/office_minimal.jpg',trophy:'portraits/baked/office_trophy.jpg',verdant:'portraits/baked/office_verdant.jpg'}[_otheme];
   if(_oimg){h+='<img src="'+_oimg+'" style="width:100%;height:140px;object-fit:cover;border-radius:8px;margin-bottom:12px;display:block;">';}
@@ -15802,7 +15812,7 @@ function uiOffice(){
     _box.setAttribute('data-room-theme',_theme);
   }
 }
-/* v000.6.331: office activities */
+/* v000.6.332: office activities */
 function uiOfficeReports(){
   // Show recent log entries
   const entries=(G.log||[]).slice(-8).reverse();
@@ -15823,7 +15833,7 @@ function uiOfficeLog(){
 }
 function uiOfficeMeeting(oid){
   const o=officer(oid);if(!o)return;
-  /* v000.6.331: once-per-day cooldown */
+  /* v000.6.332: once-per-day cooldown */
   if(o._lastMeeting===G.day){toast("You've already met with "+o.name+" today.");return;}
   o._lastMeeting=G.day;
   const fid=flagshipId();
@@ -15848,7 +15858,7 @@ function uiQuartersRest(){
   log("personnel","You rest in your quarters aboard the flagship.");
   save();render();closeModal();toast("Rested.");
 }
-/* v000.6.331: more quarters activities */
+/* v000.6.332: more quarters activities */
 
 function uiQuartersCall(){
   const k='qCall'+G.day;
@@ -15874,7 +15884,7 @@ function uiQuartersMeditate(){
   }
   save();uiQuarters();
 }
-/* v000.6.331: retro gaming + partner activities */
+/* v000.6.332: retro gaming + partner activities */
 function uiQuartersGames(){
   const k='qGames'+G.day;
   if(G.flags[k]){toast("You've already played today.");return;}
@@ -15895,7 +15905,7 @@ function uiQuartersGames(){
   }
   save();uiQuarters();
 }
-/* v000.6.331: call partner when apart */
+/* v000.6.332: call partner when apart */
 function uiQuartersPartnerCall(){
   const k='qPCall'+G.day;
   if(G.flags[k]){toast("You've already called today.");return;}
@@ -15925,7 +15935,7 @@ function uiQuartersRead(){
   }
   save();uiQuarters();
 }
-/* v000.6.331: Ship interiors — Phase 1 (Galaxy bridge proof of concept) */
+/* v000.6.332: Ship interiors — Phase 1 (Galaxy bridge proof of concept) */
 const SHIP_BRIDGES={
   galaxy:'interiors/bridge_galaxy.jpg',
   defiant:'interiors/bridge_defiant.jpg',
@@ -15986,7 +15996,7 @@ function shipModal(id){
   const s=ship(id);if(!s)return;const c=shipClass(s),crew=crewOfShip(s.id);const isFl=flagshipId()===s.id;const isTv=trainingShipId()===s.id;
   const _eff=effShipCO(s),co=_eff.o,xo=_eff.acting?null:shipXO(s.id,co);
   let h='<h2>'+(isFl?'<span class="flagGlyph">'+CMDR_GLYPH+'</span>':"")+esc(shipNameG(s))+(s.status!=="museum"?'<span class="flagStar'+(isFl?" on":"")+'" onclick="uiSetFlagship(\''+s.id+'\')" title="'+(isFl?"Stand down flagship":"Set as flagship")+'">'+(isFl?"\u2605":"\u2606")+'</span>':"")+(isFl?' <span class="badge" style="background:var(--gold);color:#0b0b12;font-weight:bold;">FLAGSHIP</span>':"")+(G.location&&G.location.type==='ship'&&G.location.id===s.id?'<span style="color:var(--teal);margin-left:6px;" title="You are here"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-2px;"><circle cx="12" cy="8" r="4"/><path d="M12 13c-5 0-8 2.5-8 6v1h16v-1c0-3.5-3-6-8-6z"/></svg></span>':"")+(isTv?' <span class="badge" style="background:var(--teal);color:#0b0b12;font-weight:bold;">TRAINING VESSEL</span>':"")+'</h2><div class="flavor">'+esc(s.registry)+' · '+c.name+'-class · '+shipStatusLabel(s)+'</div>'+shipArtFor(s,true);
-  /* v000.6.331: quarters button on flagship */
+  /* v000.6.332: quarters button on flagship */
   if(isFl)h+='<div class="btnRow"><button class="btn small teal" onclick="uiOffice()">Your Office</button><button class="btn small teal" onclick="uiQuarters()">Your Quarters</button></div>';
 
   if(s.status==="museum"&&MUSEUM_ART[s.id])h+='<div class="musPhoto"><img src="'+MUSEUM_ART[s.id]+'" alt="" loading="lazy"><div>Archive photograph \u00B7 Fleet Museum collection</div></div>';
@@ -15997,7 +16007,7 @@ function shipModal(id){
     const _canEnter=G.location&&G.location.type==='ship'&&G.location.id===s.id;
     const _isHere=!_canEnter;
     h+='<div class="shipHero"><button class="btn heroGold" '+(_canEnter?'onclick="deckEnter(\''+s.id+'\')"':'disabled style="opacity:.35;" title="Travel here first"')+'>Enter ship</button>'+(_canEnter?"":'<div class="dim" style="font-size:11px;margin-top:4px;">Travel here to enter</div>')+'</div>';
-    /* v000.6.331: Board button — come aboard this ship */
+    /* v000.6.332: Board button — come aboard this ship */
     if(_isHere){
       h+='<div class="btnRow" style="margin-top:8px;"><button class="btn small teal" style="border-radius:20px;" onclick="boardLocation(\'ship\',\''+s.id+'\')">Come Aboard</button></div>';
     }
@@ -16018,7 +16028,7 @@ function shipModal(id){
     }
     if(s.status==="active"&&!s.mothballed&&!s.dock){
       h+='<div class="kv"><span class="k">Orders</span><span class="v">'+sheetPick('Set course',postOptions(s.post||"sol"),(function(_sid){return function(v){orderCourse(_sid,v);};})(s.id))+'</span></div>';
-      /* v000.6.331: Spore Jump UI for Crossfield-class */
+      /* v000.6.332: Spore Jump UI for Crossfield-class */
       if(s.cls.indexOf("crossfield")===0){
         const _sj=canSporeJump(s);
         const _nav=sporeNavigator(s);
@@ -16129,7 +16139,7 @@ function stationModal(id){
   if(sdeckCanEnter(st)){
     const _canEnterSt=G.location&&G.location.type==='station'&&G.location.id===st.id;
     h+='<div class="shipHero"><button class="btn heroGold" '+(_canEnterSt?'onclick="sdeckEnter(\''+st.id+'\')"':'disabled style="opacity:.35;" title="Travel here first"')+'>Enter station</button>'+(_canEnterSt?"":'<div class="dim" style="font-size:11px;margin-top:4px;">Travel here to enter</div>')+'</div>';
-    /* v000.6.331: Board button */
+    /* v000.6.332: Board button */
     if(!_canEnterSt){
       h+='<div class="btnRow" style="margin-top:8px;"><button class="btn small teal" style="border-radius:20px;" onclick="boardLocation(\'station\',\''+st.id+'\')">Come Aboard</button></div>';
     }
@@ -16698,7 +16708,7 @@ const TUT_STEPS=[
    b:"Open the <b>MISSIONS</b> tab, pick a mission, and tap <b>LAUNCH MISSION</b>.<br><br>Success depends on the ship, its captain, crew, and morale."},
   {t:"Step 4 — Advance time",
    b:"Tap <b>+1 DAY</b> (or +7) at the top. Missions fly, ships build, events strike — the sector lives while the clock runs.<br><br>That's it. The <b>Captain's Manual</b> on the Command tab has the full guide whenever you want it.<br><br>Good hunting, Commander. <i>Qapla'!</i>"}
-]; /* v000.6.331: actionable tutorial */
+]; /* v000.6.332: actionable tutorial */
 let TUT={i:0};
 function tutHtml(){
   const s=TUT_STEPS[TUT.i],last=TUT.i===TUT_STEPS.length-1;
@@ -17021,8 +17031,8 @@ const DECK_ERA_NAMES={future:"Far Future",snw:"Strange New Worlds",ent:"Enterpri
 voy:"Voyager",pic:"Picard",klingon:"Klingon",romulan:"Romulan"};
 function deckEra(s){return DECK_ERA[(s&&s.cls)||""]||"tng";}
 function deckEraName(s){return DECK_ERA_NAMES[deckEra(s)]||"Starfleet";}
-/* v000.6.331: Meet Someone system — first-person meetings */
-/* v000.6.331: Meeting rooms from actual location */
+/* v000.6.332: Meet Someone system — first-person meetings */
+/* v000.6.332: Meeting rooms from actual location */
 function getMeetRooms(){
   const loc=(typeof G!=="undefined"?G.location:null);
   if(!loc)return [];
@@ -17048,7 +17058,7 @@ function getMeetRoomImg(roomId,imgKey){
   return 'interiors/'+img;
 }
 
-/* v000.6.331: Location-gated meetings */
+/* v000.6.332: Location-gated meetings */
 function meetSubspace(oid){
   const o=officer(oid);if(!o)return;
   // Mark as subspace call for AI context
@@ -17057,7 +17067,7 @@ function meetSubspace(oid){
   o.meeting.withCommander=false;
   if(typeof aiTalk==="function")aiTalk(oid,true);
 }
-/* v000.6.331: Board a ship/station — set as player location */
+/* v000.6.332: Board a ship/station — set as player location */
 function boardLocation(type,id){
   if(typeof G==="undefined")return;
   G.location={type:type,id:id};
@@ -17094,7 +17104,7 @@ function uiMeetSomeone(oid){
   let h='<h2>Meet '+esc(firstName(o))+'</h2>';
   h+='<div class="flavor">'+esc(fullName(o))+' · '+esc(rankName(o))+'</div>';
   if(!atLoc){
-    // Remote — compact layout (v000.6.331)
+    // Remote — compact layout (v000.6.332)
     h+='<p class="dim">'+esc(firstName(o))+' is at <b>'+esc(oLoc)+'</b> — not your location.</p>';
     h+='<div class="btnRow" style="gap:8px;"><button class="btn small violet" style="border-radius:20px;flex:1;" onclick="meetSubspace(\''+oid+'\')">Priority Message</button><button class="btn small ghost" style="border-radius:20px;flex:1;" onclick="uiTravel()">Travel There</button></div>';
     h+='<p class="dim" style="font-size:11px;margin-top:8px;">Subspace message opens chat. Travel to '+esc(oLoc)+' for in-person meetings.</p>';
@@ -17119,7 +17129,7 @@ function uiMeetSomeone(oid){
   h+='<div class="btnRow"><button class="btn ghost" onclick="officerModal(\''+oid+'\')">Back</button></div>';
   openModal(h);
 }
-/* v000.6.331: Meet in a specific room */
+/* v000.6.332: Meet in a specific room */
 function meetRoom(oid,roomId){
   const o=officer(oid);if(!o)return;
   const rooms=(typeof getMeetRooms==="function"?getMeetRooms():[]);
@@ -17204,7 +17214,7 @@ function uiDoMeet(oid,loc){
   o.morale=clamp((o.morale||70)+2,0,100);
   log("personnel","You met with "+o.name+" ("+loc+"). "+scene);
   save();
-  // Holodeck goes straight to program picker (v000.6.331)
+  // Holodeck goes straight to program picker (v000.6.332)
   if(loc==='holodeck'){
     holoRunTogether(oid);
     return;
@@ -17227,7 +17237,7 @@ function endMeeting(oid){
   save();officerModal(oid);toast(o.name+" returned to duty.");
 }
 function holoRunTogether(oid){
-  // Pick program — purple pills like deck UI (v000.6.331)
+  // Pick program — purple pills like deck UI (v000.6.332)
   const o=officer(oid);
   let h='<h2>Holodeck Program</h2>';
   h+='<div style="position:relative;width:100%;aspect-ratio:16/9;border-radius:8px;overflow:hidden;background:#000;margin-bottom:12px;">';
@@ -17244,7 +17254,7 @@ function holoRunTogether(oid){
   h+='<div class="btnRow"><button class="btn ghost" onclick="endMeeting(\''+oid+'\')">Back</button></div>';
   openModal(h);
 }
-/* v000.6.331: Meeting holodeck matches solo UI */
+/* v000.6.332: Meeting holodeck matches solo UI */
 function holoTogetherGo(oid,pid){
   const o=officer(oid);if(!o)return;
   if(o.meeting)o.meeting.prog=pid;
@@ -17272,7 +17282,7 @@ function holoTogetherGo(oid,pid){
   openModal(h);
 }
 function meetHoloEnd(oid){
-  // Fade program image out to reveal blank holodeck underneath, then close (v000.6.331)
+  // Fade program image out to reveal blank holodeck underneath, then close (v000.6.332)
   if(typeof holoPowerDown==="function")holoPowerDown();
   const wrap=document.getElementById('meetHoloWrap');
   if(wrap){
@@ -17289,7 +17299,7 @@ function meetHoloEnd(oid){
     if(typeof endMeeting==="function")endMeeting(oid);
   }
 }
-/* v000.6.331: Track used choices, no re-animation */
+/* v000.6.332: Track used choices, no re-animation */
 if(typeof MEET_HOLO_USED==="undefined")var MEET_HOLO_USED={};
 function meetHoloChoice(oid,pid,i){
   const o=officer(oid);if(!o)return;
@@ -17327,7 +17337,7 @@ function meetHoloChat(oid,pid){
   }
   if(typeof aiTalk==="function")aiTalk(oid);
 }
-/* v000.6.331: Room activities — give locations a purpose */
+/* v000.6.332: Room activities — give locations a purpose */
 function deckRoomActivity(s,rid){
   const sid=s.id,day=G.day;
   const once=k=>{const fk='room_'+k+'_'+day+'_'+sid;if(G.flags[fk]){toast("Already done today.");return true;}G.flags[fk]=1;return false;};
@@ -17374,7 +17384,7 @@ function deckActMess(sid){
   log("personnel","Shared a meal with the crew.");
   save();if(typeof deckRefresh==="function")deckRefresh();toast("+2 morale.");
 }
-/* v000.6.331: Holodeck recreational programs with fade + sound */
+/* v000.6.332: Holodeck recreational programs with fade + sound */
 const HOLO_FUN=[
   {id:'beach',name:'Beach Resort',desc:'Tropical sunset. Waves, sand, relaxation.',fx:'+3 morale, -5 fatigue'},
   {id:'forest',name:'Forest Retreat',desc:'Ancient redwoods. Quiet, green, peaceful.',fx:'+2 morale, -10 fatigue'},
@@ -17480,7 +17490,7 @@ function deckActBridge(sid){
 }
 function deckRoomImg(s,rid){
   const era=deckEra(s);
-  /* v000.6.331: use Jason's room photos */
+  /* v000.6.332: use Jason's room photos */
   if(rid==='sickbay'){
     const img=era==='future'?'sickbay_32c':(era==='pic'?'sickbay_modern':'sickbay_tng');
     return '<img class="deckRoomImg" src="interiors/'+img+'.jpg" alt="Sickbay" loading="lazy" onerror="this.style.display=\'none\'">'+
@@ -17538,9 +17548,9 @@ function deckRoomImg(s,rid){
     return '<img class="deckRoomImg" src="interiors/'+img+'.jpg" alt="Science Lab" loading="lazy" onerror="this.style.display=\'none\'">'+
       '<div class="deckCap">Science Lab</div>';
   }
-  /* v000.6.331: use Jason's class-specific bridge photos */
+  /* v000.6.332: use Jason's class-specific bridge photos */
   if(rid==='bridge'){
-    /* v000.6.331: 32nd century bridge for future-era ships */
+    /* v000.6.332: 32nd century bridge for future-era ships */
     if(deckEra(s)==='future'){
       return '<img class="deckRoomImg" src="interiors/bridge_32c.jpg" alt="32nd century bridge" loading="lazy" onerror="this.style.display=\'none\'">'+
         '<div class="deckCap">32nd Century Bridge</div>';
@@ -17548,7 +17558,7 @@ function deckRoomImg(s,rid){
     const c=shipClass(s);
     const key=(c.key||c.name||'').toLowerCase();
     const bridges={galaxy:'bridge_galaxy',defiant:'bridge_defiant',intrepid:'bridge_intrepid',constitution:'bridge_constitution',crossfield:'bridge_crossfield',sovereign:'bridge_sovereign'};
-    /* v000.6.331: map similar classes to closest bridge */
+    /* v000.6.332: map similar classes to closest bridge */
     const bridgeMap={nebula:'galaxy',olympic:'galaxy',mercy:'galaxy',
       akira:'sovereign',saber:'sovereign',norway:'sovereign',steamrunner:'sovereign',
       excelsior:'constitution',constellation:'constitution',nx:'constitution',nxrefit:'constitution',
@@ -17699,7 +17709,7 @@ function deckRoomHtml(s,rid){
   h+='<div class="deckSec">'+esc(def.name)+' · Deck '+deckOfRoom(s,def)+'</div>';
   h+=deckRoomImg(s,rid);
   if(rid==='holodeck'){
-    // Inline program picker (v000.6.331) — pill buttons, expands below photo
+    // Inline program picker (v000.6.332) — pill buttons, expands below photo
     h+='<div id="deckHoloPicker" style="display:none;margin:8px 0;">';
     h+='<div class="dim" style="margin-bottom:8px;">Choose a program:</div>';
     h+='<div style="display:flex;flex-wrap:wrap;gap:8px;">';
@@ -17871,8 +17881,8 @@ const DECK_GOSSIP=[
 function deckGossip(){
   openModal('<h2>Mess Hall Gossip</h2><p><i>"Did you hear…"</i></p><p>'+esc(pick(DECK_GOSSIP))+'</p><div class="btnRow"><button class="btn" onclick="closeModal()">Back to your coffee</button></div>');
 }
-/* v000.6.331: Deck holodeck — inline program picker with image transition */
-/* v000.6.331: Interactive holodeck scenarios */
+/* v000.6.332: Deck holodeck — inline program picker with image transition */
+/* v000.6.332: Interactive holodeck scenarios */
 const DECK_HOLO_PROGS=[
   {id:'beach',name:'Paradise Resort',desc:'White sand, warm water, zero responsibilities.',img:'holo_beach.jpg',
    choices:[
@@ -17957,7 +17967,7 @@ function deckHoloToggle(){
   el.style.display=isHidden?'block':'none';
   if(btn)btn.style.display=isHidden?'none':'block';
 }
-/* v000.6.331: Robust two-layer crossfade */
+/* v000.6.332: Robust two-layer crossfade */
 function deckHoloXfade(newSrc){
   const wrap=document.getElementById('deckHoloWrap');
   if(!wrap)return;
@@ -18999,7 +19009,7 @@ function sdeckSectionOf(st,room){const n=sdeckCount(st);return 1+Math.round(room
 /* station -> on-screen era for interior set photos (stations are Starfleet facilities) */
 function sdeckEra(st){return (st&&st.id==="ds9")?"ds9":"tng";}
 function sdeckEraName(st){return DECK_ERA_NAMES[sdeckEra(st)]||"Starfleet";}
-/* v000.6.331: Station room activities */
+/* v000.6.332: Station room activities */
 function sdeckRoomActivity(st,rid){
   const sid=st.id;
   let h='';
@@ -19060,7 +19070,7 @@ function sdeckActCargo(sid){
 }
 function sdeckRoomImg(st,rid){
   const era=sdeckEra(st),def=sdeckRoomDef(st,rid),img=(def&&def.img)||rid;
-  /* v000.6.331: Jason's ops photos */
+  /* v000.6.332: Jason's ops photos */
   if(rid==='ops'){
     const jimg=era==='future'?'ops_32c':(era==='pic'?'ops_modern':'ops_tng');
     return '<img class="deckRoomImg" src="interiors/'+jimg+'.jpg" alt="Ops" loading="lazy" onerror="this.style.display=\'none\'">'+
@@ -19087,7 +19097,7 @@ function sdeckRoomImg(st,rid){
       '<div class="deckCap">Infirmary</div>';
   }
   if(rid==='quarters'){
-    /* v000.6.331: medical station recovery quarters */
+    /* v000.6.332: medical station recovery quarters */
     const stType=(st.type||st.kind||'').toLowerCase();
     if(stType.includes('medical')||stType.includes('mccoy')){
       const jimg=era==='future'?'medq_32c':(era==='pic'?'medq_modern':'medq_tng');
@@ -20089,7 +20099,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.331 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.332 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
