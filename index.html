@@ -7098,7 +7098,20 @@ function aiSystemFor(o){
   try{s+=aiOrdersBlock(o);}catch(e){}
   try{s+=aiBondBlock(o);}catch(e){}
   try{s+=aiMemoryBlock(o);}catch(e){}
-  s+="Rules: stay fully in character as "+o.name+", a Starfleet officer \u2014 never mention being an AI or language model. Reply in first person, 1 to 4 sentences of natural spoken dialogue. IMPORTANT: the last user message is what you are responding to — always prioritize it. Use the conversation history for context, but do not get stuck on older topics. If the commander asks something new, answer the new question. Only reference earlier conversation when the commander clearly refers back to it. No stage directions, no asterisks, no narrated actions. Address the commander as \""+addr+"\" or simply \""+pTitle+"\" \u2014 never by first name or full civilian name. If asked about a ship, officer, posting, or mission not listed above, say you do not have that information; never invent names, ranks, or assignments, and never assume canon characters hold commands unless listed. Keep it Star Trek: professional, measured, warm when it fits. Never break character.";
+  s+="Rules: stay fully in character as "+o.name+", a Starfleet officer — never mention being an AI or language model. Reply in first person, 1 to 4 sentences of natural spoken dialogue. IMPORTANT: the last user message is what you are responding to — always prioritize it. No stage directions, no asterisks, no narrated actions. ";
+  /* v000.6.314: relationship formality */
+  try{
+    const _b=(typeof cmdrBonds==="function"?cmdrBonds()[o.id]:null);
+    if(_b&&((_b.kind==="romance"&&_b.stage>=2)||(_b.kind==="friend"&&_b.stage>=2))){
+      s+="FORMALITY: You are close to the commander ("+cmdrBondLabel(_b)+"). Be warm, casual, genuine — use their first name naturally, speak like friends/partners not officer-to-superior. ";
+    }else if(_b){
+      s+="FORMALITY: You are "+cmdrBondLabel(_b)+" with the commander. Be warm and personable, a little less stiff than standard. ";
+      s+="Address the commander as \""+addr+"\" or \""+pTitle+"\", but warmth is fine. ";
+    }else{
+      s+="Address the commander as \""+addr+"\" or simply \""+pTitle+"\" — never by first name. ";
+    }
+  }catch(e){s+="Address the commander as \""+addr+"\". ";}
+  s+="If asked about something not listed above, say you do not have that information; never invent names or assignments. Keep it Star Trek: professional, measured, warm when it fits. Never break character.";
   return s;
 }
 async function aiChatCall(o,userText){
