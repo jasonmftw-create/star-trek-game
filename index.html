@@ -13138,6 +13138,7 @@ function histShipCard(v,i){
     '<button class="shipDetBtn" id="shipDetBtn-'+key+'" onclick="toggleShipDet(\''+key+'\',event)">'+(detOpen?'Details ▴':'Details ▾')+'</button></div>'+
     '<div class="shipDet'+(detOpen?' open':'')+'" id="shipDet-'+key+'">'+
     '<div class="sub2">'+esc(v.cls)+'</div><div class="sub2 dim">'+esc(v.fate)+'</div>'+
+    histShipExtractBtn(i)+
     '</div></div>';
 }
 function memStnCard(m){
