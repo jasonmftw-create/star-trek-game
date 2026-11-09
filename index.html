@@ -1123,6 +1123,52 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
 
 /* visible affordance for long-press hints (v2.39): dotted underline = "long-press me" */
 [data-hint]{border-bottom:1px dotted #9fb2c3;cursor:help;}
+
+/* ===== v000.6.384: DUO / WIDE-SCREEN LAYOUT (foldable open, tablets, desktop) =====
+   Every rule below lives inside a min-width:900px media query, so screens
+   narrower than 900px (slab phones, Duo closed) get the original layout
+   byte-for-byte. Nothing outside these queries changed. */
+@media (min-width:900px){
+  /* Use the extra width instead of stretching the phone column */
+  #view{max-width:1180px;padding:16px 22px;}
+  /* Tab bar: center the tabs instead of stretching them edge to edge */
+  #tabs{justify-content:center;}
+  #tabs .tabBtn{flex:0 1 auto;padding-left:26px;padding-right:26px;}
+  /* Existing grids gain a column on roomy screens */
+  .offGrid{grid-template-columns:repeat(3,1fr);}
+  .dashGrid{grid-template-columns:repeat(6,1fr);}
+  /* Sheets/dialogs capped for phones get breathing room */
+  #modalBox{left:max(24px,6vw);right:max(24px,6vw);}
+  .completeCard{width:min(94vw,560px);}
+  /* Menu drawer DOCKS beside the content instead of overlaying it:
+     the shade drops away and the bars + view shift left to make room.
+     Browsers without :has() keep today's overlay drawer (graceful fallback). */
+  #menuShade.open{display:none;}
+  #menuDrawer{width:312px;}
+  body:has(#menuDrawer.open) #view,
+  body:has(#menuDrawer.open) #lcarsTop,
+  body:has(#menuDrawer.open) #hud,
+  body:has(#menuDrawer.open) #tabs{margin-right:312px;}
+  body:has(#menuDrawer.open) #bottomNav{right:312px;}
+}
+@media (min-width:1400px){
+  #view{max-width:1320px;}
+  .offGrid{grid-template-columns:repeat(4,1fr);}
+}
+/* Foldable hinge: when the browser reports two viewport segments, size the
+   docked drawer to the right segment and widen grid center gutters by the
+   hinge width so cards and controls stay off the center crease. Browsers
+   without viewport-segment support ignore these rules entirely. */
+@media (min-width:900px) and (horizontal-viewport-segments:2){
+  #menuDrawer{width:env(viewport-segment-width 1 0,312px);}
+  body:has(#menuDrawer.open) #view,
+  body:has(#menuDrawer.open) #lcarsTop,
+  body:has(#menuDrawer.open) #hud,
+  body:has(#menuDrawer.open) #tabs{margin-right:env(viewport-segment-width 1 0,312px);}
+  body:has(#menuDrawer.open) #bottomNav{right:env(viewport-segment-width 1 0,312px);}
+  .dashGrid,.offGrid,.bilGrid,.kvGrid,.opsGrid,.cmdrGrid,#hudStats{
+    column-gap:max(10px,calc(env(viewport-segment-left 1 0,0px) - env(viewport-segment-width 0 0,0px)));}
+}
 </style>
 </head>
 <body>
@@ -1183,7 +1229,7 @@ window.onerror=function(msg,src,line,col,err){
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.383';
+const ART_BUST='v000.6.384';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -20872,7 +20918,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.383 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.384 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
