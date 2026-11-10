@@ -1169,6 +1169,78 @@ label{font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercas
   .dashGrid,.offGrid,.bilGrid,.kvGrid,.opsGrid,.cmdrGrid,#hudStats{
     column-gap:max(10px,calc(env(viewport-segment-left 1 0,0px) - env(viewport-segment-width 0 0,0px)));}
 }
+/* ===== v000.6.385: LANDSCAPE LAYOUT + LIQUID GLASS NAV RAIL =====
+   Tall landscape screens only (Duo open, tablets): the min-height:600px
+   floor keeps a big slab phone turned sideways (wide but short) on the
+   standard presentation. Portrait and slab are untouched. */
+@media (min-width:900px) and (min-height:600px) and (orientation:landscape){
+  /* Compact header: modest fixed height instead of a tall banner */
+  #lcarsTop .mid{padding:2px 10px;}
+  #lcarsTop .elbow{padding:6px 12px;}
+  #gameLogo{height:40px;}
+  #hud{top:47px;}
+  /* The header end-cap is a purple segment at full viewport width, beyond
+     the centered content column, so in landscape it read as a stray
+     lavender pill floating at the right edge. Gone in landscape. */
+  #lcarsTop .cap{display:none;}
+  /* Two-column flow: stacked independent cards/sections pair up
+     side-by-side instead of stretching full width */
+  #view{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:14px;
+    align-items:start;padding-right:118px;}
+  #view>*{min-width:0;}
+  /* Structural and wide elements keep the full width */
+  #view>h2,#view>h3,#view>table,#view>.dashGrid,#view>.offGrid,#view>.bilGrid,
+  #view>.kvGrid,#view>.opsGrid,#view>.cmdrGrid,#view>.dashSec,#view>.banter,
+  #view>.tickWrap,#view>.aliveTick,#view>.sceneCard,#view>.shipHero,
+  #view>.shipMedia,#view>.stnMedia,#view>.aiChatLog,#view>.aiChatBar,
+  #view>.cmdsubseg,#view>.hr{grid-column:1/-1;}
+  /* Grids nested inside a half-width card drop back to base density */
+  #view * .offGrid{grid-template-columns:repeat(2,1fr);}
+  #view * .dashGrid{grid-template-columns:repeat(3,1fr);}
+  #modalBox{right:max(112px,6vw);}
+  /* The bottom bar is gone in landscape, so reclaim its space */
+  body{padding-bottom:20px;}
+  .toast{bottom:24px;}
+  #swUpdateBanner{bottom:20px;}
+  /* Liquid Glass nav rail: the bottom nav becomes a vertical frosted-glass
+     capsule docked at the right edge of the game layout. Translucent blur,
+     bright specular rim, soft shadow. Same buttons, same actions. */
+  #bottomNav{left:auto;right:12px;top:50%;bottom:auto;transform:translateY(-50%);
+    width:78px;flex-direction:column;gap:6px;padding:10px 8px;border-radius:999px;
+    background:rgba(16,18,26,.38);border:1px solid rgba(255,255,255,.30);
+    -webkit-backdrop-filter:blur(18px) saturate(1.7);backdrop-filter:blur(18px) saturate(1.7);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.50),inset 0 -1px 0 rgba(255,255,255,.10),
+      inset 1px 0 0 rgba(255,255,255,.14),0 14px 34px rgba(0,0,0,.50);}
+  #bottomNav .tabBtn,#bottomNav .menuBtn,#bottomNav .navBtn{
+    flex:0 0 auto;width:100%;padding:9px 2px 7px;border-radius:999px;
+    background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.28);}
+  #bottomNav .tabBtn.active{background:var(--orange);color:#000;
+    border:1px solid rgba(255,255,255,.35);border-radius:999px;}
+}
+/* ===== v000.6.385: GLASS RAIL SETTING (Settings -> Navigation) =====
+   Applies only when the player turns it on (body.glassNav, persisted in
+   localStorage as stfc_glassnav). Default off: the classic bottom bar,
+   byte-for-byte as before, at every size and orientation. Wide landscape
+   uses the rail regardless of this setting. */
+body.glassNav #bottomNav{left:auto;right:12px;top:50%;bottom:auto;transform:translateY(-50%);
+  width:78px;flex-direction:column;gap:6px;padding:10px 8px;border-radius:999px;
+  background:rgba(16,18,26,.38);border:1px solid rgba(255,255,255,.30);
+  -webkit-backdrop-filter:blur(18px) saturate(1.7);backdrop-filter:blur(18px) saturate(1.7);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.50),inset 0 -1px 0 rgba(255,255,255,.10),
+    inset 1px 0 0 rgba(255,255,255,.14),0 14px 34px rgba(0,0,0,.50);}
+body.glassNav #bottomNav .tabBtn,body.glassNav #bottomNav .menuBtn,body.glassNav #bottomNav .navBtn{
+  flex:0 0 auto;width:100%;padding:9px 2px 7px;border-radius:999px;
+  background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.28);}
+body.glassNav #bottomNav .tabBtn.active{background:var(--orange);color:#000;
+  border:1px solid rgba(255,255,255,.35);border-radius:999px;}
+body.glassNav #view{padding-right:104px;}
+body.glassNav #hud{padding-right:100px;}
+body.glassNav{padding-bottom:20px;}
+body.glassNav .toast{bottom:24px;}
+body.glassNav #swUpdateBanner{bottom:20px;}
+body.glassNav #modalBox{right:104px;bottom:2vh;}
 </style>
 </head>
 <body>
@@ -1229,7 +1301,7 @@ window.onerror=function(msg,src,line,col,err){
    chokepoints: portraitSrc, crewPoolUrls, crewPortraitFor, shipPic,
    compArtFor, stationPic, stationMapIcon, shuttlePic. Idempotent: a URL
    already carrying the current bust marker is returned untouched. ---- */
-const ART_BUST='v000.6.384';
+const ART_BUST='v000.6.385';
 function bustUrl(u){if(!u||u.indexOf('data:')===0||u.indexOf('v='+ART_BUST)>=0)return u;return u+(u.indexOf('?')>=0?'&':'?')+'v='+ART_BUST;}
 function $(id){return document.getElementById(id);}
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -6942,6 +7014,10 @@ function closeSheet(){const r=$("sheetRoot");if(r)r.classList.remove("open");she
 let completionQ=[];
 function completionsOn(){try{const v=localStorage.getItem("stfc_completions");return v===null?true:v==="1";}catch(e){return true;}}
 function uiToggleCompletions(){try{localStorage.setItem("stfc_completions",completionsOn()?"0":"1");}catch(e){}render();toast("Completion celebrations "+(completionsOn()?"enabled.":"disabled."));}
+/* ===== navigation style: bottom bar / glass rail (v000.6.385) ===== */
+function glassNavOn(){try{return localStorage.getItem("stfc_glassnav")==="1";}catch(e){return false;}}
+function applyGlassNav(){document.body.classList.toggle("glassNav",glassNavOn());}
+function uiToggleGlassNav(){try{localStorage.setItem("stfc_glassnav",glassNavOn()?"0":"1");}catch(e){}applyGlassNav();render();toast(glassNavOn()?"Navigation: Glass rail — the buttons now ride a frosted-glass rail at the right edge.":"Navigation: Bottom bar — the classic bar is back.");}
 function queueCompletion(c){sfx("dock");completionQ.push(c);}
 function compStars(){return '<div class="cstars far"></div><div class="cstars near"></div>';}
 function compGotoShip(id){$("completeRoot").classList.remove("open");pumpCompletions();shipModal(id);}
@@ -7118,7 +7194,9 @@ function renderSettings(){
   h+='<div class="kv"><span class="k">Random battles</span><span class="v"><button class="btn small'+(battlesOn()?" on":"")+'" onclick="uiToggleBattles()">'+(battlesOn()?"On":"Off")+'</button></span></div>'+
     '<p class="dim">When on, any active ship posted in hostile territory — Borg space, the Dominion, the Neutral Zone — risks a random enemy encounter each day. You choose: engage or run.</p>'+
     '<div class="kv"><span class="k">Vibration</span><span class="v"><button class="btn small'+(vibOn()?" on":"")+'" onclick="toggleVib();render()">'+(vibOn()?"On":"Off")+'</button></span></div>'+
-    '<p class="dim">When on, your phone vibrates on hits and explosions during tactical battles.</p></div>';
+    '<p class="dim">When on, your phone vibrates on hits and explosions during tactical battles.</p>'+
+    '<div class="kv"><span class="k">Navigation</span><span class="v"><button class="btn small'+(glassNavOn()?" on":"")+'" onclick="uiToggleGlassNav()">'+(glassNavOn()?"Glass rail":"Bottom bar")+'</button></span></div>'+
+    '<p class="dim">Bottom bar: the classic navigation bar along the bottom of the screen. Glass rail: the same buttons as a frosted-glass rail down the right edge. On wide landscape screens the rail is always used.</p></div>';
   h+=aiSetupHtml();
   h+='<div class="card"><h3>Save Data</h3><div class="btnRow">'+
     '<button class="btn small ghost" onclick="uiSave()">Save now</button>'+
@@ -20896,6 +20974,7 @@ window.onload=function(){
   }
   try{history.pushState({hw:1},"");}catch(e){} // hardware-BACK guard (v2.39)
   applyTheme(curTheme());
+  try{applyGlassNav();}catch(e){}
   render();
   if(restoredBackup){
     try{log("system","The main save record was missing or damaged, so this sector was recovered from the automatic backup (day "+restoredBackupDay+"). Play on, Commander.");}catch(e){}
@@ -20918,7 +20997,7 @@ window.onload=function(){
 <aside id="menuDrawer">
   <div id="drawerHead"><h2>Menu</h2><button id="drawerClose" onclick="closeTabMenu()" aria-label="Close menu">&times;</button></div>
   <div id="menuList"></div>
-  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.384 — The Stylized Fleet</div>
+  <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:14px 0 8px;opacity:.7;">v000.6.385 — The Stylized Fleet</div>
   <div style="text-align:center;color:#5a6b7d;font-size:11px;padding:0 0 10px;opacity:.7;">Ship &amp; shuttlecraft profile artwork: <a href="https://www.ex-astris-scientia.org/fleet-charts.htm" target="_blank" style="color:#7d92ad;text-decoration:none;">Ex Astris Scientia</a></div>
 </aside>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(r){r.addEventListener("updatefound",function(){var w=r.installing;w.addEventListener("statechange",function(){if(w.state==="activated"&&navigator.serviceWorker.controller){try{showUpdateBanner();}catch(e){}}});});});}</script>
